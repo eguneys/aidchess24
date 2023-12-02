@@ -1,0 +1,21 @@
+{
+  "name": "aidchess24",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host --port=3000",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@solidjs/meta": "^0.29.1",
+    "@solidjs/router": "^0.9.1",
+    "solid-js": "^1.8.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0",
+    "vite-plugin-solid": "^2.7.2"
+  }
+}
