@@ -1,0 +1,91 @@
+[Event "e4 vs Minor Defences: Alekhine"]
+[Site "https://lichess.org/study/F8wyMEli/XtCmR5GS"]
+[Result "*"]
+[UTCDate "2023.04.06"]
+[UTCTime "17:47:58"]
+[Variant "Standard"]
+[ECO "B04"]
+[Opening "Alekhine Defense: Modern Variation, Larsen-Haakert Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 Nc6 (4... Nb6 5. a4 a5 6. Nc3 g6 (6... Bf5 7. d5 e6 8. dxe6 Bxe6 9. Bg5 Qd7 10. exd6 Bxd6 11. Nb5 Nd5 12. Nxd6+ Qxd6) 7. exd6 cxd6 (7... exd6 8. Bg5 f6 9. Bf4 d5 10. Bd3 Bd6 11. Bxd6 Qxd6 12. O-O O-O 13. Qd2) 8. d5 Bg7 9. Be3 O-O 10. Bd4 N8d7 11. Bxg7 Kxg7 12. Qd4+ Nf6 13. Nd2 Bd7 14. Nde4 Rc8 15. h4 h5 16. f3) (4... c6 5. Be2 g6 6. c4 Nc7 7. exd6 Qxd6 8. Nc3 Bg7 9. O-O O-O 10. h3 Ne6 11. Be3 Nf4 12. Re1) (4... Bf5 5. Bd3 Bxd3 6. Qxd3 e6 7. O-O Nc6 8. c4 Nb6 9. exd6 cxd6 10. Nc3 Be7 11. d5 Nb4 12. Qe4 e5 13. c5 dxc5 14. a3 Na6 15. Rd1 O-O) 5. c4 Nb6 6. e6 fxe6 7. Nc3 g6 8. h4 Bg7 9. Be3 e5 10. d5 Nd4 11. Nxd4 exd4 12. Bxd4 Bxd4 13. Qxd4 e5 14. Qe3 *
+
+
+[Event "e4 vs Minor Defences: Alekhine  4...g6"]
+[Site "https://lichess.org/study/F8wyMEli/z3f8rYeZ"]
+[Result "*"]
+[UTCDate "2023.04.08"]
+[UTCTime "18:18:30"]
+[Variant "Standard"]
+[ECO "B04"]
+[Opening "Alekhine Defense: Modern Variation, Alburt Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 g6 5. Bc4 Nb6 6. Bb3 Bg7 (6... Nc6 7. a4 a5 8. exd6 exd6 9. O-O d5 10. Re1+ Be6 11. Nc3 Bg7 12. Nb5 O-O 13. Bf4 Rc8 14. c3) 7. Ng5 e6 8. Qf3 Qe7 (8... O-O 9. Qh3 h6 10. Nf3 dxe5 11. dxe5 Nc6 (11... c5 12. Bxh6 c4 13. Be3 cxb3 14. Ng5 Re8 15. Nc3 N8d7 16. Qh7+ Kf8 17. Nce4 Nxe5 18. Bc5+ Re7 19. axb3 Nd5 20. O-O-O) 12. Bxh6 Nxe5 13. Ng5 Nd3+ 14. cxd3 Bxb2 15. Nd2 Bxa1 16. O-O Bd4 17. Nde4 Re8 18. Nh7) 9. Ne4 dxe5 (9... h6 10. exd6 cxd6 11. Bf4 d5 12. Nd6+ Kf8 13. Nxc8 Nxc8 14. c3 Nc6 15. Nd2 Bf6 16. Qe2) 10. Bg5 Qb4+ 11. c3 Qa5 12. dxe5 N8d7 13. Nbd2 Nxe5 14. Qg3 f5 15. O-O-O *
+
+
+[Event "e4 vs Minor Defences: Alekhine  4...Bg4"]
+[Site "https://lichess.org/study/F8wyMEli/GJAF6dwj"]
+[Result "*"]
+[UTCDate "2023.04.09"]
+[UTCTime "17:42:55"]
+[Variant "Standard"]
+[ECO "B05"]
+[Opening "Alekhine Defense: Modern Variation, Main Line"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 Bg4 5. Be2 e6 (5... c6 6. c4 Nc7 7. exd6 Qxd6 8. O-O g6 9. Nc3 Bg7 10. Qb3 O-O 11. Ne4 Qd7 12. Rd1) 6. O-O Be7 7. c4 Nb6 8. Nc3 O-O 9. h3 Bh5 10. Be3 d5 (10... N8d7 11. exd6 cxd6 12. b3 a6 13. a4) (10... Nc6 11. exd6 cxd6 12. d5 Bxf3 13. Bxf3 Ne5 14. dxe6 fxe6 15. Bg4 Nxg4 16. Qxg4 Rf6 17. b3) 11. c5 Bxf3 12. gxf3 Nc8 13. f4 *
+
+
+[Event "e4 vs Minor Defences: Alekhine  4...dxe5"]
+[Site "https://lichess.org/study/F8wyMEli/GWKakNao"]
+[Result "*"]
+[UTCDate "2023.04.12"]
+[UTCTime "18:06:42"]
+[Variant "Standard"]
+[ECO "B04"]
+[Opening "Alekhine Defense: Modern Variation, Larsen Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 dxe5 5. Nxe5 c6 (5... g6 6. Bc4 c6 (6... Be6 7. O-O Bg7 8. Re1 O-O 9. Nd2 Nd7 10. Nef3 N5b6 11. Bf1 Bf5 12. c3 c6 13. h3) 7. O-O Bg7 8. Re1 Nd7 (8... O-O 9. c3 Be6 10. Nd2 Nd7 11. Nef3 Nc7 12. Bf1 c5 13. Nb3 cxd4 14. Nbxd4) 9. Nf3 N7b6 10. Bf1 Bg4 11. c3 Bxf3 12. Qxf3 O-O 13. Bg5 h6 14. Bd2) (5... Nd7 6. Nxf7 Kxf7 7. Qh5+ Ke6 8. c4 N5f6 9. d5+ Kd6 10. Qf7 Ne5 11. Bf4 c5 12. Nc3 a6 13. b4 Qb6 (13... b6 14. Bd3) 14. Rc1) 6. Be2 Bf5 (6... Nd7 7. Nf3 g6 8. O-O Bg7 9. c4 Nc7 10. Nc3 O-O 11. Bf4 c5 12. d5 e5 13. Bg5 f6 14. Be3) (6... g6 7. O-O Bg7 8. c4 Nc7 9. f4 O-O 10. Be3 Nd7 11. Nc3 Nxe5 12. fxe5 c5 13. dxc5) 7. O-O Nd7 8. Nf3 e6 9. c4 N5f6 10. Nc3 Ne4 (10... Bd6 11. Nh4 Bg6 12. c5 Bc7 13. Bg5) 11. Re1 *
+
+
+[Event "e4 vs Minor Defences: Scandinavian  2...Nf6  3...Nxd5"]
+[Site "https://lichess.org/study/F8wyMEli/2a98Oswt"]
+[Result "*"]
+[UTCDate "2023.04.13"]
+[UTCTime "19:08:05"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Marshall Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 d5 2. exd5 Nf6 3. d4 Nxd5 4. c4 Nb6 (4... Nf6 5. Nf3 Bg4 6. Be2 c6 7. O-O e6 8. Nc3 Be7 9. h3 Bh5 10. Re1 O-O 11. g4 Bg6 12. Ne5 Nbd7 13. Nxg6 hxg6 14. Bf4) 5. Nf3 g6 (5... Bg4 6. c5 { [%cal Gb6d5,Gd1b3] } 6... N6d7 7. Bc4 e6 8. Nc3 Be7 9. h3 Bh5 10. Be3 Nc6 11. Qe2 O-O 12. g4 Bg6 13. O-O-O Na5 14. h4 Nxc4 15. Qxc4 h5 16. d5) 6. Nc3 Bg7 7. c5 Nd5 8. Bc4 c6 (8... Nxc3 9. bxc3 O-O 10. O-O Nc6 11. Bg5 Na5 12. Bd3 b6 13. Re1 Re8 14. Rb1 bxc5 15. Rb5 Nb7) 9. O-O O-O 10. Re1 Bg4 11. Bg5 Nf6 12. h3 Bxf3 13. Qxf3 Qxd4 14. Rxe7 Nbd7 15. Bb3 Qxc5 16. Bxf6 Nxf6 { [%csl Gh4] } 17. Rxb7 *
+
+
+[Event "e4 vs Minor Defences: Scandinavian  2...Nf6  3...Bg4"]
+[Site "https://lichess.org/study/F8wyMEli/9IhAcCyv"]
+[Result "*"]
+[UTCDate "2023.04.14"]
+[UTCTime "19:05:08"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Portuguese Gambit, Lusophobe Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 d5 2. exd5 Nf6 3. d4 Bg4 4. Bb5+ Nbd7 (4... c6 5. dxc6 Nxc6 6. Nf3 Qb6 7. Bxc6+ Qxc6 8. Be3 Rc8 9. c3 e6 10. Nbd2 Bd6 11. O-O O-O 12. h3 Bh5 13. Re1 h6 14. Qb3 Rfd8 15. Ne5) 5. Be2 Bxe2 6. Qxe2 Nxd5 7. c4 N5f6 8. Nf3 e6 9. Nc3 Bb4 (9... Bd6 10. g4 c6 11. Bd2 Nxg4 12. Rg1 Nh6 13. Rxg7 Nf5 14. Rg1 Qe7 15. O-O-O O-O-O 16. Ne4) 10. Bd2 (10. O-O O-O 11. Bf4 Bxc3 12. bxc3 c5 13. Rfb1 Qc8 14. a4 h6 15. Nd2 Qc6 16. Bg3 Rfd8 17. Bh4) 10... O-O 11. O-O c6 12. Ne5 Bd6 13. Rad1 Qc7 14. f4 a6 15. c5 Be7 16. Rf3 *
+
+
+[Event "e4 vs Minor Defences: Scandinavian  2...Qxd5  3...Qd8"]
+[Site "https://lichess.org/study/F8wyMEli/h0HmW7Yt"]
+[Result "*"]
+[UTCDate "2023.04.15"]
+[UTCTime "18:40:33"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Valencian Variation, Main Line"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 d5 2. exd5 Qxd5 3. Nc3 Qd8 4. d4 Nf6 5. Nf3 Bg4 6. h3 Bxf3 7. Qxf3 c6 8. Be3 e6 9. Bd3 Qa5 10. O-O Nbd7 11. a3 Be7 12. Ne2 O-O 13. c4 Rfe8 14. Nc3 Rad8 15. b4 Qc7 16. Rfc1 a5 17. Rab1 *
+
+

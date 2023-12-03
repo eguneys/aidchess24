@@ -1,0 +1,81 @@
+
+.home {
+
+    width: 512px;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+}
+
+.home h1 {
+    padding-top: 2em;
+    color: black;
+    text-align: center;
+}
+
+.home .features {
+    display: flex;
+    justify-content: space-between;
+}
+
+.home .features .feature {
+    padding: 1em;
+    flex: 1;
+    display: flex;
+    flex-flow: column;
+}
+
+.home .features .feature ul {
+    margin: 0 auto;
+    max-width: 80%;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+}
+
+.home .features .feature ul li {
+    padding: 0.2em 0;
+}
+
+.home .features .feature {
+    text-align: center;
+}
+
+
+.home .features .feature h3 {
+    font-weight: normal;
+}
+
+.home .features .feature h4 {
+    font-family: Ledger;
+    color: black;
+}
+
+.home h1 a {
+    font-weight: bold;
+    transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+.home h1.twitch {
+    text-shadow: #6441A5 2px 2px 2px;
+}
+
+.home h1.twitch a {
+    color: black;
+    transition: 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)
+}
+
+.home h1.twitch a:hover {
+    color: #6441A5;
+}
+
+
+.home footer {
+    font-family: Ledger;
+    padding-top: 6em;
+}
+
+.home footer ul {
+    display: flex;
+    justify-content: space-around;
+}

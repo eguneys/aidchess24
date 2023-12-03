@@ -1,79 +1,43 @@
+import { For, Show } from 'solid-js'
+import { useNavigate } from '@solidjs/router'
+import './Repertoires.css'
 
-type StudyInRepertoireCategory = {
-  study_link: string,
-  study_name: string,
-  category: string
-}
+import { RepertoiresFixture, StudyInRepertoireCategory  } from './studyrepo'
 
-const HardCategories: any = {
-  'Openings': [
-    ['Slav Defense', ''],
-    ['Sicilian Defense', ''],
-    ['French Defense', ''],
-  ],
-  'Masters': [
-    ['Bobby Fischer 60 Memorable Games', ''],
-    ['Magnus Carlsen 2023', ''],
-    ['Tata Steel 2023', ''],
-  ],
-  'Tactics': [
-    ['50 Puzzles 1600', ''],
-    ['50 Puzzles 2000', ''],
-    ['50 Puzzles 2200', ''],
-  ],
-  'Endgames': [
-    ['100 Endgames You Must Know', ''],
-    ['King and Pawn Endgames', '']
-  ]
-}
+const CategoryView = (props: { name: string, list: StudyInRepertoireCategory[]}) => {
 
-class RepertoiresFixture {
-  static init = () => {
-
-    function import_hard(category: string) {
-
-      return HardCategories[category].map((_: any) => ({
-        category,
-        study_name: _[0],
-        study_link: _[1]
-      }))
-
-    }
-
-    let res = new RepertoiresFixture()
-
-    res.openings = import_hard('Openings')
-    res.masters = import_hard('Masters')
-    res.tactics = import_hard('Tactics')
-    res.endgames = import_hard('Endgames')
-
-    res.recent = []
-    res.completed = []
-  }
-
-
-  openings!: StudyInRepertoireCategory[]
-  masters!: StudyInRepertoireCategory[]
-  tactics!: StudyInRepertoireCategory[]
-  endgames!: StudyInRepertoireCategory[]
-  recent!: StudyInRepertoireCategory[]
-  completed!: StudyInRepertoireCategory[]
-
+  const navigate = useNavigate()
+  return (<>
+    <div class='category'>
+       <h1>{props.name}</h1>
+       <ul>
+        <For each={props.list}>{ (item: StudyInRepertoireCategory) => 
+          <Show fallback={
+            <li onClick={() => navigate(`/repertoire/${item.study_link}`)}><h3>{item.study_name}</h3></li>
+          } when={item.study_link === ''}>
+            <li class='soon'><h3>{item.study_name}</h3><span>Coming Soon</span></li>
+          </Show>
+        }</For>
+       </ul>
+    </div>
+  </>)
 }
 
 
 function Repertoires() {
 
-  console.log(new RepertoiresFixture())
+  let fixture = RepertoiresFixture
 
   return (
     <>
-      <h1>Openings</h1>
-      <h1>Masters</h1>
-      <h1>Tactics</h1>
-      <h1>Endgames</h1>
-      <h1>Recent Studies</h1>
-      <h1>Completed Studies</h1>
+      <div class='repertoires'>
+        <CategoryView name="Openings" list={fixture.openings}/>
+        <CategoryView name="Masters" list={fixture.masters}/>
+        <CategoryView name="Tactics" list={fixture.tactics}/>
+        <CategoryView name="Endgames" list={fixture.endgames}/>
+        <CategoryView name="Recent Studies" list={fixture.recent}/>
+        <CategoryView name="Completed Studies" list={fixture.completed}/>
+      </div>
     </>
   )
 }

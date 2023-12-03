@@ -11,6 +11,9 @@ dependencies:
   '@solidjs/router':
     specifier: ^0.9.1
     version: 0.9.1(solid-js@1.8.7)
+  chessops:
+    specifier: ^0.12.8
+    version: 0.12.8
   solid-js:
     specifier: ^1.8.5
     version: 1.8.7
@@ -355,6 +358,10 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
     dev: true
+
+  /@badrap/result@0.2.13:
+    resolution: {integrity: sha512-Qvyzz0dmGY0h8pwvBFo1BznAKf5Y5NXIDiqhPALWtfU7oHbAToCtPu4FlYQ3uysskSWLx8GUiyhe0nv0nDd/7Q==}
+    dev: false
 
   /@esbuild/android-arm64@0.19.8:
     resolution: {integrity: sha512-B8JbS61bEunhfx8kasogFENgQfr/dIp+ggYXwTqdbMAgGDhRa3AaPpQMuQU0rNxDLECj6FhDzk1cF9WHMVwrtA==}
@@ -777,6 +784,13 @@ packages:
       escape-string-regexp: 1.0.5
       supports-color: 5.5.0
     dev: true
+
+  /chessops@0.12.8:
+    resolution: {integrity: sha512-/9pkJa++RU1WiIa/pH4AdFh6ulcxeMlkYm7sc4xAb1jjcmu6MlsOSTjtOUhUXcw5aVJAIrWY2IwPNucNJLCpFw==}
+    deprecated: Version published from wrong branch
+    dependencies:
+      '@badrap/result': 0.2.13
+    dev: false
 
   /color-convert@1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}

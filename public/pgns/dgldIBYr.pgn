@@ -1,0 +1,143 @@
+[Event "e4 vs Sicilian: 6...Nbd7  Introduction and Rare 6th Moves"]
+[Site "https://lichess.org/study/dgldIBYr/PfQWGZpF"]
+[Result "*"]
+[UTCDate "2023.04.01"]
+[UTCTime "13:46:44"]
+[Variant "Standard"]
+[ECO "B94"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 Nbd7 (6... Nc6 7. Qd2 Nxd4 8. Qxd4 Qa5 9. Bd2 Qc7 10. Nd5 Nxd5 11. exd5 Qxc2 12. Rc1 Qf5 13. Be2 e5 14. dxe6 Bxe6 15. O-O) (6... Bd7 7. f4 Nc6 8. Qd2 b5 9. Bxf6 gxf6 10. O-O-O e6) (6... e5 7. Nf5 Bxf5 8. Bxf6 Qxf6 9. Nd5 Qd8 10. exf5) 7. Qe2 b5 (7... e5 8. Nf5 h6 9. Bh4 g6 10. Ne3 Be7 11. O-O-O b5 12. f3 Bb7 13. a3 Rc8 14. Qd2 Kf8 15. g4 Kg7 16. Bg3 Nc5 17. h4 Ne6 18. Kb1 Nd4 19. Bg2 a5 20. f4) (7... Qa5 8. Bd2 Qb6 9. Nb3 e6 10. g4 h6 11. O-O-O Qc7 12. Bg2 Ne5 13. f4 Nc4 14. Be1 Rb8 15. e5 dxe5 16. fxe5 Nd7 17. Bg3) 8. f4 e5 9. fxe5 dxe5 10. O-O-O Bb7 (10... h6 11. Nd5 Bb7 12. Bxf6 Nxf6 13. Nxb5 Nxd5 14. exd5 Be7 15. d6 Bg5+ 16. Kb1 axb5 17. Qxe5+ Kf8 18. d7 Bf6 19. Qc5+ Kg8 20. Bxb5 Ba6 21. Bxa6 Rxa6 22. Qc8 Ra8 23. Qxd8+ Rxd8 24. Rhe1 Kh7 25. c4) (10... Qb6 11. Nd5 Nxd5 12. exd5 Qg6 13. h4 Bd6 14. Nc6 O-O 15. Ne7+ Bxe7 16. Bxe7 Re8 17. d6 Bb7 18. Kb1 Rac8 19. h5 Qe6 20. Rh4) (10... exd4 11. e5 Be7 12. exf6 gxf6 13. Nd5 fxg5 14. Re1 Nf6 15. Nxe7 Be6 16. Nc6 Qd5 17. Qf2 Qxc6 18. Qxf6 Kd7 19. h4 g4 20. Bd3) 11. Nf5 Qc7 (11... Qb6 12. g4 g6 13. Ne3 h6 14. Bxf6 Nxf6 15. h4 Bg7 16. h5 O-O 17. g5 Nxh5 18. Ncd5 Qd8 19. Rxh5 gxh5 20. Qxh5 Qxg5 21. Qxg5 hxg5 22. Ne7+ Kh7 23. Bd3) 12. g4 g6 13. Ne3 h6 14. Bxf6 Nxf6 15. Qf3 Bc5 16. Ned5 Nxd5 17. Nxd5 Bxd5 18. exd5 *
+
+
+[Event "e4 vs Sicilian: 6...Nbd7  7...g6"]
+[Site "https://lichess.org/study/dgldIBYr/fGLDjiVh"]
+[Result "*"]
+[UTCDate "2023.04.02"]
+[UTCTime "11:52:29"]
+[Variant "Standard"]
+[ECO "B94"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 Nbd7 7. Qe2 g6 8. O-O-O Bg7 (8... Qc7 9. h4 h6 10. e5 dxe5 11. Bxf6 { [%cal Gd7f6,Gd4b5,Ga6b5,Gc3b5,Gc7b8,Ge2c4] } 11... exf6 12. Nd5 Qd6 13. Qc4 exd4 14. Nc7+ Kd8 15. Nxa8 b5 16. Qxf7 Bb7 17. Re1 Be7 18. Nc7 Ne5 19. Qg7 Rf8 20. f4 Rf7 21. Qg8+ Kxc7 22. fxe5) (8... e5 9. Nd5 h6 10. Qc4 hxg5 11. Nc7+ Qxc7 12. Qxc7 exd4 13. Rxd4 g4 14. Rxd6 Bxd6 15. Qxd6 Nxe4 16. Qb4) 9. h4 h5 (9... h6 10. Bxf6 Bxf6 11. h5 g5 12. Nd5 Bxd4 13. Rxd4 Ne5) 10. Kb1 Qc7 11. g4 hxg4 (11... Nb6 12. gxh5 Nxh5 13. Nd5 Nxd5 14. exd5 Nf6 15. Bg2) 12. h5 Rxh5 13. Rxh5 gxh5 14. Nf5 Bf8 15. Bg2 Qc5 (15... Rb8 16. f4 gxf3 17. Bxf3 b5 18. e5 dxe5 19. Nd5 Nxd5 20. Bxd5 Nf6 21. Bxf6 exf6 22. Qxh5 Bxf5 23. Qxf5) (15... e6 16. e5 dxe5 17. Ng3 Rb8 18. Qd2 b5 19. Bxf6 Nxf6) 16. f4 gxf3 17. Bxf3 e6 18. Be3 Qe5 19. Nh6 Bxh6 20. Bxh6 b5 21. Rg1 b4 22. Nd1 Rb8 23. Rg5 Qd4 24. Rg7 *
+
+
+[Event "e4 vs Sicilian: 6...Nbd7  7...h6"]
+[Site "https://lichess.org/study/dgldIBYr/FHDi5eTQ"]
+[Result "*"]
+[UTCDate "2023.04.03"]
+[UTCTime "12:22:33"]
+[Variant "Standard"]
+[ECO "B94"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 Nbd7 7. Qe2 h6 8. Bh4 b5 (8... g5 9. Bg3 e6 10. O-O-O Qc7 11. h4 Rg8 12. hxg5 hxg5 13. Qe3 Ne5 14. Nf3 Nfg4 15. Qd2) (8... e6 9. f4 Qc7 10. O-O-O b5 11. e5 dxe5 12. fxe5 Nxe5 13. Bg3 Nfd7 14. Nf3 f6 15. Nxe5 Nxe5 16. Qh5+ Qf7 17. Be2) 9. f4 g5 (9... e5 10. O-O-O Bb7 11. Nf5 Qb6 12. Kb1 Rc8 13. Nd5 Nxd5 14. exd5 g6 15. Ne3) 10. fxg5 hxg5 11. Bxg5 Bb7 12. O-O-O e6 13. g4 b4 (13... Be7 14. Bg2 Ne5 15. h3 Rc8 16. Kb1) 14. Nd5 exd5 15. exd5+ Ne5 16. Bg2 Be7 17. Nf5 Rg8 18. h4 Rg6 19. Rhe1 Bc8 20. Qd2 *
+
+
+[Event "e4 vs Sicilian: 6...Nbd7  8...g6"]
+[Site "https://lichess.org/study/dgldIBYr/FOGQ4xBD"]
+[Result "*"]
+[UTCDate "2023.04.05"]
+[UTCTime "14:19:09"]
+[Variant "Standard"]
+[ECO "B94"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 Nbd7 7. Qe2 h6 8. Bh4 g6 9. f4 e5 10. fxe5 dxe5 11. O-O-O Qc7 (11... Be7 12. Nb3 O-O 13. Bxf6 Bxf6 14. Kb1 b5 15. g3 Qc7 16. Nd5 Qd6 17. h4) 12. Nb3 b5 13. Nd5 Nxd5 14. exd5 Bd6 (14... Bb7 15. Qd2 Rc8 16. Kb1 Bd6 17. Bd3 f5 18. c3) 15. Qd2 O-O (15... Kf8 16. g4 Kg7 17. Qg2 Bb7 18. Bd3 a5 19. Nd2 g5 20. Bg3) (15... f5 16. g4 f4 17. Bd3) 16. Qxh6 Bb7 17. Kb1 Rfe8 18. Be2 Rac8 19. Qc1 *
+
+
+[Event "e4 vs Sicilian: 6...e6 7.f4  Introduction and Sidelines"]
+[Site "https://lichess.org/study/dgldIBYr/rCFJR4Om"]
+[Result "*"]
+[UTCDate "2023.04.06"]
+[UTCTime "13:26:49"]
+[Variant "Standard"]
+[ECO "B98"]
+[Opening "Sicilian Defense: Najdorf Variation, Traditional Line"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 (7... Nc6 8. Nxc6 bxc6 9. e5 h6 10. Bh4 g5 11. fxg5 Nd5 12. Ne4 Qb6 13. c3 dxe5 (13... Qxb2 14. Rb1 Qxa2 15. g6 fxg6 16. Bd3 Nf4 17. Nf6+ Kf7 18. Bxg6+ Kxg6 19. Qg4+ Kf7 20. O-O) (13... Rb8 14. g6 fxg6 15. Nf6+ Kf7 16. Nxd5 exd5 17. Qf3+ Kg8 18. Bd3 dxe5 19. Bxg6) 14. g6 fxg6 15. Qc2 Rb8 16. O-O-O Be7 17. Bg3) (7... Bd7 8. Qf3 Nc6 9. O-O-O Nxd4 10. Rxd4 Bc6 11. Be2 Be7 12. Qg3 Qa5) 8. Qf3 Qc7 (8... Qa5 9. O-O-O Bd7 10. Bxf6 Bxf6 11. e5 dxe5 12. Nxe6 Bxe6 13. Qxb7 exf4 14. Qxa8 O-O) 9. O-O-O O-O 10. Qg3 Nbd7 11. Bd3 b5 12. Rhe1 b4 13. Nd5 exd5 14. Nf5 Bd8 15. Nxg7 Kh8 16. exd5 *
+
+
+[Event "e4 vs Sicilian: 6...e6 7.f4  7...Qc7"]
+[Site "https://lichess.org/study/dgldIBYr/CYB0S0lM"]
+[Result "*"]
+[UTCDate "2023.04.07"]
+[UTCTime "16:55:32"]
+[Variant "Standard"]
+[ECO "B96"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Qc7 8. Qe2 Nc6 (8... b5 9. a3 Bb7 10. O-O-O Be7 11. f5 e5 12. Bxf6 gxf6 13. Nb3) 9. O-O-O Nxd4 (9... Bd7 10. Nxc6 bxc6 11. Qe3 a5 12. Be2) (9... Be7 10. Nxc6 bxc6 11. e5 dxe5 12. Qxe5 Qb6 13. Be2 h6 14. Na4 Qb7 15. Bh4 O-O 16. Rd3) 10. Rxd4 Be7 (10... b5 11. g3 Rb8 12. Bg2 b4 13. Bxf6 bxc3 14. Rc4 cxb2+ 15. Kb1 Qb7 16. Bc3) 11. Kb1 h6 (11... O-O 12. g3 h6 13. h4 b5 14. e5 dxe5 15. fxe5 Nd5 16. Nxd5 exd5 17. Bg2) 12. Bh4 O-O (12... g5 13. fxg5 Nd7 14. g6 Bxh4 15. gxf7+ Kf8 16. e5 Qd8 17. Qh5 Qg5 18. Qd1 dxe5 19. Rd6) 13. g3 b5 14. e5 dxe5 15. fxe5 g5 16. Bxg5 hxg5 17. h4 Bb7 18. hxg5 Ng4 { [%csl Gb3] } 19. Rh4 Qxe5 20. Rd7 Qxe2 21. Bxe2 Bf3 *
+
+
+[Event "e4 vs Sicilian: 6...e6 7.f4  The Plugaevsky Variation"]
+[Site "https://lichess.org/study/dgldIBYr/OBb0Cpab"]
+[Result "*"]
+[UTCDate "2023.04.08"]
+[UTCTime "13:50:28"]
+[Variant "Standard"]
+[ECO "B96"]
+[Opening "Sicilian Defense: Najdorf Variation, Polugaevsky Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 b5 8. e5 dxe5 9. fxe5 Qc7 10. exf6 Qe5+ 11. Be2 Qxg5 12. O-O Ra7 (12... Qe5 13. Kh1 Ra7 14. Nf3 Qxf6 15. Ne4 Qd8 16. Qe1) 13. Qd3 Rd7 14. Ne4 Qe5 (14... Qg6 15. Qe3 Bb7 16. Bd3 Qh6 17. Rf4) 15. Nf3 Qxb2 (15... Qc7 16. Qe3 Bb7 17. a4 b4 18. Kh1 Bxe4 19. fxg7 Bxg7 20. Qxe4 Bxb2 21. Rad1) 16. Qe3 Bb7 17. Rab1 Qxa2 (17... Qxc2 18. Nfg5 Qc7 19. a4 Qe5 20. axb5 a5 21. Rbc1) 18. c4 Bxe4 19. fxg7 Bxg7 20. Qxe4 Rd6 21. cxb5 O-O 22. b6 *
+
+
+[Event "e4 vs Sicilian: Gelfand Variation  Introduction"]
+[Site "https://lichess.org/study/dgldIBYr/NCNe7P3B"]
+[Result "*"]
+[UTCDate "2023.04.09"]
+[UTCTime "14:14:25"]
+[Variant "Standard"]
+[ECO "B96"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Nbd7 8. Qe2 Qc7 9. O-O-O b5 (9... Be7 10. g4 h6 11. Bh4 g5 12. fxg5 hxg5 13. Bxg5 b5 14. a3) 10. a3 Be7 (10... Bb7 11. g4 Rc8 12. Bxf6 gxf6 13. h4 Nb6 14. Kb1 Nc4 15. Rh3 Qb6 16. f5 e5 17. Nd5 Qd8) 11. g4 h6 (11... Bb7 12. Bh4 g6 (12... Nb6 13. g5 Nfd7 14. Rg1) (12... Nc5 13. Bg2 O-O 14. g5) 13. f5 e5 14. Nb3 Rc8 15. Bxf6 Nxf6) 12. Bh4 Rb8 13. Bg2 b4 14. axb4 Rxb4 15. Be1 Qb6 16. Bf2 Qc7 *
+
+
+[Event "e4 vs Sicilian: Gelfand Variation  The Main Line"]
+[Site "https://lichess.org/study/dgldIBYr/IMdHc29n"]
+[Result "*"]
+[UTCDate "2023.04.12"]
+[UTCTime "15:25:45"]
+[Variant "Standard"]
+[ECO "B96"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Nbd7 8. Qe2 Qc7 9. O-O-O b5 10. a3 Be7 11. g4 h6 12. Bh4 Bb7 13. Kb1 Rc8 (13... Rb8 14. Rg1 Ba8 15. Be1 Nc5 16. Bg2 Nfd7 17. h4 Nb6 18. b3) (13... g5 14. fxg5 Nh7 15. Bg3 hxg5 16. h4 gxh4 17. Rxh4 Bxh4 18. Ncxb5 axb5 19. Nxb5 Qd8 20. Nxd6+ Kf8 21. Nxb7 Qb6 22. Rxd7 Nf6 23. Bc7) 14. Rg1 g5 (14... g6 15. f5 e5 16. Nb3 g5 17. Be1 h5 18. h3 Nc5 19. Nxc5) (14... Qb8 15. Rg3 g5 16. fxg5 Nh7 17. Rh3 Nxg5 18. Re3 Ne5 19. Bg3 Nc4 20. Red3) 15. fxg5 hxg5 16. Bxg5 Qb6 17. Qe1 Rxc3 (17... Ne5 18. h4 Nfxg4 19. Be2 Nf6 20. Rf1 Ned7 21. Nd5 exd5 22. exd5) 18. Bxf6 Nxf6 19. Qxc3 Nxe4 20. Qe1 *
+
+
+[Event "e4 vs Sicilian: Classical Main Line  The Gothernburg Variation"]
+[Site "https://lichess.org/study/dgldIBYr/zZIAJ4cr"]
+[Result "*"]
+[UTCDate "2023.04.13"]
+[UTCTime "16:02:40"]
+[Variant "Standard"]
+[ECO "B98"]
+[Opening "Sicilian Defense: Najdorf Variation, Goteborg Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Be7 8. Qf3 h6 9. Bh4 g5 10. fxg5 Nfd7 11. Nxe6 fxe6 12. Qh5+ Kf8 13. Bb5 Rh7 14. e5 Nxe5 (14... axb5 15. exd6 Bxg5 16. Bxg5 Qxg5 17. O-O+ Nf6 18. Rxf6+ Qxf6 19. Rf1) 15. O-O+ Kg8 16. g6 Bxh4 (16... Rg7 17. Bxe7 Rxe7 18. Bd3 Kg7 19. Rf4) (16... Nxg6 17. Bxe7 Nxe7 18. Bd3 Rg7) 17. gxh7+ Kxh7 18. Bd3+ Kg7 19. Ne4 Nbc6 20. Nxd6 Qxd6 21. Qxh4 Qd4+ 22. Qxd4 Nxd4 23. Be4 Nf5 24. Rae1 { [%cal Gf1f3,Gf3c3,Gc3c7] } *
+
+
+[Event "e4 vs Sicilian: Poisoned Pawn  Introduction and 12...Nd5!?"]
+[Site "https://lichess.org/study/dgldIBYr/WEvCXdDY"]
+[Result "*"]
+[UTCDate "2023.04.14"]
+[UTCTime "13:31:31"]
+[Variant "Standard"]
+[ECO "B97"]
+[Opening "Sicilian Defense: Najdorf Variation, Poisoned Pawn Accepted"]
+[Annotator "https://lichess.org/@/heroku"]
+
+1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Bg5 e6 7. f4 Qb6 8. Qd2 Qxb2 9. Rb1 Qa3 10. e5 h6 (10... dxe5 11. fxe5 Nfd7 12. Ne4 Qxa2 13. Rd1 Qd5 14. Qe3 Qxe5 15. Be2 Bc5 16. O-O f5 17. Nxc5 Qxe3+ 18. Bxe3 Nxc5 19. Nxf5 exf5 20. Bxc5) (10... Nfd7 11. f5 Nxe5 12. fxe6 fxe6 13. Be2 d5 14. O-O Bc5 15. Kh1 Bxd4 16. Nxd5 exd5 17. Qxd4 Qd6 18. Bh5+ g6 19. Rf6 Nbc6 20. Rxd6 Nxd4 21. Rd8+ Kf7 22. Rxh8 gxh5 23. Rf1+ Nf5 24. Rxf5+ Bxf5 25. Rxa8) 11. Bh4 dxe5 12. fxe5 Nd5 13. Nxd5 exd5 14. e6 Bxe6 15. Nxe6 fxe6 16. Bd3 Be7 17. Bg6+ Kd8 18. Bxe7+ Qxe7 19. O-O *
+
+

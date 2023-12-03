@@ -1,0 +1,56 @@
+.contact {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+}
+
+.contact .tabs {
+    border-right: 2px solid #994d1c;
+}
+
+.contact .tabs li {
+    user-select: none;
+    cursor: pointer;
+    padding: 1em 0.5em;
+    text-align: right;
+    transition: 0.6s;
+}
+
+.contact .tabs li.active,
+.contact .tabs li:hover {
+    box-shadow: inset -4px 0 0 #994d1c;
+}
+
+.contact .tabs li.twitch {
+    color: #6441A5;
+}
+
+.contact .tabs li.twitch.active,
+.contact .tabs li.twitch:hover {
+    box-shadow: inset -4px 0 0 #6441A5;
+}
+
+
+
+.contact .content {
+    flex: 1;
+    padding: 1em 3em;
+}
+
+.contact .content h1 {
+    padding-bottom: 0.5em;
+}
+
+.contact .donate {
+    display: flex;
+    justify-content: center;
+    padding: 1em;
+    margin-bottom: 1em;
+    background: #6441A5;
+    color: white;
+}
+
+.contact .donate h1 {
+    text-align: center;
+    max-width: 600px;
+}

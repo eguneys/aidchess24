@@ -1,0 +1,41 @@
+.main > .repertoires {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+}
+
+.repertoires > * {
+    flex: 1 1 45%;
+    text-align: center;
+}
+
+.repertoires ul {
+    margin-left: 16px;
+    border-radius: 4px;
+    border: 1px solid #e48f45;
+    color: black;
+    height: 200px;
+    overflow: auto;
+    cursor: pointer;
+    user-select: none;
+}
+
+.repertoires ul li {
+    padding: 1em 0;
+}
+
+.repertoires ul li.soon {
+    opacity: 0.6;
+}
+
+.repertoires ul li a {
+    font-weight: bold;
+}
+
+.repertoires ul li a:hover {
+    color: black;
+}
+
+.repertoires ul li:hover {
+    background: #e48f45;
+}
