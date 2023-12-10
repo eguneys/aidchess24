@@ -11,8 +11,8 @@
 }
 
 @font-face {
-  font-family: 'Ledger';
-  src: url('assets/Ledger.ttf');
+  font-family: 'Kantumruy';
+  src: url('assets/KantumruyPro-Regular.ttf');
 }
 
 
@@ -24,7 +24,7 @@
 
 
 :root {
-  font-family: 'Ledger';
+  font-family: 'Kantumruy';
   line-height: 1.5;
   font-weight: 400;
 

@@ -5,9 +5,12 @@ import './App.css'
 
 const Home = lazy(() => import('./Home'))
 const Repertoires = lazy(() => import('./Repertoires'))
-const Repertoire = lazy(() => import('./Repertoire'))
 const Contact = lazy(() => import('./Contact'))
 
+const Repertoire = lazy(() => import('./Repertoire'))
+const Masters = lazy(() => import('./Masters'))
+const Tactics = lazy(() => import('./Tactics'))
+const Endgames = lazy(() => import('./Endgames'))
 
 export const MyApp = () => {
     return (<>
@@ -37,7 +40,10 @@ const AppInRouter = () => {
           <Routes>
               <Route path='/' component={Home}/>
               <Route path='/repertoires' component={Repertoires}/>
-              <Route path='/repertoire/:id' component={Repertoire}/>
+              <Route path='/openings/:id' component={Repertoire}/>
+              <Route path='/masters/:id' component={Masters}/>
+              <Route path='/tactics/:id' component={Tactics}/>
+              <Route path='/endgames/:id' component={Endgames}/>
               <Route path='/contact' component={Contact}/>
               <Route path='/terms' component={Contact}/>
               <Route path='/privacy' component={Contact}/>

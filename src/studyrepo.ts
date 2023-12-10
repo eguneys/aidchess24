@@ -90,9 +90,9 @@ const HardCategories: any = {
     ['Tata Steel 2023', ''],
   ],
   'Tactics': [
-    ['50 Puzzles 1600', ''],
-    ['50 Puzzles 2000', ''],
-    ['50 Puzzles 2200', ''],
+    ['50 Puzzles 1600', 'u1600'],
+    ['50 Puzzles 2000', 'u2000'],
+    ['50 Puzzles 2200', 'u2200'],
   ],
   'Endgames': [
     ['100 Endgames You Must Know', ''],

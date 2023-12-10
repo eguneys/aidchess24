@@ -13,7 +13,7 @@ const CategoryView = (props: { name: string, list: StudyInRepertoireCategory[]})
        <ul>
         <For each={props.list}>{ (item: StudyInRepertoireCategory) => 
           <Show fallback={
-            <li onClick={() => navigate(`/repertoire/${item.study_link}`)}><h3>{item.study_name}</h3></li>
+            <li onClick={() => navigate(`/${item.category.toLowerCase()}/${item.study_link}`)}><h3>{item.study_name}</h3></li>
           } when={item.study_link === ''}>
             <li class='soon'><h3>{item.study_name}</h3><span>Coming Soon</span></li>
           </Show>

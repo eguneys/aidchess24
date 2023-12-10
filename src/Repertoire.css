@@ -94,7 +94,7 @@
 }
 
 .repertoire .list div h3 {
-    font-family: Ledger;
+    font-family: Kantumruy;
 }
 
 .repertoire ul li .progress {
@@ -104,7 +104,7 @@
 .repertoire ul li div span,
 .repertoire ul li::marker {
  
-    font-family: Ledger;
+    font-family: Kantumruy;
     color: #994d1c;
     font-weight: bold;
 }
@@ -157,7 +157,7 @@
 
 .repertoire .replay-header h4 {
 
-    font-family: Ledger;
+    font-family: Kantumruy;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
