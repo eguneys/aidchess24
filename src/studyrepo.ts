@@ -45,7 +45,7 @@ const reformatStudyPGN = (pgns: Game<PgnNodeData>[], study_name: string): PGNStu
 }
 
 const read_study_pgn = (id: string, study_name: string) => 
-    fetch(`/pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(parsePgn(_), study_name))
+    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(parsePgn(_), study_name))
 
 
 class StudyRepo {
