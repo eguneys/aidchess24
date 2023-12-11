@@ -12,7 +12,8 @@
     "@solidjs/meta": "^0.29.1",
     "@solidjs/router": "^0.9.1",
     "chessops": "^0.12.8",
-    "solid-js": "^1.8.5"
+    "solid-js": "^1.8.5",
+    "shess": "link://../shess"
   },
   "devDependencies": {
     "typescript": "^5.2.2",

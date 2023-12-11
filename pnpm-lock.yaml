@@ -14,6 +14,9 @@ dependencies:
   chessops:
     specifier: ^0.12.8
     version: 0.12.8
+  shess:
+    specifier: link://../shess
+    version: link:../shess
   solid-js:
     specifier: ^1.8.5
     version: 1.8.7

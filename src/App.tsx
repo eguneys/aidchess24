@@ -11,6 +11,7 @@ const Repertoire = lazy(() => import('./Repertoire'))
 const Masters = lazy(() => import('./Masters'))
 const Tactics = lazy(() => import('./Tactics'))
 const Endgames = lazy(() => import('./Endgames'))
+const Shalala = lazy(() => import('./Shalala'))
 
 export const MyApp = () => {
     return (<>
@@ -30,6 +31,7 @@ const AppInRouter = () => {
           <A href='/'>aidchess.com</A>
 
           <div class='links'>
+            <A href='/shalala'>Shalala</A>
             <A href='/repertoires'>Repertoires</A>
             <A href='/donate'>Donate</A>
           </div>
@@ -39,6 +41,7 @@ const AppInRouter = () => {
       <div class='main'>
           <Routes>
               <Route path='/' component={Home}/>
+              <Route path='/shalala' component={Shalala}/>
               <Route path='/repertoires' component={Repertoires}/>
               <Route path='/openings/:id' component={Repertoire}/>
               <Route path='/masters/:id' component={Masters}/>
