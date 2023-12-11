@@ -1,4 +1,4 @@
-import { hashIntegration, Router, Routes, Route, A } from "@solidjs/router";
+import { Router, Routes, Route, A } from "@solidjs/router";
 import { lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
 import './App.css'
@@ -15,7 +15,7 @@ const Endgames = lazy(() => import('./Endgames'))
 export const MyApp = () => {
     return (<>
     
-    <Router source={hashIntegration()}>
+    <Router>
         <MetaProvider>
           <AppInRouter/>
         </MetaProvider>

@@ -1,4 +1,4 @@
-import { For, createSignal, createEffect, createResource, createMemo  } from 'solid-js'
+import { createSignal, createEffect, createResource, createMemo  } from 'solid-js'
 import './Repertoire.css'
 import { useParams } from '@solidjs/router'
 
@@ -13,19 +13,6 @@ const ProgressOutOf = (props: { width: number, nb: number }) => {
     <div class='progress'>
         <div class='bar' style={`width: ${(props.width/props.nb) * 100}%`}/>
         <h3>{`${props.width}/${props.nb}`}</h3>
-    </div>
-    </>)
-}
-
-
-
-
-const Progress = (props: { width: number }) => {
-    return (<>
-    
-    <div class='progress'>
-        <div class='bar' style={`width: ${props.width}%`}/>
-        <h3>{`%${props.width}`}</h3>
     </div>
     </>)
 }
