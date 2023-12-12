@@ -2,8 +2,9 @@ import { createEffect, onMount } from 'solid-js'
 import { Chessground } from 'chessground'
 import { Api } from 'chessground/api'
 import { Color, Dests, Key } from 'chessground/types'
+import { piece } from 'chessops/debug'
 
-const Chessboard = (props: { onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
+const Chessboard = (props: { doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
 
     let board: HTMLElement
     let ground: Api
@@ -31,10 +32,28 @@ const Chessboard = (props: { onMoveAfter: (orig: Key, dest: Key) => void, color:
     })
 
     createEffect(() => {
-
       ground.set({
         movable: { color: props.color, dests: props.dests }
       })
+    })
+
+    createEffect(() => {
+      let key = props.doPromotion
+      if (key) {
+        let piece = ground.state.pieces.get(key)!
+        ground.setPieces(
+          new Map([
+            [
+              key,
+              {
+                color: piece.color,
+                role: 'queen',
+                promoted: true
+              }
+            ]
+          ])
+        )
+      }
     })
 
 
