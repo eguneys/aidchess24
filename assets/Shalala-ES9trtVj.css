@@ -1,0 +1,1 @@
+.shalala{display:grid;width:100%;grid-template-areas:"board" "tree";grid-template-columns:82vh;justify-content:center;gap:.5em}@media (min-width: 768px){.shalala{grid-template-areas:"board tree";grid-template-columns:minmax(400px,82vh) 3fr}}.chessboard-wrap,.chesstree-wrap{border:1px solid black}.chessboard-wrap{grid-area:board;aspect-ratio:1/1}.chesstree-wrap{grid-area:tree}
