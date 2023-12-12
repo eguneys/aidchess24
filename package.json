@@ -11,9 +11,10 @@
   "dependencies": {
     "@solidjs/meta": "^0.29.1",
     "@solidjs/router": "^0.9.1",
+    "chessground": "^9.0.4",
     "chessops": "^0.12.8",
-    "solid-js": "^1.8.5",
-    "shess": "link://../shess"
+    "shess": "link://../shess",
+    "solid-js": "^1.8.5"
   },
   "devDependencies": {
     "typescript": "^5.2.2",

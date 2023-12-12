@@ -97,7 +97,7 @@ const Privacy = () => {
         <li>We do not collect any personal information from users.</li>
         <li>Your progress and challenges are stored locally on your device, using local storage.</li>
         <br/>
-        <li>We do not use tracking mechanicms, cookies, or any similar technologies.</li>
+        <li>We do not use tracking mechanisms, cookies, or any similar technologies.</li>
         <br/>
         <li>Our website is ad-free, providing a focused and uninterrupted chess learning experience.</li>
         <br/>

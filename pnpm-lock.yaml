@@ -11,6 +11,9 @@ dependencies:
   '@solidjs/router':
     specifier: ^0.9.1
     version: 0.9.1(solid-js@1.8.7)
+  chessground:
+    specifier: ^9.0.4
+    version: 9.0.4
   chessops:
     specifier: ^0.12.8
     version: 0.12.8
@@ -787,6 +790,10 @@ packages:
       escape-string-regexp: 1.0.5
       supports-color: 5.5.0
     dev: true
+
+  /chessground@9.0.4:
+    resolution: {integrity: sha512-KeZd/kcXSKQOGO6LOKu/3bAyVSMh7hgPPharMF15HMfNlHfcBpIVZIDAQRO2PNaNMzPWl0LKc05uFHt0D+lZGA==}
+    dev: false
 
   /chessops@0.12.8:
     resolution: {integrity: sha512-/9pkJa++RU1WiIa/pH4AdFh6ulcxeMlkYm7sc4xAb1jjcmu6MlsOSTjtOUhUXcw5aVJAIrWY2IwPNucNJLCpFw==}

@@ -1,0 +1,58 @@
+.cg-wrap {
+    --cg-ccw: #ffffdd;
+    --cg-ccb: #6d8753;
+    --cg-cs: none;
+}
+
+.is2d cg-board {
+    background-image: url('green.svg');
+    background-size: cover;
+
+}
+
+.cg-wrap coords {
+    font-size: 1em;
+}
+
+.cg-wrap coords.ranks {
+    flex-flow: column-reverse;
+    height: 100%;
+    top: 1px;
+    right: 0;
+    width: 0.8em;
+}
+
+.cg-wrap coords.files {
+    text-transform: lowercase;
+    padding-left: 4px;
+    text-align: left;
+    height: 1.4em;
+    bottom: 0px;
+    left: 0;
+}
+
+
+coords .is2d .cg-wrap coords coord {
+    color: #fff !important;
+    text-shadow: 0 1px 2px #000 !important
+}
+
+coords .is2d .cg-wrap coords.files {
+    bottom: calc(1px - 2.5%)
+}
+
+coords .is2d .cg-wrap coords.files coord {
+    padding-left: 3px
+}
+
+coords {
+    text-shadow: var(--cg-cs, 0 1px 2px #000)
+}
+
+.orientation-white .files coord:nth-child(2n+1),.orientation-white .ranks coord:nth-child(2n),.orientation-black .files coord:nth-child(2n),.orientation-black .ranks coord:nth-child(2n+1) {
+    color: var(--cg-ccw, #fff)
+}
+
+.orientation-white .files coord:nth-child(2n),.orientation-white .ranks coord:nth-child(2n+1),.orientation-black .files coord:nth-child(2n+1),.orientation-black .ranks coord:nth-child(2n) {
+    color: var(--cg-ccb, #fff)
+}

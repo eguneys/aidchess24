@@ -3,26 +3,11 @@ import Chessboard from './Chessboard'
 import Chesstree from './Chesstree'
 import { Signal, createMemo, createSignal } from 'solid-js'
 import { INITIAL_FEN, makeFen, parseFen } from 'chessops/fen'
-import { Chess, Position, makeSquare } from 'chessops'
-
-type Dests = { [key: string]: string[] }
+import { Chess, Color, Position, parseUci, } from 'chessops'
+import { chessgroundDests } from 'chessops/compat'
+import { Dests, Key } from 'chessground/types'
 
 type Memo<A> = () => A
-
-function compatShessDests(pos: Position) {
-    let res: Dests = {}
-
-    let ctx = pos.ctx()
-    for (let [from, squares] of pos.allDests(ctx)) {
-        if (squares.nonEmpty()) {
-
-            res[makeSquare(from)] = Array.from(squares, makeSquare)
-
-        }
-    }
-    return res
-}
-
 
 class Shala {
 
@@ -41,21 +26,24 @@ class Shala {
     _position: Signal<Position>
     m_fen: Memo<string>
     m_dests: Memo<Dests>
+    m_color: Memo<Color>
 
     constructor() {
 
-        this._position = createSignal(Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap())
+        this._position = createSignal(Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap(), { equals: false })
 
-        this.m_dests = createMemo(() => compatShessDests(this.position))
+        this.m_dests = createMemo(() => chessgroundDests(this.position))
 
         this.m_fen = createMemo(() => makeFen(this.position.toSetup()))
 
+        this.m_color = createMemo(() => this.position.turn)
+
     }
 
-    pull_fen = (board_fen: string) => {
-      let fen = board_fen.replace('d', 'p') + ' b KQkq - 0 1'
-      console.log(fen)
-      this.position = Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
+    on_move_after = (orig: Key, dest: Key) => {
+      let uci = orig + dest
+      this.position.play(parseUci(uci)!)
+      this.position = this.position
     }
 
 
@@ -75,7 +63,7 @@ const Shalala = () => {
     return (<>
     <div class='shalala'>
       <div class='chessboard-wrap'>
-        <Chessboard pull_fen={shalala.pull_fen} fen={shalala.fen} dests={shalala.dests} />
+        <Chessboard onMoveAfter={shalala.on_move_after} color={shalala.m_color()} dests={shalala.dests} />
       </div>
       <div class='chesstree-wrap'>
         <Chesstree/>
