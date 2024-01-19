@@ -2,7 +2,6 @@ import { createEffect, onMount } from 'solid-js'
 import { Chessground } from 'chessground'
 import { Api } from 'chessground/api'
 import { Color, Dests, Key } from 'chessground/types'
-import { piece } from 'chessops/debug'
 
 const Chessboard = (props: { doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
 

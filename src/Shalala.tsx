@@ -31,7 +31,7 @@ class Shala {
       return this._promotion[0]()
     }
 
-    set promotion(dest: Key) {
+    set promotion(dest: Key | undefined) {
       this._promotion[1](dest)
     }
 
