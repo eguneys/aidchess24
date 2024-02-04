@@ -3,7 +3,9 @@ import { Chess, Position, makeUci, parseUci } from 'chessops'
 import { INITIAL_FEN, makeFen, parseFen } from 'chessops/fen'
 import { PgnNodeData, ChildNode, parsePgn } from 'chessops/pgn'
 import { makeSan, parseSan } from 'chessops/san'
+import { Signal, createSignal, untrack } from 'solid-js'
 
+export { INITIAL_FEN } from 'chessops/fen'
 
 export class Pgn {
     static make = (pgn: string) => {
@@ -55,17 +57,33 @@ export type MoveData = {
 }
 
 
-export type TreeNode<V> = {
-    data: V
-    children: TreeNode<V>[]
+export class TreeNode<V> {
+
+    static make = <V>(data: V) => {
+        return new TreeNode<V>(data)
+    }
+
+    get children() {
+        return this._children[0]()
+    }
+
+    set children(c: TreeNode<V>[]) {
+        this._children[1](c)
+    }
+
+    _children: Signal<TreeNode<V>[]>
+
+    constructor(readonly data: V) {
+        this._children = createSignal([] as TreeNode<V>[])
+    }
 }
 
-class MoveTree {
+export class MoveTree {
 
     static make = (before_fen: string, ucis: string[]) => {
         let uci = ucis[0]
         let rest = ucis.slice(1)
-        let res = new MoveTree({ data: MoveTree.make_data(before_fen, uci, 1, []), children: [] })
+        let res = new MoveTree(TreeNode.make(MoveTree.make_data(before_fen, uci, 1, [])))
         res.append_ucis(rest)
         return res
     }
@@ -117,7 +135,7 @@ class MoveTree {
                 } else {
                     path.push(p)
                     res = i_res
-                    i = res.children
+                    i = untrack(() => res.children)
                 }
             }
         }
@@ -142,11 +160,11 @@ class MoveTree {
     append_ucis(ucis: string[]) {
         let [path, i, rest] = this._find_path(ucis)
         for (let uci of rest) {
-            let child = {
-                data: MoveTree.make_data(i.data.after_fen, uci, i.data.ply + 1, path),
-                children: []
-            }
-            i.children.push(child)
+            let child = TreeNode.make(
+                MoveTree.make_data(i.data.after_fen, uci, i.data.ply + 1, path)
+            )
+            let i_children = untrack(() => i.children)
+            i.children = [...i_children, child]
             i = child
             path = [...path, uci]
         }

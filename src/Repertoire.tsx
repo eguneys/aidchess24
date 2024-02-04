@@ -4,7 +4,9 @@ import { useParams } from '@solidjs/router'
 
 import StudyRepo from './studyrepo'
 import { Show } from 'solid-js'
-
+import { Shala } from './Shalala'
+import Chessboard from './Chessboard'
+import Chesstree from './Chesstree'
 
 
 
@@ -37,8 +39,24 @@ const Repertoire = () => {
     const selected_chapter = 
     createMemo(() => pgn()?.chapters.find(_ => _.name === selected_chapter_name()))
 
+
+    let shalala = new Shala()
+
+    const onWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName !== 'PIECE' &&
+        target.tagName !== 'SQUARE' &&
+        target.tagName !== 'CG-BOARD'
+      )
+        return;
+      e.preventDefault();
+      shalala.set_on_wheel(Math.sign(e.deltaY))
+
+    }
+
     return (<>
-    <div class='repertoire'>
+    <div onWheel={onWheel} class='repertoire'>
 
       <Show when={!pgn.loading} fallback={"Loading..."}>
 
@@ -62,7 +80,12 @@ const Repertoire = () => {
       <Show when={selected_chapter()}>{chapter => 
         <>
         <div class='board-wrap'>
-  
+              <Chessboard
+                doPromotion={shalala.promotion}
+                onMoveAfter={shalala.on_move_after}
+                fen_uci={shalala.fen_uci}
+                color={shalala.turnColor}
+                dests={shalala.dests} />
         </div>
         <div class='replay-wrap'>
   
@@ -75,7 +98,9 @@ const Repertoire = () => {
           </div>
   
           <div class='replay'>
-          
+            <div class='replay-v'>
+              <Chesstree on_wheel={shalala.on_wheel} add_uci={shalala.add_uci} on_set_fen_uci={shalala.on_set_fen_uci}/>
+            </div>
           </div>
         </div>
   

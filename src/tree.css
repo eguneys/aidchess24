@@ -6,7 +6,7 @@
 .chesstree {
     user-select: none;
     cursor: pointer;
-    white-space: 'normal';
+    white-space: normal;
     padding: 0.5em 0.7em;
    font-family: "Noto Chess", "Kantumruy"; 
 }
@@ -36,11 +36,19 @@
 
 
 .chesstree .lines {
-    padding-left: 1em;
+    padding-left: 0.5em;
+}
+
+.chesstree .lines:before {
+    content: ' ';
+    border-top: 2px solid #4a4a4a;
+    position: absolute;
+    margin-left: -9px;
+    width: 9px;
+    height: 6px;
 }
 
 .chesstree .lines .line {
-    position: relative;
     border-left: 2px solid #4a4a4a;
     padding-left: 8px;
 }
@@ -49,7 +57,12 @@
     position: absolute;
     width: 8px;
     height: 8px;
+    margin-top: 0.65em;
     margin-left: -8px;
     content: "";
     border-top: 2px solid #4a4a4a;
+}
+
+.chesstree .lines .line:first-child {
+    padding-top: 0.2em;
 }

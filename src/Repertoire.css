@@ -19,7 +19,19 @@
         'list list list'
         'board board replay';
         grid-template-columns: 1fr 0.5fr minmax(0, 1.5fr);
+        grid-template-rows: auto minmax(400px, 80vh)
     }
+}
+
+
+.repertoire .replay-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.repertoire .replay-wrap .replay {
+    position: relative;
+    overflow-y: scroll;
 }
 
 .repertoire .list-wrap {
