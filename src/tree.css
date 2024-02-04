@@ -1,0 +1,55 @@
+.chesstree-wrap {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.chesstree {
+    user-select: none;
+    cursor: pointer;
+    white-space: 'normal';
+    padding: 0.5em 0.7em;
+   font-family: "Noto Chess", "Kantumruy"; 
+}
+
+.chesstree .move {
+    display: inline-block;
+    padding: 0 0.1em;
+}
+
+.chesstree .move.on_path,
+.chesstree .move.on_path_end  {
+    box-shadow: 0 2px 0 0 orange;
+}
+
+.chesstree .move.on_path_end {
+    background: hsla(30, 50%, 70%, 1);
+}
+
+.chesstree .move:hover {
+    background: hsla(30, 50%, 70%, 0.8);
+    box-shadow: none;
+}
+
+.chesstree .move > .index {
+    padding-right: 0.2em;
+}
+
+
+.chesstree .lines {
+    padding-left: 1em;
+}
+
+.chesstree .lines .line {
+    position: relative;
+    border-left: 2px solid #4a4a4a;
+    padding-left: 8px;
+}
+
+.chesstree .lines .line:before {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    margin-left: -8px;
+    content: "";
+    border-top: 2px solid #4a4a4a;
+}

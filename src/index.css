@@ -16,6 +16,14 @@
 }
 
 
+@font-face {
+  font-family: 'Noto Chess';
+  font-display: block;
+  src: url('assets/lichess.chess.woff') format('woff');
+}
+
+
+
 * {
   padding: 0;
   margin: 0;

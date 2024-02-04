@@ -14,6 +14,7 @@
         grid-template-areas:
             "board tree";
         grid-template-columns: minmax(400px, 82vh) 3fr;
+        grid-template-rows: minmax(400px, 82vh);
     }
 }
 
