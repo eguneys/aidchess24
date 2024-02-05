@@ -25,19 +25,19 @@ const Repertoire = () => {
 
     const params = useParams()
 
-    const [pgn] = createResource(params.id, StudyRepo.read_study)
+    const [study] = createResource(params.id, StudyRepo.read_study)
 
 
     const [selected_chapter_name, set_selected_chapter_name] = createSignal()
 
     createEffect(() => {
-       let name = pgn()?.chapters[0].name
+       let name = study()?.chapters[0].name
 
        set_selected_chapter_name(name)
     })
 
     const selected_chapter = 
-    createMemo(() => pgn()?.chapters.find(_ => _.name === selected_chapter_name()))
+    createMemo(() => study()?.chapters.find(_ => _.name === selected_chapter_name()))
 
 
     let shalala = new Shala()
@@ -58,16 +58,16 @@ const Repertoire = () => {
     return (<>
     <div onWheel={onWheel} class='repertoire'>
 
-      <Show when={!pgn.loading} fallback={"Loading..."}>
+      <Show when={!study.loading} fallback={"Loading..."}>
 
       <div class='list-wrap'>
       <h1 class='header'>Repertoire</h1>
       <div class='list'>
 
 
-        <div><h3 class='title'>{pgn()!.name}</h3><Progress width={30}/></div>
+        <div><h3 class='title'>{study()!.name}</h3><Progress width={30}/></div>
         <ul>
-            <For each={pgn()!.chapters}>{ chapter =>
+            <For each={study()!.chapters}>{ chapter =>
               <li onClick={() => set_selected_chapter_name(chapter.name)} class={selected_chapter_name() === chapter.name ? 'active': ''}><div><h3>{chapter.name}</h3> <Progress width={0}/></div></li>
             }</For>
         </ul>
@@ -99,7 +99,7 @@ const Repertoire = () => {
   
           <div class='replay'>
             <div class='replay-v'>
-              <Chesstree on_wheel={shalala.on_wheel} add_uci={shalala.add_uci} on_set_fen_uci={shalala.on_set_fen_uci}/>
+              <Chesstree pgn={chapter().pgn} on_wheel={shalala.on_wheel} add_uci={shalala.add_uci} on_set_fen_uci={shalala.on_set_fen_uci}/>
             </div>
           </div>
         </div>

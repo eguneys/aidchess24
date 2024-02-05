@@ -8,42 +8,85 @@ import { Signal, createSignal, untrack } from 'solid-js'
 export { INITIAL_FEN } from 'chessops/fen'
 
 export class Pgn {
-    static make = (pgn: string) => {
 
-        let g = parsePgn(pgn)[0]
-        let event = g.headers.get('Event')!
-        let site = g.headers.get('Site')!
 
-        let child = g.moves.children[0]
+    static make_many = (pgn: string) => {
+        return parsePgn(pgn).map(g => {
 
-        let before_fen = INITIAL_FEN
-        let san = child.data.san
-        let i_pos = Chess.fromSetup(parseFen(before_fen).unwrap()).unwrap()
-        let move = parseSan(i_pos, san)!
-        let uci = makeUci(move)
+            let event = g.headers.get('Event')
+            let site = g.headers.get('Site')
 
-        let t = MoveTree.make(before_fen, [uci])
+            let white = g.headers.get('White')
+            let black = g.headers.get('Black')
+            let puzzle = g.headers.get('Puzzle')
 
-        append_children(t, child, i_pos, [])
+            let fen = g.headers.get('FEN')
 
-        function append_children(t: MoveTree, child: ChildNode<PgnNodeData>, before_pos: Position, path: string[]) {
-            let move = parseSan(before_pos, child.data.san)!
-            let after_pos = before_pos.clone()
-            after_pos.play(move)
+            let child = g.moves.children[0]
+
+            let before_fen = fen ?? INITIAL_FEN
+            let san = child.data.san
+            let i_pos = Chess.fromSetup(parseFen(before_fen).unwrap()).unwrap()
+            let move = parseSan(i_pos, san)!
             let uci = makeUci(move)
-            t.append_uci(uci, path)
-            child.children.forEach(child => {
-                append_children(t, child, after_pos, [...path, uci])
-            })
-        }
-        
-        let res = new Pgn(event, site, t)
-        return res
+
+            let t = MoveTree.make(before_fen, [uci])
+
+            append_children(t, child, i_pos, [])
+
+            function append_children(t: MoveTree, child: ChildNode<PgnNodeData>, before_pos: Position, path: string[]) {
+                let move = parseSan(before_pos, child.data.san)!
+
+                let after_pos = before_pos.clone()
+                after_pos.play(move)
+                let uci = makeUci(move)
+                t.append_uci(uci, path)
+                child.children.forEach(child => {
+                    append_children(t, child, after_pos, [...path, uci])
+                })
+            }
+
+            let res = new Pgn({
+                event, site, white, black,
+                puzzle
+             }, t)
+            return res
+        })
     }
 
 
+    get event() {
+        return this.headers.event
+    }
 
-    constructor(readonly event: string, readonly site: string, readonly tree: MoveTree) {}
+    get site() {
+        return this.headers.site
+    }
+
+    get white() {
+        return this.headers.white
+    }
+
+    get black() {
+        return this.headers.black
+    }
+
+    get puzzle() {
+        return this.headers.puzzle
+    }
+
+    constructor(
+        readonly headers: PgnHeaders,
+
+        readonly tree: MoveTree) { }
+}
+
+export type PgnHeaders = {
+   event?: string, 
+   site?: string,
+   white?: string,
+   black?: string,
+   puzzle?: string,
 }
 
 export type MoveData = {

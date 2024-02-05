@@ -3,7 +3,7 @@ import { Chessground } from 'chessground'
 import { Api } from 'chessground/api'
 import { Color, Dests, Key } from 'chessground/types'
 
-const Chessboard = (props: { fen_uci?: [string, string | undefined], doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
+const Chessboard = (props: { movable?: boolean, fen_uci?: [string, string | undefined], doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
 
     let board: HTMLElement
     let ground: Api
@@ -39,8 +39,9 @@ const Chessboard = (props: { fen_uci?: [string, string | undefined], doPromotion
         lastMove.push(uci.slice(0, 2) as Key)
         lastMove.push(uci.slice(2, 4) as Key)
       }
+      let movableColor = props.movable ? props.color : undefined
       ground.set({fen, lastMove, turnColor: props.color, movable: {
-        color: props.color,
+        color: movableColor,
         dests: props.dests
       }})
     })

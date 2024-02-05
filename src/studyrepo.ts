@@ -1,5 +1,4 @@
-import { Node, Game, PgnNodeData, parsePgn } from 'chessops/pgn'
-
+import { Pgn } from "./chess_pgn_logic"
 
 export type PGNStudy = {
     name: string,
@@ -9,22 +8,21 @@ export type PGNStudy = {
 export type PGNChapter = {
     name: string,
     site: string,
-    moves: Node<PgnNodeData>
+    pgn: Pgn
 }
 
 
-const reformatStudyPGN = (pgns: Game<PgnNodeData>[], study_name: string): PGNStudy => {
-    let chapters = pgns.map(pgn => {
+const reformatStudyPGN = (pgns: string, study_name: string): PGNStudy => {
+    let chapters = Pgn.make_many(pgns).map(pgn => {
 
-        let moves = pgn.moves
-        let site = pgn.headers.get('Site')!
-        let event = pgn.headers.get('Event')!
+        let site = pgn.site
+        let event = pgn.event
 
         let chapter
         if (!event.includes(': ')) {
 
-            let white = pgn.headers.get('White')!
-            let black = pgn.headers.get('Black')!
+            let white = pgn.white
+            let black = pgn.black
 
             chapter = `${white} vs ${black} at ${event}`
         } else {
@@ -34,10 +32,11 @@ const reformatStudyPGN = (pgns: Game<PgnNodeData>[], study_name: string): PGNStu
         return {
             name: chapter,
             site,
-            moves
+            pgn
         }
 
     })
+
     return {
         name: study_name,
         chapters
@@ -45,7 +44,7 @@ const reformatStudyPGN = (pgns: Game<PgnNodeData>[], study_name: string): PGNStu
 }
 
 const read_study_pgn = (id: string, study_name: string) => 
-    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(parsePgn(_), study_name))
+    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, study_name))
 
 
 class StudyRepo {

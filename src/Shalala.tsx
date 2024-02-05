@@ -162,6 +162,7 @@ const Shalala = () => {
     <div onWheel={onWheel} class='shalala'>
       <div class='chessboard-wrap'>
         <Chessboard 
+        movable={true}
         doPromotion={shalala.promotion}
         onMoveAfter={shalala.on_move_after} 
         fen_uci={shalala.fen_uci}

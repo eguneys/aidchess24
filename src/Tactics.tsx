@@ -4,6 +4,9 @@ import { useParams } from '@solidjs/router'
 
 import StudyRepo from './studyrepo'
 import { Show } from 'solid-js'
+import Chesstree from './Chesstree'
+import Chessboard from './Chessboard'
+import { Shala } from './Shalala'
 
 
 
@@ -36,8 +39,23 @@ const Repertoire = () => {
     const selected_chapter = 
     createMemo(() => pgn()?.chapters.find(_ => _.name === selected_chapter_name()))
 
+    let shalala = new Shala()
+
+    const onWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName !== 'PIECE' &&
+        target.tagName !== 'SQUARE' &&
+        target.tagName !== 'CG-BOARD'
+      )
+        return;
+      e.preventDefault();
+      shalala.set_on_wheel(Math.sign(e.deltaY))
+
+    }
+
     return (<>
-    <div class='repertoire'>
+    <div onWheel={onWheel} class='repertoire'>
 
       <Show when={!pgn.loading} fallback={"Loading..."}>
 
@@ -55,7 +73,13 @@ const Repertoire = () => {
       <Show when={selected_chapter()}>{chapter => 
         <>
         <div class='board-wrap'>
-  
+              <Chessboard
+                doPromotion={shalala.promotion}
+                onMoveAfter={shalala.on_move_after}
+                fen_uci={shalala.fen_uci}
+                color={shalala.turnColor}
+                dests={shalala.dests} />
+
         </div>
         <div class='replay-wrap'>
   
@@ -64,11 +88,13 @@ const Repertoire = () => {
                 <h5>{pgn()!.name}</h5>
                 <h4>3/50</h4>
             </div>
-            <h3 class='lichess'><a target="_blank" href={chapter().site}>lichess</a></h3>
+            <h3 class='lichess'><a target="_blank" href={`https://lichess.org/training/${chapter().pgn.puzzle}`}>lichess</a></h3>
           </div>
   
           <div class='replay'>
-          
+            <div class='replay-v'>
+              <Chesstree pgn={chapter().pgn} on_wheel={shalala.on_wheel} add_uci={shalala.add_uci} on_set_fen_uci={shalala.on_set_fen_uci}/>
+            </div>
           </div>
         </div>
   
