@@ -15,11 +15,11 @@ export type PGNChapter = {
 const reformatStudyPGN = (pgns: string, study_name: string): PGNStudy => {
     let chapters = Pgn.make_many(pgns).map(pgn => {
 
-        let site = pgn.site
+        let site = pgn.site!
         let event = pgn.event
 
         let chapter
-        if (!event.includes(': ')) {
+        if (!event?.includes(': ')) {
 
             let white = pgn.white
             let black = pgn.black

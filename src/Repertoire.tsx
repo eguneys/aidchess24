@@ -6,7 +6,6 @@ import StudyRepo from './studyrepo'
 import { Show } from 'solid-js'
 import { Shala } from './Shalala'
 import Chessboard from './Chessboard'
-import Chesstree from './Chesstree'
 
 
 
@@ -99,7 +98,6 @@ const Repertoire = () => {
   
           <div class='replay'>
             <div class='replay-v'>
-              <Chesstree pgn={chapter().pgn} on_wheel={shalala.on_wheel} add_uci={shalala.add_uci} on_set_fen_uci={shalala.on_set_fen_uci}/>
             </div>
           </div>
         </div>

@@ -1,0 +1,27 @@
+.replay .tools {
+    padding: 1em;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
+}
+
+
+.replay .tools button {
+    cursor: pointer;
+    user-select: none;
+    border: none;
+    background: #e48f15;
+    color: white;
+    padding: 1em;
+}
+
+.replay .tools button:hover {
+    background: #d18c02;
+}
+
+.replay .tools button:active {
+    background: #c0c0c0;
+    color: #e48f15;
+}

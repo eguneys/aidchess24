@@ -1,6 +1,6 @@
 import './tree.css'
 import { For, Match, Show, Switch, batch, createEffect, createSignal, on, untrack } from 'solid-js'
-import { INITIAL_FEN, MoveData, MoveTree, Pgn, TreeNode } from './chess_pgn_logic'
+import { INITIAL_FEN, MoveData, MoveTree, TreeNode } from './chess_pgn_logic'
 
 export const _alekhine = `
 [Event "e4 vs Minor Defences: Alekhine"]
@@ -17,7 +17,7 @@ export const _alekhine = `
 `
 
 
-const Chesstree = (props: { pgn?: Pgn, before_fen?: string, add_uci?: string, on_wheel?: number, on_set_fen_uci: (fen: string, uci: string) => void }) => {
+const Chesstree = (props: { pgn?: MoveTree, before_fen?: string, add_uci?: string, on_wheel?: number, on_set_fen_uci: (fen: string, uci: string) => void }) => {
 
     let before_fen = props.before_fen ?? INITIAL_FEN
 
@@ -30,7 +30,7 @@ const Chesstree = (props: { pgn?: Pgn, before_fen?: string, add_uci?: string, on
 
       let pgn = props.pgn
       if (pgn) {
-        set_tree(pgn.tree)
+        set_tree(pgn)
         on_set_path([])
       }
     })
@@ -38,13 +38,13 @@ const Chesstree = (props: { pgn?: Pgn, before_fen?: string, add_uci?: string, on
     const root = () => tree()?.root
 
     const on_set_path = (path: string[]) => {
-        set_cursor_path(path)
         let t = untrack(() => tree())
         if (t) {
             let i = t.get_at(path)
             let fen = i.after_fen
             let last_move = i.uci
           props.on_set_fen_uci(fen, last_move)
+          set_cursor_path(i.path)
         }
     }
 
@@ -95,7 +95,7 @@ const Chesstree = (props: { pgn?: Pgn, before_fen?: string, add_uci?: string, on
     createEffect(() => {
 
       let path = cursor_path()
-      let cont = el_move.parentElement?.parentElement
+      let cont = el_move.parentElement
       if (!cont) {
         return
       }

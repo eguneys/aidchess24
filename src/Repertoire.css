@@ -29,11 +29,6 @@
     flex-direction: column;
 }
 
-.repertoire .replay-wrap .replay {
-    position: relative;
-    overflow-y: scroll;
-}
-
 .repertoire .list-wrap {
     grid-area: list;
     display: flex;
@@ -182,4 +177,20 @@
 
 .repertoire .replay-header .lichess a {
     color: #2e4567;
+}
+
+
+.replay {
+    display: flex;
+    flex-flow: column;
+}
+
+.repertoire .replay-wrap .replay .replay-v {
+    position: relative;
+    overflow-y: scroll;
+}
+
+.replay .replay-v {
+    flex: 1;
+    border-bottom: 1px solid black;
 }

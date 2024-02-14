@@ -96,7 +96,7 @@ export type MoveData = {
     san: string,
     uci: string,
     ply: number,
-    comments?: string
+    comments?: string,
 }
 
 

@@ -92,9 +92,14 @@ export class Shala {
 
     on_set_fen_uci = (fen: string, last_move: string) => {
       batch(() => {
+        this.add_uci = undefined
         this.last_move = last_move
         this.position = Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
       })
+    }
+
+    reset_move_after = () => {
+      this.position = this.position
     }
 
     on_move_after = (orig: Key, dest: Key) => {
