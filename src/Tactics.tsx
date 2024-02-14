@@ -1,4 +1,4 @@
-import { createSignal, createEffect, createResource, createMemo, on  } from 'solid-js'
+import { createSignal, createEffect, createResource, createMemo, on, Signal  } from 'solid-js'
 import './Repertoire.css'
 import './Tactics.css'
 import { useParams } from '@solidjs/router'
@@ -9,6 +9,56 @@ import Chessboard from './Chessboard'
 import { Shala } from './Shalala'
 import { MoveTree } from './chess_pgn_logic'
 import Chesstree2, { Treelala } from './Chesstree2'
+
+class PuzzleRuns {
+
+  static make = (id: string) => {
+    return new PuzzleRuns(id)
+  }
+
+  _scores: Signal<number[]>
+  _current_run: [Signal<number>, Signal<number>]
+
+  constructor(readonly id: string) {
+    this._scores = createSignal<number[]>([], { equals: false })
+    this._current_run = [createSignal(0), createSignal(0)]
+  }
+
+  get current_score() {
+    return this._current_run[0][0]() ?? 0
+  }
+  get i_selected_chapter() {
+    return this._current_run[1][0]() ?? 0
+  }
+
+  set current_score(n: number) {
+    this._current_run[0][1](n)
+  }
+  set i_selected_chapter(n: number) {
+    this._current_run[1][1](n)
+  }
+
+  get scores() {
+    return this._scores[0]()
+  }
+
+
+  new_current_run() {
+    this.current_score = 0
+    this.i_selected_chapter = 0
+  }
+
+  add_current_run() {
+    let ss = this._scores[0]()
+    ss.push(this.current_score)
+    ss = ss.slice(-10)
+    this._scores[1](ss)
+  }
+
+  get highscore( ){
+    return Math.max(...[0, ...this._scores[0]()])
+  }
+}
 
 class PuzzlePgn {
 
@@ -38,14 +88,14 @@ const ProgressOutOf = (props: { width: number, nb: number }) => {
 const Repertoire = () => {
 
   const params = useParams()
+  let id = params.id
 
-  const [pgn] = createResource(params.id, StudyRepo.read_study)
+  let runs = PuzzleRuns.make(id)
 
-
-  const [i_selected_chapter, set_i_selected_chapter] = createSignal(0)
+  const [pgn] = createResource(id, StudyRepo.read_study)
 
   const selected_chapter =
-    createMemo(() => pgn()?.chapters[i_selected_chapter()])
+    createMemo(() => pgn()?.chapters[runs.i_selected_chapter])
 
   let shalala = new Shala()
 
@@ -82,10 +132,50 @@ const Repertoire = () => {
     }
   }))
 
-  const on_next_puzzle = () => {
+  const puzzle_sub_title = () => {
+    let pp = pgn()
+    if (!pp) {
+      return '--'
+    }
 
-    set_i_selected_chapter(i_selected_chapter() + 1)
+    return `${runs.i_selected_chapter+ 1} / ${pp.chapters.length}  Score: ${runs.current_score}`
   }
+
+  const check_score = () => {
+
+    let i = puzzle_pgn()?.attempt.solved_paths.length ?? 0
+    let f = puzzle_pgn()?.attempt.failed_paths.length ?? 0
+    if (i % 2 === 1) {
+      i =  i + 1 + (i - 1) / 2
+    } else {
+      i = i + i / 2
+    }
+    if (f % 2 === 1) {
+      f = f + 1 + (f - 1) / 2
+    } else {
+      f = f + i / 2
+    }
+    return i - f
+  }
+
+  const on_new_run = () => {
+    runs.new_current_run()
+  }
+
+  const on_next_puzzle = () => {
+    runs.current_score = Math.max(0, runs.current_score + check_score())
+    runs.i_selected_chapter = runs.i_selected_chapter + 1
+  }
+
+
+  createEffect(on(() => puzzle_pgn()?.attempt.is_revealed, (p, p0) => {
+    if (p && !p0) {
+      if (runs.i_selected_chapter === pgn()!.chapters.length - 1) {
+        runs.current_score = Math.max(0, runs.current_score + check_score())
+        runs.add_current_run()
+      }
+    }
+  }))
 
   const on_view_solution = () => {
     puzzle_pgn()?.attempt.reveal_hidden_paths()
@@ -112,8 +202,14 @@ const Repertoire = () => {
       <div class='list-wrap'>
       <h1 class='header'>Tactics</h1>
       <div class='list'>
-        <div><h3 class='title'>{pgn()!.name}</h3><ProgressOutOf width={3} nb={10}/></div>
-        <div><p>Current Run</p><ProgressOutOf width={3} nb={50}/></div>
+        <div>
+          <h3 class='title'>{pgn()!.name}</h3><span>Total Runs</span><ProgressOutOf width={runs.scores.length} nb={10}/>
+          <p>Highscore: {runs.highscore} </p>
+          </div>
+        <div>
+            <p>Current Run</p><ProgressOutOf width={runs.i_selected_chapter + 1} nb={pgn()!.chapters.length}/>
+            <p>Score: {runs.current_score}</p>
+        </div>
       </div>
       </div>
 
@@ -137,7 +233,7 @@ const Repertoire = () => {
           <div class='replay-header'>
             <div class='title'>
                 <h5>{pgn()!.name}</h5>
-                <h4>3/50</h4>
+                <h4>{puzzle_sub_title()}</h4>
             </div>
             <h3 class='lichess'><a target="_blank" href={`https://lichess.org/training/${puzzle_pgn().puzzle}`}>lichess</a></h3>
           </div>
@@ -154,8 +250,13 @@ const Repertoire = () => {
                 </>
               }>
 
-                <h3>Puzzle solved.</h3>
-                <button onClick={on_next_puzzle}>Next Puzzle</button>
+                <h3>Puzzle solved. <span> Score +{check_score()}</span></h3>
+                <Show when={runs.i_selected_chapter === pgn()!.chapters.length - 1} fallback={
+                  <button onClick={on_next_puzzle}>Next Puzzle</button>
+                }>
+                    <h3> Current Run Finished </h3>
+                    <button onClick={on_new_run}>New Run</button>
+                </Show>
               </Show>
             </div>
           </div>
