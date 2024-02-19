@@ -41,10 +41,13 @@ const Chesstree = (props: { pgn?: MoveTree, before_fen?: string, add_uci?: strin
         let t = untrack(() => tree())
         if (t) {
             let i = t.get_at(path)
+            if (i) {
             let fen = i.after_fen
             let last_move = i.uci
-          props.on_set_fen_uci(fen, last_move)
-          set_cursor_path(i.path)
+              props.on_set_fen_uci(fen, last_move)
+              set_cursor_path(i.path)
+
+            }
         }
     }
 
@@ -62,7 +65,7 @@ const Chesstree = (props: { pgn?: MoveTree, before_fen?: string, add_uci?: strin
           let t = tree()
           if (t) {
             let i = t._traverse_path(path)
-            let new_path = i.children[0]?.data.path
+            let new_path = i?.children[0]?.data.path
             if (new_path) {
               on_set_path(new_path)
             }

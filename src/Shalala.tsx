@@ -90,7 +90,7 @@ export class Shala {
       return this._on_wheel[0]()
     }
 
-    on_set_fen_uci = (fen: string, last_move: string) => {
+    on_set_fen_uci = (fen: string, last_move?: string) => {
       batch(() => {
         this.add_uci = undefined
         this.last_move = last_move

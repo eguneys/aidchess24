@@ -106,6 +106,46 @@ export class TreeNode<V> {
         return new TreeNode<V>(data)
     }
 
+    get clone() {
+
+        let res = new TreeNode({ ...this.data })
+        res.children = this.children.map(_ => _.clone)
+
+        return res
+    }
+
+
+    get length() {
+
+        if (this.children.length > 1) {
+            return 1
+        }
+
+        let res = 2
+        let i = this.children[0]
+
+        while (i?.children.length === 1) {
+            res++
+            i = i.children[0]
+        }
+        return res
+    }
+
+    get nb_first_variations() {
+
+        if (this.children.length > 1) {
+            return this.children.length
+        }
+
+        let i = this.children[0]
+
+        while (i?.children.length === 1) {
+            i = i.children[0]
+        }
+        return i?.children.length ?? 0
+
+    }
+
     get children() {
         return this._children[0]()
     }
@@ -131,6 +171,10 @@ export class MoveTree {
         return res
     }
 
+    get clone() {
+        return new MoveTree(this.root.clone)
+    }
+
     constructor(public root: TreeNode<MoveData>) {}
 
     static make_data(before_fen: string, uci: string, ply: number, path: string[]) {
@@ -151,11 +195,11 @@ export class MoveTree {
 
     _traverse_path(path: string[]) {
 
-        let res = this.root
-        let i = [res]
+        let res = undefined
+        let i = [this.root]
         for (let p of path) {
             res = i.find(_ => _.data.uci === p)!
-            i = res.children
+            i = res?.children || this.root
         }
         return res
     }
@@ -188,12 +232,12 @@ export class MoveTree {
 
     get_children(path: string[]) {
         let i = this._traverse_path(path)
-        return i.children.map(_ => _.data)
+        return i?.children.map(_ => _.data)
     }
 
     get_at(path: string[]) {
         let i = this._traverse_path(path)
-        return i.data
+        return i?.data
     }
 
     append_uci(uci: string, path: string[] = []) {
@@ -212,19 +256,4 @@ export class MoveTree {
             path = [...path, uci]
         }
     }
-
-    delete_children(path: string[]) {
-
-        let i = this._traverse_path(path)
-        i.children = []
-    }
-
-    delete_path(path: string[]) {
-        let i = this._traverse_path(path.slice(0, -1))
-
-        let uci = path[path.length - 1]
-        let index = i.children.findIndex(_ => _.data.uci === uci)
-        i.children.splice(index, 1)
-    }
-
 }

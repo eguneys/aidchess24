@@ -52,13 +52,16 @@
 }
 
 .repertoire .list {
+    background: hsla(40, 57%, 86%);
     align-self: center;
-    padding-left: 1em;
+    padding: 1em;
     max-width: 800px;
 }
 
-.repertoire .list > div {
-    padding-bottom: 1em;
+.repertoire .list > div:first-child {
+    background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
+    padding: 0.5em 0.4em;
+    margin-bottom: 0.2em;
 }
 
 .repertoire .title {
@@ -147,6 +150,10 @@
     max-height: 90vh;
 }
 
+.repertoire .replay-wrap .replay {
+    flex: 2 1 0;
+}
+
 .repertoire .replay-wrap .replay,
 .repertoire .board-wrap {
     border: 2px solid #e48f45;
@@ -156,6 +163,8 @@
 
 
 .repertoire .replay-header {
+    border-radius: 2px;
+    background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
     padding: 0 2em;
     display: flex;
     justify-content: space-between;
@@ -181,6 +190,7 @@
 
 
 .replay {
+    overflow: hidden;
     display: flex;
     flex-flow: column;
 }
@@ -191,6 +201,60 @@
 }
 
 .replay .replay-v {
+    background: hsla(40, 57%, 86%);
     flex: 1;
     border-bottom: 1px solid black;
+}
+
+.replay-wrap .tools {
+    background: hsla(40, 57%, 86%);
+}
+
+.replay-wrap .tools .in_mode {
+    display: flex;
+    gap: 1em;
+}
+
+.replay-wrap .tools h2 {
+    font-family: Kantumruy;
+    color: black;
+}
+
+.replay-wrap .tools button {
+    font-weight: bold;
+    min-width: 8em;
+    padding: 1em;
+    border: none;
+    background: #e48f45;
+    color: white;
+    transform: skew(-21deg);
+}
+
+.replay-wrap .tools button.end2 {
+    background: transparent;
+    border: 2px solid black;
+    color: black;
+}
+
+.replay-wrap .tools button > span {
+    display: inline-block;
+    transform: skew(21deg);
+}
+
+.replay-wrap .tools button:hover {
+    cursor: pointer;
+    background: #d49f35;
+}
+
+.replay-wrap .tools button:active > span {
+    text-decoration: underline;
+}
+
+.replay-wrap .tools {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
+    padding: 1em;
 }

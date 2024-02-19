@@ -2,6 +2,7 @@ import { createEffect, onMount } from 'solid-js'
 import { Chessground } from 'chessground'
 import { Api } from 'chessground/api'
 import { Color, Dests, Key } from 'chessground/types'
+import { INITIAL_FEN } from './chess_pgn_logic'
 
 const Chessboard = (props: { movable?: boolean, fen_uci?: [string, string | undefined], doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
 
@@ -30,10 +31,12 @@ const Chessboard = (props: { movable?: boolean, fen_uci?: [string, string | unde
     })
 
     createEffect(() => {
+      let fen, uci
       if (!props.fen_uci) {
-        return
+        fen = INITIAL_FEN
+      } else {
+        [fen, uci] = props.fen_uci
       }
-      let [fen, uci] = props.fen_uci
       let lastMove: Key[] = []
       if (uci) {
         lastMove.push(uci.slice(0, 2) as Key)
