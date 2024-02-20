@@ -1,7 +1,9 @@
+import { Color } from "chessground/types"
 import { Pgn } from "./chess_pgn_logic"
 
 export type PGNStudy = {
     name: string,
+    orientation?: Color,
     chapters: PGNChapter[]
 }
 
@@ -12,7 +14,7 @@ export type PGNChapter = {
 }
 
 
-const reformatStudyPGN = (pgns: string, study_name: string): PGNStudy => {
+const reformatStudyPGN = (pgns: string, study_name: string, orientation?: Color): PGNStudy => {
     let chapters = Pgn.make_many(pgns).map(pgn => {
 
         let site = pgn.site!
@@ -39,12 +41,13 @@ const reformatStudyPGN = (pgns: string, study_name: string): PGNStudy => {
 
     return {
         name: study_name,
+        orientation,
         chapters
     }
 }
 
-const read_study_pgn = (id: string, study_name: string) => 
-    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, study_name))
+const read_study_pgn = (id: string, study_name: string, orientation?: Color) => 
+    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, study_name, orientation))
 
 
 class StudyRepo {
@@ -60,8 +63,8 @@ class StudyRepo {
 
     read_study(id: string) {
 
-        let study_name = RepertoiresFixture.study_name_by_id(id)
-        return read_study_pgn(id, study_name)
+        let {study_name, orientation} = RepertoiresFixture.study_by_id(id)
+        return read_study_pgn(id, study_name, orientation)
     }
 }
 
@@ -72,15 +75,16 @@ export default StudyRepo.init()
 export type StudyInRepertoireCategory = {
   study_link: string,
   study_name: string,
-  category: string
+  category: string,
+  orientation?: Color
 }
 
 const HardCategories: any = {
   'Openings': [
-    ['Slav Defense', 'TCnt4Tx7'],
-    ['Sicilian Defense', 'dgldIBYr'],
-    ['French Defense', 'bLcOj6sO'],
-    ['e4 vs Minor Defenses', 'F8wyMEli'],
+    ['Slav Defense', 'TCnt4Tx7', 'white'],
+    ['Sicilian Defense', 'dgldIBYr', 'white'],
+    ['French Defense', 'bLcOj6sO', 'black'],
+    ['e4 vs Minor Defenses', 'F8wyMEli', 'white'],
     ['Spanish Opening', ''],
   ],
   'Masters': [
@@ -107,7 +111,8 @@ class _RepertoiresFixture {
       return HardCategories[category].map((_: any) => ({
         category,
         study_name: _[0],
-        study_link: _[1]
+        study_link: _[1],
+        orientation: _[2]
       }))
 
     }
@@ -138,10 +143,10 @@ class _RepertoiresFixture {
   completed!: StudyInRepertoireCategory[]
 
 
-  study_name_by_id(id: string) {
+  study_by_id(id: string) {
 
     let _ = this.all.find(_ => _.study_link === id)!
-    return _.study_name
+    return _
   }
 
 }

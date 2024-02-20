@@ -162,7 +162,8 @@ export class Treelala {
     const a0 = this.tree?._traverse_path(this.cursor_path) ?? this.tree.root
     const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? [this.tree.root]
 
-    const c_found = cc.find(_ => _.data.uci === uci)
+    const c_found = cc.find(_ => _.data.uci === uci) ??  cc.find(_ => castles_uci_fix(_.data) === uci)
+
     if (c_found) {
       let hh = this.hidden_paths
       hh = hh.filter(_ => _.join('') !== c_found.data.path.join(''))
@@ -315,7 +316,7 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
   revealed_paths: string[][], 
   failed_paths: string[][], 
   hidden_paths: string[][], 
-  cursor_path: string[], data: MoveData, show_index?: true, collapsed?: true }) => {
+  cursor_path: string[], data: MoveData, show_index?: boolean, collapsed?: true }) => {
 
     let index = `${Math.ceil(props.data.ply / 2)}.`
     if (props.data.ply % 2 === 0) {
@@ -405,7 +406,7 @@ const RenderLinesShorten = (props: {
   revealed_paths: string[][],
   failed_paths: string[][],
   hidden_paths: string[][],
-  lines: TreeNode<MoveData>[], show_index?: true}) => {
+  lines: TreeNode<MoveData>[], show_index?: boolean}) => {
 
 
     return (<>
@@ -414,7 +415,7 @@ const RenderLinesShorten = (props: {
           <RenderData data={line.data} {...props} />
           <Switch>
             <Match when={line.children.length === 1}>
-              <RenderLinesShorten {...props} lines={line.children} />
+              <RenderLinesShorten {...props} lines={line.children} show_index={false} />
             </Match>
             <Match when={line.children.length > 1}>
               <div class='lines'>
@@ -423,7 +424,7 @@ const RenderLinesShorten = (props: {
                     <Show when={props.cursor_path.join('').startsWith(child.data.path.join(''))} fallback= {
                       <RenderLinesShortenCollapsed {...props} lines={[child]} show_index={true} />
                     }>
-                      <RenderLinesShorten {...props} lines={[child]} />
+                      <RenderLinesShorten {...props} lines={[child]} show_index={true} />
                     </Show>
                     </div>
                 }</For>
@@ -442,7 +443,7 @@ const RenderLinesShortenCollapsed = (props: {
   revealed_paths: string[][],
   failed_paths: string[][],
   hidden_paths: string[][],
-  lines: TreeNode<MoveData>[], show_index?: true}) => {
+  lines: TreeNode<MoveData>[], show_index?: boolean}) => {
 
     return (<>
       <For each={props.lines}>{line =>
@@ -467,5 +468,18 @@ function weightedRandomSelect<T>(array: T[]) {
     if (randNum <= weightSum) {
       return array[i];
     }
+  }
+}
+
+
+const castles_uci_fix = (data: MoveData) => {
+
+
+  let from = data.uci.slice(0, 2)
+  let to_rank = data.uci[3]
+  if (data.san === 'O-O') {
+    return from + 'g' + to_rank
+  } else if (data.san === 'O-O-O') {
+    return from + 'c' + to_rank
   }
 }

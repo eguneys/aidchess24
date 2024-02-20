@@ -1,4 +1,4 @@
-import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch  } from 'solid-js'
+import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup  } from 'solid-js'
 import './Repertoire.css'
 import { useParams } from '@solidjs/router'
 
@@ -8,10 +8,12 @@ import { Shala } from './Shalala'
 import Chessboard from './Chessboard'
 import { ChesstreeShorten, Treelala } from './Chesstree2'
 import { INITIAL_FEN } from './chess_pgn_logic'
+import { Color } from 'chessground/types'
 
 type PlayMode = 'moves' | 'match'
 
 class RepertoirePlayer {
+  
   _mode: Signal<PlayMode | undefined>
 
   get mode() {
@@ -22,8 +24,23 @@ class RepertoirePlayer {
     this._mode[1](_)
   }
 
+  _match_color: Signal<Color>
+
+  get match_color() {
+    return this._match_color[0]()
+  }
+
+  set match_color(_: Color) {
+    this._match_color[1](_)
+  }
+
+  flip_match_color() {
+    this.match_color = this.match_color === 'white' ? 'black':'white'
+  }
+
   constructor() {
     this._mode = createSignal<PlayMode | undefined>(undefined, { equals: false })
+    this._match_color = createSignal<Color>('white')
   }
 }
 
@@ -67,6 +84,14 @@ const Repertoire = () => {
   })
 
 
+  createEffect(() => {
+    let { mode, match_color } = repertoire_player
+    if (mode === 'match' && match_color === 'black') {
+      setTimeout(() => {
+        repertoire_lala()?.reveal_one_random()
+      }, 400)
+    }
+  })
 
   createEffect(on(() => shalala.add_uci, (uci?: string) => {
     if (!uci) {
@@ -83,6 +108,7 @@ const Repertoire = () => {
       }
     }
   }))
+
 
   createEffect(on(() => repertoire_lala()?.fen_last_move, (res) => {
     if (res) {
@@ -101,6 +127,18 @@ const Repertoire = () => {
 
 
 
+    const onKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'f') {
+        repertoire_player.flip_match_color()
+      }
+    }
+
+    document.addEventListener('keypress', onKeyPress)
+
+    onCleanup(() => {
+      document.removeEventListener('keypress', onKeyPress)
+    })
+
 
     const onWheel = (e: WheelEvent) => {
       const target = e.target as HTMLElement;
@@ -118,6 +156,9 @@ const Repertoire = () => {
 
     let repertoire_player = new RepertoirePlayer()
 
+    createEffect(() => {
+      repertoire_player.match_color = study()?.orientation ?? 'white'
+    })
 
     return (<>
     <div onWheel={onWheel} class='repertoire'>
@@ -145,6 +186,7 @@ const Repertoire = () => {
         <>
         <div class='board-wrap'>
               <Chessboard
+                orientation={repertoire_player.match_color}
                 movable={repertoire_player.mode !== undefined}
                 doPromotion={shalala.promotion}
                 onMoveAfter={shalala.on_move_after}
@@ -180,10 +222,17 @@ const Repertoire = () => {
 
                     <Match when={repertoire_player.mode === 'match'}>
                       <h2>Play as Match</h2>
-                      <small> AI will play the random next move </small>
+                      <small> AI will play the next move picking a random variation </small>
 
                       <div class='in_mode'>
-                        <button onClick={() => { repertoire_player.mode = 'match' }}><span> Rematch </span></button>
+                        <button onClick={() => { 
+                          batch(() => {
+
+                          repertoire_player.mode = 'match'
+                          repertoire_player.flip_match_color()
+                          })
+
+                        }}><span> Rematch </span></button>
                         <button class='end2' onClick={() => repertoire_player.mode = undefined}><span> End Practice </span></button>
                       </div>
                     </Match>

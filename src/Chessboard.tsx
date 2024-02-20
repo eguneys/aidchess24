@@ -4,7 +4,7 @@ import { Api } from 'chessground/api'
 import { Color, Dests, Key } from 'chessground/types'
 import { INITIAL_FEN } from './chess_pgn_logic'
 
-const Chessboard = (props: { movable?: boolean, fen_uci?: [string, string | undefined], doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
+const Chessboard = (props: { orientation?: Color, movable?: boolean, fen_uci?: [string, string | undefined], doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
 
     let board: HTMLElement
     let ground: Api
@@ -47,6 +47,13 @@ const Chessboard = (props: { movable?: boolean, fen_uci?: [string, string | unde
         color: movableColor,
         dests: props.dests
       }})
+    })
+
+    createEffect(() => {
+      let color = props.orientation ?? 'white'
+      ground.set({
+        orientation: color
+      })
     })
 
     createEffect(() => {
