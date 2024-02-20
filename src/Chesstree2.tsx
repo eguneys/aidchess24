@@ -212,7 +212,9 @@ export class Treelala {
             } else {
               i = t._traverse_path(path)?.children
             } 
-            let new_path = i?.[0]?.data.path
+
+            let new_path = i?.map(_ => _.data.path)
+            .find(_ => !this.hidden_paths?.some(h => _.join('').startsWith(h.join(''))))
             if (new_path) {
               this.try_set_cursor_path(new_path)
             }
