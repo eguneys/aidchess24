@@ -480,8 +480,6 @@ function weightedRandomSelect<T>(array: T[]) {
 
 
 const castles_uci_fix = (data: MoveData) => {
-
-
   let from = data.uci.slice(0, 2)
   let to_rank = data.uci[3]
   if (data.san === 'O-O') {

@@ -55,12 +55,40 @@ const Progress = (props: { width: number }) => {
 }
 
 
+class RepertoireStats {
+
+  constructor(readonly chapters: RepertoireStat[]) {}
+
+  get progress() {
+    return this.chapters.map(_ => _.progress).reduce((a, b) => a + b)
+  }
+}
+
+class RepertoireStat {
+
+  static load_from_study = (study_name: string, i: number) => {
+
+    return new RepertoireStat()
+  }
+
+  get progress() {
+    return 0
+  }
+}
+
+
 const Repertoire = () => {
 
     const params = useParams()
 
     const [study] = createResource(params.id, StudyRepo.read_study)
 
+    let stats = createMemo(() => {
+      const s = study()
+      if (s) {
+        return new RepertoireStats(s.chapters.map((_, i) => RepertoireStat.load_from_study(s.name, i)))
+      }
+    })
 
     const [i_selected_chapter, set_i_selected_chapter] = createSignal(0)
 
@@ -170,10 +198,10 @@ const Repertoire = () => {
       <div class='list'>
 
 
-        <div><h3 class='title'>{study()!.name}</h3><Progress width={30}/></div>
+        <div><h3 class='title'>{study()!.name}</h3><Progress width={stats()?.progress ?? 0}/></div>
         <ul>
             <For each={study()!.chapters}>{ (chapter, i) =>
-              <li onClick={() => set_i_selected_chapter(i())} class={i() === i_selected_chapter() ? 'active': ''}><div><h3>{chapter.name}</h3> <Progress width={0}/></div></li>
+              <li onClick={() => set_i_selected_chapter(i())} class={i() === i_selected_chapter() ? 'active': ''}><div><h3>{chapter.name}</h3> <Progress width={stats()?.chapters[i()].progress ?? 0}/></div></li>
             }</For>
         </ul>
       </div>
@@ -215,14 +243,18 @@ const Repertoire = () => {
                   <Switch>
 
                     <Match when={repertoire_player.mode === undefined}>
-                      <h2>Select an Option</h2>
+                      <small> Click on variations to expand. </small>
+                      <small> Your goal is to guess every move correctly to fill up the progress bar. </small>
+                      <h2>Select a Practice Option</h2>
                       <button onClick={() => repertoire_player.mode = 'moves'}><span> Play all Moves </span></button>
                       <button onClick={() => repertoire_player.mode = 'match'}><span> Play as Match </span></button>
                     </Match>
 
                     <Match when={repertoire_player.mode === 'match'}>
                       <h2>Play as Match</h2>
-                      <small> AI will play the next move picking a random variation </small>
+                      <small> Try to guess the moves for {repertoire_player.match_color}.</small>
+                      <small> AI will play the next move, picking a random variation. </small>
+                      <small> Moves will be hidden once the game is started. </small>
 
                       <div class='in_mode'>
                         <button onClick={() => { 
@@ -239,6 +271,8 @@ const Repertoire = () => {
 
                     <Match when={repertoire_player.mode === 'moves'}>
                       <h2>Play all moves</h2>
+                      <small>Try to guess the moves for both sides.</small>
+                      <small>Moves will be hidden once you start.</small>
 
                       <div class='in_mode'>
                         <button onClick={() => { repertoire_player.mode = 'moves' }}><span> Clear </span></button>
