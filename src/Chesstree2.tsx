@@ -32,6 +32,11 @@ export class Treelala {
     _solved_paths: Signal<string[][]>
 
 
+  get initial_color() {
+    return this.tree?.initial_color
+  }
+
+
     get solved_paths() {
       return this._solved_paths[0]()
     }

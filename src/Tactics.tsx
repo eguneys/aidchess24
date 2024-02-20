@@ -9,6 +9,7 @@ import Chessboard from './Chessboard'
 import { Shala } from './Shalala'
 import { MoveTree } from './chess_pgn_logic'
 import Chesstree2, { Treelala } from './Chesstree2'
+import { opposite } from 'chessground/util'
 
 class PuzzleRuns {
 
@@ -220,6 +221,7 @@ const Repertoire = () => {
         <>
         <div class='board-wrap'>
               <Chessboard
+                orientation={opposite(puzzle_pgn().attempt.initial_color ?? 'white')}
                 movable={!puzzle_pgn().attempt.is_revealed}
                 doPromotion={shalala.promotion}
                 onMoveAfter={shalala.on_move_after}

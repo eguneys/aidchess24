@@ -100,7 +100,12 @@ export type MoveData = {
 }
 
 
+
 export class TreeNode<V> {
+
+    static color_of(_: TreeNode<MoveData>) {
+        return parseFen(_.data.before_fen).unwrap().turn
+    }
 
     static make = <V>(data: V) => {
         return new TreeNode<V>(data)
@@ -169,6 +174,10 @@ export class MoveTree {
         let res = new MoveTree(TreeNode.make(MoveTree.make_data(before_fen, uci, 1, [])))
         res.append_ucis(rest)
         return res
+    }
+
+    get initial_color() {
+        return TreeNode.color_of(this.root)
     }
 
     get clone() {

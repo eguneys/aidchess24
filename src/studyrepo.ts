@@ -14,10 +14,10 @@ export type PGNChapter = {
 }
 
 
-const reformatStudyPGN = (pgns: string, study_name: string, orientation?: Color): PGNStudy => {
+const reformatStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color): PGNStudy => {
     let chapters = Pgn.make_many(pgns).map(pgn => {
 
-        let site = pgn.site!
+        let site = pgn.site?.includes('http') ? pgn.site : `https://lichess.org/study/${id}`
         let event = pgn.event
 
         let chapter
@@ -47,7 +47,7 @@ const reformatStudyPGN = (pgns: string, study_name: string, orientation?: Color)
 }
 
 const read_study_pgn = (id: string, study_name: string, orientation?: Color) => 
-    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, study_name, orientation))
+    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, id, study_name, orientation))
 
 
 class StudyRepo {
@@ -88,7 +88,7 @@ const HardCategories: any = {
     ['Spanish Opening', ''],
   ],
   'Masters': [
-    ['Bobby Fischer 60 Memorable Games', 'nk2t0m1n'],
+    ['Bobby Fischer 60 Memorable Games', '6kq6sDHS'],
     ['Magnus Carlsen 2023', ''],
     ['Tata Steel 2023', ''],
   ],
