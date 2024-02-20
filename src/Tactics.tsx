@@ -248,16 +248,16 @@ const Repertoire = () => {
               <Show when={puzzle_pgn().attempt.is_revealed} fallback={
                   <>
                 <h3>Find the best line!</h3>
-                <button onClick={on_view_solution}>View Solution</button>
+                <button onClick={on_view_solution}><span>View Solution</span></button>
                 </>
               }>
 
                 <h3>Puzzle solved. <span> Score +{check_score()}</span></h3>
                 <Show when={runs.i_selected_chapter === pgn()!.chapters.length - 1} fallback={
-                  <button onClick={on_next_puzzle}>Next Puzzle</button>
+                  <button onClick={on_next_puzzle}><span>Next Puzzle</span></button>
                 }>
                     <h3> Current Run Finished </h3>
-                    <button onClick={on_new_run}>New Run</button>
+                    <button onClick={on_new_run}><span>New Run</span></button>
                 </Show>
               </Show>
             </div>

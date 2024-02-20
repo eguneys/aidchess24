@@ -14,12 +14,13 @@
 
 @media (min-width: 768px) {
     .repertoire {
-        max-width: 800px;
+        max-width: 1200px;
         grid-template-areas:
         'list list list'
         'board board replay';
         grid-template-columns: 1fr 0.5fr minmax(0, 1.5fr);
-        grid-template-rows: auto minmax(600px, 80vh)
+        /*grid-template-rows: auto minmax(400px, 80vh);*/
+        grid-template-rows: fit-content(0);
     }
 }
 
