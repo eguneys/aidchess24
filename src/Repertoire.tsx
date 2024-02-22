@@ -2,13 +2,14 @@ import { For, createSignal, createEffect, createResource, createMemo, on, Signal
 import './Repertoire.css'
 import { useParams } from '@solidjs/router'
 
-import StudyRepo from './studyrepo'
+import StudyRepo, { PGNStudy } from './studyrepo'
 import { Show } from 'solid-js'
 import { Shala } from './Shalala'
 import Chessboard from './Chessboard'
 import { ChesstreeShorten, Treelala } from './Chesstree2'
-import { INITIAL_FEN } from './chess_pgn_logic'
+import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
+import { RepertoireStatStore } from './storage'
 
 type PlayMode = 'moves' | 'match'
 
@@ -60,19 +61,53 @@ class RepertoireStats {
   constructor(readonly chapters: RepertoireStat[]) {}
 
   get progress() {
-    return this.chapters.map(_ => _.progress).reduce((a, b) => a + b)
+    let n = this.chapters.length
+    return this.chapters.map(_ => _.progress / n).reduce((a, b) => a + b)
   }
 }
 
 class RepertoireStat {
 
-  static load_from_study = (study_name: string, i: number) => {
+  static load_from_store(s: PGNStudy, i_chapter: number): any {
+    let store = new RepertoireStatStore(s.name, i_chapter)
+    return RepertoireStat.make(s.chapters[i_chapter].pgn.tree, store.solved_paths)
+  }
 
-    return new RepertoireStat()
+  static save_paths_to_store(s: PGNStudy, i_chapter: number, stats: RepertoireStat) {
+    let store = new RepertoireStatStore(s.name, i_chapter)
+    store.solved_paths = stats.solved_paths
+  }
+  
+
+  static make(t: MoveTree, paths: string[][] = []): any {
+    return new RepertoireStat(MoveScoreTree.make(t), paths)
+  }
+
+  constructor(readonly score_tree: MoveScoreTree, solved_paths: string[][]) {
+
+    this._solved_paths = createSignal(solved_paths, { equals: false })
+
+  }
+
+  _solved_paths: Signal<string[][]>
+
+  get solved_paths() {
+    return this._solved_paths[0]()
+  }
+  
+  set solved_paths(_: string[][]) {
+    this._solved_paths[1](_)
   }
 
   get progress() {
-    return 0
+    return Math.floor(this.solved_paths
+    .map(p => this.score_tree.get_at(p)?.score ?? 0)
+    .reduce((a, b) => a + b, 0) * 100)
+  }
+
+  merge_stats(b: RepertoireStat) {
+    this.solved_paths = merge_dup(this.solved_paths, b.solved_paths)
+
   }
 }
 
@@ -83,11 +118,15 @@ const Repertoire = () => {
 
     const [study] = createResource(params.id, StudyRepo.read_study)
 
-    let stats = createMemo(() => {
+    let overall_stats = createMemo(() => {
       const s = study()
       if (s) {
-        return new RepertoireStats(s.chapters.map((_, i) => RepertoireStat.load_from_study(s.name, i)))
+        return new RepertoireStats(s.chapters.map((_, i) => RepertoireStat.load_from_store(s, i)))
       }
+    })
+
+    let overall_repertoire_stat = createMemo(() => {
+      return overall_stats()?.chapters[i_selected_chapter()]
     })
 
     const [i_selected_chapter, set_i_selected_chapter] = createSignal(0)
@@ -99,7 +138,7 @@ const Repertoire = () => {
   let shalala = new Shala()
 
   let [repertoire_lala, set_repertoire_lala] = createSignal<Treelala | undefined>(undefined)
-  
+
   createEffect(() => {
     let mode = repertoire_player.mode
     let chapter = selected_chapter()
@@ -107,10 +146,50 @@ const Repertoire = () => {
       let res = Treelala.make(chapter.pgn.tree.clone)
       if (mode !== undefined) {
       }
+      res.solved_paths = overall_repertoire_stat()!.solved_paths
       set_repertoire_lala(res)
     }
   })
 
+  let [repertoire_stat_for_mode, set_repertoire_stat_for_mode] = createSignal<RepertoireStat | undefined>(undefined)
+
+  createEffect(on(() => repertoire_player.mode, m => {
+    if (m !== undefined) {
+      let t = repertoire_lala()!.tree!
+      set_repertoire_stat_for_mode(RepertoireStat.make(t))
+    }
+  }))
+
+  createEffect(on(() => repertoire_lala()?.solved_paths, (paths) => {
+    if (paths) {
+      let rs = repertoire_stat_for_mode()
+      if (rs) {
+        rs.solved_paths = paths
+      }
+    }
+  }))
+
+  const merge_save_stats = () => {
+
+    let s = study()
+    let i_chapter = i_selected_chapter()
+    let o = overall_repertoire_stat()
+
+    if (!s || !o) {
+      return
+
+    }
+
+    o.merge_stats(repertoire_stat_for_mode()!)
+
+    RepertoireStat.save_paths_to_store(s, i_chapter, o)
+  }
+
+  createEffect(on(() => repertoire_player.mode, p => {
+    if (!p) {
+      merge_save_stats()
+    }
+  }))
 
   createEffect(() => {
     let { mode, match_color } = repertoire_player
@@ -137,6 +216,11 @@ const Repertoire = () => {
     }
   }))
 
+  createEffect(on(() => repertoire_lala()?.solved_paths, paths => {
+
+    if (paths) {
+    }
+  }))
 
   createEffect(on(() => repertoire_lala()?.fen_last_move, (res) => {
     if (res) {
@@ -198,10 +282,10 @@ const Repertoire = () => {
       <div class='list'>
 
 
-        <div><h3 class='title'>{study()!.name}</h3><Progress width={stats()?.progress ?? 0}/></div>
+        <div><h3 class='title'>{study()!.name}</h3><Progress width={overall_stats()?.progress ?? 0}/></div>
         <ul>
             <For each={study()!.chapters}>{ (chapter, i) =>
-              <li onClick={() => set_i_selected_chapter(i())} class={i() === i_selected_chapter() ? 'active': ''}><div><h3>{chapter.name}</h3> <Progress width={stats()?.chapters[i()].progress ?? 0}/></div></li>
+              <li onClick={() => set_i_selected_chapter(i())} class={i() === i_selected_chapter() ? 'active': ''}><div><h3>{chapter.name}</h3> <Progress width={overall_stats()?.chapters[i()].progress ?? 0}/></div></li>
             }</For>
         </ul>
       </div>
@@ -221,6 +305,10 @@ const Repertoire = () => {
                 fen_uci={shalala.fen_uci}
                 color={shalala.turnColor}
                 dests={shalala.dests} />
+        </div>
+        <div class='eval-gauge'>
+              <div class='white' style="height: 100%"> </div>
+              <div class='score' style={`height: ${repertoire_stat_for_mode()?.progress ?? 0}%`}></div>
         </div>
         <div class='replay-wrap'>
           <div class='replay-header'>
@@ -295,3 +383,7 @@ const Repertoire = () => {
 
 
 export default Repertoire
+
+function merge_dup<A>(a: A[], b: A[]) {
+  return [...new Set([...a ,...b])]
+}

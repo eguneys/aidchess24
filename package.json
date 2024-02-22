@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@solid-primitives/storage": "^2.1.2",
     "@solidjs/meta": "^0.29.1",
     "@solidjs/router": "^0.9.1",
     "chessground": "^9.0.4",

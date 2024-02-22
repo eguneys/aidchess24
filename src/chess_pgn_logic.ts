@@ -89,17 +89,6 @@ export type PgnHeaders = {
    puzzle?: string,
 }
 
-export type MoveData = {
-    path: string[],
-    before_fen: string,
-    after_fen: string,
-    san: string,
-    uci: string,
-    ply: number,
-    comments?: string,
-}
-
-
 
 export class TreeNode<V> {
 
@@ -119,7 +108,6 @@ export class TreeNode<V> {
         return res
     }
 
-
     get length() {
 
         if (this.children.length > 1) {
@@ -137,18 +125,20 @@ export class TreeNode<V> {
     }
 
     get nb_first_variations() {
+        return this.children_first_variations?.length ?? 0
+    }
 
-        if (this.children.length > 1) {
-            return this.children.length
+    get children_first_variations() {
+
+        let i = this.children
+
+        while (i?.length === 1) {
+            i = i[0].children
         }
 
-        let i = this.children[0]
-
-        while (i?.children.length === 1) {
-            i = i.children[0]
+        if (i.length > 1) {
+            return i
         }
-        return i?.children.length ?? 0
-
     }
 
     get children() {
@@ -164,6 +154,92 @@ export class TreeNode<V> {
     constructor(readonly data: V) {
         this._children = createSignal([] as TreeNode<V>[])
     }
+}
+
+
+export type MoveScoreData = {
+    path: string[],
+    uci: string,
+    score: number
+}
+
+
+export class MoveScoreTree {
+
+    static make = (tree: MoveTree) => {
+
+        function score_node(node: TreeNode<MoveData>, i: number) {
+
+            let l = node.length
+            let v = node.nb_first_variations
+            
+            let score = i * (l / 2) * (v + 1)
+            let res = TreeNode.make({ path: node.data.path, uci: node.data.uci, score })
+
+            let n = node.children.length
+            let s = n * (n + 1) / 2
+            res.children = node.children.map((_, i) => score_node(_, (n - i) / s))
+
+            return res
+        }
+
+        function calc_score(node: TreeNode<MoveScoreData>): number {
+            let score = node.data.score
+
+            return score + node.children.map(_ => calc_score(_))
+            .reduce((a, b) => a + b, 0)
+        }
+
+        function normalize(node: TreeNode<MoveScoreData>, total: number) {
+            node.data.score /= total
+            node.children.forEach(_ => normalize(_, total))
+        }
+
+        let res = score_node(tree.root, 1)
+
+        let total = calc_score(res)
+
+        normalize(res, total)
+
+        return new MoveScoreTree(res)
+    }
+
+    constructor(readonly root: TreeNode<MoveScoreData>) {}
+
+
+
+    _traverse_path(path: string[]) {
+
+        let res = undefined
+        let i = [this.root]
+        for (let p of path) {
+            res = i.find(_ => _.data.uci === p)!
+            i = res?.children || this.root
+        }
+        return res
+    }
+
+    get_children(path: string[]) {
+        let i = this._traverse_path(path)
+        return i?.children.map(_ => _.data)
+    }
+
+    get_at(path: string[]) {
+        let i = this._traverse_path(path)
+        return i?.data
+    }
+
+
+}
+
+export type MoveData = {
+    path: string[],
+    before_fen: string,
+    after_fen: string,
+    san: string,
+    uci: string,
+    ply: number,
+    comments?: string,
 }
 
 export class MoveTree {
@@ -183,7 +259,6 @@ export class MoveTree {
     get clone() {
         return new MoveTree(this.root.clone)
     }
-
     constructor(public root: TreeNode<MoveData>) {}
 
     static make_data(before_fen: string, uci: string, ply: number, path: string[]) {

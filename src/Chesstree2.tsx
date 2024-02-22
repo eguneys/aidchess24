@@ -31,7 +31,6 @@ export class Treelala {
     _failed_paths: Signal<string[][]>
     _solved_paths: Signal<string[][]>
 
-
   get initial_color() {
     return this.tree?.initial_color
   }
