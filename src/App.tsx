@@ -38,7 +38,9 @@ const AppInRouter = () => {
 
           <A href='/'>Dashboard</A>
       </div>
-      <div class='main'>
+      <div class='main-wrap'>
+        <div class='main'>
+
           <Routes>
               <Route path='/' component={Home}/>
               <Route path='/shalala' component={Shalala}/>
@@ -54,6 +56,7 @@ const AppInRouter = () => {
               <Route path='/donate' component={Contact}/>
               <Route path='/thanks' component={Contact}/>
           </Routes>
+        </div>
       </div>
     </>)
 }
