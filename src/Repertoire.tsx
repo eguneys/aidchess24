@@ -62,7 +62,7 @@ class RepertoireStats {
 
   get progress() {
     let n = this.chapters.length
-    return this.chapters.map(_ => _.progress / n).reduce((a, b) => a + b)
+    return this.chapters.map(_ => Math.round(_.progress / n)).reduce((a, b) => a + b)
   }
 }
 
