@@ -146,7 +146,7 @@ const Repertoire = () => {
       let res = Treelala.make(chapter.pgn.tree.clone)
       if (mode !== undefined) {
       }
-      res.solved_paths = overall_repertoire_stat()!.solved_paths
+      res.solved_paths = overall_repertoire_stat()!.solved_paths.slice(0)
       set_repertoire_lala(res)
     }
   })
@@ -387,7 +387,7 @@ export default Repertoire
 function merge_dup(a: string[][], b: string[][]) {
   let res = a.slice(0)
   b.forEach(b => {
-    if (!res.find(_ => _.join('') !== b.join(''))) {
+    if (res.every(_ => _.join('') !== b.join(''))) {
       res.push(b)
     }
   })
