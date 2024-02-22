@@ -384,6 +384,12 @@ const Repertoire = () => {
 
 export default Repertoire
 
-function merge_dup<A>(a: A[], b: A[]) {
-  return [...new Set([...a ,...b])]
+function merge_dup(a: string[][], b: string[][]) {
+  let res = a.slice(0)
+  b.forEach(b => {
+    if (!res.find(_ => _.join('') !== b.join(''))) {
+      res.push(b)
+    }
+  })
+  return res
 }
