@@ -867,6 +867,7 @@ const castles_uci_fix = (data: MoveData) => {
 }
 
 
+/*
 function merge_dup(a: string[][], b: string[][]) {
   let res = a.slice(0)
   b.forEach(b => {
@@ -876,3 +877,4 @@ function merge_dup(a: string[][], b: string[][]) {
   })
   return res
 }
+*/

@@ -8,8 +8,9 @@ import { Show } from 'solid-js'
 import Chessboard from './Chessboard'
 import { Shala } from './Shalala'
 import { MoveTree } from './chess_pgn_logic'
-import Chesstree2, { Treelala } from './Chesstree2'
+import Chesstree2, { Treelala2 } from './Chesstree2'
 import { opposite } from 'chessground/util'
+import { makePersisted } from '@solid-primitives/storage'
 
 class PuzzleRuns {
 
@@ -21,8 +22,14 @@ class PuzzleRuns {
   _current_run: [Signal<number>, Signal<number>]
 
   constructor(readonly id: string) {
-    this._scores = createSignal<number[]>([], { equals: false })
-    this._current_run = [createSignal(0), createSignal(0)]
+    this._scores = makePersisted(createSignal<number[]>([], { equals: false }), {
+      name: `.puzzle_run.${id}.scores.`
+    })
+    this._current_run = [makePersisted(createSignal(0), {
+      name: `.puzzle_run.${id}.current_run.0.`
+    }), makePersisted(createSignal(0), {
+      name: `.puzzle_run.${id}.current_run.1.`
+    })]
   }
 
   get current_score() {
@@ -67,10 +74,10 @@ class PuzzlePgn {
     return new PuzzlePgn(puzzle, pgn)
   }
 
-  attempt: Treelala
+  attempt: Treelala2
 
   constructor(readonly puzzle: string, readonly solution: MoveTree) {
-    this.attempt = Treelala.make(solution)
+    this.attempt = Treelala2.make(solution)
   }
 }
 
@@ -105,7 +112,7 @@ const Repertoire = () => {
       let res = PuzzlePgn.make(chapter.pgn.puzzle!, chapter.pgn.tree)
 
       res.attempt.cursor_path = res.attempt.tree!.root.data.path
-      res.attempt.hidden_paths = res.attempt.tree!.root.children.map(_ => _.data.path)
+      res.attempt.tree!.root.children.map(_ => _.data.path).forEach(_ => res.attempt._hidden_paths.add_path(_))
 
       return res
     }
@@ -144,8 +151,8 @@ const Repertoire = () => {
 
   const check_score = () => {
 
-    let i = puzzle_pgn()?.attempt.solved_paths.length ?? 0
-    let f = puzzle_pgn()?.attempt.failed_paths.length ?? 0
+    let i = puzzle_pgn()?.attempt.solved_paths_expanded.length ?? 0
+    let f = puzzle_pgn()?.attempt.failed_paths_expanded.length ?? 0
     if (i % 2 === 1) {
       i =  i + 1 + (i - 1) / 2
     } else {
