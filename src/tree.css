@@ -36,7 +36,8 @@
     background: hsla(30, 50%, 70%, 1);
 }
 
-.chesstree .move.on_failed_path {
+.chesstree .move.on_failed_path,
+.chesstree .move.on_failed_path_start {
     font-weight: bold;
     color: hsla(0, 70%, 30%, 1);
     background: hsla(0, 60%, 70%, 0.8);
@@ -50,7 +51,8 @@
 
 
 
-.chesstree .move.on_solved_path {
+.chesstree .move.on_solved_path,
+.chesstree .move.on_solved_path_start {
     color: hsla(130, 40%, 30%, 1);
     background: hsla(130, 30%, 70%, 0.8);
 }

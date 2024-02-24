@@ -1,5 +1,5 @@
-import { hashIntegration, Router, Routes, Route, A } from "@solidjs/router";
-import { lazy } from 'solid-js'
+import { hashIntegration, Router, Routes, Route, A, useLocation } from "@solidjs/router";
+import { createMemo, lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
 import './App.css'
 
@@ -26,6 +26,15 @@ export const MyApp = () => {
 
 
 const AppInRouter = () => {
+
+  let location = useLocation()
+  let pathname = createMemo(() => location.pathname.split('/')[1])
+
+  const path_klass = () => {
+    let p = pathname()
+    return `on-${p}`
+  }
+
     return (<>
       <div class='navbar'>
           <A href='/'>aidchess.com</A>
@@ -38,7 +47,7 @@ const AppInRouter = () => {
 
           <A href='/'>Dashboard</A>
       </div>
-      <div class='main-wrap'>
+      <div class={'main-wrap ' + path_klass()}>
         <div class='main'>
 
           <Routes>

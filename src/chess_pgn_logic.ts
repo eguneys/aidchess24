@@ -89,7 +89,6 @@ export type PgnHeaders = {
    puzzle?: string,
 }
 
-
 export class TreeNode<V> {
 
     static color_of(_: TreeNode<MoveData>) {

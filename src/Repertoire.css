@@ -19,11 +19,16 @@
         max-width: 1200px;
         grid-template-areas:
         'list list list'
-        'board gauge replay';
-        grid-template-columns: 2fr var(--gauge-gap) minmax(200px, 400px);
+        'board gauge replay'
+        'under . .';
+        grid-template-columns: minmax(55vmin, 90vh) var(--gauge-gap) minmax(200px, 400px);
         /*grid-template-rows: auto minmax(400px, 80vh);*/
         grid-template-rows: fit-content(0);
     }
+}
+
+.repertoire .under {
+    grid-area: under;
 }
 
 .repertoire .eval-gauge {

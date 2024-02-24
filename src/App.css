@@ -17,6 +17,15 @@
   font-weight: bold;
 }
 
+.main-wrap.on-repertoires,
+.main-wrap.on-openings,
+.main-wrap.on-tactics,
+.main-wrap.on-masters
+ {
+  --main-max-width: auto;
+
+}
+
 .main-wrap {
   --main-max-width: 1300px;
   display: grid;
