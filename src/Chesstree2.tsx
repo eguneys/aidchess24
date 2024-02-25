@@ -391,6 +391,12 @@ export class Treelala2 {
         this.tree = t
         this.cursor_path = path
       })
+      return path
+    }
+
+
+    drop_failed_paths() {
+
     }
 
 

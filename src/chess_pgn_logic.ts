@@ -4,6 +4,7 @@ import { INITIAL_FEN, makeFen, parseFen } from 'chessops/fen'
 import { PgnNodeData, ChildNode, parsePgn } from 'chessops/pgn'
 import { makeSan, parseSan } from 'chessops/san'
 import { Signal, createSignal, untrack } from 'solid-js'
+import { FinalEvalAccuracy, ceval } from './chess_ceval'
 
 export { INITIAL_FEN } from 'chessops/fen'
 
@@ -113,7 +114,11 @@ export class TreeNode<V> {
             return 1
         }
 
-        let res = 2
+        if (this.children.length === 0) {
+            return 0
+        }
+
+        let res = 1
         let i = this.children[0]
 
         while (i?.children.length === 1) {
@@ -239,6 +244,7 @@ export type MoveData = {
     uci: string,
     ply: number,
     comments?: string,
+    eval_accuracy?: FinalEvalAccuracy
 }
 
 export class MoveTree {
@@ -316,6 +322,14 @@ export class MoveTree {
     get_children(path: string[]) {
         let i = this._traverse_path(path)
         return i?.children.map(_ => _.data)
+    }
+
+    async request_ceval_and_get_at(path: string[]) {
+        let i = this.get_at(path)
+        if (i) {
+            i.eval_accuracy = await ceval.request_move_data(i.before_fen, i.after_fen)
+            return i
+        }
     }
 
     get_at(path: string[]) {
