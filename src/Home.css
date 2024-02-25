@@ -72,9 +72,20 @@
 
 .home footer {
     padding-top: 6em;
+    padding-bottom: 1em;
 }
 
 .home footer ul {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
+}
+
+.home footer a {
+    font-weight: bold;
+    font-family: Kantumruy;
+    font-size: 1.3em;
+}
+
+.home footer a:active {
+    text-decoration: underline;
 }

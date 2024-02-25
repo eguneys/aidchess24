@@ -1,4 +1,5 @@
 .contact {
+
     flex: 1;
     display: flex;
     justify-content: space-between;
@@ -35,6 +36,16 @@
 .contact .content {
     flex: 1;
     padding: 1em 3em;
+}
+
+.contact .content p {
+    padding: 0.5em;
+}
+
+.contact .content h1,
+.contact .content h2,
+.contact .tabs li h4 {
+    font-family: Kantumruy;
 }
 
 .contact .content h1 {

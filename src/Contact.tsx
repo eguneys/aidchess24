@@ -1,6 +1,6 @@
 import './Contact.css'
 import { Match, Switch, createMemo } from "solid-js"
-import { useNavigate, useLocation } from '@solidjs/router'
+import { useNavigate, useLocation, A } from '@solidjs/router'
 
 const ContactView = () => {
 
@@ -39,8 +39,8 @@ const Thanks = () => {
     return (<>
     <h1>Thanks</h1>
     <ul>
-      <li>Lichess.org</li>
-      <li>Quality Chess Books</li>
+      <li><p>Lichess.org</p></li>
+      <li><p>Quality Chess Books</p></li>
     </ul>
     </>)
 }
@@ -56,6 +56,10 @@ const Donate = () => {
       <p>
         Please Support me on Twitch at <a target="_blank" href="https://twitch.tv/gsoutz">twitch.tv/gsoutz</a>
       </p>
+      <p>
+        Or <a target="_blank" href="https://www.buymeacoffee.com/eguneys">buymeacoffee.com/eguneys</a>
+      </p>
+
     </div>
     </>)
 }
@@ -65,20 +69,17 @@ const Terms = () => {
     return (<>
     <h1> Terms of Service </h1>
 
-    <strong>Last updated: 3.12.2023</strong>
+    <strong>Last updated: 26.02.2024</strong>
     <p>
       By using this website, you agree to the following terms:
     </p>
       <ul>
-        <li>We do not collect personal information. Your progress and challenges are stored locally on your device.</li>
-        <li>We do not use tracking mechanisms or cookies.</li>
-        <li>Our website is ad-free to provide an uninterrupted experience.</li>
-        <li>We are not liable for any data loss or issues arising from the use of this site.</li>
-      </ul>
+        <li><p>We are not liable for any data loss or issues arising from the use of this site.</p></li>
+        <li><h2>DMCA</h2></li>
+        <li><p>If you believe your content has been copied in a way that constitutes copyright infringement, please report this by getting in touch with us as outlined on our <A href="/contact">contact page</A>.</p></li>
 
-    <p>
-      By accessing the site, you acknowledge and agree to these terms. Enjoy your chess learning experience.
-    </p>
+      </ul>
+    <p> Enjoy your chess learning experience!  </p>
     </>)
 }
 
@@ -88,24 +89,19 @@ const Privacy = () => {
     return (<>
       <h1> Privacy Policy </h1>
 
-      <strong>Last updated: 3.12.2023</strong>
+      <strong>Last updated: 26.02.2024</strong>
 
       <p>
         This Privacy Policy outlines how we handle your information on aidchess.com. By using our website, you agree to the terms outlined below.
       </p>
       <ul>
-        <li>We do not collect any personal information from users.</li>
-        <li>Your progress and challenges are stored locally on your device, using local storage.</li>
-        <br/>
-        <li>We do not use tracking mechanisms, cookies, or any similar technologies.</li>
-        <br/>
-        <li>Our website is ad-free, providing a focused and uninterrupted chess learning experience.</li>
-        <br/>
-        <li>Our site may contain links to third-party websites. We are not responsible for the privacy practices or content of these external sites.</li>
-        <br/>
-        <li>We reserve the right to update our Privacy Policy. Any changes will be posted on this page, and the date of the last modification will be indicated.</li>
-        <br/>
-        <li>For any questions or concerns regarding this Privacy Policy, please contact us at iplaythefrench at gmail.com</li>
+        <li><p>We do not collect any personal information from users.</p></li>
+        <li><p>Your progress and challenges are stored locally on your device, using local storage.</p></li>
+        <li><p>We do not use tracking mechanisms, cookies, or any similar technologies.</p></li>
+        <li><p>Our website is ad-free, providing a focused and uninterrupted chess learning experience.</p></li>
+        <li><p>Our site may contain links to third-party websites. We are not responsible for the privacy practices or content of these external sites.</p></li>
+        <li><p>We reserve the right to update our Privacy Policy. Any changes will be posted on this page, and the date of the last modification will be indicated.</p></li>
+        <li><p>For any questions or concerns regarding this Privacy Policy, please contact us at iplaythefrench at gmail dot com. </p></li>
       </ul>
 
       <p>
@@ -121,9 +117,9 @@ const Contact = () => {
     return (<>
     <h1> Contact </h1>
     <ul>
-      <li>Email me at iplaythefrench at gmail dot com.</li>
-      <li>Reach me out at <a href="https://lichess.org/@/heroku">https://lichess.org/@/heroku</a>.</li>
-      <li>Open an issue at <a href="https://github.com/eguneys/aidchess24">https://github.com/eguneys/aidchess24</a></li>
+      <li><p>Email me at iplaythefrench at gmail dot com.</p></li>
+      <li><p>Reach me out at <a href="https://lichess.org/@/heroku">https://lichess.org/@/heroku</a>.</p></li>
+      <li><p>Open an issue at <a href="https://github.com/eguneys/aidchess24">https://github.com/eguneys/aidchess24</a></p></li>
     </ul>
     </>)
 }

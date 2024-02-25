@@ -1,4 +1,4 @@
-import { povAccuracy, povChances } from "./chess_winningChances"
+import { povAccuracy } from "./chess_winningChances"
 
 export type EvalScore = {
     mate?: number
