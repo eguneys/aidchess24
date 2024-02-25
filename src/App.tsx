@@ -12,6 +12,7 @@ const Masters = lazy(() => import('./Masters'))
 const Tactics = lazy(() => import('./Tactics'))
 const Endgames = lazy(() => import('./Endgames'))
 const Shalala = lazy(() => import('./Shalala'))
+const SixthDraw = lazy(() => import('./SixthDraw'))
 
 export const MyApp = () => {
     return (<>
@@ -41,6 +42,7 @@ const AppInRouter = () => {
 
           <div class='links'>
             <A href='/shalala'>Shalala</A>
+            <A href='/sixth'>Sixth Game</A>
             <A href='/repertoires'>Repertoires</A>
             <A href='/donate'>Donate</A>
           </div>
@@ -53,6 +55,7 @@ const AppInRouter = () => {
           <Routes>
               <Route path='/' component={Home}/>
               <Route path='/shalala' component={Shalala}/>
+              <Route path='/sixth' component={SixthDraw}/>
               <Route path='/repertoires' component={Repertoires}/>
               <Route path='/openings/:id' component={Repertoire}/>
               <Route path='/masters/:id' component={Masters}/>

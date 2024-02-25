@@ -1,0 +1,65 @@
+.replay-wrap .replay {
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
+    flex: 2 1 0;
+}
+
+
+.replay-wrap .replay .replay-v {
+    position: relative;
+    overflow-y: scroll;
+    flex: 1;
+}
+
+
+.sixth {
+    flex: 1;
+    max-width: 800px;
+    display: grid;
+    grid-template-areas:
+    'list'
+    'board'
+    'replay';
+    justify-content: center;
+}
+
+
+@media (min-width: 768px) {
+    .sixth {
+        grid-template-areas:
+        '. . .'
+        'board . replay'
+        '. . .';
+
+        grid-template-columns: minmax(55vmin, 90vh) auto minmax(200px, 400px);
+        grid-template-rows: fit-content(0);
+    }
+}
+
+
+.sixth .replay-wrap {
+    grid-area: replay;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.sixth .board-wrap {
+    grid-area: board;
+    aspect-ratio: 1/1;
+}
+
+.sixth .board-wrap {
+    border: 2px solid #994d1c;
+    border-radius: 8px;
+    min-height: 200px;
+    overflow: hidden;
+    padding: 2px 0px 0 2px;
+}
+
+.sixth .replay-wrap .replay {
+    border: 2px solid #e48f45;
+    border-radius: 0px 0px 8px 8px;
+    min-height: 200px;
+}
