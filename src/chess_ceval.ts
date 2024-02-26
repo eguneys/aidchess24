@@ -1,3 +1,4 @@
+import { legal_moves } from "./chess_pgn_logic"
 import { povAccuracy } from "./chess_winningChances"
 
 export type EvalScore = {
@@ -23,12 +24,13 @@ class CEval {
         }
         let accuracy = povAccuracy('white', before_cp, after_cp)
 
-        console.log(before_cp, after_cp, accuracy)
+        let multi_pvs4 = legal_moves(after_fen).slice(0, 4)
+
         return {
             before_cp,
             after_cp,
             accuracy,
-            multi_pvs4: []
+            multi_pvs4
         }
     }
 

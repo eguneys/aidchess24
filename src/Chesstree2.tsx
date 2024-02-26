@@ -168,8 +168,7 @@ function test_two_paths() {
 
 
 export class Treelala2 {
-  
-
+    
   static make = (tree?: MoveTree, initial_fen: string = tree?.root.data.before_fen || INITIAL_FEN) => {
     let res = new Treelala2(initial_fen, tree)
     return res
@@ -180,26 +179,33 @@ export class Treelala2 {
   _cursor_path: Signal<string[]>
 
   _hidden_paths: TwoPaths
-  _revealed_paths: TwoPaths
-  _failed_paths: TwoPaths
+  _revealed_paths: Signal<string[][]>
+  _failed_paths: Signal<string[][]>
   _solved_paths: TwoPaths
 
   get hidden_paths() {
     return this._hidden_paths.paths
   }
   get revealed_paths() {
-    return this._revealed_paths.paths
+    return this._revealed_paths[0]()
   }
+
+  set revealed_paths(_: string[][]) {
+    this._revealed_paths[1](_)
+  }
+
+
+
   get failed_paths() {
-    return this._failed_paths.paths
+    return this._failed_paths[0]()
+  }
+
+  set failed_paths(_: string[][]) {
+    this._failed_paths[1](_)
   }
 
   get solved_paths() {
     return this._solved_paths
-  }
-
-  get failed_paths_expanded() {
-    return this._failed_paths.expand_paths
   }
 
   get solved_paths_expanded() {
@@ -258,8 +264,8 @@ export class Treelala2 {
     this._tree = createSignal(tree)
 
     this._hidden_paths = new TwoPaths()
-    this._revealed_paths = new TwoPaths()
-    this._failed_paths = new TwoPaths()
+    this._revealed_paths = createSignal<string[][]>([], { equals: false })
+    this._failed_paths = createSignal<string[][]>([], { equals: false })
     this._solved_paths = new TwoPaths()
   }
 
@@ -270,11 +276,18 @@ export class Treelala2 {
   reveal_hidden_paths = () => {
     batch(() => {
       this.hidden_paths.forEach(_ => {
-        this._revealed_paths.add_path(_)
+        this.revealed_paths.push(_)
       })
       this._hidden_paths.clear()
+      this.revealed_paths = this.revealed_paths
     })
   }
+
+  add_and_reveal_uci(uci: string) {
+    this.revealed_paths.push(this.add_uci(uci))
+    this.revealed_paths = this.revealed_paths
+  }
+
 
 
   reveal_one_random = () => {
@@ -314,7 +327,7 @@ export class Treelala2 {
     if (c_found) {
 
 
-      let in_failed_path = this.failed_paths_expanded.find(_ => _.join('') === c_found.data.path.join(''))
+      let in_failed_path = this.failed_paths.find(_ => _.join('') === c_found.data.path.join(''))
 
       if (in_failed_path) {
         setTimeout(() => {
@@ -341,13 +354,19 @@ export class Treelala2 {
       }
 
       this.add_uci(uci)
-      this._failed_paths.add_path([...a0.data.path, uci])
-
+      this.add_failed_path([...a0.data.path, uci])
       setTimeout(() => {
         this.on_wheel(-1)
       }, 100)
       return false
     }
+  }
+
+  add_failed_path(path: string[]) {
+    let fs = this.failed_paths
+    fs = fs.filter(_ => _.join('') !== path.join(''))
+    fs.push(path)
+    this.failed_paths = fs
   }
 
 
@@ -396,236 +415,17 @@ export class Treelala2 {
 
 
     drop_failed_paths() {
+      return batch(() => {
 
-    }
-
-
-
-}
-
-// @ts-ignore
-class Treelala {
-        static make = (tree?: MoveTree, initial_fen: string = tree?.root.data.before_fen || INITIAL_FEN) => {
-        let res = new Treelala(initial_fen, tree)
-        return res
-    }
-
-    _tree: Signal<MoveTree | undefined>
-    _cursor_path: Signal<string[]>
-
-
-    _hidden_paths: Signal<string[][]>
-    _revealed_paths: Signal<string[][]>
-    _failed_paths: Signal<string[][]>
-    _solved_paths: Signal<string[][]>
-
-  get initial_color() {
-    return this.tree?.initial_color
-  }
-
-
-    get solved_paths() {
-      return this._solved_paths[0]()
-    }
-
-    set solved_paths(paths: string[][]) {
-      this._solved_paths[1](paths)
-    }
-
-
-
-
-
-    get failed_paths() {
-      return this._failed_paths[0]()
-    }
-
-    set failed_paths(paths: string[][]) {
-      this._failed_paths[1](paths)
-    }
-
-
-
-
-    get revealed_paths() {
-      return this._revealed_paths[0]()
-    }
-
-    set revealed_paths(paths: string[][]) {
-      this._revealed_paths[1](paths)
-    }
-
-
-
-    get hidden_paths() {
-      return this._hidden_paths[0]()
-    }
-
-    set hidden_paths(paths: string[][]) {
-      this._hidden_paths[1](paths)
-    }
-
-    get cursor_path() {
-        return this._cursor_path[0]()
-    }
-
-    get tree() {
-        return this._tree[0]()
-    }
-
-    set cursor_path(path: string[]) {
-        this._cursor_path[1](path)
-    }
-
-    set tree(tree: MoveTree | undefined) {
-        this._tree[1](tree)
-    }
-
-    try_set_cursor_path(path: string[]) {
-      let hidden_paths = this.hidden_paths
-      if (hidden_paths.find(_ => path.join('').startsWith(_.join('')))) {
-        return false
-      }
-      this.cursor_path = path
-      return true
-    }
-
-    get fen_last_move() {
-        let t = this.tree
-        if (t) {
-            let i = t.get_at(this.cursor_path)
-            if (!i) {
-              return undefined
-            }
-            let fen = i.after_fen
-            let last_move = i.uci
-            return [fen, last_move]
+        let fs = this.failed_paths
+        fs.forEach(_ => this.tree?.delete_at(_))
+        let cursor_path = this.cursor_path
+        while (cursor_path.length > 0 && !this.tree?.get_at(cursor_path)) {
+          cursor_path.pop()
         }
-    }
-
-    constructor(readonly initial_fen: string, tree?: MoveTree) {
-        this._cursor_path = createSignal<string[]>([], { equals: false })
-        this._tree = createSignal(tree)
-
-        this._hidden_paths = createSignal<string[][]>([], { equals: false })
-        this._revealed_paths = createSignal<string[][]>([], { equals: false })
-        this._failed_paths = createSignal<string[][]>([], { equals: false })
-        this._solved_paths = createSignal<string[][]>([], { equals: false })
-    }
-
-  get is_revealed() {
-    return this.hidden_paths.length === 0
-  }
-
-  reveal_hidden_paths = () => {
-    this.revealed_paths = this.hidden_paths
-    this.hidden_paths = []
-  }
-
-
-  reveal_one_random = () => {
-
-    if (!this.tree) {
-      return false
-    }
-
-    const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? [this.tree.root]
-
-    const c_found = weightedRandomSelect(cc)
-    if (c_found) {
-      let hh = this.hidden_paths
-      hh = hh.filter(_ => _.join('') !== c_found.data.path.join(''))
-      let cc0cc = c_found.children.map(_ => _.data.path)
-      hh.push(...cc0cc)
-      this.hidden_paths = hh
-      this.cursor_path = c_found.data.path
-      return true
-    }
-
-    return false
-  }
-
-  try_next_uci_fail = (uci: string) => {
-
-    if (!this.tree) {
-      return false
-    }
-
-    const a0 = this.tree?._traverse_path(this.cursor_path) ?? this.tree.root
-    const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? [this.tree.root]
-
-    const c_found = cc.find(_ => _.data.uci === uci) ??  cc.find(_ => castles_uci_fix(_.data) === uci)
-
-    if (c_found) {
-      let hh = this.hidden_paths
-      hh = hh.filter(_ => _.join('') !== c_found.data.path.join(''))
-      let cc0cc = c_found.children.map(_ => _.data.path)
-      hh.push(...cc0cc)
-      this.hidden_paths = hh
-      let rr = this.solved_paths
-      rr.push(c_found.data.path)
-      this.solved_paths = rr
-      this.cursor_path = c_found.data.path
-      return true
-    } else {
-
-      if (this.is_revealed) {
-        setTimeout(() => {
-          this.cursor_path = this.cursor_path
-        }, 100)
-        return
-      }
-
-      this.add_uci(uci)
-      this.failed_paths.push([...a0.data.path, uci])
-
-      setTimeout(() => {
-        this.on_wheel(-1)
-      }, 100)
-      return false
-    }
-  }
-
-
-
-    on_wheel = (dir: number) => {
-        let path = this.cursor_path
-        if (dir < 0) {
-          if (path.length > 0) {
-            this.try_set_cursor_path(path.slice(0, -1))
-          }
-        } else {
-          let t = this.tree
-          if (t) {
-
-            let i
-            if (path.length === 0) {
-              i = [t.root]
-            } else {
-              i = t._traverse_path(path)?.children
-            } 
-
-            let new_path = i?.map(_ => _.data.path)
-            .find(_ => !this.hidden_paths?.some(h => _.join('').startsWith(h.join(''))))
-            if (new_path) {
-              this.try_set_cursor_path(new_path)
-            }
-          }
-        }
-    }
-
-    add_uci(uci: string) {
-      let t = this.tree
-      let path = this.cursor_path
-      if (!t) {
-        t = MoveTree.make(this.initial_fen, [uci])
-      } else {
-        t.append_uci(uci, path)
-      }
-      path = [...path, uci]
-      batch(() => {
-        this.tree = t
-        this.cursor_path = path
+        this.cursor_path = cursor_path
+        this.failed_paths = []
+        return fs
       })
     }
 }
@@ -666,7 +466,7 @@ const Chesstree2 = (props: { lala: Treelala2 }) => {
             hidden_paths={props.lala.hidden_paths}
             revealed_paths={props.lala.revealed_paths}
             solved_paths={props.lala.solved_paths_expanded}
-            failed_paths={props.lala.failed_paths_expanded}
+            failed_paths={props.lala.failed_paths}
             lines={[tree().root]}/>
           }</Show>
       </div>
@@ -722,8 +522,7 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
     let on_hidden_path_start = () => props.hidden_paths.find(_ => _.join('') === my_path)!
     let on_hidden_path_rest = () => props.hidden_paths.find(_ => my_path.startsWith(_.join('')))!
 
-    let on_revealed_path_start = () => props.revealed_paths.find(_ => _.join('') === my_path)!
-    let on_revealed_path_rest = () => props.revealed_paths.find(_ => my_path.startsWith(_.join('')))!
+    let on_revealed_path = () => props.revealed_paths.find(_ => _.join('') === my_path)!
 
     let on_failed_path = () => props.failed_paths.find(_ => _.join('') === my_path)!
 
@@ -732,7 +531,7 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
     let move_on_path_klass = () => ['move', 
     on_path_end()?'on_path_end':on_path()?'on_path':'',
     on_hidden_path_start() ? 'on_hidden_path_start':on_hidden_path_rest() ? 'on_hidden_path': '',
-    on_revealed_path_start() ? 'on_revealed_path_start':on_revealed_path_rest() ? 'on_revealed_path': '',
+    on_revealed_path() ? 'on_revealed_path': '',
     on_failed_path() ? 'on_failed_path': '',
     on_solved_path() ? 'on_solved_path': '',
     props.collapsed ? 'collapsed': ''
@@ -781,7 +580,7 @@ export const ChesstreeShorten = (props: { lala: Treelala2 }) => {
             hidden_paths={props.lala.hidden_paths}
             revealed_paths={props.lala.revealed_paths}
             solved_paths={props.lala.solved_paths_expanded}
-            failed_paths={props.lala.failed_paths_expanded}
+            failed_paths={props.lala.failed_paths}
             lines={[tree().root]}/>
           }</Show>
       </div>

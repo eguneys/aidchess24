@@ -152,7 +152,7 @@ const Repertoire = () => {
   const check_score = () => {
 
     let i = puzzle_pgn()?.attempt.solved_paths_expanded.length ?? 0
-    let f = puzzle_pgn()?.attempt.failed_paths_expanded.length ?? 0
+    let f = puzzle_pgn()?.attempt.failed_paths.length ?? 0
     if (i % 2 === 1) {
       i =  i + 1 + (i - 1) / 2
     } else {

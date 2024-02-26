@@ -5,8 +5,21 @@ import { PgnNodeData, ChildNode, parsePgn } from 'chessops/pgn'
 import { makeSan, parseSan } from 'chessops/san'
 import { Signal, createSignal, untrack } from 'solid-js'
 import { FinalEvalAccuracy, ceval } from './chess_ceval'
+import { chessgroundDests } from 'chessops/compat'
 
 export { INITIAL_FEN } from 'chessops/fen'
+
+export function legal_moves(fen: string) {
+    let i_pos = Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
+
+    let res = []
+
+    for (let [from, to] of chessgroundDests(i_pos)) {
+        res.push(...to.map(_ => from+_))
+    }
+
+    return res
+}
 
 export class Pgn {
 
@@ -106,6 +119,14 @@ export class TreeNode<V> {
         res.children = this.children.map(_ => _.clone)
 
         return res
+    }
+
+    get all_leaves(): TreeNode<V>[] {
+        if (this.children.length === 0) {
+            return [this]
+        } else {
+            return this.children.flatMap(_ => _.all_leaves)
+        }
     }
 
     get length() {
@@ -284,11 +305,15 @@ export class MoveTree {
 
     _traverse_path(path: string[]) {
 
+        
         let res = undefined
         let i = [this.root]
         for (let p of path) {
-            res = i.find(_ => _.data.uci === p)!
-            i = res?.children || this.root
+            res = i.find(_ => _.data.uci === p)
+            if (!res) {
+                return undefined
+            }
+            i = res.children
         }
         return res
     }
@@ -319,6 +344,11 @@ export class MoveTree {
         return [path, res, rest]
     }
 
+
+    get all_leaves() {
+        return this.root.all_leaves.map(_ => _.data)
+    }
+
     get_children(path: string[]) {
         let i = this._traverse_path(path)
         return i?.children.map(_ => _.data)
@@ -335,6 +365,13 @@ export class MoveTree {
     get_at(path: string[]) {
         let i = this._traverse_path(path)
         return i?.data
+    }
+
+    delete_at(path: string[]) {
+        const parent = this._traverse_path(path.slice(0, -1))
+        if (parent) {
+            parent.children = parent.children.filter(_ => _.data.path.join('') !== path.join(''))
+        }
     }
 
     append_uci(uci: string, path: string[] = []) {
