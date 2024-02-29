@@ -67,13 +67,17 @@ export class TwoPaths {
 
     this.whites.forEach(_ => {
       for (let i = 0; i <= _.length - 1; i+= 2) {
-        res.push(_.slice(0, i + 1))
+        let x = _.slice(0, i + 1)
+        res = res.filter(_ => _.join('') !== x.join(''))
+        res.push(x)
       }
     })
 
     this.blacks.forEach(_ => {
       for (let i = 1; i <= _.length - 1; i+= 2) {
-        res.push(_.slice(0, i + 1))
+        let x = _.slice(0, i + 1)
+        res = res.filter(_ => _.join('') !== x.join(''))
+        res.push(x)
       }
     })
     return res

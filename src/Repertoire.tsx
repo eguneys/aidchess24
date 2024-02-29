@@ -1,4 +1,4 @@
-import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup } from 'solid-js'
+import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack } from 'solid-js'
 import './Repertoire.css'
 import { useParams } from '@solidjs/router'
 
@@ -10,6 +10,15 @@ import { ChesstreeShorten, Treelala2, TwoPaths } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
 import { RepertoireStatStore } from './storage'
+
+const DEPTH_COLOR = [
+   '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159', '#ffaa5e', '#ffd4a3', '#ffecd6',
+   '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159', '#ffaa5e', '#ffd4a3', '#ffecd6',
+   '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159', '#ffaa5e', '#ffd4a3', '#ffecd6',
+]
+const total_score_to_color = (n: number) => {
+  return DEPTH_COLOR[Math.floor((1 - n) * 23)] ?? 'white'
+}
 
 type PlayMode = 'moves' | 'match'
 
@@ -70,20 +79,24 @@ class RepertoireStat {
 
   static load_from_store(s: PGNStudy, i_chapter: number): any {
     let store = new RepertoireStatStore(s.name, i_chapter)
-    return RepertoireStat.make(s.chapters[i_chapter].pgn.tree, TwoPaths.set_for_saving(store.solved_paths))
+    return RepertoireStat.make(s.name, i_chapter, s.chapters[i_chapter].pgn.tree, TwoPaths.set_for_saving(store.solved_paths))
   }
 
-  static save_paths_to_store(s: PGNStudy, i_chapter: number, stats: RepertoireStat) {
-    let store = new RepertoireStatStore(s.name, i_chapter)
+  static save_paths_to_store(stats: RepertoireStat) {
+    let store = new RepertoireStatStore(stats.study_name, stats.i_chapter)
     store.solved_paths = stats.solved_paths.get_for_saving()
   }
   
 
-  static make(t: MoveTree, paths: TwoPaths = new TwoPaths()) {
-    return new RepertoireStat(MoveScoreTree.make(t), paths)
+  static make(study_name: string, i_chapter: number, t: MoveTree, paths: TwoPaths = new TwoPaths()) {
+    return new RepertoireStat(study_name, i_chapter, MoveScoreTree.make(t), paths)
   }
 
-  constructor(readonly score_tree: MoveScoreTree, readonly solved_paths: TwoPaths) {}
+  constructor(
+    readonly study_name: string, 
+    readonly i_chapter: number, 
+    readonly score_tree: MoveScoreTree, 
+    readonly solved_paths: TwoPaths) {}
 
   get progress() {
     return Math.floor(this.solved_paths.expand_paths
@@ -91,8 +104,39 @@ class RepertoireStat {
     .reduce((a, b) => a + b, 0) * 100)
   }
 
-  merge_stats(b: RepertoireStat) {
+  get progress_map() {
+
+    let ss = this.solved_paths.expand_paths
+    let pp = this.score_tree.progress_paths
+
+    const total_scores = pp.map(paths => {
+      return paths
+        .map(p => this.score_tree.get_at(p)!.score)
+        .reduce((a, b) => a + b, 0)
+    })
+
+    const total = total_scores.reduce((a, b) => a + b, 0)
+
+    return pp.map((paths, i) => {
+
+      let e_path = paths[paths.length - 1]
+
+      let total_score = total_scores[i] / total
+
+      let dd = ss.filter(_ => paths.some(p => p.join('') === _.join('')))
+
+      let done = dd
+        .map(p => this.score_tree.get_at(p)!.score)
+        .reduce((a, b) => a + b, 0)
+
+      return { color: total_score_to_color(total_score), total: total_score, done: done / total_score, path: e_path }
+    }).reverse()
+  }
+
+
+  merge_and_save_stats(b: RepertoireStat) {
     this.solved_paths.merge_dup(b.solved_paths)
+    RepertoireStat.save_paths_to_store(this)
   }
 }
 
@@ -150,21 +194,20 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     repertoire_lala().solved_paths.replace_all(overall_repertoire_stat().solved_paths)
   })
 
-  const repertoire_stat_for_mode = createMemo(on(() => repertoire_player.mode, () => {
+  const repertoire_stat_for_mode = createMemo(() => {
     let t = repertoire_lala().tree!
-    return RepertoireStat.make(t)
-  }))
-
-  createEffect(() => {
-    repertoire_stat_for_mode().solved_paths.replace_all(repertoire_lala().solved_paths)
+    return untrack(() => RepertoireStat.make(study().name, i_selected_chapter(), t, new TwoPaths()))
   })
 
-  createEffect(on(repertoire_stat_for_mode, (_, prev) => {
-    if (prev) {
-      let o = overall_repertoire_stat()
+  createEffect(() => {
+    let s = untrack(() => repertoire_stat_for_mode())
+    s.solved_paths.replace_all(repertoire_lala().solved_paths)
+  })
 
-      o.merge_stats(prev)
-      RepertoireStat.save_paths_to_store(study(), i_selected_chapter(), o)
+  createEffect(on(() => [repertoire_stat_for_mode(), overall_repertoire_stat()], (_, prev) => {
+    if (prev) {
+      let [m, o] = prev
+      o.merge_and_save_stats(m)
     }
   }))
 
@@ -210,7 +253,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   }))
 
 
-
   const onKeyPress = (e: KeyboardEvent) => {
     if (e.key === 'f') {
       repertoire_player.flip_match_color()
@@ -243,6 +285,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     repertoire_player.match_color = study().orientation ?? 'white'
   })
 
+  const progress_map = createMemo(() => repertoire_stat_for_mode().progress_map)
+
   return (<>
     <div onWheel={onWheel} class='repertoire'>
 
@@ -270,8 +314,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
           dests={shalala.dests} />
       </div>
       <div class='eval-gauge'>
-        <div class='white' style="height: 100%"> </div>
-        <div class='score' style={`height: ${repertoire_stat_for_mode().progress ?? 0}%`}></div>
+        <For each={progress_map()}>{ p => 
+          <div onClick={_ => repertoire_lala().try_set_cursor_path(p.path) } class='white' style={`background: ${p.color}; height: ${p.total * 100}%`}>
+            <span class='fill' style={`background: ${p.color}; height: ${p.done * 100}%`}></span>
+          </div>
+        }</For>
       </div>
       <div class='replay-wrap'>
         <div class='replay-header'>

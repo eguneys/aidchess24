@@ -14,6 +14,8 @@
     "@solidjs/router": "^0.9.1",
     "chessground": "^9.0.4",
     "chessops": "^0.12.8",
+    "idb-keyval": "^6.2.1",
+    "lila-stockfish-web": "^0.0.3",
     "shess": "link://../shess",
     "solid-js": "^1.8.5"
   },

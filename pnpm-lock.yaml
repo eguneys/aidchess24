@@ -20,6 +20,12 @@ dependencies:
   chessops:
     specifier: ^0.12.8
     version: 0.12.8
+  idb-keyval:
+    specifier: ^6.2.1
+    version: 6.2.1
+  lila-stockfish-web:
+    specifier: ^0.0.3
+    version: 0.0.3
   shess:
     specifier: link://../shess
     version: link:../shess
@@ -926,6 +932,10 @@ packages:
     resolution: {integrity: sha512-DV5Ln36z34NNTDgnz0EWGBLZENelNAtkiFA4kyNOG2tDI6Mz1uSWiq1wAKdyjnJwyDiDO7Fa2SO1CTxPXL8VxA==}
     dev: true
 
+  /idb-keyval@6.2.1:
+    resolution: {integrity: sha512-8Sb3veuYCyrZL+VBt9LJfZjLUPWVvqn8tG28VqYNFCo43KHcKuq+b4EiXGeuaLAQWL2YmyDgMp2aSpH9JHsEQg==}
+    dev: false
+
   /is-what@4.1.16:
     resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
     engines: {node: '>=12.13'}
@@ -946,6 +956,10 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
     dev: true
+
+  /lila-stockfish-web@0.0.3:
+    resolution: {integrity: sha512-HyoLNUhA8wEFw4fJLhhz3FupPtntylz8e7ERmzOHEM0mJ4cznBaKHWjdA7QB/vY/egwRB4bvbTCKpVo9M+drUg==}
+    dev: false
 
   /lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}

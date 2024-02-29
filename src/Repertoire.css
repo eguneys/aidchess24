@@ -35,25 +35,33 @@
     display: flex;
     flex-flow: column;
     justify-content: flex-end;
-    border-radius: 4px;
+    border-radius: 2px;
     overflow: hidden;
     grid-area: gauge;
     width: var(--gauge-gap);
     position: relative;
     background: #a0a0a0;
+    border: 1px solid black;
 }
 
-.eval-gauge:after {
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    box-shadow: 0 0 3px rgba(0, 0, 0, .7) inset;
+.eval-gauge .white {
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-end;
+
+    border-bottom: 1px solid #0c0c0c;
 }
 
+.eval-gauge .white .fill {
+    user-select: none;
+    cursor: pointer;
+    box-shadow: inset 1px 1px 4px rgb(234, 255, 156);
+    transition: height 0.6s;
+}
+
+.eval-gauge .white .fill:hover {
+    border: 1px solid black;
+}
 
 .eval-gauge > .score {
     background: hsla(130, 57%, 86%);

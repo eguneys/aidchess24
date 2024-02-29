@@ -42,7 +42,6 @@ const AppInRouter = () => {
 
           <div class='links'>
             <A href='/shalala'>Shalala</A>
-            <A href='/sixth'>Sixth Game</A>
             <A href='/repertoires'>Repertoires</A>
             <A href='/donate'>Donate</A>
           </div>

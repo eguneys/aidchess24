@@ -153,17 +153,18 @@ export class TreeNode<V> {
         return this.children_first_variations?.length ?? 0
     }
 
+    get first_node_with_variations(): TreeNode<V> | undefined {
+        if (this.children.length === 0) {
+            return undefined
+        } else if (this.children.length === 1) {
+            return this.children[0].first_node_with_variations
+        } else {
+            return this
+        }
+    }
+
     get children_first_variations() {
-
-        let i = this.children
-
-        while (i?.length === 1) {
-            i = i[0].children
-        }
-
-        if (i.length > 1) {
-            return i
-        }
+        return this.first_node_with_variations?.children
     }
 
     get children() {
@@ -195,10 +196,13 @@ export class MoveScoreTree {
 
         function score_node(node: TreeNode<MoveData>, i: number) {
 
+
+            let p_l = node.data.path.length
             let l = node.length
             let v = node.nb_first_variations
             
-            let score = i * (l / 2) * (v + 1)
+            let score = ((i + 1) * 400 + (100 / p_l) * 30 + l * 10) * (v + 1) * 1000
+
             let res = TreeNode.make({ path: node.data.path, uci: node.data.uci, score })
 
             let n = node.children.length
@@ -229,8 +233,30 @@ export class MoveScoreTree {
         return new MoveScoreTree(res)
     }
 
+    get clone() {
+        return new MoveScoreTree(this.root.clone)
+    }
+
     constructor(readonly root: TreeNode<MoveScoreData>) {}
 
+    get progress_paths() {
+        function find_vs(node: TreeNode<MoveScoreData>, cur: string[][], res: string[][][]) {
+            cur.push(node.data.path)
+            if (node.children.length === 0) {
+                res.push(cur)
+            } else if (node.children.length === 1) {
+                find_vs(node.children[0], cur, res)
+            } else {
+                res.push(cur)
+                node.children.forEach(child => {
+                    find_vs(child, [], res)
+                })
+            }
+        }
+        let res: string[][][] = []
+        find_vs(this.root, [], res)
+        return res
+    }
 
 
     _traverse_path(path: string[]) {
@@ -254,7 +280,12 @@ export class MoveScoreTree {
         return i?.data
     }
 
-
+    delete_at(path: string[]) {
+        const parent = this._traverse_path(path.slice(0, -1))
+        if (parent) {
+            parent.children = parent.children.filter(_ => _.data.path.join('') !== path.join(''))
+        }
+    }
 }
 
 export type MoveData = {
