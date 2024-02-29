@@ -12,12 +12,10 @@ import { Color } from 'chessground/types'
 import { RepertoireStatStore } from './storage'
 
 const DEPTH_COLOR = [
-   '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159', '#ffaa5e', '#ffd4a3', '#ffecd6',
-   '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159', '#ffaa5e', '#ffd4a3', '#ffecd6',
-   '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159', '#ffaa5e', '#ffd4a3', '#ffecd6',
+   '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
 ]
 const total_score_to_color = (n: number) => {
-  return DEPTH_COLOR[Math.floor((1 - n) * 23)] ?? 'white'
+  return DEPTH_COLOR[Math.floor((1 - n / 10) * 6)]
 }
 
 type PlayMode = 'moves' | 'match'
@@ -106,30 +104,48 @@ class RepertoireStat {
 
   get progress_map() {
 
-    let ss = this.solved_paths.expand_paths
-    let pp = this.score_tree.progress_paths
+    let pp = untrack(() => this.score_tree.progress_paths)
 
-    const total_scores = pp.map(paths => {
-      return paths
+    const total_scores = untrack(() => pp.map(paths => {
+      return [
+        paths
+        .filter(_ => _.length % 2 === 1)
         .map(p => this.score_tree.get_at(p)!.score)
-        .reduce((a, b) => a + b, 0)
-    })
+        .reduce((a, b) => a + b, 0),
+        paths
+        .filter(_ => _.length % 2 === 0)
+        .map(p => this.score_tree.get_at(p)!.score)
+        .reduce((a, b) => a + b, 0),
 
-    const total = total_scores.reduce((a, b) => a + b, 0)
+      ]
+    }))
 
     return pp.map((paths, i) => {
 
+      let b_path = paths[0]
       let e_path = paths[paths.length - 1]
 
-      let total_score = total_scores[i] / total
+      let total_whites = total_scores[i][0]
+      let total_blacks = total_scores[i][1]
 
-      let dd = ss.filter(_ => paths.some(p => p.join('') === _.join('')))
+      let ss = createMemo(() => this.solved_paths.expand_paths)
+      let dd = createMemo(() => ss().filter(_ => paths.some(p => p.join('') === _.join(''))))
 
-      let done = dd
+      let white = createMemo(() => dd()
+        .filter(_ => _.length % 2 === 1)
         .map(p => this.score_tree.get_at(p)!.score)
-        .reduce((a, b) => a + b, 0)
+        .reduce((a, b) => a + b, 0))
+      let black = createMemo(() => dd()
+        .filter(_ => _.length % 2 === 0)
+        .map(p => this.score_tree.get_at(p)!.score)
+        .reduce((a, b) => a + b, 0))
 
-      return { color: total_score_to_color(total_score), total: total_score, done: done / total_score, path: e_path }
+      return { 
+        color: total_score_to_color(b_path.length / 20 + e_path.length / 10), 
+        total: total_whites * 2, 
+        black: createMemo(() => black() / total_blacks), 
+        white: createMemo(() => white() / total_whites),
+        path: e_path }
     }).reverse()
   }
 
@@ -315,8 +331,9 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       </div>
       <div class='eval-gauge'>
         <For each={progress_map()}>{ p => 
-          <div onClick={_ => repertoire_lala().try_set_cursor_path(p.path) } class='white' style={`background: ${p.color}; height: ${p.total * 100}%`}>
-            <span class='fill' style={`background: ${p.color}; height: ${p.done * 100}%`}></span>
+          <div onClick={_ => repertoire_lala().try_set_cursor_path(p.path) } class='line' style={`background: ${p.color}; height: ${Math.round(p.total * 100)}%`}>
+            <span class='fill white' style={`height: ${Math.round(p.white() * 100)}%`}></span>
+            <span class='fill black' style={`height: ${Math.round(p.black() * 100)}%`}></span>
           </div>
         }</For>
       </div>

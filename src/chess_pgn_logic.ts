@@ -201,13 +201,13 @@ export class MoveScoreTree {
             let l = node.length
             let v = node.nb_first_variations
             
-            let score = ((i + 1) * 400 + (100 / p_l) * 30 + l * 10) * (v + 1) * 1000
+            let score = ((- i) * 100 + (1 / (p_l / 40)) * 10 + (l / 20) * 10) + (v + 1) * 100
 
             let res = TreeNode.make({ path: node.data.path, uci: node.data.uci, score })
 
-            let n = node.children.length
+            let n = node.children.length + i
             let s = n * (n + 1) / 2
-            res.children = node.children.map((_, i) => score_node(_, (n - i) / s))
+            res.children = node.children.map((_, ii) => score_node(_, (ii + i) / s))
 
             return res
         }
