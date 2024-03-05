@@ -1,4 +1,4 @@
-import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack } from 'solid-js'
+import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack, onMount } from 'solid-js'
 import './Repertoire.css'
 import { useParams } from '@solidjs/router'
 
@@ -10,6 +10,8 @@ import { ChesstreeShorten, Treelala2, TwoPaths } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
 import { RepertoireStatStore } from './storage'
+import throttle from './common/throttle'
+import { stepwiseScroll } from './common/scroll'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
@@ -282,7 +284,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   })
 
 
-  const onWheel = (e: WheelEvent) => {
+  const onWheel = stepwiseScroll((e: WheelEvent) => {
     const target = e.target as HTMLElement;
     if (
       target.tagName !== 'PIECE' &&
@@ -293,7 +295,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     e.preventDefault();
     shalala.set_on_wheel(Math.sign(e.deltaY))
 
-  }
+  })
 
 
 
@@ -303,8 +305,18 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
   const progress_map = createMemo(() => repertoire_stat_for_mode().progress_map)
 
+
+  let el_rep: HTMLDivElement
+
+  onMount(() => {
+    el_rep.addEventListener('wheel', onWheel, { passive: false })
+  })
+  onCleanup(() => {
+    el_rep.removeEventListener('wheel', onWheel)
+  })
+
   return (<>
-    <div onWheel={onWheel} class='repertoire'>
+    <div ref={_ => el_rep = _} class='repertoire'>
 
       <div class='list-wrap'>
         <h1 class='header'>Repertoire</h1>

@@ -10,7 +10,6 @@ const Chessboard = (props: { orientation?: Color, movable?: boolean, fen_uci?: [
     let ground: Api
 
     onMount(() => {
-
       let color = props.color
       let dests = props.dests
 
