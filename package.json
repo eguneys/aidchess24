@@ -9,19 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@solid-primitives/storage": "^2.1.2",
-    "@solidjs/meta": "^0.29.1",
+    "@solid-primitives/storage": "^2.1.4",
+    "@solidjs/meta": "^0.29.3",
     "@solidjs/router": "^0.9.1",
     "chessground": "^9.0.4",
-    "chessops": "^0.12.8",
+    "chessops": "^0.14.0",
     "idb-keyval": "^6.2.1",
     "lila-stockfish-web": "^0.0.3",
-    "shess": "link://../shess",
-    "solid-js": "^1.8.5"
+    "shess": "link:../shess",
+    "solid-js": "^1.8.15"
   },
   "devDependencies": {
-    "typescript": "^5.2.2",
-    "vite": "^5.0.12",
-    "vite-plugin-solid": "^2.7.2"
+    "sass": "^1.71.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.5",
+    "vite-plugin-solid": "^2.10.1"
   }
 }

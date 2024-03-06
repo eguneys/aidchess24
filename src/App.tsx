@@ -1,7 +1,7 @@
 import { hashIntegration, Router, Routes, Route, A, useLocation } from "@solidjs/router";
 import { createMemo, lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
-import './App.css'
+import './App.scss'
 
 const Home = lazy(() => import('./Home'))
 const Repertoires = lazy(() => import('./Repertoires'))
@@ -37,17 +37,33 @@ const AppInRouter = () => {
   }
 
     return (<>
-      <div class='navbar'>
-          <A href='/'>aidchess.com</A>
 
-          <div class='links'>
-            <A href='/shalala'>Shalala</A>
-            <A href='/repertoires'>Repertoires</A>
-            <A href='/donate'>Donate</A>
+      <div class='hh'>
+        Hello
+      </div>
+      <header id='top'>
+          <div class='site-title-nav'>
+
+          <input type='checkbox' id='tn-tg' class='topnav-toggle'></input>
+          <label for='tn-tg' class='fullscreen-mask'></label>
+          <label for='tn-tg' class='hbg'>
+            <span class='hbg__in'></span>
+          </label>
+          <h1 class='site-title'><A href='/'>aidchess.com</A></h1>
+
+          <nav id='topnav'>
+            <section><A href='/shalala'>Shalala</A></section>
+            <section><A href='/repertoires'>Repertoires</A></section>
+            <section><A class="site-title-nav__donate" href='/donate'>Donate</A></section>
+          </nav>
           </div>
 
-          <A href='/'>Dashboard</A>
-      </div>
+          <div class='site-buttons'>
+            <div class='dasher'>
+            <A href='/'>Dashboard</A>
+            </div>
+          </div>
+      </header>
       <div class={'main-wrap ' + path_klass()}>
         <div class='main'>
 
