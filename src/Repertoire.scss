@@ -1,6 +1,7 @@
 @import '_variables';
 
-.on-openings {
+.on-openings,
+.on-tactics  {
     .repertoire {
 
         display: grid;
@@ -98,11 +99,7 @@
         .replay-wrap {
             display: flex;
             flex-direction: column;
-    
-            @media (max-width: 600px) {
-    
-                min-height: 500px;
-            }
+
         }
         
         .list-wrap {
@@ -342,3 +339,17 @@
         }
     }
 }
+
+    
+            @media (max-width: 600px) {
+                .on-openings {
+                    .replay-wrap {
+                      min-height: 500px;
+                    }
+                }
+                .on-tactics {
+                    .replay-wrap {
+                        min-height: 200px;
+                    }
+                }
+            }

@@ -1,6 +1,6 @@
 import { createSignal, createEffect, createResource, createMemo, on, Signal  } from 'solid-js'
-import './Repertoire.css'
-import './Tactics.css'
+import './Tactics.scss'
+import './Repertoire.scss'
 import { useParams } from '@solidjs/router'
 
 import StudyRepo from './studyrepo'
