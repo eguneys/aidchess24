@@ -1,0 +1,110 @@
+@import '_variables';
+
+.on-home {
+  .home {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+
+    h1 {
+        padding: 2em 0 1em 0;
+        color: $dark-text;
+        text-align: center;
+
+
+        a {
+            font-weight: bold;
+            transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1);
+        }
+
+        &.twitch {
+           text-shadow: $gold 2px 2px 2px;
+
+           a {
+            color: $dark-text;
+            transition: 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+            &:hover {
+                color: $gold;
+                text-shadow: $dark-text 1px 1px 0px;
+            }
+           }
+        }
+    }
+
+
+    .features {
+
+        display: flex;
+        justify-content: space-between;
+
+
+        .feature {
+            padding: 1em;
+            flex: 1;
+            display: flex;
+            flex-flow: column;
+            text-align: center;
+
+            h3 {
+                font-weight: normal;
+            }
+
+            h4 {
+                font-family: Kantumruy;
+                color: $dark-text;
+            }
+
+            ul {
+                margin: 0 auto;
+                max-width: 80%;
+                display: flex;
+                flex-flow: column;
+                justify-content: center;
+
+
+                li {
+                    padding: 0.2em 0;
+                }
+            }
+        }
+    }
+
+
+    footer {
+        padding-top: 6em;
+        padding-bottom: 1em;
+
+        align-self: stretch;
+
+        ul {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: space-around;
+        }
+
+        a {
+            font-weight: bold;
+            font-family: Kantumruy;
+            font-size: 1.3em;
+
+            &:active {
+                text-decoration: underline;
+            }
+        }
+    }
+  }
+
+  iframe {
+    height: 378px;
+    width: 620px;
+
+    @media (max-width: 499px) {
+  
+        height: calc(378px/1.5);
+        width: calc(620px/1.5);
+    }
+  }
+
+}

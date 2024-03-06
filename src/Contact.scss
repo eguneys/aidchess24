@@ -1,0 +1,113 @@
+@import '_variables';
+
+.contact {
+    display: grid;
+    grid-template-areas: 
+    'tabs'
+    'content';
+    grid-template-rows: fit-content(0) auto;
+
+    @media (min-width: 979.3px) {
+        grid-template-areas: 'tabs content';
+        grid-template-columns: max-content auto;
+        grid-template-rows: min-content; 
+    }
+
+    .tabs {
+        grid-area: tabs;
+    }
+
+    .content {
+        grid-area: content;
+    }
+
+    .content {
+        display: flex;
+        flex-flow: column;
+        padding: 1em;
+        min-height: 100%;
+
+        h1, h2, h4 {
+            font-family: Kantumruy;
+        }
+
+        h1 {
+            padding-bottom: 0.5em;
+        }
+
+        p {
+            padding: 0.5em;
+        }
+
+
+        .donate {
+            display: flex;
+            justify-content: center;
+            padding: 1em;
+            margin-bottom: 1em;
+            background: $gold;
+            color: $text-light;
+
+            h1 {
+                text-align: center;
+                max-width: 600px;
+            }
+        }
+    }
+
+
+    .tabs {
+
+        border-right: 2px solid $accent;
+
+        @media (max-width: 979.3px) {
+   
+           display: flex;
+           flex-direction: row wrap;
+           justify-content: space-around;
+           border-bottom: 2px solid $accent;
+           border-right: none;
+        }
+
+        li {
+            flex: 1 0 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            cursor: pointer;
+            padding: 1em 0.5em;
+            transition: .6s;
+
+            h4 {
+              font-family: Kantumruy;
+            }
+
+            &.twitch {
+                color: $gold;
+    
+                &.active,
+                &:hover {
+                   box-shadow: inset 0px -4px 0 $gold;
+    
+                   @media (min-width: 979.3px) {
+                      box-shadow: inset -4px 0px 0 $gold;
+                   }
+    
+                }
+    
+
+            }
+
+            &.active,
+            &:hover {
+               box-shadow: inset 0px -4px 0 $accent;
+
+               @media (min-width: 979.3px) {
+                  box-shadow: inset -4px 0px 0 $accent;
+               }
+
+            }
+        }
+    }
+}

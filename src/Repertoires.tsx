@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js'
 import { useNavigate } from '@solidjs/router'
-import './Repertoires.css'
+import './Repertoires.scss'
 
 import { RepertoiresFixture, StudyInRepertoireCategory  } from './studyrepo'
 

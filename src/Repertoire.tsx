@@ -1,5 +1,5 @@
 import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack, onMount } from 'solid-js'
-import './Repertoire.css'
+import './Repertoire.scss'
 import { useParams } from '@solidjs/router'
 
 import StudyRepo, { PGNStudy } from './studyrepo'
@@ -10,7 +10,6 @@ import { ChesstreeShorten, Treelala2, TwoPaths } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
 import { RepertoireStatStore } from './storage'
-import throttle from './common/throttle'
 import { stepwiseScroll } from './common/scroll'
 
 const DEPTH_COLOR = [

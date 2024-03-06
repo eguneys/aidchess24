@@ -1,4 +1,4 @@
-import './Contact.css'
+import './Contact.scss'
 import { Match, Switch, createMemo } from "solid-js"
 import { useNavigate, useLocation, A } from '@solidjs/router'
 

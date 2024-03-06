@@ -33,18 +33,14 @@ const AppInRouter = () => {
 
   const path_klass = () => {
     let p = pathname()
-    return `on-${p}`
+    return `on-${p === '' ? 'home' : p}`
   }
 
     return (<>
-
-      <div class='hh'>
-        Hello
-      </div>
       <header id='top'>
           <div class='site-title-nav'>
 
-          <input type='checkbox' id='tn-tg' class='topnav-toggle'></input>
+          <input type='checkbox' id='tn-tg' class='topnav-toggle fullscreen-toggle'></input>
           <label for='tn-tg' class='fullscreen-mask'></label>
           <label for='tn-tg' class='hbg'>
             <span class='hbg__in'></span>
@@ -52,6 +48,7 @@ const AppInRouter = () => {
           <h1 class='site-title'><A href='/'>aidchess.com</A></h1>
 
           <nav id='topnav'>
+            <section><A class='home' href='/'>aidchess.com</A></section>
             <section><A href='/shalala'>Shalala</A></section>
             <section><A href='/repertoires'>Repertoires</A></section>
             <section><A class="site-title-nav__donate" href='/donate'>Donate</A></section>
