@@ -13,6 +13,8 @@ const Tactics = lazy(() => import('./Tactics'))
 const Endgames = lazy(() => import('./Endgames'))
 const Shalala = lazy(() => import('./Shalala'))
 const SixthDraw = lazy(() => import('./SixthDraw'))
+const Dashboard = lazy(() => import('./Dashboard'))
+
 
 export const MyApp = () => {
     return (<>
@@ -57,7 +59,7 @@ const AppInRouter = () => {
 
           <div class='site-buttons'>
             <div class='dasher'>
-            <A href='/'>Dashboard</A>
+            <A href='/dashboard'>Dashboard</A>
             </div>
           </div>
       </header>
@@ -79,6 +81,7 @@ const AppInRouter = () => {
               <Route path='/about' component={Contact}/>
               <Route path='/donate' component={Contact}/>
               <Route path='/thanks' component={Contact}/>
+              <Route path='/dashboard' component={Dashboard}/>
           </Routes>
         </div>
       </div>

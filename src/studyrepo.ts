@@ -2,6 +2,7 @@ import { Color } from "chessground/types"
 import { Pgn } from "./chess_pgn_logic"
 
 export type PGNStudy = {
+    id: string,
     name: string,
     orientation?: Color,
     chapters: PGNChapter[]
@@ -34,12 +35,13 @@ const reformatStudyPGN = (pgns: string, id: string, study_name: string, orientat
         return {
             name: chapter,
             site,
-            pgn
+            pgn,
         }
 
     })
 
     return {
+        id,
         name: study_name,
         orientation,
         chapters
@@ -75,27 +77,28 @@ export default StudyRepo.init()
 export type StudyInRepertoireCategory = {
   study_link: string,
   study_name: string,
+  nb_chapters: number,
   category: string,
   orientation?: Color
 }
 
 const HardCategories: any = {
   'Openings': [
-    ['Slav Defense', 'TCnt4Tx7', 'black'],
-    ['Sicilian Defense', 'dgldIBYr', 'white'],
-    ['French Defense', 'bLcOj6sO', 'black'],
-    ['e4 vs Minor Defenses', 'F8wyMEli', 'white'],
+    ['Slav Defense', 'TCnt4Tx7', 28, 'black'],
+    ['Sicilian Defense', 'dgldIBYr', 11, 'white'],
+    ['French Defense', 'bLcOj6sO', 14, 'black'],
+    ['e4 vs Minor Defenses', 'F8wyMEli', 7, 'white'],
     ['Spanish Opening', ''],
   ],
   'Masters': [
-    ['Bobby Fischer 60 Memorable Games', '6kq6sDHS'],
+    ['Bobby Fischer 60 Memorable Games', '6kq6sDHS', 60],
     ['Magnus Carlsen 2023', ''],
     ['Tata Steel 2023', ''],
   ],
   'Tactics': [
-    ['50 Puzzles 1600', 'u1600'],
-    ['50 Puzzles 2000', 'u2000'],
-    ['50 Puzzles 2200', 'u2200'],
+    ['50 Puzzles 1600', 'u1600', 50],
+    ['50 Puzzles 2000', 'u2000', 50],
+    ['50 Puzzles 2200', 'u2200', 50],
   ],
   'Endgames': [
     ['100 Endgames You Must Know', ''],
@@ -112,7 +115,8 @@ class _RepertoiresFixture {
         category,
         study_name: _[0],
         study_link: _[1],
-        orientation: _[2]
+        nb_chapters: _[2],
+        orientation: _[3]
       }))
 
     }

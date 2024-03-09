@@ -1,0 +1,219 @@
+@import '_variables';
+
+.on-dashboard {
+    .dashboard {
+        display: grid;
+        grid-template-areas: 
+        'tabs content';
+        grid-template-columns: max-content auto;
+
+
+        .tabs {
+            grid-area: tabs;
+        }
+
+        .content {
+           .openings {
+            margin: 1em;
+            display: flex;
+            gap: 0.5em;
+
+            .list,
+            .one {
+                background: linear-gradient(hsl(40, 57%, 76%), hsl(40, 57%, 70%));
+                box-shadow: 0px 1px 1px $secondary;
+                border-radius: 2px;
+            }
+
+            .list {
+                display: flex;
+                flex-flow: column;
+
+                div {
+                    user-select: none;
+                    cursor: pointer;
+                    padding: 0.5em;
+
+                    &:hover {
+                        background: $accent-light;
+                    }
+
+                    &.active {
+                        background: $text-light;
+                    }
+                }
+            }
+
+            .one {
+                flex: 1;
+                padding: 0.5em;
+                background: linear-gradient(rgb(50, 71, 114), #284276);
+
+                .challenges {
+                    display: flex;
+                    flex-flow: column;
+                    gap: 0.5em;
+
+                    .challenge-wrap {
+                        border-radius: 2px;
+
+                        display: flex;
+                        flex-flow: column;
+                        gap: 0.5em;
+
+                        .title {
+                            display: flex;
+                            align-items: center;
+                            gap: 1em;
+
+                            h3 {
+                                user-select: none;
+                                cursor: pointer;
+                            }
+
+                            span {
+                                color: $accent;
+                            }
+                        }
+
+                    .practice,
+                    .quiz,
+                    .deathmatch {
+
+                        background: #38629a;
+                        color: $text-light;
+                        box-shadow: 0px 1px 2px $dark-text;
+
+                        display: flex;
+                        flex-flow: column;
+
+                        ul {
+                            display: flex;
+
+                            li {
+                                text-align: right;
+                                font-size: 0.7rem;
+                            }
+                        }
+
+                        .progress {
+                            display: flex;
+                            height: 4px;
+                            background: $accent-light;
+
+                            .bar {
+                                background: $accent;
+                            }
+                        }
+                    }
+
+                    .practice {
+                        &:hover {
+                          user-select: none;
+                          cursor: pointer;
+                          background: #517bac;
+                        }
+                    }
+
+                    .quiz-wrap {
+                        display: flex;
+                        gap: 0.6em;
+
+                        .quiz,
+                        .deathmatch {
+
+                           button {
+                               margin: 0 1em;
+                               border: none;
+                               background: $text;
+                               user-select: none;
+                               cursor: pointer;
+
+                               &:hover {
+                                background: $text-light;
+                               }
+
+                               &:active {
+                                text-decoration: underline;
+                               }
+                           }
+
+
+
+                            span {
+                                padding: 0.2em;
+                                font-size: 0.8em;
+                                align-self: flex-end;
+                                color: $text;
+
+                                &.passed {
+                                    color: $success;
+                                }
+                                &.failed {
+                                    color: $error;
+                                }
+                            }
+                        }
+
+                        .quiz {
+                            flex: 1;
+                        }
+
+                        .deathmatch {
+                            flex: 1;
+                        }
+
+                        .progress {
+                            .pass {
+                                background: $success;
+                            }
+                            .fail {
+                                background: $error;
+                            }
+                        }
+                    }
+
+                    }
+
+
+
+                }
+            }
+           }
+
+           h2, h3, h4 {
+            color: $text;
+            font-family: Kantumruy;
+            padding: 0.2em;
+           }
+           h2, h3 {
+            color: $text-light;
+            text-decoration: underline;
+           }
+
+
+        }
+
+
+        .tabs {
+            display: flex;
+            flex-flow: column;
+            gap: 0.1em;
+
+            box-shadow: inset -1px 0px 0 $accent;
+
+            div {
+                user-select: none;
+                cursor: pointer;
+                padding: 1em;
+
+                transition: box-shadow .2s;
+
+                &.active,
+                &:hover {
+                    box-shadow: inset -4px 0px 0 $accent;
+                }
+            }
+        }
+    }
+}

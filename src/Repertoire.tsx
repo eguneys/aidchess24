@@ -9,8 +9,9 @@ import Chessboard from './Chessboard'
 import { ChesstreeShorten, Treelala2, TwoPaths } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
-import { RepertoireStatStore } from './storage'
+import { OpeningsChapterStatStore } from './repertoire_store'
 import { stepwiseScroll } from './common/scroll'
+import SessionStore from './SessionStore'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
@@ -77,13 +78,16 @@ class RepertoireStats {
 class RepertoireStat {
 
   static load_from_store(s: PGNStudy, i_chapter: number): any {
-    let store = new RepertoireStatStore(s.name, i_chapter)
-    return RepertoireStat.make(s.name, i_chapter, s.chapters[i_chapter].pgn.tree, TwoPaths.set_for_saving(store.solved_paths))
+    let store = new OpeningsChapterStatStore(s.id, i_chapter)
+    return RepertoireStat.make(s.id, i_chapter, s.chapters[i_chapter].pgn.tree, TwoPaths.set_for_saving(store.solved_paths))
   }
 
   static save_paths_to_store(stats: RepertoireStat) {
-    let store = new RepertoireStatStore(stats.study_name, stats.i_chapter)
+    let store = new OpeningsChapterStatStore(stats.study_id, stats.i_chapter)
     store.solved_paths = stats.solved_paths.get_for_saving()
+
+
+    store.practice_progress = stats.progress
   }
   
 
@@ -92,7 +96,7 @@ class RepertoireStat {
   }
 
   constructor(
-    readonly study_name: string, 
+    readonly study_id: string, 
     readonly i_chapter: number, 
     readonly score_tree: MoveScoreTree, 
     readonly solved_paths: TwoPaths) {}
@@ -184,7 +188,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
   let shalala = new Shala()
 
-  const [i_selected_chapter, set_i_selected_chapter] = createSignal(0)
+  const [i_selected_chapter, set_i_selected_chapter] = createSignal(SessionStore.i_chapter ?? 0)
 
   let overall_stats = createMemo(() => {
     const s = study()
