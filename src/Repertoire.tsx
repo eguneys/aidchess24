@@ -233,7 +233,7 @@ class RepertoireStat {
     readonly solved_paths: TwoPaths) {}
 
   get progress() {
-    return Math.floor(this.solved_paths.expand_paths
+    return Math.round(this.solved_paths.expand_paths
     .map(p => this.score_tree.get_at(p)?.score ?? 0)
     .reduce((a, b) => a + b, 0) * 100)
   }
