@@ -49,33 +49,75 @@ class RepertoirePlayer {
   }
 
 
+  _practice_end_result: Signal<boolean>
+
+  get practice_end_result() {
+    return this._practice_end_result[0]()
+  }
+
+
+  set practice_end_result(_: boolean) {
+    this._practice_end_result[1](_)
+  }
+
+
   get i_quiz_quiz() {
     return this.quiz_quiz_ls.length + 1
   }
 
+  restart_match() {
+      batch(() => {
+        this.practice_end_result = false
+        this.mode = 'match'
+        this.flip_match_color()
+      })
+  }
+
+  restart_moves() {
+    batch(() => {
+      this.practice_end_result = false
+      this.mode = 'moves'
+      this.flip_match_color()
+    })
+  }
+
+  end_match_or_moves() {
+    batch(() => {
+      this.practice_end_result = false
+      this.mode = undefined
+    })
+  }
 
   restart_quiz(): void {
-    this.quiz_quiz_ls = []
-    this.mode = 'quiz-quiz'
+    batch(() => {
+      this.quiz_quiz_ls = []
+      this.mode = 'quiz-quiz'
+    })
   }
 
   end_quiz(): void {
-    this.quiz_quiz_ls = []
-    this.mode = 'quiz'
+    batch(() => {
+      this.quiz_quiz_ls = []
+      this.mode = 'quiz'
+    })
   }
   
 
 
   quiz_pass_one() {
-    this.quiz_quiz_ls.push(1)
-    this.quiz_quiz_ls = this.quiz_quiz_ls
+    batch(() => {
+      this.quiz_quiz_ls.push(1)
+      this.quiz_quiz_ls = this.quiz_quiz_ls
+    })
   }
 
 
 
   quiz_fail_one() {
-    this.quiz_quiz_ls.push(-1)
-    this.quiz_quiz_ls = this.quiz_quiz_ls
+    batch(() => {
+      this.quiz_quiz_ls.push(-1)
+      this.quiz_quiz_ls = this.quiz_quiz_ls
+    })
   }
 
   get quiz_pass() {
@@ -123,6 +165,7 @@ class RepertoirePlayer {
     batch(() => {
     this.quiz_deathmatch_fail_result = 0
     this.mode = 'quiz'
+    this.flip_match_color()
     })
   }
   
@@ -135,8 +178,9 @@ class RepertoirePlayer {
     this._quiz_quiz_ls = createSignal<number[]>([], { equals: false })
 
     this._quiz_deathmatch_fail = createSignal(0)
-
     this._quiz_deathmatch_result_path = createSignal<string[]>([])
+
+    this._practice_end_result = createSignal(false)
   }
 }
 
@@ -320,10 +364,13 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   })
 
   createEffect(() => {
-    if (repertoire_player.mode === 'quiz-deathmatch') {
-      if (repertoire_player.match_color === 'black') {
+    let { mode, match_color } = repertoire_player
+    if (mode === 'quiz-deathmatch') {
+      if (match_color === 'black') {
         setTimeout(() => {
-          repertoire_lala().reveal_one_random()
+          untrack(() => {
+            repertoire_lala().reveal_one_random()
+          })
         }, 400)
       }
     }
@@ -362,7 +409,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
     if (success) {
 
-
       success_auto_play_or_end()
 
       if (repertoire_player.mode === 'quiz-quiz') {
@@ -370,7 +416,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       }
 
     } else {
-      if (repertoire_player.mode === 'match') {
+      if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
         setTimeout(() => {
           repertoire_lala().on_wheel(-1)
         }, 100)
@@ -392,7 +438,9 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     let { mode, match_color } = repertoire_player
 
     if (mode === 'match' && match_color === 'black') {
-      success_auto_play_or_end()
+      untrack(() => {
+        success_auto_play_or_end()
+      })
     }
   })
 
@@ -415,7 +463,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
           repertoire_player.quiz_deathmatch_fail_result = 1
           repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path
         } else if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
-
+          repertoire_player.practice_end_result = true
         }
       } else {
         if (repertoire_player.mode === 'match' || repertoire_player.mode === 'quiz-deathmatch') {
@@ -428,7 +476,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                  repertoire_player.quiz_deathmatch_fail_result = 1
                  repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path
                } else if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
-       
+                repertoire_player.practice_end_result = true
                }
             }
           }, 400)
@@ -506,7 +554,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   }
 
   const is_board_movable = createMemo(() => {
-    return repertoire_player.mode !== undefined && !quiz_quiz_stop()
+    return repertoire_player.mode !== undefined && !quiz_quiz_stop() && !repertoire_player.practice_end_result
   })
 
 
@@ -569,7 +617,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
           <div class='tools'>
 
             <div class='tabs'>
-              <h3 class={'tab' + active_if_tab_practice('practice')} onClick={() => repertoire_player.mode = undefined}>Practice</h3>
+              <h3 class={'tab' + active_if_tab_practice('practice')} onClick={() => repertoire_player.end_match_or_moves() }>Practice</h3>
               <h3 class={'tab' + active_if_tab_practice('quiz')} onClick={() => repertoire_player.mode = 'quiz' }>Quiz</h3>
             </div>
 
@@ -655,31 +703,43 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
               <Match when={repertoire_player.mode === 'match'}>
                 <h2>Play as Match</h2>
-                <small> Try to guess the moves for {repertoire_player.match_color}.</small>
-                <small> AI will play the next move, picking a random variation. </small>
-                <small> Moves will be hidden once the game is started. </small>
 
-                <div class='in_mode'>
-                  <button onClick={() => {
-                    batch(() => {
-
-                      repertoire_player.mode = 'match'
-                      repertoire_player.flip_match_color()
-                    })
-
-                  }}><span> Rematch </span></button>
-                  <button class='end2' onClick={() => repertoire_player.mode = undefined}><span> End Practice </span></button>
-                </div>
+                 <Show when={repertoire_player.practice_end_result} fallback={
+                   <>
+                      <small> Try to guess the moves for {repertoire_player.match_color}.</small>
+                      <small> AI will play the next move, picking a random variation. </small>
+                      <small> Moves will be hidden once the game is started. </small>
+                   </>
+                 }>
+                  <>
+                  <small> End of practice. </small>
+                  <small> Congratulations. </small>
+                  </>
+                 </Show>
+                  <div class='in_mode'>
+                    <button onClick={() => repertoire_player.restart_match()}><span> Rematch </span></button>
+                    <button class='end2' onClick={() => repertoire_player.end_match_or_moves()}><span> End Practice </span></button>
+                  </div>
               </Match>
 
               <Match when={repertoire_player.mode === 'moves'}>
                 <h2>Play all moves</h2>
-                <small>Try to guess the moves for both sides.</small>
-                <small>Moves will be hidden once you start.</small>
+
+                 <Show when={repertoire_player.practice_end_result} fallback={
+                   <>
+                       <small>Try to guess the moves for both sides.</small>
+                       <small>Moves will be hidden once you start.</small>
+                   </>
+                 }>
+                  <>
+                  <small> End of practice. </small>
+                  <small> Congratulations. </small>
+                  </>
+                 </Show>
 
                 <div class='in_mode'>
-                  <button onClick={() => { repertoire_player.mode = 'moves' }}><span> Clear </span></button>
-                  <button class='end2' onClick={() => repertoire_player.mode = undefined}><span> End Practice </span></button>
+                  <button onClick={() => { repertoire_player.restart_moves() }}><span> Clear </span></button>
+                  <button class='end2' onClick={() => repertoire_player.end_match_or_moves()}><span> End Practice </span></button>
                 </div>
               </Match>
             </Switch>
