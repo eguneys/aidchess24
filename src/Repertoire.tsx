@@ -12,6 +12,7 @@ import { Color } from 'chessground/types'
 import { OpeningsChapterStatStore } from './repertoire_store'
 import { stepwiseScroll } from './common/scroll'
 import SessionStore from './SessionStore'
+import { usePlayer } from './sound'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
@@ -312,6 +313,7 @@ const Repertoire = () => {
 
 const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
+  const Player = usePlayer()
   const study = () => props.study
 
   let repertoire_player = new RepertoirePlayer()
@@ -386,7 +388,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   })
 
   createEffect(() => {
-    if (repertoire_player.mode !== 'match' && repertoire_player.mode !== 'moves') {
+    if (repertoire_player.mode !== undefined && repertoire_player.mode !== 'match' && repertoire_player.mode !== 'moves') {
       return 
     }
     let s = untrack(() => repertoire_stat_for_mode())
@@ -424,6 +426,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
       if (repertoire_player.mode === 'quiz-quiz') {
         repertoire_player.quiz_fail_one()
+        Player.play('error')
       }
 
 
@@ -432,6 +435,14 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
         repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path.slice(0, -1)
       }
     }
+  }))
+
+  createEffect(on(() => repertoire_player.quiz_deathmatch_fail_result, () => {
+    Player.play('victory')
+  }))
+
+  createEffect(on(() => repertoire_player.practice_end_result, () => {
+    Player.play('victory')
   }))
 
   createEffect(() => {
@@ -497,6 +508,13 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     }
   }
 
+  createEffect(on(() => repertoire_lala().tree?.get_at(repertoire_lala().cursor_path), v => {
+    if (v) {
+      Player.move(v)
+    }
+  }))
+
+
   onMount(() => {
     document.addEventListener('keypress', onKeyPress)
   })
@@ -536,7 +554,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   onCleanup(() => {
     el_rep.removeEventListener('wheel', onWheel)
   })
-
 
   const active_if_tab_practice = (p: PlayMode) => {
 

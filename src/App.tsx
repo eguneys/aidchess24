@@ -2,6 +2,7 @@ import { hashIntegration, Router, Routes, Route, A, useLocation } from "@solidjs
 import { createMemo, lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
 import './App.scss'
+import { PlayerProvider } from "./sound";
 
 const Home = lazy(() => import('./Home'))
 const Repertoires = lazy(() => import('./Repertoires'))
@@ -21,7 +22,9 @@ export const MyApp = () => {
     
     <Router source={hashIntegration()}>
         <MetaProvider>
+        <PlayerProvider>
           <AppInRouter/>
+        </PlayerProvider>
         </MetaProvider>
     </Router>
     </>)
