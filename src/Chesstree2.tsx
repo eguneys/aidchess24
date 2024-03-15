@@ -1,6 +1,7 @@
 import './tree.css'
 import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal, untrack } from 'solid-js'
-import { INITIAL_FEN, MoveData, MoveTree, TreeNode } from './chess_pgn_logic'
+import { INITIAL_FEN, MoveData, MoveTree, TreeNode, fen_color } from './chess_pgn_logic'
+import { arr_rnd } from './random'
 
 export const _alekhine = `
 [Event "e4 vs Minor Defences: Alekhine"]
@@ -15,6 +16,18 @@ export const _alekhine = `
 
 1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 Nc6 (4... Nb6 5. a4 a5 6. Nc3 g6 (6... Bf5 7. d5 e6 8. dxe6 Bxe6 9. Bg5 Qd7 10. exd6 Bxd6 11. Nb5 Nd5 12. Nxd6+ Qxd6) 7. exd6 cxd6 (7... exd6 8. Bg5 f6 9. Bf4 d5 10. Bd3 Bd6 11. Bxd6 Qxd6 12. O-O O-O 13. Qd2) 8. d5 Bg7 9. Be3 O-O 10. Bd4 N8d7 11. Bxg7 Kxg7 12. Qd4+ Nf6 13. Nd2 Bd7 14. Nde4 Rc8 15. h4 h5 16. f3) (4... c6 5. Be2 g6 6. c4 Nc7 7. exd6 Qxd6 8. Nc3 Bg7 9. O-O O-O 10. h3 Ne6 11. Be3 Nf4 12. Re1) (4... Bf5 5. Bd3 Bxd3 6. Qxd3 e6 7. O-O Nc6 8. c4 Nb6 9. exd6 cxd6 10. Nc3 Be7 11. d5 Nb4 12. Qe4 e5 13. c5 dxc5 14. a3 Na6 15. Rd1 O-O) 5. c4 Nb6 6. e6 fxe6 7. Nc3 g6 8. h4 Bg7 9. Be3 e5 10. d5 Nd4 11. Nxd4 exd4 12. Bxd4 Bxd4 13. Qxd4 e5 14. Qe3 *
 `
+
+const expand_long_path = (path: string[]) => {
+  let res: string[][] = []
+  for (let p of path) {
+    if (res.length === 0) {
+      res.push([p])
+    } else {
+      res.push([...res[res.length - 1], p])
+    }
+  }
+  return res
+}
 
 export class TwoPaths {
 
@@ -172,6 +185,7 @@ function test_two_paths() {
 
 
 export class Treelala2 {
+  
     
   static make = (tree?: MoveTree, initial_fen: string = tree?.root.data.before_fen || INITIAL_FEN) => {
     let res = new Treelala2(initial_fen, tree)
@@ -186,6 +200,19 @@ export class Treelala2 {
   _revealed_paths: Signal<string[][]>
   _failed_paths: Signal<string[][]>
   _solved_paths: TwoPaths
+
+  get cursor_after_color() {
+    let p = this.cursor_path
+
+    return fen_color(this.tree?.get_at(p)?.after_fen ?? INITIAL_FEN)
+  }
+
+  get is_cursor_path_at_a_leaf() {
+
+    let p = this.cursor_path
+
+    return this.tree?.get_children(p)?.length === 0
+  }
 
   get hidden_paths() {
     return this._hidden_paths.paths
@@ -277,6 +304,17 @@ export class Treelala2 {
     return this.hidden_paths.length === 0
   }
 
+  set_random_cursor_hide_rest() {
+    let w_path = arr_rnd(this.tree!.all_leaves.map(_ => _.path))
+    let path = arr_rnd(expand_long_path(w_path).slice(1, -1))
+
+    this.cursor_path = path
+
+    let cc = this.tree!.get_children(path)
+    this._hidden_paths.clear()
+    cc?.forEach(_ => this._hidden_paths.add_path(_.path))
+  }
+
   reveal_hidden_paths = () => {
     batch(() => {
       this.hidden_paths.forEach(_ => {
@@ -359,9 +397,7 @@ export class Treelala2 {
 
       this.add_uci(uci)
       this.add_failed_path([...a0.data.path, uci])
-      setTimeout(() => {
-        this.on_wheel(-1)
-      }, 100)
+
       return false
     }
   }
@@ -522,15 +558,15 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
     let on_path = createMemo(() => props.cursor_path.join('').startsWith(props.data.path.join('')))
     let on_path_end = createMemo(() => props.cursor_path.join('') === props.data.path.join(''))
 
-    let my_path = props.data.path.join('')
-    let on_hidden_path_start = createMemo(() => props.hidden_paths.find(_ => _.join('') === my_path)!)
-    let on_hidden_path_rest = createMemo(() => props.hidden_paths.find(_ => my_path.startsWith(_.join('')))!)
+    let my_path = createMemo(() => props.data.path.join(''))
+    let on_hidden_path_start = createMemo(() => props.hidden_paths.find(_ => _.join('') === my_path())!)
+    let on_hidden_path_rest = createMemo(() => props.hidden_paths.find(_ => my_path().startsWith(_.join('')))!)
 
-    let on_revealed_path = createMemo(() => props.revealed_paths.find(_ => _.join('') === my_path)!)
+    let on_revealed_path = createMemo(() => props.revealed_paths.find(_ => _.join('') === my_path())!)
 
-    let on_failed_path = createMemo(() => props.failed_paths.find(_ => _.join('') === my_path)!)
+    let on_failed_path = createMemo(() => props.failed_paths.find(_ => _.join('') === my_path())!)
 
-    let on_solved_path = createMemo(() => props.solved_paths.find(_ => _.join('') === my_path)!)
+    let on_solved_path = createMemo(() => props.solved_paths.find(_ => _.join('') === my_path())!)
 
     let move_on_path_klass = createMemo(() => ['move', 
     on_path_end()?'on_path_end':on_path()?'on_path':'',

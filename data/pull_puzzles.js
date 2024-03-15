@@ -1,9 +1,10 @@
 import fs from 'fs'
-import { ChildNode, Node, makePgn, emptyHeaders } from 'chessops/pgn.js'
-import { makeSan } from 'chessops/san.js'
-import { makeFen, parseFen } from 'chessops/fen.js'
-import { Chess } from 'chessops/chess.js'
-import { parseUci } from 'chessops/util.js'
+import { ChildNode, Node, makePgn, emptyHeaders } from 'chessops/pgn'
+import { makeSan } from 'chessops/san'
+import { makeFen, parseFen } from 'chessops/fen'
+import { Chess } from 'chessops/chess'
+import { parseUci } from 'chessops/util'
+
 const parse_tenk = (tenk) => {
   let i = 0;
   return tenk.trim().split('\n').map(line => {
@@ -70,7 +71,9 @@ function read_puzzles() {
     let u2000 = res.filter(_ => _.rating > 2000 && _.rating < 2100)
     let u2200 = res.filter(_ => _.rating > 2200 && _.rating < 2300)
 
+    let mix200 = res.slice(0, 1000)
 
+    shuffleArray(mix200)
     shuffleArray(u1600)
     shuffleArray(u2000)
     shuffleArray(u2200)
@@ -79,9 +82,12 @@ function read_puzzles() {
     u2000 = u2000.slice(0, 50)
     u2200 = u2200.slice(0, 50)
 
+    mix200 = res.slice(0, 200)
+
     fs.writeFileSync('u1600.pgn', u1600.map(pz_pgn).join('\n'))
     fs.writeFileSync('u2000.pgn', u2000.map(pz_pgn).join('\n'))
     fs.writeFileSync('u2200.pgn', u2200.map(pz_pgn).join('\n'))
+    fs.writeFileSync('mix200.pgn', mix200.map(pz_pgn).join('\n'))
 }
 
 read_puzzles()

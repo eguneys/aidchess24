@@ -229,61 +229,100 @@
         .replay-wrap {
 
             .tools {
-                display: flex;
-                flex-flow: column;
-                justify-content: center;
-                align-items: center;
-                gap: 1em;
-                padding: 1em;
-                background: hsla(40, 57%, 86%);
 
-                .in_mode {
+                .tabs {
                     display: flex;
-                    gap: 1em;
-                }
+                    border-bottom: 2px solid $accent;
 
-                h2 {
-                    font-size: 1.2em;
-                }
-
-                h3,
-                h2 {
-                   font-family: Kantumruy;
-                   color: $dark-text;
-                }
-
-
-                button {
-                    border-radius: 2px;
-                    font-weight: bold;
-                    min-width: 8em;
-                    padding: 1em;
-                    border: none;
-                    background: #e48f45;
-                    color: white;
-                    transform: skew(-21deg);
-
-
-                    &.end2 {
-                        background: transparent;
-                        border: 2px solid $dark-text;
-                        color: $dark-text;
-                    }
-
-                    & > span {
-                        display: inline-block;
-                        transform: skew(21deg);
-                    }
-
-                    &:hover {
+                    .tab {
+                        user-select: none;
                         cursor: pointer;
-                        background: #d49f35;
-                    }
+                        padding: 0 1em;
+                        background: $secondary;
+                        color: $text;
+                        border-radius: 8px 8px 0 0;
 
-                    &:active > span {
-                        text-decoration: underline;
+                        &.active {
+                            background: $accent;
+                        }
+
+                        &:hover {
+                            background: $secondary-light;
+                        }
+
+                        &:active {
+                            text-decoration: underline;
+                        }
                     }
                 }
+
+               .content {
+                   display: flex;
+                   flex-flow: column;
+                   justify-content: center;
+                   align-items: center;
+                   gap: 1em;
+                   padding: 1em;
+                   background: hsla(40, 57%, 86%);
+
+                   span {
+                    &.failed {
+                        color: $error;
+                    }
+
+                    &.passed {
+                        color: $success;
+                    }
+                   }
+
+                   .in_mode {
+                       display: flex;
+                       gap: 1em;
+                   }
+
+                   h2 {
+                       font-size: 1.2em;
+                   }
+
+                   h3,
+                   h2 {
+                      font-family: Kantumruy;
+                      color: $dark-text;
+                   }
+
+
+                   button {
+                       border-radius: 2px;
+                       font-weight: bold;
+                       min-width: 8em;
+                       padding: 1em;
+                       border: none;
+                       background: #e48f45;
+                       color: white;
+                       transform: skew(-21deg);
+
+
+                       &.end2 {
+                           background: transparent;
+                           border: 2px solid $dark-text;
+                           color: $dark-text;
+                       }
+
+                       & > span {
+                           display: inline-block;
+                           transform: skew(21deg);
+                       }
+
+                       &:hover {
+                           cursor: pointer;
+                           background: #d49f35;
+                       }
+
+                       &:active > span {
+                           text-decoration: underline;
+                       }
+                   }
+               }
             }
 
             .replay {

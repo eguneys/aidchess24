@@ -20,10 +20,10 @@ const total_score_to_color = (n: number) => {
   return DEPTH_COLOR[Math.floor((1 - n / 10) * 6)]
 }
 
-type PlayMode = 'moves' | 'match'
+type PlayMode = 'quiz' | 'practice' | 'moves' | 'match' | 'quiz-quiz' | 'quiz-deathmatch'
 
 class RepertoirePlayer {
-  
+ 
   _mode: Signal<PlayMode | undefined>
 
   get mode() {
@@ -48,9 +48,95 @@ class RepertoirePlayer {
     this.match_color = this.match_color === 'white' ? 'black':'white'
   }
 
+
+  get i_quiz_quiz() {
+    return this.quiz_quiz_ls.length + 1
+  }
+
+
+  restart_quiz(): void {
+    this.quiz_quiz_ls = []
+    this.mode = 'quiz-quiz'
+  }
+
+  end_quiz(): void {
+    this.quiz_quiz_ls = []
+    this.mode = 'quiz'
+  }
+  
+
+
+  quiz_pass_one() {
+    this.quiz_quiz_ls.push(1)
+    this.quiz_quiz_ls = this.quiz_quiz_ls
+  }
+
+
+
+  quiz_fail_one() {
+    this.quiz_quiz_ls.push(-1)
+    this.quiz_quiz_ls = this.quiz_quiz_ls
+  }
+
+  get quiz_pass() {
+    return this.quiz_quiz_ls.filter(_ => _ > 0).length
+  }
+
+  get quiz_quiz_ls() {
+    return this._quiz_quiz_ls[0]()
+  }
+
+  set quiz_quiz_ls(_: number[]) {
+    this._quiz_quiz_ls[1](_)
+  }
+  
+  _quiz_quiz_ls: Signal<number[]>
+
+  _quiz_deathmatch_fail: Signal<number>
+
+  set quiz_deathmatch_fail_result(v: number) {
+    this._quiz_deathmatch_fail[1](v)
+  }
+
+  get quiz_deathmatch_fail_result() {
+    return this._quiz_deathmatch_fail[0]()
+  }
+
+  _quiz_deathmatch_result_path: Signal<string[]>
+
+  get quiz_deathmatch_result_path() {
+    return this._quiz_deathmatch_result_path[0]()
+  }
+
+  set quiz_deathmatch_result_path(_: string[]) {
+    this._quiz_deathmatch_result_path[1](_)
+  }
+
+  restart_deathmatch(): void {
+    batch(() => {
+    this.flip_match_color()
+    this.quiz_deathmatch_fail_result = 0
+    this.mode = 'quiz-deathmatch'
+    })
+  }
+  end_deathmatch(): void {
+    batch(() => {
+    this.quiz_deathmatch_fail_result = 0
+    this.mode = 'quiz'
+    })
+  }
+  
+
+
   constructor() {
     this._mode = createSignal<PlayMode | undefined>(undefined, { equals: false })
     this._match_color = createSignal<Color>('white')
+
+    this._quiz_quiz_ls = createSignal<number[]>([], { equals: false })
+
+    this._quiz_deathmatch_fail = createSignal(0)
+
+    this._quiz_deathmatch_result_path = createSignal<string[]>([])
   }
 }
 
@@ -211,6 +297,38 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     return res
   })
 
+
+  const quiz_quiz_stop = createMemo(() => {
+    if (repertoire_player.mode === 'quiz-quiz') {
+      return repertoire_player.i_quiz_quiz === 15
+    }
+  })
+
+  createEffect(() => {
+    if (repertoire_player.mode === 'quiz-quiz') {
+      let i = repertoire_player.i_quiz_quiz
+
+      if (i === 15) {
+
+      } else {
+        untrack(() => {
+          repertoire_lala().set_random_cursor_hide_rest()
+          repertoire_player.match_color = repertoire_lala().cursor_after_color
+        })
+      }
+    }
+  })
+
+  createEffect(() => {
+    if (repertoire_player.mode === 'quiz-deathmatch') {
+      if (repertoire_player.match_color === 'black') {
+        setTimeout(() => {
+          repertoire_lala().reveal_one_random()
+        }, 400)
+      }
+    }
+  })
+
   createEffect(() => {
     repertoire_lala().solved_paths.replace_all(overall_repertoire_stat().solved_paths)
   })
@@ -221,6 +339,9 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   })
 
   createEffect(() => {
+    if (repertoire_player.mode !== 'match' && repertoire_player.mode !== 'moves') {
+      return 
+    }
     let s = untrack(() => repertoire_stat_for_mode())
     s.solved_paths.replace_all(repertoire_lala().solved_paths)
   })
@@ -232,16 +353,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     }
   }))
 
-
-  createEffect(() => {
-    let { mode, match_color } = repertoire_player
-    if (mode === 'match' && match_color === 'black') {
-      setTimeout(() => {
-        repertoire_lala().reveal_one_random()
-      }, 400)
-    }
-  })
-
   createEffect(on(() => shalala.add_uci, (uci?: string) => {
     if (!uci) {
       return
@@ -250,13 +361,40 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     let success = repertoire_lala().try_next_uci_fail(uci)
 
     if (success) {
+
+
+      success_auto_play_or_end()
+
+      if (repertoire_player.mode === 'quiz-quiz') {
+        repertoire_player.quiz_pass_one()
+      }
+
+    } else {
       if (repertoire_player.mode === 'match') {
         setTimeout(() => {
-          repertoire_lala().reveal_one_random()
-        }, 400)
+          repertoire_lala().on_wheel(-1)
+        }, 100)
+      }
+
+      if (repertoire_player.mode === 'quiz-quiz') {
+        repertoire_player.quiz_fail_one()
+      }
+
+
+      if (repertoire_player.mode === 'quiz-deathmatch') {
+        repertoire_player.quiz_deathmatch_fail_result = -1
+        repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path.slice(0, -1)
       }
     }
   }))
+
+  createEffect(() => {
+    let { mode, match_color } = repertoire_player
+
+    if (mode === 'match' && match_color === 'black') {
+      success_auto_play_or_end()
+    }
+  })
 
   createEffect(on(() => repertoire_lala().fen_last_move, (res) => {
     if (res) {
@@ -265,7 +403,38 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     } else {
       shalala.on_set_fen_uci(INITIAL_FEN)
     }
+
   }))
+
+
+  const success_auto_play_or_end = () => {
+    let is_leaf = () => repertoire_lala().is_cursor_path_at_a_leaf
+
+      if (is_leaf()) {
+        if (repertoire_player.mode === 'quiz-deathmatch') {
+          repertoire_player.quiz_deathmatch_fail_result = 1
+          repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path
+        } else if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
+
+        }
+      } else {
+        if (repertoire_player.mode === 'match' || repertoire_player.mode === 'quiz-deathmatch') {
+          setTimeout(() => {
+            repertoire_lala().reveal_one_random()
+
+
+            if (is_leaf()) {
+               if (repertoire_player.mode === 'quiz-deathmatch') {
+                 repertoire_player.quiz_deathmatch_fail_result = 1
+                 repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path
+               } else if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
+       
+               }
+            }
+          }, 400)
+        }
+      }
+  }
 
   createEffect(on(() => shalala.on_wheel, (dir) => {
     if (dir) {
@@ -280,7 +449,9 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     }
   }
 
-  document.addEventListener('keypress', onKeyPress)
+  onMount(() => {
+    document.addEventListener('keypress', onKeyPress)
+  })
 
   onCleanup(() => {
     document.removeEventListener('keypress', onKeyPress)
@@ -318,6 +489,35 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     el_rep.removeEventListener('wheel', onWheel)
   })
 
+
+  const active_if_tab_practice = (p: PlayMode) => {
+
+    let m = repertoire_player.mode
+    if (p === 'practice') {
+      if (m === undefined || m === 'match' || m === 'moves') {
+        return ' active'
+      }
+    } else {
+      if (m === 'quiz' || m === 'quiz-quiz' || m === 'quiz-deathmatch') {
+        return ' active'
+      }
+    }
+    return ''
+  }
+
+  const is_board_movable = createMemo(() => {
+    return repertoire_player.mode !== undefined && !quiz_quiz_stop()
+  })
+
+
+  const deathmatch_score = createMemo(on(() => repertoire_player.quiz_deathmatch_result_path, rp => {
+    let x = rp.length
+    let y = repertoire_lala().tree?.all_leaves.map(_ => _.path)
+    .filter(_ => !repertoire_lala().failed_paths.find(f => f.join('') === _.join('')))
+    .filter(_ => _.join('').startsWith(rp.join('')))[0]?.length
+    return `${x} out of ${y}`
+  }))
+
   return (<>
     <div ref={_ => el_rep = _} class='repertoire'>
 
@@ -337,7 +537,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       <div class='board-wrap'>
         <Chessboard
           orientation={repertoire_player.match_color}
-          movable={repertoire_player.mode !== undefined}
+          movable={is_board_movable()}
           doPromotion={shalala.promotion}
           onMoveAfter={shalala.on_move_after}
           fen_uci={shalala.fen_uci}
@@ -368,7 +568,82 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
           <div class='tools'>
 
+            <div class='tabs'>
+              <h3 class={'tab' + active_if_tab_practice('practice')} onClick={() => repertoire_player.mode = undefined}>Practice</h3>
+              <h3 class={'tab' + active_if_tab_practice('quiz')} onClick={() => repertoire_player.mode = 'quiz' }>Quiz</h3>
+            </div>
+
+            <div class='content'>
             <Switch>
+
+              <Match when={repertoire_player.mode === 'quiz'}>
+                <small> Click on variations to expand. </small>
+                <small> Your goal is to guess every move correctly to pass the quiz. </small>
+                <h2>Select a Quiz Option</h2>
+                <button onClick={() => repertoire_player.mode = 'quiz-quiz'}><span> Take Quiz </span></button>
+                <button onClick={() => repertoire_player.mode = 'quiz-deathmatch'}><span> Play Deathmatch </span></button>
+              </Match>
+
+
+
+              <Match when={repertoire_player.mode === 'quiz-deathmatch'}>
+                <h2>Deathmatch Mode</h2>
+
+                <Show when={repertoire_player.quiz_deathmatch_fail_result !== 0} fallback={
+                  <>
+                <small>You will play the moves from the opening.</small>
+                <small>If you go out of book, game ends.</small>
+
+                <div class='in_mode'>
+                  <button class='end2' onClick={() => repertoire_player.end_deathmatch()}><span> End Deathmatch </span></button>
+                </div>
+                    </>
+                }>
+
+                   <small> Deathmatch <Show when={repertoire_player.quiz_deathmatch_fail_result > 0} fallback={<span class='failed'>failed</span>}> <span class='passed'>passed</span></Show></small>
+                   <small> Your score: {deathmatch_score()}</small>
+
+                <div class='in_mode'>
+                  <button onClick={() => repertoire_player.restart_deathmatch()}><span> Restart Deathmatch </span></button>
+                  <button class='end2' onClick={() => repertoire_player.end_deathmatch()}><span> End Deathmatch </span></button>
+                </div>
+                </Show>
+
+
+              </Match>
+
+
+
+
+
+              <Match when={repertoire_player.mode === 'quiz-quiz'}>
+                <h2>Quiz Mode</h2>
+
+                <Show when={quiz_quiz_stop()} fallback={
+                  <>
+                <small>You are given 15 random positions from the opening.</small>
+                <small>Guess the correct move.</small>
+                <h2>{repertoire_player.i_quiz_quiz} of 15</h2>
+
+                <div class='in_mode'>
+                  <button class='end2' onClick={() => repertoire_player.end_quiz()}><span> End Quiz </span></button>
+                </div>
+                    </>
+                }>
+
+                   <small> Quiz <Show when={repertoire_player.quiz_pass > 10} fallback={<span class='failed'>failed</span>}> <span class='passed'>passed</span></Show></small>
+                   <small> Your score: {repertoire_player.quiz_pass} out of 15 correct</small>
+
+                <div class='in_mode'>
+                  <button onClick={() => repertoire_player.restart_quiz()}><span> Restart Quiz </span></button>
+                  <button class='end2' onClick={() => repertoire_player.end_quiz()}><span> End Quiz </span></button>
+                </div>
+                </Show>
+
+
+              </Match>
+
+
 
               <Match when={repertoire_player.mode === undefined}>
                 <small> Click on variations to expand. </small>
@@ -408,6 +683,9 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                 </div>
               </Match>
             </Switch>
+
+            </div>
+
           </div>
         </div>
 

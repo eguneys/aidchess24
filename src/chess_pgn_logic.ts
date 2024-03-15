@@ -9,6 +9,10 @@ import { chessgroundDests } from 'chessops/compat'
 
 export { INITIAL_FEN } from 'chessops/fen'
 
+export const fen_color = (fen: string) => {
+    return parseFen(fen).unwrap().turn
+}
+
 export function legal_moves(fen: string) {
     let i_pos = Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
 
@@ -106,7 +110,7 @@ export type PgnHeaders = {
 export class TreeNode<V> {
 
     static color_of(_: TreeNode<MoveData>) {
-        return parseFen(_.data.before_fen).unwrap().turn
+        return fen_color(_.data.before_fen)
     }
 
     static make = <V>(data: V) => {
