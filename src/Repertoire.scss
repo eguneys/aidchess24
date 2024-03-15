@@ -228,6 +228,27 @@
 
         .replay-wrap {
 
+
+
+            .replay-jump {
+                display: flex;
+                flex-flow: row;
+                align-items: stretch;
+                font-size: 1.2rem;
+
+                .fbt {
+                    flex: 1 1 30%;
+                    border-radius: 0 0 3px 3px;
+
+                    &:last-child,
+                    &:first-child {
+                        font-size: .7em;
+                        flex: 1 1 20%;
+                    }
+                }
+            }
+
+
             .tools {
 
                 .tabs {
@@ -377,18 +398,42 @@
             }
         }
     }
+    
+    @media (max-width: 600px) {
+        .on-openings {
+            .replay-wrap {
+              min-height: 500px;
+            }
+        }
+        .on-tactics {
+            .replay-wrap {
+                min-height: 200px;
+            }
+        }
+    }
+
 }
 
-    
-            @media (max-width: 600px) {
-                .on-openings {
-                    .replay-wrap {
-                      min-height: 500px;
-                    }
-                }
-                .on-tactics {
-                    .replay-wrap {
-                        min-height: 200px;
-                    }
-                }
-            }
+
+
+.fbt {
+    padding: 0.2em;
+    text-transform: capitalize;
+    line-height: 1.5;
+    background: none;
+    border: none;
+    outline: none;
+    color: $dark-text;
+    user-select: none;
+    cursor: pointer;
+
+    &:hover:not(.disabled) {
+        background: $success;
+        color: $text;
+    }
+
+    &.disabled {
+        opacity: .5;
+        cursor: default;
+    }
+}

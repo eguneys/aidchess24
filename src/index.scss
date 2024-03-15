@@ -2,27 +2,43 @@
 
 @font-face {
   font-family: 'Lobster Two';
-  src: url('assets/LobsterTwo-Regular.ttf');
+  src: url('assets/fonts/LobsterTwo-Regular.ttf');
 }
 
 @font-face {
   font-family: 'Lobster Two';
-  src: url('assets/LobsterTwo-Bold.ttf');
+  src: url('assets/fonts/LobsterTwo-Bold.ttf');
   font-weight: bold;
 }
 
 @font-face {
   font-family: 'Kantumruy';
-  src: url('assets/KantumruyPro-Regular.ttf');
+  src: url('assets/fonts/KantumruyPro-Regular.ttf');
 }
 
 
 @font-face {
   font-family: 'Noto Chess';
   font-display: block;
-  src: url('assets/lichess.chess.woff') format('woff');
+  src: url('assets/fonts/lichess.chess.woff') format('woff');
 }
 
+@font-face {
+  font-family: 'lichess';
+  font-display: block;
+  src: url(./assets/fonts/lichess.woff) format('woff');
+}
+
+[data-icon]::before {
+    font-size: 1.2em;
+    vertical-align: middle;
+    font-family: 'lichess';
+    font-style: normal;
+    font-weight: normal;
+    text-transform: none;
+    content: attr(data-icon);
+    opacity: 0.9;
+}
 
 * {
   padding: 0;

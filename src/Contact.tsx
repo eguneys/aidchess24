@@ -41,6 +41,7 @@ const Thanks = () => {
     <ul>
       <li><p>Lichess.org</p></li>
       <li><p>Quality Chess Books</p></li>
+      <li><p>My Family {'<3'}</p></li>
     </ul>
     </>)
 }

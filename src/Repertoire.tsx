@@ -583,6 +583,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     return `${x} out of ${y}`
   }))
 
+
+  const is_pending = () => {
+    return false
+  }
+
   return (<>
     <div ref={_ => el_rep = _} class='repertoire'>
 
@@ -629,6 +634,12 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
         <div class='replay'>
           <div class='replay-v'>
             <ChesstreeShorten lala={repertoire_lala()} />
+          </div>
+          <div class='replay-jump'>
+            <button onClick={() => repertoire_lala().navigate_first()} class={"fbt first" + (!is_pending() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
+            <button onClick={() => repertoire_lala().navigate_prev()} class={"fbt prev" + (!is_pending() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
+            <button onClick={() => repertoire_lala().navigate_next()} class={"fbt next" + (!is_pending() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
+            <button onClick={() => repertoire_lala().navigate_last()} class={"fbt last" + (!is_pending() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
           </div>
 
           <div class='tools'>
