@@ -744,7 +744,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                  </Show>
                   <div class='in_mode'>
                     <button onClick={() => repertoire_player.restart_match()}><span> Rematch </span></button>
-                    <button class='end2' onClick={() => repertoire_player.end_match_or_moves()}><span> End Practice </span></button>
+                    <button class='end2' onClick={() => {
+                      let pp = repertoire_lala().cursor_path
+                      repertoire_player.end_match_or_moves()
+                      repertoire_lala().cursor_path = pp
+                    }}><span> End Practice </span></button>
                   </div>
               </Match>
 
