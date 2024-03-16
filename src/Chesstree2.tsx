@@ -284,6 +284,10 @@ export class Treelala2 {
 
     let p = this.cursor_path
 
+    if (this.failed_paths.find(_ => _.join('') === p.join(''))) {
+      return false
+    }
+
     return this.tree?.get_children(p)?.length === 0
   }
 
@@ -445,11 +449,8 @@ export class Treelala2 {
       let in_failed_path = this.failed_paths.find(_ => _.join('') === c_found.data.path.join(''))
 
       if (in_failed_path) {
-        setTimeout(() => {
-          this.cursor_path = this.cursor_path
-        }, 100)
-        return
-
+        this.cursor_path = c_found.data.path
+        return false
       }
 
       batch(() => {

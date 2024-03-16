@@ -314,8 +314,12 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   const Player = usePlayer()
   const study = () => props.study
 
-  let repertoire_player = new RepertoirePlayer()
 
+
+  let [is_pending_move, set_is_pending_move] = createSignal(false)
+
+
+  let repertoire_player = new RepertoirePlayer()
   let shalala = new Shala()
 
   const [i_selected_chapter, set_i_selected_chapter] = createSignal(SessionStore.i_chapter ?? 0)
@@ -401,6 +405,10 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   }))
 
   createEffect(on(() => shalala.add_uci, (uci?: string) => {
+    if (is_pending_move()) {
+      return
+    }
+    console.log(is_pending_move())
     if (!uci) {
       return
     }
@@ -408,7 +416,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     let success = repertoire_lala().try_next_uci_fail(uci)
 
     if (success) {
-
       success_auto_play_or_end()
 
       if (repertoire_player.mode === 'quiz-quiz') {
@@ -417,8 +424,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
     } else {
       if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
+        set_is_pending_move(true)
         setTimeout(() => {
           repertoire_lala().on_wheel(-1)
+          console.log(repertoire_lala().cursor_path)
+          set_is_pending_move(false)
         }, 100)
       }
 
@@ -476,7 +486,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
         }
       } else {
         if (repertoire_player.mode === 'match' || repertoire_player.mode === 'quiz-deathmatch') {
+          set_is_pending_move(true)
+          console.log('set')
           setTimeout(() => {
+            console.trace('reveal')
+            console.log(repertoire_lala().cursor_path)
             repertoire_lala().reveal_one_random()
 
 
@@ -488,6 +502,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                 repertoire_player.practice_end_result = true
                }
             }
+            set_is_pending_move(false)
           }, 400)
         }
       }
@@ -582,9 +597,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   }))
 
 
-  const is_pending = () => {
-    return false
-  }
 
   return (<>
     <div ref={_ => el_rep = _} class='repertoire'>
@@ -634,10 +646,10 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
             <ChesstreeShorten lala={repertoire_lala()} />
           </div>
           <div class='replay-jump'>
-            <button onClick={() => repertoire_lala().navigate_first()} class={"fbt first" + (!is_pending() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
-            <button onClick={() => repertoire_lala().navigate_prev()} class={"fbt prev" + (!is_pending() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
-            <button onClick={() => repertoire_lala().navigate_next()} class={"fbt next" + (!is_pending() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
-            <button onClick={() => repertoire_lala().navigate_last()} class={"fbt last" + (!is_pending() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
+            <button onClick={() => repertoire_lala().navigate_first()} class={"fbt first" + (!is_pending_move() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
+            <button onClick={() => repertoire_lala().navigate_prev()} class={"fbt prev" + (!is_pending_move() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
+            <button onClick={() => repertoire_lala().navigate_next()} class={"fbt next" + (!is_pending_move() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
+            <button onClick={() => repertoire_lala().navigate_last()} class={"fbt last" + (!is_pending_move() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
           </div>
 
           <div class='tools'>
