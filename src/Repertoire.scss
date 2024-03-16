@@ -353,7 +353,10 @@
                 flex-flow: column;
                 border: 2px solid $accent;
                 border-radius: 0px 0px 8px 8px;
-                min-height: 200px;
+
+                @media (max-width: 600px) {
+                    flex: 1;
+                }
 
                 .replay-v {
                     position: relative;
