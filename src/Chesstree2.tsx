@@ -1,5 +1,5 @@
 import './tree.css'
-import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal, untrack } from 'solid-js'
+import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal } from 'solid-js'
 import { INITIAL_FEN, MoveData, MoveTree, TreeNode, fen_color } from './chess_pgn_logic'
 import { arr_rnd } from './random'
 
@@ -29,6 +29,78 @@ const expand_long_path = (path: string[]) => {
   return res
 }
 
+
+export class TwoPaths2 {
+
+  static set_for_saving(paths: string[][]): TwoPaths2 {
+    let res = new TwoPaths2()
+    res.paths = paths
+    return res
+  }
+
+  _paths: Signal<string[][]>
+
+  get paths() {
+    return this._paths[0]()
+  }
+
+  set paths(_: string[][]) {
+    this._paths[1](_)
+  }
+
+  constructor() {
+    this._paths = createSignal<string[][]>([], { equals: false })
+  }
+
+  get_for_saving(): string[][] {
+    return this.paths
+  }
+
+  merge_dup(paths: TwoPaths2) {
+    batch(() => {
+      paths.paths.forEach(_ => this.add_path(_))
+    })
+  }
+
+  replace_all(tp: TwoPaths2) {
+    this.paths = tp.paths.slice(0)
+  }
+
+  add_path(path: string[]) {
+
+    let bs = this.paths
+
+    if (bs.find(_ => _.join('') === path.join(''))) {
+      return
+    }
+
+    /*
+    if (bs.find(_ => _.join('').startsWith(path.join('')))) {
+      return
+    }
+
+    let rm = bs.findIndex(_ => path.join('').startsWith(_.join('')))
+    if (rm !== -1) {
+      bs.splice(rm, 1, path)
+    } else {
+      bs.push(path)
+    }
+    */
+   bs.push(path)
+    this.paths = bs
+  }
+
+  remove_path(path: string[]) {
+    this.paths = this.paths.filter(_ => _.join('') !== path.join(''))
+  }
+
+  clear() {
+    this.paths = []
+  }
+
+}
+
+/*
 export class TwoPaths {
 
   replace_all(paths: TwoPaths) {
@@ -183,6 +255,7 @@ function test_two_paths() {
 
 //test_two_paths()
 
+*/
 
 export class Treelala2 {
  
@@ -196,10 +269,10 @@ export class Treelala2 {
 
   _cursor_path: Signal<string[]>
 
-  _hidden_paths: TwoPaths
+  _hidden_paths: TwoPaths2
   _revealed_paths: Signal<string[][]>
   _failed_paths: Signal<string[][]>
-  _solved_paths: TwoPaths
+  _solved_paths: TwoPaths2
 
   get cursor_after_color() {
     let p = this.cursor_path
@@ -240,7 +313,7 @@ export class Treelala2 {
   }
 
   get solved_paths_expanded() {
-    return this._solved_paths.expand_paths
+    return this._solved_paths.paths
   }
 
 
@@ -294,10 +367,10 @@ export class Treelala2 {
     this._cursor_path = createSignal<string[]>([], { equals: false })
     this._tree = createSignal(tree)
 
-    this._hidden_paths = new TwoPaths()
+    this._hidden_paths = new TwoPaths2()
     this._revealed_paths = createSignal<string[][]>([], { equals: false })
     this._failed_paths = createSignal<string[][]>([], { equals: false })
-    this._solved_paths = new TwoPaths()
+    this._solved_paths = new TwoPaths2()
   }
 
   get is_revealed() {

@@ -6,7 +6,7 @@ import StudyRepo, { PGNStudy } from './studyrepo'
 import { Show } from 'solid-js'
 import { Shala } from './Shalala'
 import Chessboard from './Chessboard'
-import { ChesstreeShorten, Treelala2, TwoPaths } from './Chesstree2'
+import { ChesstreeShorten, Treelala2, TwoPaths2 } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
 import { OpeningsChapterStatStore } from './repertoire_store'
@@ -210,19 +210,17 @@ class RepertoireStat {
 
   static load_from_store(s: PGNStudy, i_chapter: number): any {
     let store = new OpeningsChapterStatStore(s.id, i_chapter)
-    return RepertoireStat.make(s.id, i_chapter, s.chapters[i_chapter].pgn.tree, TwoPaths.set_for_saving(store.solved_paths))
+    return RepertoireStat.make(s.id, i_chapter, s.chapters[i_chapter].pgn.tree, TwoPaths2.set_for_saving(store.solved_paths))
   }
 
   static save_paths_to_store(stats: RepertoireStat) {
     let store = new OpeningsChapterStatStore(stats.study_id, stats.i_chapter)
     store.solved_paths = stats.solved_paths.get_for_saving()
-
-
     store.practice_progress = stats.progress
   }
   
 
-  static make(study_name: string, i_chapter: number, t: MoveTree, paths: TwoPaths = new TwoPaths()) {
+  static make(study_name: string, i_chapter: number, t: MoveTree, paths: TwoPaths2 = new TwoPaths2()) {
     return new RepertoireStat(study_name, i_chapter, MoveScoreTree.make(t), paths)
   }
 
@@ -230,10 +228,10 @@ class RepertoireStat {
     readonly study_id: string, 
     readonly i_chapter: number, 
     readonly score_tree: MoveScoreTree, 
-    readonly solved_paths: TwoPaths) {}
+    readonly solved_paths: TwoPaths2) {}
 
   get progress() {
-    return Math.round(this.solved_paths.expand_paths
+    return Math.round(this.solved_paths.paths
     .map(p => this.score_tree.get_at(p)?.score ?? 0)
     .reduce((a, b) => a + b, 0) * 100)
   }
@@ -264,7 +262,7 @@ class RepertoireStat {
       let total_whites = total_scores[i][0]
       let total_blacks = total_scores[i][1]
 
-      let ss = createMemo(() => this.solved_paths.expand_paths)
+      let ss = createMemo(() => this.solved_paths.paths)
       let dd = createMemo(() => ss().filter(_ => paths.some(p => p.join('') === _.join(''))))
 
       let white = createMemo(() => dd()
@@ -384,7 +382,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
   const repertoire_stat_for_mode = createMemo(() => {
     let t = repertoire_lala().tree!
-    return untrack(() => RepertoireStat.make(study().name, i_selected_chapter(), t, new TwoPaths()))
+    return untrack(() => RepertoireStat.make(study().name, i_selected_chapter(), t, new TwoPaths2()))
   })
 
   createEffect(() => {

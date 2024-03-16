@@ -47,9 +47,9 @@ export class OpeningsChapterStatStore {
 
 
 
-    _solved_paths: Signal<[string[][], string[][]]>
+    _solved_paths: Signal<string[][]>
   
-    set solved_paths(solved_paths: [string[][], string[][]]) {
+    set solved_paths(solved_paths: string[][]) {
       this._solved_paths[1](solved_paths)
     }
   
@@ -64,7 +64,7 @@ export class OpeningsChapterStatStore {
 
     constructor(readonly study_id: string, readonly i_chapter: number) { 
 
-      this._solved_paths = this.make_persisted<[string[][], string[][]]>([[],[]], 'solved_paths')
+      this._solved_paths = this.make_persisted<string[][]>([], 'solved_paths')
 
       this._practice_progress = this.make_persisted(0, 'practice_progress')
 
