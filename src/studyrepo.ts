@@ -49,7 +49,7 @@ const reformatStudyPGN = (pgns: string, id: string, study_name: string, orientat
 }
 
 const read_study_pgn = (id: string, study_name: string, orientation?: Color) => 
-    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, id, study_name, orientation))
+    fetch(`/pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, id, study_name, orientation))
 
 
 class StudyRepo {

@@ -1,4 +1,4 @@
-import { hashIntegration, Router, Routes, Route, A, useLocation } from "@solidjs/router";
+import { Router, Route, A, useLocation } from "@solidjs/router";
 import { createMemo, lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
 import './App.scss'
@@ -21,18 +21,34 @@ const SixthDraw = lazy(() => import('./SixthDraw'))
 export const MyApp = () => {
     return (<>
     
-    <Router source={hashIntegration()}>
         <MetaProvider>
         <PlayerProvider>
-          <AppInRouter/>
+            <Router root={AppInRouter}>
+              <Route path='/' component={Home}/>
+              <Route path='/shalala' component={Shalala}/>
+              <Route path='/sixth' component={SixthDraw}/>
+
+              <Route path='/explorer' component={Explorer}/>
+              <Route path='/repertoires' component={Repertoires}/>
+              <Route path='/openings/:id' component={Repertoire}/>
+              <Route path='/masters/:id' component={Masters}/>
+              <Route path='/tactics/:id' component={Tactics}/>
+              <Route path='/endgames/:id' component={Endgames}/>
+              <Route path='/contact' component={Contact}/>
+              <Route path='/terms' component={Contact}/>
+              <Route path='/privacy' component={Contact}/>
+              <Route path='/about' component={Contact}/>
+              <Route path='/donate' component={Contact}/>
+              <Route path='/thanks' component={Contact}/>
+              <Route path='/dashboard' component={Dashboard}/>
+            </Router>
         </PlayerProvider>
         </MetaProvider>
-    </Router>
     </>)
 }
 
 
-const AppInRouter = () => {
+const AppInRouter = (props: any) => {
 
   let location = useLocation()
   let pathname = createMemo(() => location.pathname.split('/')[1])
@@ -69,28 +85,7 @@ const AppInRouter = () => {
       </header>
       <div class={'main-wrap ' + path_klass()}>
         <div class='main'>
-
-          <Routes>
-              <Route path='/' component={Home}/>
-              <Route path='/shalala' component={Shalala}/>
-              <Route path='/sixth' component={SixthDraw}/>
-
-
-
-              <Route path='/explorer' component={Explorer}/>
-              <Route path='/repertoires' component={Repertoires}/>
-              <Route path='/openings/:id' component={Repertoire}/>
-              <Route path='/masters/:id' component={Masters}/>
-              <Route path='/tactics/:id' component={Tactics}/>
-              <Route path='/endgames/:id' component={Endgames}/>
-              <Route path='/contact' component={Contact}/>
-              <Route path='/terms' component={Contact}/>
-              <Route path='/privacy' component={Contact}/>
-              <Route path='/about' component={Contact}/>
-              <Route path='/donate' component={Contact}/>
-              <Route path='/thanks' component={Contact}/>
-              <Route path='/dashboard' component={Dashboard}/>
-          </Routes>
+          {props.children}
         </div>
       </div>
     </>)

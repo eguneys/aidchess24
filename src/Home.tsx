@@ -37,7 +37,7 @@ const Home = () => {
       <img src='vite.svg' height="180px"></img>
 
       <h1 class='twitch'><a href="https://twitch.tv/gsoutz" target="_blank">Please Support me on Twitch</a></h1>
-      <iframe src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=eguneys.github.io"></iframe>
+      <iframe src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=aidchess.com"></iframe>
 
       <footer>
         <ul>

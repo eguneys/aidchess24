@@ -11,7 +11,7 @@
   "dependencies": {
     "@solid-primitives/storage": "^2.1.4",
     "@solidjs/meta": "^0.29.3",
-    "@solidjs/router": "^0.9.1",
+    "@solidjs/router": "^0.13.0",
     "chessground": "^9.0.4",
     "chessops": "^0.14.0",
     "idb-keyval": "^6.2.1",
