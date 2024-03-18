@@ -635,7 +635,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       <div class='replay-wrap'>
         <div class='replay-header'>
           <div class='title'>
-            <h5>Slav Defense</h5>
+            <h5>{study().name}</h5>
             <h4>{selected_chapter().name}</h4>
           </div>
           <h3 class='lichess'><a target="_blank" href={selected_chapter().site}>lichess</a></h3>
