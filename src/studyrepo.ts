@@ -91,14 +91,14 @@ const HardCategories: any = {
     ['Spanish Opening', ''],
   ],
   'Masters': [
-    ['Bobby Fischer 60 Memorable Games', '6kq6sDHS', 60],
+    ['Bobby Fischer 60 Memorable Games', '', 60],
     ['Magnus Carlsen 2023', ''],
     ['Tata Steel 2023', ''],
   ],
   'Tactics': [
-    ['50 Puzzles 1600', 'u1600', 50],
-    ['50 Puzzles 2000', 'u2000', 50],
-    ['50 Puzzles 2200', 'u2200', 50],
+    ['50 Puzzles 1600', '', 50],
+    ['50 Puzzles 2000', '', 50],
+    ['50 Puzzles 2200', '', 50],
   ],
   'Endgames': [
     ['100 Endgames You Must Know', ''],
