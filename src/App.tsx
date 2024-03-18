@@ -1,4 +1,4 @@
-import { Router, Route, A, useLocation } from "@solidjs/router";
+import { Route, A, useLocation, HashRouter } from "@solidjs/router";
 import { createMemo, lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
 import './App.scss'
@@ -23,7 +23,7 @@ export const MyApp = () => {
     
         <MetaProvider>
         <PlayerProvider>
-            <Router root={AppInRouter}>
+            <HashRouter root={AppInRouter}>
               <Route path='/' component={Home}/>
               <Route path='/shalala' component={Shalala}/>
               <Route path='/sixth' component={SixthDraw}/>
@@ -41,7 +41,7 @@ export const MyApp = () => {
               <Route path='/donate' component={Contact}/>
               <Route path='/thanks' component={Contact}/>
               <Route path='/dashboard' component={Dashboard}/>
-            </Router>
+            </HashRouter>
         </PlayerProvider>
         </MetaProvider>
     </>)
