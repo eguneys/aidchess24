@@ -390,9 +390,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   })
 
   createEffect(() => {
+    /*
     if (repertoire_player.mode !== undefined && repertoire_player.mode !== 'match' && repertoire_player.mode !== 'moves') {
       return 
     }
+    */
     let s = untrack(() => repertoire_stat_for_mode())
     s.solved_paths.replace_all(repertoire_lala().solved_paths)
   })
