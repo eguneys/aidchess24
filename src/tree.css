@@ -18,6 +18,10 @@
     line-height: 1.2em;
 }
 
+.chesstree .move .index {
+    color: rgb(134, 104, 72);
+}
+
 .chesstree .move.collapsed {
     opacity: 0.7;
 }

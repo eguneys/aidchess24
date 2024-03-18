@@ -1,0 +1,132 @@
+@import '_variables';
+
+.on-explorer {
+  .explorer {
+  
+    padding-top: 1em;
+    display: grid;
+
+    grid-template-areas: 
+    'studies chapter';
+
+    grid-template-columns: min-content auto;
+    gap: 1em;
+
+    .e-studies {
+        grid-area: studies;
+    }
+
+    .e-chapter-wrap {
+        grid-area: chapter;
+    }
+
+    .e-studies {
+        select {
+            text-overflow: ellipsis;
+            width: 200px;
+        }
+    }
+
+    .e-chapter-wrap {
+        display: flex;
+
+        .explorer-chapter {
+
+            display: grid;
+
+            grid-template-areas: 'board replay';
+
+            grid-template-columns: min(80vh, 80vw) 390px;
+
+            .board-wrap {
+                aspect-ratio: 1/1;
+            }
+
+
+            .replay-wrap {
+
+                display: flex;
+                flex-flow: column;
+
+
+
+                .replay-header {
+                    border-radius: 8px 8px 0px 0;
+                    background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
+                    padding: 0.1em 1em;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: end;
+
+                    .title {
+                        min-width: 0;
+                        color: $secondary;
+                    }
+
+                    h4 {
+                        font-family: Kantumruy;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                    }
+
+                    h5 {
+                       padding-left: 1em;
+                       color: #994d1c;
+                    }
+
+
+                    .lichess a {
+                        color: #2e4567;
+                    }
+                }
+
+
+                .replay-jump {
+                    display: flex;
+                    flex-flow: row;
+                    align-items: stretch;
+                    font-size: 1.2rem;
+
+                    .fbt {
+                        flex: 1 1 30%;
+                        border-radius: 0 0 3px 3px;
+
+                        &:last-child,
+                        &:first-child {
+                            font-size: .7em;
+                            flex: 1 1 20%;
+                        }
+                    }
+                }
+
+
+
+                .replay {
+                    flex: 2 1 0;
+                    overflow: hidden;
+                    display: flex;
+                    flex-flow: column;
+                    border-radius: 0px 0px 8px 8px;
+
+                    @media (max-width: 600px) {
+                        flex: 1;
+                    }
+
+                    .replay-v {
+                        position: relative;
+                        overflow-y: scroll;
+
+                        background: hsla(40, 57%, 86%);
+                        flex: 1;
+                        border-bottom: 1px solid $dark-text;
+                    }
+                }
+
+
+            }
+
+        }
+    }
+  }
+}

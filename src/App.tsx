@@ -12,10 +12,11 @@ const Repertoire = lazy(() => import('./Repertoire'))
 const Masters = lazy(() => import('./Masters'))
 const Tactics = lazy(() => import('./Tactics'))
 const Endgames = lazy(() => import('./Endgames'))
+const Dashboard = lazy(() => import('./Dashboard'))
+const Explorer = lazy(() => import('./Explorer'))
+
 const Shalala = lazy(() => import('./Shalala'))
 const SixthDraw = lazy(() => import('./SixthDraw'))
-const Dashboard = lazy(() => import('./Dashboard'))
-
 
 export const MyApp = () => {
     return (<>
@@ -54,7 +55,7 @@ const AppInRouter = () => {
 
           <nav id='topnav'>
             <section><A class='home' href='/'>aidchess.com</A></section>
-            <section><A href='/shalala'>Shalala</A></section>
+            <section><A href='/explorer'>Explorer</A></section>
             <section><A href='/repertoires'>Repertoires</A></section>
             <section><A class="site-title-nav__donate" href='/donate'>Donate</A></section>
           </nav>
@@ -73,6 +74,10 @@ const AppInRouter = () => {
               <Route path='/' component={Home}/>
               <Route path='/shalala' component={Shalala}/>
               <Route path='/sixth' component={SixthDraw}/>
+
+
+
+              <Route path='/explorer' component={Explorer}/>
               <Route path='/repertoires' component={Repertoires}/>
               <Route path='/openings/:id' component={Repertoire}/>
               <Route path='/masters/:id' component={Masters}/>
