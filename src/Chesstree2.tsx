@@ -1,5 +1,5 @@
 import './tree.css'
-import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal } from 'solid-js'
+import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal, untrack } from 'solid-js'
 import { INITIAL_FEN, MoveData, MoveTree, TreeNode, fen_color } from './chess_pgn_logic'
 import { arr_rnd } from './random'
 
@@ -52,14 +52,18 @@ export class TwoPaths2 {
     this._paths = createSignal<string[][]>([], { equals: false })
   }
 
+  get clone() {
+    let res = new TwoPaths2()
+    res.paths = this.paths.slice(0)
+    return res
+  }
+
   get_for_saving(): string[][] {
     return this.paths
   }
 
   merge_dup(paths: TwoPaths2) {
-    batch(() => {
-      paths.paths.forEach(_ => this.add_path(_))
-    })
+    paths.paths.forEach(_ => untrack(() => this.add_path(_)))
   }
 
   replace_all(tp: TwoPaths2) {

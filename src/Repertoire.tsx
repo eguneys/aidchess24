@@ -230,9 +230,13 @@ class RepertoireStat {
     readonly score_tree: MoveScoreTree, 
     readonly solved_paths: TwoPaths2) {}
 
+  get clone() {
+    return new RepertoireStat(this.study_id, this.i_chapter, this.score_tree, this.solved_paths.clone)
+  }
+
   get progress() {
     return Math.round(this.solved_paths.paths
-    .map(p => this.score_tree.get_at(p)?.score ?? 0)
+    .map(p => untrack(() => this.score_tree.get_at(p)?.score) ?? 0)
     .reduce((a, b) => a + b, 0) * 100)
   }
 
@@ -283,9 +287,18 @@ class RepertoireStat {
     }).reverse()
   }
 
+  clone_merge_stats(b: RepertoireStat) {
+    let res = untrack(() => this.clone)
+    res.solved_paths.merge_dup(b.solved_paths)
+    return res
+  }
 
   merge_and_save_stats(b: RepertoireStat) {
     this.solved_paths.merge_dup(b.solved_paths)
+    this.save_stats()
+  }
+
+  save_stats() {
     RepertoireStat.save_paths_to_store(this)
   }
 }
@@ -390,18 +403,25 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   })
 
   createEffect(() => {
-    /*
-    if (repertoire_player.mode !== undefined && repertoire_player.mode !== 'match' && repertoire_player.mode !== 'moves') {
-      return 
-    }
-    */
     let s = untrack(() => repertoire_stat_for_mode())
     s.solved_paths.replace_all(repertoire_lala().solved_paths)
   })
 
-  createEffect(on(() => [repertoire_stat_for_mode(), overall_repertoire_stat()], (_, prev) => {
-    if (prev) {
-      let [m, o] = prev
+  let stats_merge_diff = createMemo(() => {
+    let o = overall_repertoire_stat()
+    let m = repertoire_stat_for_mode()
+
+    let old_progress = untrack(() => o.progress)
+    let new_progress = o.clone_merge_stats(m).progress
+
+
+    return new_progress - old_progress
+  })
+
+  createEffect(on(repertoire_stat_for_mode, (_, m) => {
+    let o = overall_repertoire_stat()
+
+    if (m) {
       o.merge_and_save_stats(m)
     }
   }))
@@ -410,7 +430,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     if (is_pending_move()) {
       return
     }
-    console.log(is_pending_move())
     if (!uci) {
       return
     }
@@ -429,7 +448,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
         set_is_pending_move(true)
         setTimeout(() => {
           repertoire_lala().on_wheel(-1)
-          console.log(repertoire_lala().cursor_path)
           set_is_pending_move(false)
         }, 100)
       }
@@ -447,12 +465,18 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     }
   }))
 
-  createEffect(on(() => repertoire_player.quiz_deathmatch_fail_result, () => {
-    Player.play('victory')
+  createEffect(on(() => repertoire_player.quiz_deathmatch_fail_result, v => {
+    if (v > 0) {
+       Player.play('victory')
+    } else if (v < 0) {
+       Player.play('victory')
+    }
   }))
 
-  createEffect(on(() => repertoire_player.practice_end_result, () => {
-    Player.play('victory')
+  createEffect(on(() => repertoire_player.practice_end_result, v => {
+    if (v) {
+      Player.play('victory')
+    }
   }))
 
   createEffect(() => {
@@ -489,10 +513,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       } else {
         if (repertoire_player.mode === 'match' || repertoire_player.mode === 'quiz-deathmatch') {
           set_is_pending_move(true)
-          console.log('set')
           setTimeout(() => {
-            console.trace('reveal')
-            console.log(repertoire_lala().cursor_path)
             repertoire_lala().reveal_one_random()
 
 
@@ -690,6 +711,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
                    <small> Deathmatch <Show when={repertoire_player.quiz_deathmatch_fail_result > 0} fallback={<span class='failed'>failed</span>}> <span class='passed'>passed</span></Show></small>
                    <small> Your score: {deathmatch_score()}</small>
+                   <small> Progress +{stats_merge_diff()}% </small>
+
 
                 <div class='in_mode'>
                   <button onClick={() => repertoire_player.restart_deathmatch()}><span> Restart Deathmatch </span></button>
@@ -721,6 +744,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
                    <small> Quiz <Show when={repertoire_player.quiz_pass > 10} fallback={<span class='failed'>failed</span>}> <span class='passed'>passed</span></Show></small>
                    <small> Your score: {repertoire_player.quiz_pass} out of 15 correct</small>
+                   <small> Progress +{stats_merge_diff()}% </small>
 
                 <div class='in_mode'>
                   <button onClick={() => repertoire_player.restart_quiz()}><span> Restart Quiz </span></button>

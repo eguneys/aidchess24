@@ -41,7 +41,6 @@ class Player {
     if (!path) return;
     if (this.sounds.has(path)) return this.sounds.get(path);
 
-    console.log(path)
     const result = await fetch(`${path}.mp3`);
     if (!result.ok) throw new Error(`${path}.mp3 failed ${result.status}`);
 
