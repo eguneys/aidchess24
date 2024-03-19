@@ -391,6 +391,7 @@
                 align-items: end;
 
                 .title {
+                    flex: 1;
                     min-width: 0;
                     color: $secondary;
                 }
@@ -407,8 +408,13 @@
                    color: #994d1c;
                 }
 
+                .progress {
+                    flex: 0;
+                    margin: 0 0.2em;
+                }
 
                 .lichess a {
+                    flex: 0;
                     color: #2e4567;
                 }
             }

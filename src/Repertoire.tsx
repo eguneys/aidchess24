@@ -666,6 +666,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
             <h5>{study().name}</h5>
             <h4>{selected_chapter().name}</h4>
           </div>
+          <h3 class='progress'>{overall_repertoire_stat().progress}%</h3>
           <h3 class='lichess'><a target="_blank" href={selected_chapter().site}>lichess</a></h3>
         </div>
 
