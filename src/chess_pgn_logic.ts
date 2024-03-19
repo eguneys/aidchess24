@@ -397,6 +397,30 @@ export class MoveTree {
         }
     }
 
+
+    collect_branch_sums(path: string[]) {
+        let res = []
+        let i = [this.root]
+        let add_variation = false
+        for (let p of path) {
+            let next = i.find(_ => _.data.uci === p)
+
+            if (!next) {
+                return undefined
+            }
+
+            if (add_variation) {
+                res.push(next.data)
+                add_variation = false
+            }
+            if (next.children.length > 1) {
+                add_variation = true
+            }
+            i = next.children
+        }
+        return res
+    }
+
     get_at(path: string[]) {
         let i = this._traverse_path(path)
         return i?.data

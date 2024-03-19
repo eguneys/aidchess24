@@ -617,7 +617,7 @@ export class Treelala2 {
       if (new_path) {
 
         let i = t._traverse_path(new_path)
-        while (i!.children.length > 0) {
+        while (i!.children.length === 1) {
           if (this.hidden_paths?.some(h => i!.children[0].data.path.join('').startsWith(h.join('')))) {
             break
           }

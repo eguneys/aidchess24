@@ -23,6 +23,11 @@ const total_score_to_color = (n: number) => {
 
 type PlayMode = 'quiz' | 'practice' | 'moves' | 'match' | 'quiz-quiz' | 'quiz-deathmatch'
 
+const ply_to_index = (ply: number) => {
+  let res = Math.floor(ply / 2) + 1
+  return `${res}.` + (ply %2 === 0 ? '..' : '')
+}
+
 class RepertoirePlayer {
  
   _mode: Signal<PlayMode | undefined>
@@ -619,6 +624,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   }))
 
 
+  const branch_sums = createMemo(() => repertoire_lala().tree?.collect_branch_sums(repertoire_lala().cursor_path))
 
   return (<>
     <div ref={_ => el_rep = _} class='repertoire'>
@@ -666,6 +672,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
         <div class='replay'>
           <div class='replay-v'>
             <ChesstreeShorten lala={repertoire_lala()} />
+          </div>
+          <div class='branch-sums'>
+            <For each={branch_sums()}>{branch => 
+              <div class='fbt' onClick={() => repertoire_lala().try_set_cursor_path(branch.path)}><Show when={branch.ply & 1}><span class='index'>{ply_to_index(branch.ply)}</span></Show>{branch.san}</div>
+            }</For>
           </div>
           <div class='replay-jump'>
             <button onClick={() => repertoire_lala().navigate_first()} class={"fbt first" + (!is_pending_move() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
