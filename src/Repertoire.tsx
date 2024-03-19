@@ -760,7 +760,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
                 <div class='in_mode'>
                   <button onClick={() => repertoire_player.restart_quiz()}><span> Restart Quiz </span></button>
-                  <button class='end2' onClick={() => repertoire_player.end_quiz()}><span> End Quiz </span></button>
+                  <button class='end2' onClick={() => { 
+                    let path = repertoire_lala().cursor_path
+                    repertoire_player.end_quiz()
+                    repertoire_lala().cursor_path = path
+                    }}><span> End Quiz </span></button>
                 </div>
                 </Show>
 
