@@ -418,10 +418,9 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     return new_progress - old_progress
   })
 
-  createEffect(on(repertoire_stat_for_mode, (_, m) => {
-    let o = overall_repertoire_stat()
-
-    if (m) {
+  createEffect(on(() => [overall_repertoire_stat(), repertoire_stat_for_mode()], (_, prev) => {
+    if (prev) {
+      let [o, m] = prev
       o.merge_and_save_stats(m)
     }
   }))
