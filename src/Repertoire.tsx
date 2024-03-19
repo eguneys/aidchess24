@@ -674,6 +674,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
             <ChesstreeShorten lala={repertoire_lala()} />
           </div>
           <div class='branch-sums'>
+            <button disabled={is_pending_move() || !repertoire_lala().can_navigate_up} onClick={() => repertoire_lala().navigate_up()} class={"fbt prev" + (!is_pending_move() && repertoire_lala().can_navigate_up ? '' : ' disabled')} data-icon=""/>
+            <button disabled={is_pending_move() || !repertoire_lala().can_navigate_down} onClick={() => repertoire_lala().navigate_down()} class={"fbt prev" + (!is_pending_move() && repertoire_lala().can_navigate_down ? '' : ' disabled')} data-icon=""/>
             <For each={branch_sums()}>{branch => 
               <div class='fbt' onClick={() => repertoire_lala().try_set_cursor_path(branch.path)}><Show when={branch.ply & 1}><span class='index'>{ply_to_index(branch.ply)}</span></Show>{branch.san}</div>
             }</For>

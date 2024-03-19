@@ -262,7 +262,7 @@ function test_two_paths() {
 */
 
 export class Treelala2 {
- 
+
     
   static make = (tree?: MoveTree, initial_fen: string = tree?.root.data.before_fen || INITIAL_FEN) => {
     let res = new Treelala2(initial_fen, tree)
@@ -628,8 +628,106 @@ export class Treelala2 {
         this.try_set_cursor_path(new_path)
       }
     }
+
   }
   
+  get can_navigate_up() {
+    let path = this.cursor_path
+
+    let t = this.tree
+
+    if (t) {
+
+      let i = path
+      while (i.length > 0) {
+        const cc = t._traverse_path(i.slice(0, -1))?.children
+        if (cc && cc.length > 1) {
+
+          let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) - 1
+
+          return ic >= 0
+        }
+
+        i = i.slice(0, -1)
+      }
+    }
+
+
+    return false
+  }
+
+  get can_navigate_down() {
+
+        let path = this.cursor_path
+
+    let t = this.tree
+
+    if (t) {
+
+      let i = path
+      while (i.length > 0) {
+        const cc = t._traverse_path(i.slice(0, -1))?.children
+        if (cc && cc.length > 1) {
+
+          let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) + 1
+
+          return ic < cc.length
+        }
+
+        i = i.slice(0, -1)
+      }
+    }
+
+  }
+
+  navigate_up(): void {
+    let path = this.cursor_path
+
+    let t = this.tree
+
+    if (t) {
+
+      let i = path
+      while (i.length > 0) {
+        const cc = t._traverse_path(i.slice(0, -1))?.children
+        if (cc && cc.length > 1) {
+
+          let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) - 1
+
+          this.cursor_path = cc[ic].data.path
+
+          break;
+        }
+
+        i = i.slice(0, -1)
+      }
+    }
+  }
+
+   navigate_down(): void {
+    let path = this.cursor_path
+
+    let t = this.tree
+
+    if (t) {
+
+      let i = path
+      while (i.length > 0) {
+        const cc = t._traverse_path(i.slice(0, -1))?.children
+        if (cc && cc.length > 1) {
+
+          let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) + 1
+
+          this.cursor_path = cc[ic].data.path
+
+          break;
+        }
+
+        i = i.slice(0, -1)
+      }
+    }
+  }
+ 
 
 
 }

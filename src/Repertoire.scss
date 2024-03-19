@@ -368,10 +368,16 @@
                 }
 
                 .branch-sums {
+                    font-family: 'Noto Chess';
                     display: flex;
                     gap: 0.5em;
                     padding-left: 0.5em;
                     border-bottom: 1px solid #0c0c0c;
+
+
+                    div {
+                        text-transform: none;
+                    }
                 }
             }
 
