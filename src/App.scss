@@ -188,6 +188,9 @@ body {
     margin: 0 0.5rem;
     display: none;
 
+    .beta {
+        color: $secondary;
+    }
 
     @media (max-width: 979.3px) {
         margin-left: calc(0.5rem + var(--site-header-height));

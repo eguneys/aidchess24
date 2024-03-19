@@ -1,0 +1,25 @@
+@import '_variables';
+
+.on-beta {
+    .beta {
+        padding: 1em;
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+
+
+        button {
+            user-select: none;
+            cursor: pointer;
+            margin-top: 1em;
+            padding: 1em;
+            background: $error;
+            color: $text-light;
+            border: 1px solid $dark-text;
+
+            &:active {
+                text-decoration: underline;
+            }
+        }
+    }
+}

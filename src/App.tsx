@@ -18,6 +18,9 @@ const Explorer = lazy(() => import('./Explorer'))
 const Shalala = lazy(() => import('./Shalala'))
 const SixthDraw = lazy(() => import('./SixthDraw'))
 
+const Beta = lazy(() => import('./Beta'))
+
+
 export const MyApp = () => {
     return (<>
     
@@ -28,6 +31,7 @@ export const MyApp = () => {
               <Route path='/shalala' component={Shalala}/>
               <Route path='/sixth' component={SixthDraw}/>
 
+              <Route path='/beta' component={Beta}/>
               <Route path='/explorer' component={Explorer}/>
               <Route path='/repertoires' component={Repertoires}/>
               <Route path='/openings/:id' component={Repertoire}/>
@@ -67,7 +71,7 @@ const AppInRouter = (props: any) => {
           <label for='tn-tg' class='hbg'>
             <span class='hbg__in'></span>
           </label>
-          <h1 class='site-title'><A href='/'>aidchess.com</A> <small>beta</small> </h1>
+          <h1 class='site-title'><A href='/'>aidchess.com</A> <small><A class='beta' href='/beta'>beta</A></small> </h1>
 
           <nav id='topnav'>
             <section><A class='home' href='/'>aidchess.com</A></section>
