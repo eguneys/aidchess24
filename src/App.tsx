@@ -67,7 +67,7 @@ const AppInRouter = (props: any) => {
           <label for='tn-tg' class='hbg'>
             <span class='hbg__in'></span>
           </label>
-          <h1 class='site-title'><A href='/'>aidchess.com</A></h1>
+          <h1 class='site-title'><A href='/'>aidchess.com</A> <small>beta</small> </h1>
 
           <nav id='topnav'>
             <section><A class='home' href='/'>aidchess.com</A></section>
