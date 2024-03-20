@@ -389,6 +389,10 @@ export class Treelala2 {
     let w_path = arr_rnd(this.tree!.all_leaves.map(_ => _.path))
     let path = arr_rnd(expand_long_path(w_path).slice(1, -1))
 
+    if (this.solved_paths.paths.find(_ => _.join('') === path.join(''))) {
+      path = arr_rnd(expand_long_path(w_path).slice(1, -1))
+    }
+
     this.cursor_path = path
 
     let cc = this.tree!.get_children(path)
