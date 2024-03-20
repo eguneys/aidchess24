@@ -15,11 +15,11 @@
     display: inline-block;
     margin: 0 0.1em;
     padding: 0.1em;
-    line-height: 1.2em;
+    line-height: 1.3em;
 }
 
-.chesstree .move .index {
-    color: rgb(134, 104, 72);
+.chesstree .move:not(.on_path_end) .index {
+    color: rgb(113, 88, 62);
 }
 
 .chesstree .move.collapsed {
@@ -33,11 +33,12 @@
 
 .chesstree .move.on_path,
 .chesstree .move.on_path_end  {
-    box-shadow: 0 2px 0 0 orange;
+    box-shadow: 0 2px 0 0 rgb(37, 111, 202);
 }
 
 .chesstree .move.on_path_end {
-    background: hsla(30, 50%, 70%, 1);
+    background: rgb(37, 111, 202);
+    color: hsla(183, 39%, 88%, 0.8)
 }
 
 .chesstree .move.on_failed_path,
@@ -80,6 +81,7 @@
 
 .chesstree .lines {
     padding-left: 0.5em;
+    padding-bottom: 0.2em;
 }
 
 .chesstree .lines:before {

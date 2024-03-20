@@ -359,6 +359,14 @@ export class Treelala2 {
   }
 
 
+  clear_failed_paths() {
+    batch(() => {
+      this.failed_paths.forEach(path => {
+        this.tree?.delete_at(path)
+      })
+      this.failed_paths = []
+    })
+  }
 
   try_set_cursor_path(path: string[]) {
     let hidden_paths = this.hidden_paths

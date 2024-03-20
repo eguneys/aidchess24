@@ -391,7 +391,10 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       }
 
       if (is_stop) {
-
+        untrack(() => {
+           repertoire_lala().clear_failed_paths()
+           repertoire_lala()._hidden_paths.clear()
+        })
       } else {
         set_is_pending_move(true)
         setTimeout(() => {
@@ -477,7 +480,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       }
 
       if (repertoire_player.mode === 'quiz-quiz') {
-        repertoire_player.quiz_fail_one(repertoire_lala().cursor_path)
+        repertoire_player.quiz_fail_one(repertoire_lala().cursor_path.slice(0, -1))
         Player.play('error')
       }
 
@@ -778,8 +781,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
 
               <Match when={repertoire_player.mode === 'quiz-quiz'}>
-                <h2>Quiz Mode</h2>
-
                 <Show when={quiz_quiz_stop()} fallback={
                   <>
                 <small>You are given 15 random positions from the opening.</small>
