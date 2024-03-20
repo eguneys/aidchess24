@@ -717,7 +717,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                 <small>If you go out of book, game ends.</small>
 
                 <div class='in_mode'>
-                  <button class='end2' onClick={() => repertoire_player.end_deathmatch()}><span> End Deathmatch </span></button>
+                  <button class='end2' onClick={() => {
+                    let p = repertoire_lala().cursor_path
+                    repertoire_player.end_deathmatch()
+                    repertoire_lala().cursor_path = p
+                  }}><span> End Deathmatch </span></button>
                 </div>
                     </>
                 }>
@@ -729,7 +733,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
                 <div class='in_mode'>
                   <button onClick={() => repertoire_player.restart_deathmatch()}><span> Restart Deathmatch </span></button>
-                  <button class='end2' onClick={() => repertoire_player.end_deathmatch()}><span> End Deathmatch </span></button>
+                  <button class='end2' onClick={() => {
+                    let p = repertoire_lala().cursor_path
+                    repertoire_player.end_deathmatch()
+                    repertoire_lala().cursor_path = p
+                  }}><span> End Deathmatch </span></button>
                 </div>
                 </Show>
 
@@ -750,7 +758,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                 <h2>{repertoire_player.i_quiz_quiz} of 15</h2>
 
                 <div class='in_mode'>
-                  <button class='end2' onClick={() => repertoire_player.end_quiz()}><span> End Quiz </span></button>
+                  <button class='end2' onClick={() => {
+                    let path = repertoire_lala().cursor_path
+                    repertoire_player.end_quiz()
+                    repertoire_lala().cursor_path = path
+                  }}><span> End Quiz </span></button>
                 </div>
                     </>
                 }>
