@@ -741,6 +741,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     batch(() => {
                     let p = repertoire_lala().cursor_path
                     repertoire_player.end_deathmatch()
+
+                    repertoire_lala()._hidden_paths.clear()
                     repertoire_lala().cursor_path = p
                     })
                   }}><span> End Deathmatch </span></button>
@@ -760,6 +762,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     batch(() => {
                     let p = repertoire_lala().cursor_path
                     repertoire_player.end_deathmatch()
+
+                    repertoire_lala()._hidden_paths.clear()
                     repertoire_lala().cursor_path = p
                     })
                   }}><span> End Deathmatch </span></button>
@@ -787,6 +791,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     batch(() => {
                     let path = repertoire_lala().cursor_path
                     repertoire_player.end_quiz()
+
+                    repertoire_lala()._hidden_paths.clear()
                     repertoire_lala().cursor_path = path
                     })
                   }}><span> End Quiz </span></button>
@@ -813,6 +819,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     batch(() => {
                     let path = repertoire_lala().cursor_path
                     repertoire_player.end_quiz()
+                    repertoire_lala()._hidden_paths.clear()
                     repertoire_lala().cursor_path = path
                     })
                     }}><span> End Quiz </span></button>
@@ -852,6 +859,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     <button class='end2' onClick={() => {
                       let pp = repertoire_lala().cursor_path
                       repertoire_player.end_match_or_moves()
+
+                      repertoire_lala()._hidden_paths.clear()
                       repertoire_lala().cursor_path = pp
                     }}><span> End Practice </span></button>
                   </div>
