@@ -718,9 +718,12 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
                 <div class='in_mode'>
                   <button class='end2' onClick={() => {
+
+                    batch(() => {
                     let p = repertoire_lala().cursor_path
                     repertoire_player.end_deathmatch()
                     repertoire_lala().cursor_path = p
+                    })
                   }}><span> End Deathmatch </span></button>
                 </div>
                     </>
@@ -734,9 +737,12 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                 <div class='in_mode'>
                   <button onClick={() => repertoire_player.restart_deathmatch()}><span> Restart Deathmatch </span></button>
                   <button class='end2' onClick={() => {
+
+                    batch(() => {
                     let p = repertoire_lala().cursor_path
                     repertoire_player.end_deathmatch()
                     repertoire_lala().cursor_path = p
+                    })
                   }}><span> End Deathmatch </span></button>
                 </div>
                 </Show>
@@ -759,9 +765,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
                 <div class='in_mode'>
                   <button class='end2' onClick={() => {
+                    batch(() => {
                     let path = repertoire_lala().cursor_path
                     repertoire_player.end_quiz()
                     repertoire_lala().cursor_path = path
+                    })
                   }}><span> End Quiz </span></button>
                 </div>
                     </>
@@ -774,9 +782,12 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                 <div class='in_mode'>
                   <button onClick={() => repertoire_player.restart_quiz()}><span> Restart Quiz </span></button>
                   <button class='end2' onClick={() => { 
+
+                    batch(() => {
                     let path = repertoire_lala().cursor_path
                     repertoire_player.end_quiz()
                     repertoire_lala().cursor_path = path
+                    })
                     }}><span> End Quiz </span></button>
                 </div>
                 </Show>
