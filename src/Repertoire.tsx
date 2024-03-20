@@ -798,7 +798,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                    <small> Your score: {repertoire_player.quiz_pass} out of 15 correct</small>
                    <small> Progress +{stats_merge_diff()}% </small>
 
-                   <div class='list'>
+                   <div class='past'>
                      <For each={repertoire_player.quiz_quiz_ls}>{(ls, i) => 
                        <span onClick={() => repertoire_lala().cursor_path = repertoire_player._quiz_quiz_ls_paths[i()]} class={'move ' + (ls > 0 ? 'success': 'error')}>{i() + 1}</span>
                      }</For>
