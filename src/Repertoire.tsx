@@ -97,6 +97,7 @@ class RepertoirePlayer {
   restart_quiz(): void {
     batch(() => {
       this.quiz_quiz_ls = []
+      this._quiz_quiz_ls_paths = []
       this.mode = 'quiz-quiz'
     })
   }
@@ -104,25 +105,29 @@ class RepertoirePlayer {
   end_quiz(): void {
     batch(() => {
       this.quiz_quiz_ls = []
+      this._quiz_quiz_ls_paths = []
       this.mode = 'quiz'
     })
   }
   
 
 
-  quiz_pass_one() {
+  quiz_pass_one(path: string[]) {
     batch(() => {
       this.quiz_quiz_ls.push(1)
       this.quiz_quiz_ls = this.quiz_quiz_ls
+      this._quiz_quiz_ls_paths.push(path)
     })
   }
 
 
+  _quiz_quiz_ls_paths: string[][] = []
 
-  quiz_fail_one() {
+  quiz_fail_one(path: string[]) {
     batch(() => {
       this.quiz_quiz_ls.push(-1)
       this.quiz_quiz_ls = this.quiz_quiz_ls
+      this._quiz_quiz_ls_paths.push(path)
     })
   }
 
@@ -366,7 +371,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
   const quiz_quiz_stop = createMemo(() => {
     if (repertoire_player.mode === 'quiz-quiz') {
-      return repertoire_player.i_quiz_quiz === 15
+      return repertoire_player.i_quiz_quiz === 16
     }
   })
 
@@ -374,7 +379,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
   createEffect(() => {
     if (repertoire_player.mode === 'quiz-quiz') {
-      let i = repertoire_player.i_quiz_quiz
+      let is_stop = quiz_quiz_stop()
       let last_fail = repertoire_player.quiz_quiz_ls[repertoire_player.quiz_quiz_ls.length - 1]
 
       if (last_fail < 0) {
@@ -385,7 +390,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
         }, 500)
       }
 
-      if (i === 15) {
+      if (is_stop) {
 
       } else {
         set_is_pending_move(true)
@@ -459,7 +464,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       success_auto_play_or_end()
 
       if (repertoire_player.mode === 'quiz-quiz') {
-        repertoire_player.quiz_pass_one()
+        repertoire_player.quiz_pass_one(repertoire_lala().cursor_path)
       }
 
     } else {
@@ -472,7 +477,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       }
 
       if (repertoire_player.mode === 'quiz-quiz') {
-        repertoire_player.quiz_fail_one()
+        repertoire_player.quiz_fail_one(repertoire_lala().cursor_path)
         Player.play('error')
       }
 
@@ -792,6 +797,14 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                    <small> Quiz <Show when={repertoire_player.quiz_pass > 10} fallback={<span class='failed'>failed</span>}> <span class='passed'>passed</span></Show></small>
                    <small> Your score: {repertoire_player.quiz_pass} out of 15 correct</small>
                    <small> Progress +{stats_merge_diff()}% </small>
+
+                   <div class='list'>
+                     <For each={repertoire_player.quiz_quiz_ls}>{(ls, i) => 
+                       <span onClick={() => repertoire_lala().cursor_path = repertoire_player._quiz_quiz_ls_paths[i()]} class={'move ' + (ls > 0 ? 'success': 'error')}>{i() + 1}</span>
+                     }</For>
+                   </div>
+
+
 
                 <div class='in_mode'>
                   <button onClick={() => repertoire_player.restart_quiz()}><span> Restart Quiz </span></button>

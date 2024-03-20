@@ -109,7 +109,7 @@
         }
 
 
-        .list {
+        & > .list {
             background: hsla(40, 57%, 86%);
             align-self: center;
             padding: 1em;
@@ -286,6 +286,31 @@
                    padding: 1em;
                    background: hsla(40, 57%, 86%);
 
+
+                   .list {
+                    display: flex;
+                    flex-flow: row wrap;
+                    gap: 1em;
+                    align-self: stretch;
+
+                    .move {
+                        user-select: none;
+                        cursor: pointer;
+                        flex: 0 0 1.5em;
+                        text-align: center;
+                        border-radius: 3px;
+                        padding: 0 0.2em;
+                        color: $text;
+                        &.success {
+                            background: $success;
+                        }
+
+                        &.error {
+                            background: $error;
+                        }
+                    }
+                   }
+
                    span {
                     &.failed {
                         color: $error;
@@ -317,7 +342,6 @@
                       font-family: Kantumruy;
                       color: $dark-text;
                    }
-
 
                    button {
                        border-radius: 2px;
