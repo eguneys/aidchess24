@@ -370,17 +370,32 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     }
   })
 
+  const [quiz_error_flash, set_quiz_error_flash] = createSignal(false)
+
   createEffect(() => {
     if (repertoire_player.mode === 'quiz-quiz') {
       let i = repertoire_player.i_quiz_quiz
+      let last_fail = repertoire_player.quiz_quiz_ls[repertoire_player.quiz_quiz_ls.length - 1]
+
+      if (last_fail < 0) {
+
+        set_quiz_error_flash(true)
+        setTimeout(() => {
+          set_quiz_error_flash(false)
+        }, 500)
+      }
 
       if (i === 15) {
 
       } else {
-        untrack(() => {
-          repertoire_lala().set_random_cursor_hide_rest()
-          repertoire_player.match_color = repertoire_lala().cursor_after_color
-        })
+        set_is_pending_move(true)
+        setTimeout(() => {
+          batch(() => untrack(() => {
+            repertoire_lala().set_random_cursor_hide_rest()
+            repertoire_player.match_color = repertoire_lala().cursor_after_color
+            set_is_pending_move(false)
+          }))
+        }, 100)
       }
     }
   })
@@ -502,7 +517,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     }
 
   }))
-
 
   const success_auto_play_or_end = () => {
     let is_leaf = () => repertoire_lala().is_cursor_path_at_a_leaf
@@ -761,7 +775,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                   <>
                 <small>You are given 15 random positions from the opening.</small>
                 <small>Guess the correct move.</small>
-                <h2>{repertoire_player.i_quiz_quiz} of 15</h2>
+                <h2 class={quiz_error_flash() ? 'error': ''}>{repertoire_player.i_quiz_quiz} of 15</h2>
 
                 <div class='in_mode'>
                   <button class='end2' onClick={() => {
