@@ -902,6 +902,23 @@ export const ChesstreeShorten = (props: { lala: Treelala2 }) => {
     </>)
 }
 
+const can_inline_node = (node: TreeNode<MoveData>) => {
+
+  let res = 0
+  while (node !== undefined) {
+    if (node.children.length > 1) {
+      return false
+    }
+    node = node.children[0]
+
+    if (res++ > 5) {
+
+      return false
+    }
+  }
+
+  return true
+}
 
 const RenderLinesShorten = (props: {
   on_set_path: (_: string[]) => void, 
@@ -920,6 +937,11 @@ const RenderLinesShorten = (props: {
           <Switch>
             <Match when={line.children.length === 1}>
               <RenderLinesShorten {...props} lines={line.children} show_index={false} />
+            </Match>
+            <Match when={line.children.length === 2 && can_inline_node(line.children[1])}>
+              <RenderData data={line.children[0].data} {...props}/>
+              (<RenderLinesShorten {...props} lines={[line.children[1]]} show_index={true}/>)
+              <RenderLinesShorten {...props} lines={line.children[0].children} />
             </Match>
             <Match when={line.children.length > 1}>
               <div class='lines'>
