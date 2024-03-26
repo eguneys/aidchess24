@@ -15,7 +15,8 @@
     display: inline-block;
     margin: 0 0.1em;
     padding: 0.1em;
-    line-height: 1.3em;
+    line-height: 1.4em;
+    border-radius: 1px;
 }
 
 .chesstree .move:not(.on_path_end) .index {
@@ -33,7 +34,7 @@
 
 .chesstree .move.on_path,
 .chesstree .move.on_path_end  {
-    box-shadow: 0 2px 0 0 rgb(37, 111, 202);
+    box-shadow: inset 0 -2px 0 0 rgb(37, 111, 202);
 }
 
 .chesstree .move.on_path_end {
@@ -62,15 +63,17 @@
     background: hsla(130, 30%, 70%, 0.8);
 }
 
-
 .chesstree .move.on_hidden_path,
-.chesstree .move.on_hidden_path_start {
+.chesstree .move.on_hidden_path_start,
+.chesstree .move.on_hidden_path:hover,
+.chesstree .move.on_hidden_path_start:hover {
     color: transparent;
     background: hsla(30, 50%, 30%, 1);
 }
 
 .chesstree .move:hover {
-    background: hsla(30, 50%, 70%, 0.8);
+    background: hsla(212, 67%, 54%, 0.8);
+    color:hsla(183, 39%, 88%, 0.8);
     box-shadow: none;
 }
 

@@ -104,163 +104,6 @@ export class TwoPaths2 {
 
 }
 
-/*
-export class TwoPaths {
-
-  replace_all(paths: TwoPaths) {
-    this.blacks = paths.blacks.slice(0)
-    this.whites = paths.whites.slice(0)
-  }
-  merge_dup(paths: TwoPaths) {
-    batch(() => {
-      paths.paths.forEach(_ => this.add_path(_))
-    })
-  }
-
-  get_for_saving(): [string[][], string[][]] {
-    return [this.blacks, this.whites]
-  }
-
-  static set_for_saving(solved_paths: [string[][], string[][]]): TwoPaths {
-    let res = new TwoPaths()
-    res.blacks = solved_paths[0]
-    res.whites = solved_paths[1]
-    return res
-  }
-
-  _blacks: Signal<string[][]>
-  _whites: Signal<string[][]>
-
-  set blacks(_: string[][]) {
-    this._blacks[1](_)
-  }
-
-  set whites(_: string[][]) {
-    this._whites[1](_)
-  }
-
-  get blacks() {
-    return this._blacks[0]()
-  }
-
-  get whites(){
-    return this._whites[0]()
-  }
-
-  get paths() {
-    return [...this.blacks, ...this.whites]
-  }
-
-  get expand_paths() {
-    let res: string[][] = []
-
-    this.whites.forEach(_ => {
-      for (let i = 0; i <= _.length - 1; i+= 2) {
-        let x = _.slice(0, i + 1)
-        res = res.filter(_ => _.join('') !== x.join(''))
-        res.push(x)
-      }
-    })
-
-    this.blacks.forEach(_ => {
-      for (let i = 1; i <= _.length - 1; i+= 2) {
-        let x = _.slice(0, i + 1)
-        res = res.filter(_ => _.join('') !== x.join(''))
-        res.push(x)
-      }
-    })
-    return res
-  }
-
-  constructor() {
-    this._blacks = createSignal<string[][]>([], { equals: false })
-    this._whites = createSignal<string[][]>([], { equals: false })
-  }
-
-  clear() {
-    this.blacks = []
-    this.whites = []
-  }
-
-  remove_path(path: string[]) {
-    untrack(() => {
-      if (path.length % 2 === 0) {
-        let bs = this.blacks
-        bs = bs.filter(_ => _.join('') !== path.join(''))
-        this.blacks = bs
-      } else {
-        let bs = this.whites
-        bs = bs.filter(_ => _.join('') !== path.join(''))
-        this.whites = bs
-      }
-    })
-  }
-
-  add_path(path: string[]) {
-    untrack(() => {
-      if (path.length % 2 === 0) {
-        let bs = this.blacks
-
-
-        if (bs.find(_ => _.join('').startsWith(path.join('')))) {
-          return
-        }
-
-        let rm = bs.findIndex(_ => path.join('').startsWith(_.join('')))
-        if (rm !== -1) {
-          bs.splice(rm, 1, path)
-        } else {
-          bs.push(path)
-        }
-        this.blacks = bs
-      } else {
-        let bs = this.whites
-
-        if (bs.find(_ => _.join('').startsWith(path.join('')))) {
-          return
-        }
-
-
-        let rm = bs.findIndex(_ => path.join('').startsWith(_.join('')))
-        if (rm !== -1) {
-          bs.splice(rm, 1, path)
-        } else {
-          bs.push(path)
-        }
-        this.whites = bs
-      }
-    })
-  }
-}
-
-
-// @ts-ignore
-function test_two_paths() {
-  let t = new TwoPaths()
-
-  t.add_path(['e2e4'])
-
-
-  console.log(t.expand_paths)
-
-  t.add_path(['e2e4', 'e7e6', 'd2d4'])
-
-  console.log(t.expand_paths)
-
-
-  t.add_path(['e2e4', 'e7e6'])
-
-  console.log(t.expand_paths)
-
-  t.add_path(['e2e4'])
-  console.log(t.expand_paths)
-  console.log('whites', t.whites)
-}
-
-//test_two_paths()
-
-*/
-
 export class Treelala2 {
 
     
@@ -357,6 +200,41 @@ export class Treelala2 {
       return [fen, last_move]
     }
   }
+
+
+  collect_branch_sums(path: string[]) {
+    if (!this.tree) {
+      return []
+    }
+
+      let res = []
+      let i = [this.tree.root]
+      let add_variation = false
+      for (let p of path) {
+          let next = i.find(_ => _.data.uci === p)
+
+          if (!next) {
+              return undefined
+          }
+
+          if (add_variation) {
+              res.push(next.data)
+              add_variation = false
+          }
+
+          let c0 = next.children.filter(_ => 
+            !this.failed_paths
+            .some(f => f.join('') === _.data.path.join('')))
+          if (c0.length > 1) {
+              add_variation = true
+          }
+          i = next.children
+      }
+      return res
+  }
+
+ 
+
 
 
   clear_failed_paths() {

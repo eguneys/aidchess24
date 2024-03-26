@@ -337,6 +337,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   const Player = usePlayer()
   const study = () => props.study
 
+  Player.setVolume(0.2)
 
 
   let [is_pending_move, set_is_pending_move] = createSignal(false)
@@ -646,7 +647,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   }))
 
 
-  const branch_sums = createMemo(() => repertoire_lala().tree?.collect_branch_sums(repertoire_lala().cursor_path))
+  const branch_sums = createMemo(() => repertoire_lala().collect_branch_sums(repertoire_lala().cursor_path))
 
   return (<>
     <div ref={_ => el_rep = _} class='repertoire'>
@@ -723,9 +724,10 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
               <Match when={repertoire_player.mode === 'quiz'}>
                 <small> Click on variations to expand. </small>
                 <small> Your goal is to guess every move correctly to pass the quiz. </small>
-                <h2>Select a Quiz Option</h2>
+                <div class='in_mode'>
                 <button onClick={() => repertoire_player.mode = 'quiz-quiz'}><span> Take Quiz </span></button>
                 <button onClick={() => repertoire_player.mode = 'quiz-deathmatch'}><span> Play Deathmatch </span></button>
+                </div>
               </Match>
 
 
@@ -783,6 +785,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
               <Match when={repertoire_player.mode === 'quiz-quiz'}>
                 <Show when={quiz_quiz_stop()} fallback={
                   <>
+                  <h3>Quiz Mode</h3>
                 <small>You are given 15 random positions from the opening.</small>
                 <small>Guess the correct move.</small>
                 <h2 class={quiz_error_flash() ? 'error': ''}>{repertoire_player.i_quiz_quiz} of 15</h2>
@@ -835,9 +838,10 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
               <Match when={repertoire_player.mode === undefined}>
                 <small> Click on variations to expand. </small>
                 <small> Your goal is to guess every move correctly to fill up the progress bar. </small>
-                <h2>Select a Practice Option</h2>
+                <div class='in_mode'>
                 <button onClick={() => repertoire_player.mode = 'moves'}><span> Play all Moves </span></button>
                 <button onClick={() => repertoire_player.mode = 'match'}><span> Play as Match </span></button>
+                </div>
               </Match>
 
               <Match when={repertoire_player.mode === 'match'}>
