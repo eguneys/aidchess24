@@ -781,8 +781,8 @@ export const ChesstreeShorten = (props: { lala: Treelala2 }) => {
 }
 
 const can_inline_node = (node: TreeNode<MoveData>) => {
-
   let res = 0
+
   while (node !== undefined) {
     if (node.children.length > 1) {
       return false
@@ -805,21 +805,28 @@ const RenderLinesShorten = (props: {
   revealed_paths: string[][],
   failed_paths: string[][],
   hidden_paths: string[][],
-  lines: TreeNode<MoveData>[], show_index?: boolean}) => {
+  lines: TreeNode<MoveData>[], show_index?: boolean, hide_data?: boolean}) => {
 
+    let hide_data = props.hide_data
+    props.hide_data = undefined
+
+    console.log(props.lines.map(_ => _.data.path.join('')))
+    console.log(props.lines.map(_ => _.children.length))
 
     return (<>
       <For each={props.lines}>{line =>
         <>
-          <RenderData data={line.data} {...props} />
+          <Show when={!hide_data}>
+             <RenderData data={line.data} {...props} />
+          </Show>
           <Switch>
             <Match when={line.children.length === 1}>
               <RenderLinesShorten {...props} lines={line.children} show_index={false} />
             </Match>
             <Match when={line.children.length === 2 && can_inline_node(line.children[1])}>
-              <RenderData data={line.children[0].data} {...props}/>
+              <RenderData data={line.children[0].data} {...props} show_index={false}/>
               (<RenderLinesShorten {...props} lines={[line.children[1]]} show_index={true}/>)
-              <RenderLinesShorten {...props} lines={line.children[0].children} />
+              <RenderLinesShorten {...props} lines={[line.children[0]]} hide_data={true}/>
             </Match>
             <Match when={line.children.length > 1}>
               <div class='lines'>

@@ -24,10 +24,14 @@ const reformatStudyPGN = (pgns: string, id: string, study_name: string, orientat
         let chapter
         if (!event?.includes(': ')) {
 
+          if (pgn.white !== '?') {
             let white = pgn.white
             let black = pgn.black
 
             chapter = `${white} vs ${black} at ${event}`
+          } else {
+            chapter = event
+          }
         } else {
           [study_name, chapter] = event.split(': ')
         }
@@ -84,7 +88,8 @@ export type StudyInRepertoireCategory = {
 
 const HardCategories: any = {
   'Openings': [
-    ['Slav Defense', '', 28, 'black'],
+    ['Berlin Defence', 'berlin', 1, 'black'],
+    ['Slav Defense', 'slav', 28, 'black'],
     ['Sicilian Defense', '', 11, 'white'],
     ['French Defense', '', 14, 'black'],
     ['e4 vs Minor Defenses', '', 7, 'white'],
