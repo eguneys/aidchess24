@@ -30,7 +30,7 @@ const reformatStudyPGN = (pgns: string, id: string, study_name: string, orientat
 
             chapter = `${white} vs ${black} at ${event}`
           } else {
-            chapter = event
+            chapter = event!
           }
         } else {
           [study_name, chapter] = event.split(': ')

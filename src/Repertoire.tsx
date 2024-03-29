@@ -290,7 +290,7 @@ class RepertoireStat {
 
       return { 
         color: total_score_to_color(b_path.length / 20 + e_path.length / 10), 
-        total: total_whites * 2, 
+        total: total_whites + total_blacks, 
         black: createMemo(() => black() / total_blacks), 
         white: createMemo(() => white() / total_whites),
         path: e_path }
@@ -677,9 +677,9 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       </div>
       <div class='eval-gauge'>
         <For each={progress_map()}>{ p => 
-          <div onClick={_ => repertoire_lala().try_set_cursor_path(p.path) } class='line' style={`background: ${p.color}; height: ${Math.round(p.total * 100)}%`}>
-            <span class='fill white' style={`height: ${Math.round(p.white() * 100)}%`}></span>
-            <span class='fill black' style={`height: ${Math.round(p.black() * 100)}%`}></span>
+          <div onClick={_ => repertoire_lala().try_set_cursor_path(p.path) } class='line' style={`background: ${p.color}; height: ${p.total * 100}%`}>
+            <span class='fill white' style={`height: ${p.white() * 100}%`}></span>
+            <span class='fill black' style={`height: ${p.black() * 100}%`}></span>
           </div>
         }</For>
       </div>

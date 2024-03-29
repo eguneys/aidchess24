@@ -810,9 +810,6 @@ const RenderLinesShorten = (props: {
     let hide_data = props.hide_data
     props.hide_data = undefined
 
-    console.log(props.lines.map(_ => _.data.path.join('')))
-    console.log(props.lines.map(_ => _.children.length))
-
     return (<>
       <For each={props.lines}>{line =>
         <>
