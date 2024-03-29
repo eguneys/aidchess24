@@ -228,10 +228,6 @@ export class MoveScoreTree {
             node.children.forEach(_ => normalize(_, total))
         }
 
-        function max_score(node: TreeNode<MoveScoreData>, max_so_far = 0): number {
-            max_so_far = Math.max(node.data.score, max_so_far)
-            return Math.max(...[...node.children.map(_ => max_score(_, max_so_far)), max_so_far])
-        }
 
         let res = score_node(tree.root, 1)
 
