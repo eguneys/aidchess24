@@ -402,7 +402,16 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
           batch(() => untrack(() => {
             repertoire_lala().set_random_cursor_hide_rest()
             repertoire_player.match_color = repertoire_lala().cursor_after_color
-            set_is_pending_move(false)
+
+            let path = repertoire_lala().cursor_path
+
+            repertoire_lala().cursor_path = path.slice(0, -1)
+
+            setTimeout(() => {
+              repertoire_lala().cursor_path = path
+              set_is_pending_move(false)
+            }, 600)
+
           }))
         }, 100)
       }

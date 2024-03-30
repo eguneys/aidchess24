@@ -90,7 +90,7 @@ const HardCategories: any = {
   'Openings': [
     ['Berlin Defence', 'berlin', 21, 'black'],
     ['Slav Defense', 'slav', 27, 'black'],
-    ['Caro Kann', 'caro-kann', 27, 'white'],
+    ['Caro Kann', 'caro-kann', 25, 'white'],
     ['Sicilian Defense', '', 11, 'white'],
     ['French Defense', '', 14, 'black'],
     ['e4 vs Minor Defenses', '', 7, 'white'],
