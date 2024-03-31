@@ -1,0 +1,63 @@
+[Event "4.Bb5"]
+
+1. e4 e5 2. Nc3 Nf6 3. Nf3 Nc6 4. Bb5 Bb4 (4... Nd4 5. O-O Nxb5 6. Nxb5 c6 7. Nc3 d6) 5. O-O O-O 6. d3 Bxc3 7. bxc3 d6 
+
+[Event "4.a3"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. a3 d5 (4... g6 5. Nxe5 Nxe5 6. d4 Nc6 7. d5 Nb8) 5. Bb5 Nxe4 6. Qe2 Qd6 7. Nxe4 dxe4 
+
+[Event "4.Bb5 Bb4 5.O-O O-O 6.d3"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. Bb5 Bb4 5. O-O O-O 6. d3 Bxc3 (6... d6 7. Bg5 Bxc3) 7. bxc3 d6 
+
+[Event "4.Bb5"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. Bb5 Bd6 (4... d6 5. d4 Bd7 6. O-O exd4 7. Nxd4 Be7) 5. d3 (5. O-O O-O 6. d3 Re8 7. Re1 a6) 5... O-O 6. O-O h6 7. a3 Re8 
+
+[Event "4.Bb5 Nd4 5.Ba4"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. Bb5 Nd4 5. Ba4 Bc5 (5... c6 6. Nxe5 (6. O-O Nxf3+ 7. Qxf3 d6) 6... d6 7. Nf3 Bg4) (5... Nxf3+ 6. Qxf3 c6 7. d3 d6) 6. Nxe5 O-O 7. Nd3 Bb6 
+
+[Event "4.Bb5 Nd4 5.Bc4"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. Bb5 Nd4 5. Bc4 Bc5 (5... c6 6. Nxe5 d5 7. exd5 Bd6) (5... d6 6. Ng5 d5 7. exd5 h6) 6. d3 (6. Nxe5 Qe7 7. Nf3 d5)  c6 (6... d6 7. Nxd4 Bxd4) 7. Nxe5 O-O 
+
+[Event "4.Bb5 Nd4"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. Bb5 Nd4 5. Nxd4 (5. O-O Nxb5 6. Nxb5 c6 7. Nc3 d6) 5... exd4 6. e5 dxc3 7. exf6 Qxf6 
+
+[Event "4.d4 exd4 5.Nxd4 Bb4 6.Nxc6 bxc6"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. d4 exd4 5. Nxd4 Bb4 6. Nxc6 bxc6 7. Bd3 (7. Be2 d5)  d5 (7... O-O) 
+
+[Event "4.d4 exd4 5.Nxd4"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. d4 exd4 5. Nxd4 Bc5 (5... d6 6. Nde2 Be7 7. h3 O-O) (5... Nxe4 6. Nxe4 Qe7 7. Bd3 Nxd4) 6. Be3 Bb6 7. Nf5 (7. Qd2 O-O) 7... O-O 
+
+[Event "4.g3"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. g3 Bc5 (4... d5 5. exd5 Nxd5 6. Bg2 Nxc3 7. bxc3 Bc5) (4... Nxe4 5. Nxe4 d5 6. Nc3 d4 7. Bg2 dxc3) 5. Bg2 d6 6. d3 (6. O-O a6 7. d3 O-O) 6... a5 7. O-O h6 
+
+[Event "4.h3 Bb4 5.Nd5 Bc5"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. h3 Bb4 5. Nd5 Bc5 6. c3 (6. Nxf6+ gxf6 7. Bc4 d6) 6... O-O 7. b4 (7. d3 h6) (7. d4 exd4) 7... Bb6 
+
+[Event "4.h3 Bb4"]
+
+1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. h3 Bb4 5. Nd5 (5. Bd3 O-O 6. O-O d6 7. a3 Bxc3) 5... Nxd5 6. exd5 e4 7. dxc6 exf3 
+
+[Event "4.a3, 4.a4"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nc3 Nc6 4. a3 (4. a4 Bb4 (4... d6 5. d4 exd4 6. Nxd4 Be7 7. Be2 O-O) 5. Bd3 d6 6. O-O O-O 7. Nd5 Bc5) 4... d5 5. exd5 Nxd5 6. Bb5 Nxc3 7. bxc3 Bd6 
+
+[Event "4.Bb5 Bb4 5.O-O O-O"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nc3 Nc6 4. Bb5 Bb4 5. O-O O-O 6. Bxc6 (6. d3 Bxc3 (6... d6 7. Bg5 (7. Ne2 Ne7) 7... Bxc3) 7. bxc3 d6) 6... dxc6 7. d3 Nd7 
+
+[Event "4.Bb5 Nd4"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nc3 Nc6 4. Bb5 Nd4 5. Ba4 (5. Bc4 Bc5 (5... d6 6. Nxd4 exd4 7. Nd5 Nd7) 6. Nxe5 d5 7. Bxd5 Nxd5) 5... c6 6. Nxe5 d6 7. Nd3 b5 
+
+[Event "Other Side-lines"]
+
+1. e4 e5 2. Nf3 (2. Nc3 Nf6 3. Nf3 Nc6 4. Bb5 Bb4 5. O-O O-O 6. d3 Bxc3 7. bxc3 d6) 2... Nf6 3. Nc3 Nc6 4. Bc4 (4. d4 exd4 5. Nxd4 Bb4 6. Nxc6 bxc6 7. Bd3 d5) 4... Bb4 5. d3 d5 6. exd5 Nxd5 7. Bd2 Nxc3 
