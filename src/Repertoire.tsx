@@ -392,6 +392,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       }
 
       if (is_stop) {
+        Player.play('victory')
         untrack(() => {
            repertoire_lala().clear_failed_paths()
            repertoire_lala()._hidden_paths.clear()
@@ -405,7 +406,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
             let path = repertoire_lala().cursor_path
 
-            repertoire_lala().cursor_path = path.slice(0, -1)
+            set_silent_cursor_path(path.slice(0, -1))
 
             setTimeout(() => {
               repertoire_lala().cursor_path = path
@@ -580,8 +581,13 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
     }
   }
 
+  let mute_move_sound = false
   createEffect(on(() => repertoire_lala().tree?.get_at(repertoire_lala().cursor_path), v => {
     if (v) {
+      if (mute_move_sound) {
+        mute_move_sound = false
+        return
+      }
       Player.move(v)
     }
   }))
@@ -657,6 +663,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
 
   const branch_sums = createMemo(() => repertoire_lala().collect_branch_sums(repertoire_lala().cursor_path))
+
+  const set_silent_cursor_path = (path: string[]) => {
+    mute_move_sound = true
+    repertoire_lala().cursor_path = path
+  }
 
   return (<>
     <div ref={_ => el_rep = _} class='repertoire'>
@@ -757,7 +768,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     repertoire_player.end_deathmatch()
 
                     repertoire_lala()._hidden_paths.clear()
-                    repertoire_lala().cursor_path = p
+                    set_silent_cursor_path(p)
                     })
                   }}><span> End Deathmatch </span></button>
                 </div>
@@ -778,7 +789,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     repertoire_player.end_deathmatch()
 
                     repertoire_lala()._hidden_paths.clear()
-                    repertoire_lala().cursor_path = p
+                    set_silent_cursor_path(p)
                     })
                   }}><span> End Deathmatch </span></button>
                 </div>
@@ -806,7 +817,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     repertoire_player.end_quiz()
 
                     repertoire_lala()._hidden_paths.clear()
-                    repertoire_lala().cursor_path = path
+                    set_silent_cursor_path(path)
                     })
                   }}><span> End Quiz </span></button>
                 </div>
@@ -833,7 +844,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                     let path = repertoire_lala().cursor_path
                     repertoire_player.end_quiz()
                     repertoire_lala()._hidden_paths.clear()
-                    repertoire_lala().cursor_path = path
+                    set_silent_cursor_path(path)
                     })
                     }}><span> End Quiz </span></button>
                 </div>
@@ -875,7 +886,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                       repertoire_player.end_match_or_moves()
 
                       repertoire_lala()._hidden_paths.clear()
-                      repertoire_lala().cursor_path = pp
+                      set_silent_cursor_path(pp)
                     }}><span> End Practice </span></button>
                   </div>
               </Match>
