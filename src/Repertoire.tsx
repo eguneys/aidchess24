@@ -410,7 +410,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
             setTimeout(() => {
               repertoire_lala().cursor_path = path
               set_is_pending_move(false)
-            }, 600)
+            }, 200)
 
           }))
         }, 100)
