@@ -1,83 +1,83 @@
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. Bxc6 dxc6 6. Be3 (6. h3) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6 6.Nbd2"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6 6.Nbd2"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. Bxc6 dxc6 6. Nbd2 Be6 (6... Bg4) (6... Nd7) (6... O-O) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6 6.O-O"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6 6.O-O"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. Bxc6 dxc6 6. O-O Bd6 (6... Bg4) (6... Nd7) (6... Qd6) (6... Qe7) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. Bxc6 dxc6 6. Qe2 (6. Nc3) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.c3 d5"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.c3 d5"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. c3 d5 6. exd5 (6. Nbd2) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.c3 O-O"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.c3 O-O"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. c3 O-O 6. Bg5 (6. Bxc6) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.c3 O-O 6.O-O"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.c3 O-O 6.O-O"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. c3 O-O 6. O-O d5 (6... d6) (6... Re8) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.O-O d6"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.O-O d6"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. O-O d6 6. c3 (6. Nbd2) (6. Nc3) (6. Re1) 6... O-O 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.O-O Nd4"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.O-O Nd4"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. O-O Nd4 6. Ba4 (6. Be3) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.O-O Nd4 6.Nxd4 Bxd4"]
+[Event "3.Bb5 Nf6 4.d3 Bc5 5.O-O Nd4 6.Nxd4 Bxd4"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. O-O Nd4 6. Nxd4 Bxd4 7. c3 (7. Nd2) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5"]
+[Event "3.Bb5 Nf6 4.d3 Bc5"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 Bc5 5. Nbd2 (5. Nc3) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 d6 5.c3"]
+[Event "3.Bb5 Nf6 4.d3 d6 5.c3"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 d6 5. c3 Bd7 (5... g6) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 d6 5.O-O Bd7"]
+[Event "3.Bb5 Nf6 4.d3 d6 5.O-O Bd7"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 d6 5. O-O Bd7 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 d6 5.O-O"]
+[Event "3.Bb5 Nf6 4.d3 d6 5.O-O"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 d6 5. O-O Be7 (5... a6) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 d6 5.O-O g6"]
+[Event "3.Bb5 Nf6 4.d3 d6 5.O-O g6"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. d3 d6 5. O-O g6 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Bc5 5.c3 O-O 6.d4 Bb6"]
+[Event "3.Bb5 Nf6 4.O-O Bc5 5.c3 O-O 6.d4 Bb6"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O Bc5 5. c3 O-O 6. d4 Bb6 7. Bg5 (7. dxe5) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Nxe4 5.d4 Nd6"]
+[Event "3.Bb5 Nf6 4.O-O Nxe4 5.d4 Nd6"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O Nxe4 5. d4 Nd6 6. Bg5 (6. Bxc6) (6. dxe5 Nxb5 7. a4 Nbd4 (7... d6)) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Nxe4 5.d4 Be7"]
+[Event "3.Bb5 Nf6 4.O-O Nxe4 5.d4 Be7"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O Nxe4 5. d4 Be7 6. dxe5 (6. Qe2) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Nxe4 5.Re1"]
+[Event "3.Bb5 Nf6 4.O-O Nxe4 5.Re1"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O Nxe4 5. Re1 Nd6 (5... Nf6 6. Nxe5 Be7 7. d4) 6. a4 (6. Nxe5 Be7 7. Bd3 (7. Bf1)) 
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O"]
+[Event "3.Bb5 Nf6 4.O-O"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O Nxe4 (4... d6) 5. Bxc6
 
-[Event "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6"]
+[Event "3.Bb5 Nf6"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. Nc3 (4. Qe2 a6 5. Ba4 Be7 6. c3 d6 7. O-O O-O) (4. Bxc6 dxc6 5. d3 Bd6 6. Nbd2 Bg4 7. h3 Bh5) 4... Nd4 5. Bc4 (5. Nxd4) 
