@@ -9,7 +9,7 @@ import Chessboard from './Chessboard'
 import { ChesstreeShorten, Treelala2, TwoPaths2 } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
-import { OpeningsChapterStatStore } from './repertoire_store'
+import { OpeningsChapterStatStore, OpeningsStore } from './repertoire_store'
 import { stepwiseScroll } from './common/scroll'
 import SessionStore from './SessionStore'
 import { usePlayer } from './sound'
@@ -339,6 +339,8 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
   Player.setVolume(0.2)
 
+  let store = new OpeningsStore(study().id)
+
 
   let [is_pending_move, set_is_pending_move] = createSignal(false)
 
@@ -346,7 +348,11 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   let repertoire_player = new RepertoirePlayer()
   let shalala = new Shala()
 
-  const [i_selected_chapter, set_i_selected_chapter] = createSignal(SessionStore.i_chapter ?? 0)
+  const [i_selected_chapter, set_i_selected_chapter] = createSignal(SessionStore.i_chapter ?? store.i_chapter_index)
+
+  createEffect(() => {
+    store.i_chapter_index = i_selected_chapter()
+  })
 
   let overall_stats = createMemo(() => {
     const s = study()

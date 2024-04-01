@@ -1,6 +1,30 @@
 import { Signal } from "solid-js";
 import { makePersistedNamespaced } from "./storage";
 
+export class OpeningsStore {
+
+    make_persisted<T>(def: T, name: string) {
+        return makePersistedNamespaced<T>(def, 
+            `.openings.id.${this.study_id}.${name}`)
+    }
+
+  _i_chapter_index: Signal<number>
+
+
+  get i_chapter_index() {
+    return this._i_chapter_index[0]()
+  }
+
+  set i_chapter_index(_: number) {
+    this._i_chapter_index[1](_)
+  }
+
+    constructor(readonly study_id: string) {
+      this._i_chapter_index = this.make_persisted(0, 'i_chapter_idx')
+    }
+}
+
+
 export class OpeningsChapterStatStore {
 
   _practice_progress: Signal<number>
