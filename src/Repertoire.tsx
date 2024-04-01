@@ -499,6 +499,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
       if (repertoire_player.mode === 'quiz-deathmatch') {
         repertoire_player.quiz_deathmatch_fail_result = -1
         repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path.slice(0, -1)
+        repertoire_lala()._hidden_paths.clear()
       }
     }
   }))
@@ -649,7 +650,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   }
 
   const is_board_movable = createMemo(() => {
-    return repertoire_player.mode !== undefined && !quiz_quiz_stop() && !repertoire_player.practice_end_result
+    return repertoire_player.mode !== undefined && !quiz_quiz_stop() && !repertoire_player.practice_end_result && !repertoire_player.quiz_deathmatch_fail_result
   })
 
 
@@ -764,7 +765,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                   <button class='end2' onClick={() => {
 
                     batch(() => {
-                    let p = repertoire_lala().cursor_path
+                    let p = repertoire_lala().cursor_path.slice(0, -1)
                     repertoire_player.end_deathmatch()
 
                     repertoire_lala()._hidden_paths.clear()
@@ -785,7 +786,7 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
                   <button class='end2' onClick={() => {
 
                     batch(() => {
-                    let p = repertoire_lala().cursor_path
+                    let p = repertoire_lala().cursor_path.slice(0, -1)
                     repertoire_player.end_deathmatch()
 
                     repertoire_lala()._hidden_paths.clear()
