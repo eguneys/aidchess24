@@ -14,6 +14,49 @@ $primary-light: #64240c;
 
 $text-light: #f5fbfd;
 
-$accent-light: #ffd7b5;
+$accent-light: #e59b5b;
+$accent-lighter: #ffd7b5;
 
 $dark-text: #101012;
+
+$xxx-small: 400px;
+$xx-small: 500px;
+$x-small: 650px;
+$small: 800px;
+$medium: 980px;
+$large: 1120px;
+$x-large: 1260px;
+$xx-large: 1500px;
+
+$x-short: 400px;
+$short: 500px;
+$tall: 600px;
+$x-tall: 700px;
+
+
+@mixin mq-is-col1 {
+    @media (max-width: at-most($small)) and (orientation: portrait) {
+        @content;
+    }
+}
+
+
+@mixin mq-at-least-col2 {
+    @media (min-width: $small), (orientation: landscape) {
+        @content;
+    }
+}
+
+
+@mixin mq-is-col2-squeeze {
+    @media (max-width: $small) and (orientation: landscape) {
+        @content;
+    }
+}
+
+
+@mixin mq-at-least-col3 {
+    @media (min-width: $x-large) {
+        @content;
+    }
+}

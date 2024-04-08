@@ -1,0 +1,155 @@
+@import '_variables';
+
+.on-openings {
+    .repertoire {
+
+        display: grid;
+        grid-template-areas: "board"
+                             "replay"
+                             "sections";
+        gap: 0.4em;
+
+        --gauge-gap: calc(
+          8px + 9 *
+            ((100vw - 320px) / 880)
+        );
+
+        --col2-uniboard-width: calc(
+            min(calc(100vw - 240px - 20px), 
+                calc(100vh - calc(var(--site-header-height)))));
+
+
+        @include mq-at-least-col2 {
+            grid-template-areas: 'board gauge replay'
+            'sections sections sections';
+
+            grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) auto;
+
+            gap: 0.1em;
+
+            .eval-gauge {
+                display: flex !important;
+            }
+        }
+
+        @include mq-is-col2-squeeze {
+            grid-template-areas: 'board gauge replay'
+            'sections sections sections';
+
+            grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) minmax(200px, 300px);
+            gap: 0.1em;
+        }
+
+
+
+        @include mq-at-least-col3 {
+            grid-template-areas: 'board gauge replay sections';
+
+            grid-template-columns: minmax(auto, calc(90vh - var(--site-header-height))) var(--gauge-gap) 320px auto;
+            grid-auto-rows: 1fr;
+
+            gap: 0.1em;
+
+            .eval-gauge {
+                display: flex !important;
+            }
+        }
+
+
+
+
+        .eval-gauge {
+            grid-area: gauge;
+            display: none;
+        }
+
+        .sections-wrap {
+            grid-area: sections;
+        }
+
+        .board-wrap {
+            grid-area: board;
+        }
+
+        .replay-wrap {
+            grid-area: replay;
+        }
+
+        .sections-wrap {
+
+            position: relative;
+            display: flex;
+            flex-flow: column;
+            overflow-y: scroll;
+            overflow-x: hidden;
+
+        .sections {
+            flex: 1;
+            display: flex;
+            flex-flow: column;
+            gap: 0.2em;
+
+
+            .section {
+                display: flex;
+                flex-flow: column;
+
+                input {
+                    position: absolute;
+                    opacity: 0;
+                    z-index: -1;
+                }
+
+                label {
+                    user-select: none;
+                    cursor: pointer;
+                    border-radius: 2px;
+                    padding: 0.6em;
+                    background: linear-gradient(#2c2a25, #37342e);
+
+                    &:hover {
+                      background: linear-gradient(#434038, #37342e);
+                    }
+
+                    &.active {
+                      background: linear-gradient(#59554a, #37342e);
+                      color: $text-light;
+                    }
+                }
+
+                .chapters {
+                    display: flex;
+                    flex-flow: column;
+                    max-height: 0;
+                    overflow: hidden;
+                    gap: 0.1em;
+
+                    .chapter {
+                        border-radius: 2px;
+                        user-select: none;
+                        cursor: pointer;
+                        margin: 0 0.4em;
+                        padding: 0.2em 0.4em;
+                        background: $secondary;
+                        color: $text;
+
+                        &:hover {
+                            background: $secondary-light;
+                        }
+
+                        &.active {
+                            background: $primary-light;
+                        }
+                    }
+                }
+
+            }
+
+            input:checked ~ .chapters {
+                max-height: 100rem;
+            }
+        }
+        }
+
+    }
+}

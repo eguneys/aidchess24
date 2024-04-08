@@ -83,10 +83,10 @@ export class OpeningsChapterStatStore {
 
     make_persisted<T>(def: T, name: string) {
         return makePersistedNamespaced<T>(def, 
-            `.openings.id.${this.study_id}.chapter.${this.i_chapter}.${name}`)
+            `openings.id.${this.study_id}.section.${this.section}.chapter.${this.chapter}.${name}`)
     }
 
-    constructor(readonly study_id: string, readonly i_chapter: number) { 
+    constructor(readonly study_id: string, readonly section: string, readonly chapter: string) { 
 
       this._solved_paths = this.make_persisted<string[][]>([], 'solved_paths')
 

@@ -38,7 +38,11 @@ export class Pgn {
             let black = g.headers.get('Black')
             let puzzle = g.headers.get('Puzzle')
 
+            let section = g.headers.get('Section')
+            let chapter = g.headers.get('Chapter')
+
             let fen = g.headers.get('FEN')
+
 
             let child = g.moves.children[0]
 
@@ -66,7 +70,7 @@ export class Pgn {
 
             let res = new Pgn({
                 event, site, white, black,
-                puzzle
+                puzzle, section, chapter
              }, t)
             return res
         })
@@ -93,6 +97,14 @@ export class Pgn {
         return this.headers.puzzle
     }
 
+    get section() {
+        return this.headers.section
+    }
+
+    get chapter() {
+        return this.headers.chapter
+    }
+
     constructor(
         readonly headers: PgnHeaders,
 
@@ -100,11 +112,13 @@ export class Pgn {
 }
 
 export type PgnHeaders = {
-   event?: string, 
-   site?: string,
-   white?: string,
-   black?: string,
-   puzzle?: string,
+    section?: string,
+    chapter?: string,
+    event?: string,
+    site?: string,
+    white?: string,
+    black?: string,
+    puzzle?: string,
 }
 
 export class TreeNode<V> {

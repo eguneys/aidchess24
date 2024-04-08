@@ -10,19 +10,7 @@ body {
 
 .main-wrap {
     --main-max-width: 1300px;
-
-
-    &.on-repertoires,
-    &.on-openings,
-    &.on-tactics,
-    &.on-masters,
-    &.on-sixth
-     {
-      --main-max-width: auto;
-    }
-
-
-
+    --main-max-width: auto;
     display: grid;
     grid-template-areas: '. . main . .';
     grid-template-columns: 1vw 1fr minmax(auto, var(--main-max-width)) 1fr 1vw;

@@ -52,9 +52,65 @@ const reformatStudyPGN = (pgns: string, id: string, study_name: string, orientat
     }
 }
 
+
+export type PGNSectionStudy = {
+  id: string,
+  name: string,
+  orientation?: Color,
+  sections: PGNSection[]
+}
+
+export type PGNSection = {
+  name: string,
+  chapters: PGNSectionChapter[]
+}
+
+export type PGNSectionChapter = {
+  name: string,
+  pgn: Pgn
+}
+
+
+
+const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color): PGNSectionStudy => {
+  let sections: PGNSection[] = []
+    Pgn.make_many(pgns).map(pgn => {
+
+        let section = pgn.section!
+        let chapter_name = pgn.chapter!
+
+        let ss = sections.find(_ => _.name === section)
+
+        if (!ss) {
+          sections.push(ss = {
+            name: section,
+            chapters: []
+          })
+        }
+
+        ss?.chapters.push({
+          name: chapter_name,
+          pgn
+        })
+    })
+
+    return {
+        id,
+        name: study_name,
+        orientation,
+        sections
+    }
+}
+
+
+
+
+
 const read_study_pgn = (id: string, study_name: string, orientation?: Color) => 
     fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, id, study_name, orientation))
 
+const read_section_study_pgn = (id: string, study_name: string, orientation?: Color) => 
+    fetch(`pgns/${id}.section.pgn`).then(_ => _.text()).then(_ => reformatSectionStudyPGN(_, id, study_name, orientation))
 
 class StudyRepo {
 
@@ -66,6 +122,11 @@ class StudyRepo {
         return res
     }
 
+
+    read_section_study(id: string) {
+      let { study_name, orientation } = RepertoiresFixture.study_by_id(id)
+      return read_section_study_pgn(id, study_name, orientation)
+    }
 
     read_study(id: string) {
 
@@ -88,14 +149,12 @@ export type StudyInRepertoireCategory = {
 
 const HardCategories: any = {
   'Openings': [
-    ['Berlin Defence', 'berlin', 21, 'black'],
-    ['Slav Defense', 'slav', 27, 'black'],
-    ['Caro Kann', 'caro-kann', 25, 'white'],
-    ['Four-Knights', 'four-knights', 25, 'white'],
-    ['Sicilian Defense', '', 11, 'white'],
-    ['French Defense', '', 14, 'black'],
-    ['e4 vs Minor Defenses', '', 7, 'white'],
-    ['Spanish Opening', ''],
+    ['Slav Defense', 'slav', 'black'],
+    ['Berlin Defence', '', 'black'],
+    ['Caro Kann', '', 'white'],
+    ['Four-Knights', '', 'white'],
+    ['Sicilian Defense', '', 'white'],
+    ['French Defense', '', 'black'],
   ],
   'Masters': [
     ['Bobby Fischer 60 Memorable Games', '', 60],

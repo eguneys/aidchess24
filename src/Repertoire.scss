@@ -4,46 +4,6 @@
 .on-tactics  {
     .repertoire {
 
-        display: grid;
-        --gauge-gap: calc(
-          8px + 9 *
-            ((100vw - 320px) / 880)
-        );
-        grid-template-areas:
-        'board gauge replay'
-        'list list list'
-        'under . .';
-        grid-template-columns: minmax(55vmin, 90vh) var(--gauge-gap) minmax(200px, 400px);
-        justify-content: center;
-
-        @media (max-width: 600px) {
-
-            grid-template-areas:
-            'board'
-            'replay'
-            'list';
-            grid-template-columns: min-content;
-        }
-
-
-
-        .under {
-            grid-area: under;
-
-        }
-
-        .list-wrap {
-            grid-area: list;
-        }
-
-        .board-wrap {
-            grid-area: board;
-        }
-
-        .replay-wrap {
-            grid-area: replay;
-        }
-
         .header {
             color: $dark-text;
             padding: 0.5em 1em;
@@ -378,16 +338,12 @@
             }
 
             .replay {
-                flex: 2 1 0;
+                flex: 2 1 300px;
                 overflow: hidden;
                 display: flex;
                 flex-flow: column;
                 border: 2px solid $accent;
                 border-radius: 0px 0px 8px 8px;
-
-                @media (max-width: 600px) {
-                    flex: 1;
-                }
 
                 .replay-v {
                     position: relative;

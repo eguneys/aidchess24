@@ -1,5 +1,5 @@
-import { Route, A, useLocation, HashRouter } from "@solidjs/router";
-import { createMemo, lazy } from 'solid-js'
+import { Route, A, useLocation, HashRouter, useBeforeLeave } from "@solidjs/router";
+import { createMemo, createSignal, lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { PlayerProvider } from "./sound";
@@ -62,11 +62,16 @@ const AppInRouter = (props: any) => {
     return `on-${p === '' ? 'home' : p}`
   }
 
+  const [is_checked, set_checked] = createSignal(false, { equals: false })
+  useBeforeLeave(() => {
+    set_checked(false)
+  })
+
     return (<>
       <header id='top'>
           <div class='site-title-nav'>
 
-          <input type='checkbox' id='tn-tg' class='topnav-toggle fullscreen-toggle'></input>
+          <input checked={is_checked()} type='checkbox' id='tn-tg' class='topnav-toggle fullscreen-toggle'></input>
           <label for='tn-tg' class='fullscreen-mask'></label>
           <label for='tn-tg' class='hbg'>
             <span class='hbg__in'></span>

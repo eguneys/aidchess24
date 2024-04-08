@@ -1,8 +1,9 @@
 import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack, onMount } from 'solid-js'
 import './Repertoire.scss'
+import './RepertoireSections.scss'
 import { useParams } from '@solidjs/router'
 
-import StudyRepo, { PGNStudy } from './studyrepo'
+import StudyRepo, { PGNSection, PGNSectionChapter, PGNSectionStudy } from './studyrepo'
 import { Show } from 'solid-js'
 import { Shala } from './Shalala'
 import Chessboard from './Chessboard'
@@ -218,30 +219,35 @@ class RepertoireStats {
 
 class RepertoireStat {
 
-  static load_from_store(s: PGNStudy, i_chapter: number): any {
-    let store = new OpeningsChapterStatStore(s.id, i_chapter)
-    return RepertoireStat.make(s.id, i_chapter, s.chapters[i_chapter].pgn.tree, TwoPaths2.set_for_saving(store.solved_paths))
+  static load_from_store(s: PGNSectionStudy, section_name: string, chapter_name: string): any {
+    let store = new OpeningsChapterStatStore(s.id, section_name, chapter_name)
+    return RepertoireStat.make(s.id, section_name, chapter_name, 
+      s.sections.find(_ => _.name === section_name)!
+      .chapters.find(_ => _.name === chapter_name)!
+      .pgn.tree,
+      TwoPaths2.set_for_saving(store.solved_paths))
   }
 
   static save_paths_to_store(stats: RepertoireStat) {
-    let store = new OpeningsChapterStatStore(stats.study_id, stats.i_chapter)
+    let store = new OpeningsChapterStatStore(stats.study_id, stats.section, stats.chapter)
     store.solved_paths = stats.solved_paths.get_for_saving()
     store.practice_progress = stats.progress
   }
   
 
-  static make(study_name: string, i_chapter: number, t: MoveTree, paths: TwoPaths2 = new TwoPaths2()) {
-    return new RepertoireStat(study_name, i_chapter, MoveScoreTree.make(t), paths)
+  static make(study_id: string, section_name: string, chapter_name: string, t: MoveTree, paths: TwoPaths2 = new TwoPaths2()) {
+    return new RepertoireStat(study_id, section_name, chapter_name, MoveScoreTree.make(t), paths)
   }
 
   constructor(
     readonly study_id: string, 
-    readonly i_chapter: number, 
+    readonly section: string, 
+    readonly chapter: string, 
     readonly score_tree: MoveScoreTree, 
     readonly solved_paths: TwoPaths2) {}
 
   get clone() {
-    return new RepertoireStat(this.study_id, this.i_chapter, this.score_tree, this.solved_paths.clone)
+    return new RepertoireStat(this.study_id, this.section, this.chapter, this.score_tree, this.solved_paths.clone)
   }
 
   get progress() {
@@ -318,20 +324,662 @@ const Repertoire = () => {
 
     const params = useParams()
 
-    const [study] = createResource(params.id, StudyRepo.read_study)
+    const [study] = createResource(params.id, StudyRepo.read_section_study)
 
-
+    let [el_rep, set_el_rep] = createSignal<HTMLDivElement>()
+ 
   return (
     <>
-      <div class='repertoire-wrap'>
-        <Show when={!study.loading} fallback={"Loading..."}>
-          <RepertoireLoaded study={study()!} />
+      <div ref={_ => set_el_rep(_)} class='repertoire'>
+        <Show when={study()} fallback={"Loading..."}>
+          <SectionLoaded el_rep={el_rep()} section_study={study()!} />
         </Show>
       </div>
     </>)
 }
 
 
+const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSectionStudy }) => {
+
+  let sections = createMemo(() => props.section_study.sections)
+
+  const [i_selected_section, _set_i_selected_section] = createSignal(0)
+
+  const selected_section = createMemo(() => sections()[i_selected_section()])
+
+  const selected_chapters = createMemo(() => selected_section().chapters)
+
+  const [i_selected_chapter, set_i_selected_chapter] = createSignal(0)
+
+
+  const set_i_selected_section = (i: number) => {
+    batch(() => {
+      set_i_selected_chapter(0)
+      _set_i_selected_section(i)
+    })
+  }
+
+
+  const selected_chapter = createMemo(() => selected_chapters()[i_selected_chapter()])
+
+  return (<>
+      <div class='sections-wrap'>
+      <h2 class='title'>
+        {props.section_study.name}
+      </h2>
+      <div class='sections'>
+        <For each={sections()}>{(section, i) => 
+          <div class='section'>
+            <input checked={i_selected_section() === i()} type='radio' name="accordion" id={`accordion-${i()}`}/>
+            <label class={i_selected_section() === i() ? 'active': ''} for={`accordion-${i()}`} onClick={() => set_i_selected_section(i())}>{section.name}</label>
+            <div class='chapters'>
+              <For each={selected_chapters()}>{ (chapter, i_chapter) => 
+                <div class={`chapter` + (i_chapter() === i_selected_chapter() ? ' active' : '')} onClick={() => set_i_selected_chapter(i_chapter())}><span class='no'>{i_chapter() + 1}.</span> {chapter.name}</div>
+              }</For>
+            </div>
+          </div>
+        }</For>
+      </div>
+      </div>
+      <ChapterLoaded el_rep={props.el_rep} study={props.section_study} section={selected_section()} chapter={selected_chapter()}/>
+  </>)
+}
+
+const ChapterLoaded = (props: { el_rep?: HTMLDivElement, study: PGNSectionStudy, section: PGNSection, chapter: PGNSectionChapter}) => {
+
+  const Player = usePlayer()
+  Player.setVolume(0.2)
+
+
+  const study = createMemo(() => props.study)
+
+  const section = createMemo(() => props.section)
+  const chapter = createMemo(() => props.chapter)
+
+  const study_name = createMemo(() => study().name)
+  const section_name = createMemo(() => section().name)
+
+  const chapter_name = createMemo(() => chapter().name)
+  const chapter_pgn = createMemo(() => chapter().pgn)
+
+  
+
+  let repertoire_player = new RepertoirePlayer()
+  let shalala = new Shala()
+
+  const repertoire_lala = createMemo(() => {
+    //track
+    repertoire_player.mode
+
+    let res = Treelala2.make(chapter_pgn().tree.clone)
+    return res
+  })
+
+  const repertoire_stat_for_mode = createMemo(() => {
+    let t = repertoire_lala().tree!
+    return untrack(() => RepertoireStat.make(study_name(), section_name(), chapter_name(), t, new TwoPaths2()))
+  })
+
+  let overall_stats = createMemo(() => {
+    const s = study()
+    return new RepertoireStats(section().chapters.map(_ => RepertoireStat.load_from_store(s, section_name(), _.name)))
+  })
+
+  let overall_repertoire_stat = createMemo(() => {
+    return overall_stats().chapters.find(_ => chapter_name() === _.chapter)!
+  })
+
+
+
+  const [quiz_error_flash, set_quiz_error_flash] = createSignal(false)
+
+  const quiz_quiz_stop = createMemo(() => {
+    if (repertoire_player.mode === 'quiz-quiz') {
+      return repertoire_player.i_quiz_quiz === 16
+    }
+  })
+
+
+  let stats_merge_diff = createMemo(() => {
+    let o = overall_repertoire_stat()
+    let m = repertoire_stat_for_mode()
+
+    let old_progress = untrack(() => o.progress)
+    let new_progress = o.clone_merge_stats(m).progress
+
+
+    return new_progress - old_progress
+  })
+
+
+
+  const progress_map = createMemo(() => repertoire_stat_for_mode().progress_map)
+
+  let [is_pending_move, set_is_pending_move] = createSignal(false)
+
+  const active_if_tab_practice = (p: PlayMode) => {
+
+    let m = repertoire_player.mode
+    if (p === 'practice') {
+      if (m === undefined || m === 'match' || m === 'moves') {
+        return ' active'
+      }
+    } else {
+      if (m === 'quiz' || m === 'quiz-quiz' || m === 'quiz-deathmatch') {
+        return ' active'
+      }
+    }
+    return ''
+  }
+
+  const is_board_movable = createMemo(() => {
+    return repertoire_player.mode !== undefined && !quiz_quiz_stop() && !repertoire_player.practice_end_result && !repertoire_player.quiz_deathmatch_fail_result
+  })
+
+  const branch_sums = createMemo(() => repertoire_lala().collect_branch_sums(repertoire_lala().cursor_path))
+
+
+  const deathmatch_score = createMemo(on(() => repertoire_player.quiz_deathmatch_result_path, rp => {
+    let x = rp.length
+    let y = repertoire_lala().tree?.all_leaves.map(_ => _.path)
+    .filter(_ => !repertoire_lala().failed_paths.find(f => f.join('') === _.join('')))
+    .filter(_ => _.join('').startsWith(rp.join('')))[0]?.length
+    return `${x} out of ${y}`
+  }))
+
+
+
+  createEffect(() => {
+    if (repertoire_player.mode === 'quiz-quiz') {
+      let is_stop = quiz_quiz_stop()
+      let last_fail = repertoire_player.quiz_quiz_ls[repertoire_player.quiz_quiz_ls.length - 1]
+
+      if (last_fail < 0) {
+
+        set_quiz_error_flash(true)
+        setTimeout(() => {
+          set_quiz_error_flash(false)
+        }, 500)
+      }
+
+      if (is_stop) {
+        Player.play('victory')
+        untrack(() => {
+           repertoire_lala().clear_failed_paths()
+           repertoire_lala()._hidden_paths.clear()
+        })
+      } else {
+        set_is_pending_move(true)
+        setTimeout(() => {
+          batch(() => untrack(() => {
+            repertoire_lala().set_random_cursor_hide_rest()
+            repertoire_player.match_color = repertoire_lala().cursor_after_color
+
+            let path = repertoire_lala().cursor_path
+
+            set_silent_cursor_path(path.slice(0, -1))
+
+            setTimeout(() => {
+              repertoire_lala().cursor_path = path
+              set_is_pending_move(false)
+            }, 200)
+
+          }))
+        }, 100)
+      }
+    }
+  })
+
+
+  createEffect(() => {
+    let { mode, match_color } = repertoire_player
+    if (mode === 'quiz-deathmatch') {
+      if (match_color === 'black') {
+        setTimeout(() => {
+          untrack(() => {
+            repertoire_lala().reveal_one_random()
+          })
+        }, 400)
+      }
+    }
+  })
+
+  createEffect(() => {
+    repertoire_lala().solved_paths.replace_all(overall_repertoire_stat().solved_paths)
+  })
+
+
+  createEffect(() => {
+    let s = untrack(() => repertoire_stat_for_mode())
+    s.solved_paths.replace_all(repertoire_lala().solved_paths)
+  })
+
+
+  createEffect(on(() => [overall_repertoire_stat(), repertoire_stat_for_mode()], (_, prev) => {
+    if (prev) {
+      let [o, m] = prev
+      o.merge_and_save_stats(m)
+    }
+  }))
+
+
+
+  createEffect(on(() => shalala.add_uci, (uci?: string) => {
+    if (is_pending_move()) {
+      return
+    }
+    if (!uci) {
+      return
+    }
+
+    let success = repertoire_lala().try_next_uci_fail(uci)
+
+    if (success) {
+      success_auto_play_or_end()
+
+      if (repertoire_player.mode === 'quiz-quiz') {
+        repertoire_player.quiz_pass_one(repertoire_lala().cursor_path)
+      }
+
+    } else {
+      if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
+        set_is_pending_move(true)
+        setTimeout(() => {
+          repertoire_lala().on_wheel(-1)
+          set_is_pending_move(false)
+        }, 100)
+      }
+
+      if (repertoire_player.mode === 'quiz-quiz') {
+        repertoire_player.quiz_fail_one(repertoire_lala().cursor_path.slice(0, -1))
+        Player.play('error')
+      }
+
+
+      if (repertoire_player.mode === 'quiz-deathmatch') {
+        repertoire_player.quiz_deathmatch_fail_result = -1
+        repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path.slice(0, -1)
+        repertoire_lala()._hidden_paths.clear()
+      }
+    }
+  }))
+
+  createEffect(on(() => repertoire_player.quiz_deathmatch_fail_result, v => {
+    if (v > 0) {
+       Player.play('victory')
+    } else if (v < 0) {
+       Player.play('victory')
+    }
+  }))
+
+  createEffect(on(() => repertoire_player.practice_end_result, v => {
+    if (v) {
+      Player.play('victory')
+    }
+  }))
+
+  createEffect(() => {
+    let { mode, match_color } = repertoire_player
+
+    if (mode === 'match' && match_color === 'black') {
+      untrack(() => {
+        success_auto_play_or_end()
+      })
+    }
+  })
+
+  createEffect(on(() => repertoire_lala().fen_last_move, (res) => {
+    if (res) {
+      let [fen, last_move] = res
+      shalala.on_set_fen_uci(fen, last_move)
+    } else {
+      shalala.on_set_fen_uci(INITIAL_FEN)
+    }
+
+  }))
+
+  const success_auto_play_or_end = () => {
+    let is_leaf = () => repertoire_lala().is_cursor_path_at_a_leaf
+
+      if (is_leaf()) {
+        if (repertoire_player.mode === 'quiz-deathmatch') {
+          repertoire_player.quiz_deathmatch_fail_result = 1
+          repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path
+        } else if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
+          repertoire_player.practice_end_result = true
+        }
+      } else {
+        if (repertoire_player.mode === 'match' || repertoire_player.mode === 'quiz-deathmatch') {
+          set_is_pending_move(true)
+          setTimeout(() => {
+            repertoire_lala().reveal_one_random()
+
+
+            if (is_leaf()) {
+               if (repertoire_player.mode === 'quiz-deathmatch') {
+                 repertoire_player.quiz_deathmatch_fail_result = 1
+                 repertoire_player.quiz_deathmatch_result_path = repertoire_lala().cursor_path
+               } else if (repertoire_player.mode === 'match' || repertoire_player.mode === 'moves') {
+                repertoire_player.practice_end_result = true
+               }
+            }
+            set_is_pending_move(false)
+          }, 400)
+        }
+      }
+  }
+
+  createEffect(() => {
+    repertoire_player.match_color = study().orientation ?? 'white'
+  })
+
+
+  let mute_move_sound = false
+  createEffect(on(() => repertoire_lala().tree?.get_at(repertoire_lala().cursor_path), v => {
+    if (v) {
+      if (mute_move_sound) {
+        mute_move_sound = false
+        return
+      }
+      Player.move(v)
+    }
+  }))
+
+
+  const set_silent_cursor_path = (path: string[]) => {
+    mute_move_sound = true
+    repertoire_lala().cursor_path = path
+  }
+
+  createEffect(on(() => shalala.on_wheel, (dir) => {
+    if (dir) {
+      repertoire_lala().on_wheel(dir)
+    }
+  }))
+
+  const onKeyPress = (e: KeyboardEvent) => {
+    if (e.key === 'f') {
+      repertoire_player.flip_match_color()
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener('keypress', onKeyPress)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener('keypress', onKeyPress)
+  })
+
+
+
+
+
+  const onWheel = stepwiseScroll((e: WheelEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName !== 'PIECE' &&
+      target.tagName !== 'SQUARE' &&
+      target.tagName !== 'CG-BOARD'
+    )
+      return;
+    e.preventDefault();
+    shalala.set_on_wheel(Math.sign(e.deltaY))
+
+  })
+
+
+
+  createEffect(() => {
+    const el_rep = props.el_rep
+    if (!el_rep) {
+      return
+    }
+    el_rep.addEventListener('wheel', onWheel, { passive: false })
+    onCleanup(() => {
+      el_rep.removeEventListener('wheel', onWheel)
+    })
+  })
+
+
+
+
+  return (<>
+  <div class='board-wrap'>
+    <Chessboard
+      orientation={repertoire_player.match_color}
+      movable={is_board_movable()}
+      doPromotion={shalala.promotion}
+      onMoveAfter={shalala.on_move_after}
+      fen_uci={shalala.fen_uci}
+      color={shalala.turnColor}
+      dests={shalala.dests} />
+  </div>
+  <div class='eval-gauge'>
+    <For each={progress_map()}>{ p => 
+      <div onClick={_ => repertoire_lala().try_set_cursor_path(p.path) } class='line' style={`background: ${p.color}; height: ${p.total * 100}%`}>
+        <span class='fill white' style={`height: ${p.white() * 100}%`}></span>
+        <span class='fill black' style={`height: ${p.black() * 100}%`}></span>
+      </div>
+    }</For>
+  </div>
+  <div class='replay-wrap'>
+    <div class='replay-header'>
+      <div class='title'>
+        <h4>{section_name()}</h4>
+        <h5>{chapter_name()}</h5>
+      </div>
+    </div>
+    <div class='replay'>
+        <div class='replay-v'>
+          <ChesstreeShorten lala={repertoire_lala()} />
+        </div>
+        <div class='branch-sums'>
+          <button disabled={is_pending_move() || !repertoire_lala().can_navigate_up} onClick={() => repertoire_lala().navigate_up()} class={"fbt prev" + (!is_pending_move() && repertoire_lala().can_navigate_up ? '' : ' disabled')} data-icon=""/>
+          <button disabled={is_pending_move() || !repertoire_lala().can_navigate_down} onClick={() => repertoire_lala().navigate_down()} class={"fbt prev" + (!is_pending_move() && repertoire_lala().can_navigate_down ? '' : ' disabled')} data-icon=""/>
+          <For each={branch_sums()}>{branch => 
+            <div class='fbt' onClick={() => repertoire_lala().try_set_cursor_path(branch.path)}><Show when={branch.ply & 1}><span class='index'>{ply_to_index(branch.ply)}</span></Show>{branch.san}</div>
+          }</For>
+         </div>
+        <div class='replay-jump'>
+          <button onClick={() => repertoire_lala().navigate_first()} class={"fbt first" + (!is_pending_move() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
+          <button onClick={() => repertoire_lala().navigate_prev()} class={"fbt prev" + (!is_pending_move() && repertoire_lala().can_navigate_prev ? '' : ' disabled')} data-icon=""/>
+          <button onClick={() => repertoire_lala().navigate_next()} class={"fbt next" + (!is_pending_move() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
+          <button onClick={() => repertoire_lala().navigate_last()} class={"fbt last" + (!is_pending_move() && repertoire_lala().can_navigate_next ? '' : ' disabled')} data-icon=""/>
+        </div>
+
+        
+
+        <div class='tools'>
+
+          <div class='tabs'>
+            <h3 class={'tab' + active_if_tab_practice('practice')} onClick={() => repertoire_player.end_match_or_moves() }>Practice</h3>
+            <h3 class={'tab' + active_if_tab_practice('quiz')} onClick={() => repertoire_player.mode = 'quiz' }>Quiz</h3>
+          </div>
+
+          <div class='content'>
+          <Switch>
+
+            <Match when={repertoire_player.mode === 'quiz'}>
+              <small> Click on variations to expand. </small>
+              <small> Your goal is to guess every move correctly to pass the quiz. </small>
+              <div class='in_mode'>
+              <button onClick={() => repertoire_player.mode = 'quiz-quiz'}><span> Take Quiz </span></button>
+              <button onClick={() => repertoire_player.mode = 'quiz-deathmatch'}><span> Play Deathmatch </span></button>
+              </div>
+            </Match>
+
+
+
+            <Match when={repertoire_player.mode === 'quiz-deathmatch'}>
+              <h2>Deathmatch Mode</h2>
+
+              <Show when={repertoire_player.quiz_deathmatch_fail_result !== 0} fallback={
+                <>
+              <small>You will play the moves from the opening.</small>
+              <small>If you go out of book, game ends.</small>
+
+              <div class='in_mode'>
+                <button class='end2' onClick={() => {
+
+                  batch(() => {
+                  let p = repertoire_lala().cursor_path.slice(0, -1)
+                  repertoire_player.end_deathmatch()
+
+                  repertoire_lala()._hidden_paths.clear()
+                  set_silent_cursor_path(p)
+                  })
+                }}><span> End Deathmatch </span></button>
+              </div>
+                  </>
+              }>
+
+                 <small> Deathmatch <Show when={repertoire_player.quiz_deathmatch_fail_result > 0} fallback={<span class='failed'>failed</span>}> <span class='passed'>passed</span></Show></small>
+                 <small> Your score: {deathmatch_score()}</small>
+                 <small> Progress +{stats_merge_diff()}% </small>
+
+
+              <div class='in_mode'>
+                <button onClick={() => repertoire_player.restart_deathmatch()}><span> Restart Deathmatch </span></button>
+                <button class='end2' onClick={() => {
+
+                  batch(() => {
+                  let p = repertoire_lala().cursor_path.slice(0, -1)
+                  repertoire_player.end_deathmatch()
+
+                  repertoire_lala()._hidden_paths.clear()
+                  set_silent_cursor_path(p)
+                  })
+                }}><span> End Deathmatch </span></button>
+              </div>
+              </Show>
+
+
+            </Match>
+
+
+
+
+
+            <Match when={repertoire_player.mode === 'quiz-quiz'}>
+              <Show when={quiz_quiz_stop()} fallback={
+                <>
+                <h3>Quiz Mode</h3>
+              <small>You are given 15 random positions from the opening.</small>
+              <small>Guess the correct move.</small>
+              <h2 class={quiz_error_flash() ? 'error': ''}>{repertoire_player.i_quiz_quiz} of 15</h2>
+
+              <div class='in_mode'>
+                <button class='end2' onClick={() => {
+                  batch(() => {
+                  let path = repertoire_lala().cursor_path
+                  repertoire_player.end_quiz()
+
+                  repertoire_lala()._hidden_paths.clear()
+                  set_silent_cursor_path(path)
+                  })
+                }}><span> End Quiz </span></button>
+              </div>
+                  </>
+              }>
+
+                 <small> Quiz <Show when={repertoire_player.quiz_pass > 10} fallback={<span class='failed'>failed</span>}> <span class='passed'>passed</span></Show></small>
+                 <small> Your score: {repertoire_player.quiz_pass} out of 15 correct</small>
+                 <small> Progress +{stats_merge_diff()}% </small>
+
+                 <div class='past'>
+                   <For each={repertoire_player.quiz_quiz_ls}>{(ls, i) => 
+                     <span onClick={() => repertoire_lala().cursor_path = repertoire_player._quiz_quiz_ls_paths[i()]} class={'move ' + (ls > 0 ? 'success': 'error')}>{i() + 1}</span>
+                   }</For>
+                 </div>
+
+
+
+              <div class='in_mode'>
+                <button onClick={() => repertoire_player.restart_quiz()}><span> Restart Quiz </span></button>
+                <button class='end2' onClick={() => { 
+
+                  batch(() => {
+                  let path = repertoire_lala().cursor_path
+                  repertoire_player.end_quiz()
+                  repertoire_lala()._hidden_paths.clear()
+                  set_silent_cursor_path(path)
+                  })
+                  }}><span> End Quiz </span></button>
+              </div>
+              </Show>
+
+
+            </Match>
+
+
+
+            <Match when={repertoire_player.mode === undefined}>
+              <small> Click on variations to expand. </small>
+              <small> Your goal is to guess every move correctly to fill up the progress bar. </small>
+              <div class='in_mode'>
+              <button onClick={() => repertoire_player.mode = 'moves'}><span> Play all Moves </span></button>
+              <button onClick={() => repertoire_player.mode = 'match'}><span> Play as Match </span></button>
+              </div>
+            </Match>
+
+            <Match when={repertoire_player.mode === 'match'}>
+              <h2>Play as Match</h2>
+
+               <Show when={repertoire_player.practice_end_result} fallback={
+                 <>
+                    <small> Try to guess the moves for {repertoire_player.match_color}.</small>
+                    <small> AI will play the next move, picking a random variation. </small>
+                    <small> Moves will be hidden once the game is started. </small>
+                 </>
+               }>
+                <>
+                <small> End of practice. </small>
+                <small> Congratulations. </small>
+                </>
+               </Show>
+                <div class='in_mode'>
+                  <button onClick={() => repertoire_player.restart_match()}><span> Rematch </span></button>
+                  <button class='end2' onClick={() => {
+                    let pp = repertoire_lala().cursor_path
+                    repertoire_player.end_match_or_moves()
+
+                    repertoire_lala()._hidden_paths.clear()
+                    set_silent_cursor_path(pp)
+                  }}><span> End Practice </span></button>
+                </div>
+            </Match>
+
+            <Match when={repertoire_player.mode === 'moves'}>
+              <h2>Play all moves</h2>
+
+               <Show when={repertoire_player.practice_end_result} fallback={
+                 <>
+                     <small>Try to guess the moves for both sides.</small>
+                     <small>Moves will be hidden once you start.</small>
+                 </>
+               }>
+                <>
+                <small> End of practice. </small>
+                <small> Congratulations. </small>
+                </>
+               </Show>
+
+              <div class='in_mode'>
+                <button onClick={() => { repertoire_player.restart_moves() }}><span> Clear </span></button>
+                <button class='end2' onClick={() => repertoire_player.end_match_or_moves()}><span> End Practice </span></button>
+              </div>
+            </Match>
+          </Switch>
+
+          </div>
+        </div>
+    </div>
+  </div>
+  </>)
+}
+
+/*
 const RepertoireLoaded = (props: { study: PGNStudy }) => {
 
   const Player = usePlayer()
@@ -936,5 +1584,6 @@ const RepertoireLoaded = (props: { study: PGNStudy }) => {
   )
 }
 
+*/
 
 export default Repertoire
