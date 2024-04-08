@@ -17,6 +17,8 @@
         --col2-uniboard-width: calc(
             min(calc(100vw - 240px - 20px), 
                 calc(100vh - calc(var(--site-header-height)))));
+        
+        --col3-uniboard-width: calc(90vh - var(--site-header-height));
 
 
         @include mq-at-least-col2 {
@@ -45,8 +47,8 @@
         @include mq-at-least-col3 {
             grid-template-areas: 'board gauge replay sections';
 
-            grid-template-columns: minmax(auto, calc(90vh - var(--site-header-height))) var(--gauge-gap) 320px auto;
-            grid-auto-rows: 1fr;
+            grid-template-columns: minmax(auto, var(--col3-uniboard-width)) var(--gauge-gap) 320px auto;
+            grid-template-rows: minmax(auto, var(--col3-uniboard-width));
 
             gap: 0.1em;
 
@@ -129,7 +131,6 @@
                         user-select: none;
                         cursor: pointer;
                         margin: 0 0.4em;
-                        padding: 0.2em 0.4em;
                         background: $secondary;
                         color: $text;
 
@@ -139,6 +140,33 @@
 
                         &.active {
                             background: $primary-light;
+                        }
+
+                        .title {
+                            padding: 0.2em;
+                        }
+
+                        .progress-wrap {
+
+                            display: flex;
+                            align-items: flex-end;
+
+                            h5 {
+                                padding: 0 0.2em;
+                            }
+
+                            .progress {
+                             flex: 1;
+                            height: 8px;
+                            background: $text;
+                            border: 1px  solid $dark-text;
+                            border-radius: 2px;
+                            display: flex;
+
+                            .bar {
+                                background: $success;
+                            }
+                            }
                         }
                     }
                 }

@@ -198,10 +198,11 @@ class RepertoirePlayer {
 
 const Progress = (props: { width: number }) => {
     return (<>
-    
+    <div class='progress-wrap'>
     <div class='progress'>
         <div class='bar' style={`width: ${props.width}%`}/>
-        <h3>{`%${props.width}`}</h3>
+    </div>
+    <h5>{props.width}%</h5>
     </div>
     </>)
 }
@@ -221,10 +222,16 @@ class RepertoireStat {
 
   static load_from_store(s: PGNSectionStudy, section_name: string, chapter_name: string): any {
     let store = new OpeningsChapterStatStore(s.id, section_name, chapter_name)
+
+    let tree = s.sections
+    .find(_ => _.name === section_name)?.chapters
+    .find(_ => _.name === chapter_name)?.pgn.tree
+
+    if (!tree) {
+      return undefined
+    }
     return RepertoireStat.make(s.id, section_name, chapter_name, 
-      s.sections.find(_ => _.name === section_name)!
-      .chapters.find(_ => _.name === chapter_name)!
-      .pgn.tree,
+      tree,
       TwoPaths2.set_for_saving(store.solved_paths))
   }
 
@@ -235,7 +242,7 @@ class RepertoireStat {
   }
   
 
-  static make(study_id: string, section_name: string, chapter_name: string, t: MoveTree, paths: TwoPaths2 = new TwoPaths2()) {
+  static make(study_id: string, section_name: string, chapter_name: string, t: MoveTree, paths: TwoPaths2 = new TwoPaths2()): RepertoireStat {
     return new RepertoireStat(study_id, section_name, chapter_name, MoveScoreTree.make(t), paths)
   }
 
@@ -362,6 +369,7 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
 
   const selected_chapter = createMemo(() => selected_chapters()[i_selected_chapter()])
 
+
   return (<>
       <div class='sections-wrap'>
       <h2 class='title'>
@@ -374,7 +382,10 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
             <label class={i_selected_section() === i() ? 'active': ''} for={`accordion-${i()}`} onClick={() => set_i_selected_section(i())}>{section.name}</label>
             <div class='chapters'>
               <For each={selected_chapters()}>{ (chapter, i_chapter) => 
-                <div class={`chapter` + (i_chapter() === i_selected_chapter() ? ' active' : '')} onClick={() => set_i_selected_chapter(i_chapter())}><span class='no'>{i_chapter() + 1}.</span> {chapter.name}</div>
+                <div class={`chapter` + (i_chapter() === i_selected_chapter() ? ' active' : '')} onClick={() => set_i_selected_chapter(i_chapter())}>
+                  <div class='title'><span class='no'>{i_chapter() + 1}.</span> {chapter.name}</div>
+                  <Progress width={RepertoireStat.load_from_store(props.section_study, section.name, chapter.name)?.progress ?? 0}/>
+                </div>
               }</For>
             </div>
           </div>
