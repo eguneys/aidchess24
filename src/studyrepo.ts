@@ -150,6 +150,7 @@ export type StudyInRepertoireCategory = {
 const HardCategories: any = {
   'Openings': [
     ['Slav Defense', 'slav', 'black'],
+    ['Caro-Kann Defense', 'caro-kann', 'white'],
     ['Petroff Defense', 'petroff', 'white'],
     ['Philidor Defence', 'philidor', 'white'],
     ['Berlin Defence', '', 'black'],
