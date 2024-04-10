@@ -1,0 +1,44 @@
+[Section "3.d4 exd4 4.Nxd4 Nf6 5.Nc3"]
+[Chapter "5...Be7 6.g3"]
+
+1. e4 e5 2. Nf3 d6 3. d4 exd4 4. Nxd4 Nf6 5. Nc3 Be7 6. g3 d5 (6... O-O 7. Bg2 Re8) 7. e5 Ng4 
+
+[Section "3.d4 exd4 4.Nxd4 Nf6 5.Nc3"]
+[Chapter "5...Be7 6.Bf4"]
+
+1. e4 e5 2. Nf3 d6 3. d4 exd4 4. Nxd4 Nf6 5. Nc3 Be7 6. Bf4 Nc6 (6... O-O 7. Qd2 c6) 7. Qd2 O-O 
+
+[Section "3.d4 exd4 4.Nxd4 Nf6 5.Nc3"]
+[Chapter "5...Be7"]
+
+1. e4 e5 2. Nf3 d6 3. d4 exd4 4. Nxd4 Nf6 5. Nc3 Be7 6. Bc4 (6. Be2 O-O 7. O-O Re8) (6. g3 Nc6 7. Bg2 Nxd4) 6... O-O 7. O-O c6 
+
+[Section "3.d4 exd4 4.Nxd4 Nf6 5.Nc3"]
+[Chapter "5...g6 6.Bf4 Bg7 7.Qd2 Nc6"]
+
+1. e4 e5 2. Nf3 d6 3. d4 exd4 4. Nxd4 Nf6 5. Nc3 g6 6. Bf4 Bg7 7. Qd2 Nc6 
+
+[Section "3.Bg4, 3.exd4, 3.f5, 3.Nf6"]
+[Chapter "3...Bg4 4.dxe5 Nc6 5.exd6 Bxd6 6.Bb5 Ne7 7.Be3 a6"]
+
+1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Nc6 5. exd6 Bxd6 6. Bb5 Ne7 7. Be3 a6 
+
+[Section "3.Bg4, 3.exd4, 3.f5, 3.Nf6"]
+[Chapter "3...exd4 4.Nxd4 Nf6 5.f3 Be7 6.c4 O-O 7.Nc3 c6"]
+
+1. e4 e5 2. Nf3 d6 3. d4 exd4 4. Nxd4 Nf6 5. f3 Be7 6. c4 O-O 7. Nc3 c6 
+
+[Section "3.Bg4, 3.exd4, 3.f5, 3.Nf6"]
+[Chapter "3...f5 4.exf5 e4 5.Ng5 Bxf5 6.f3 exf3 7.Qxf3 Qe7+"]
+
+1. e4 e5 2. Nf3 d6 3. d4 f5 4. exf5 e4 5. Ng5 Bxf5 6. f3 exf3 7. Qxf3 Qe7+ 
+
+[Section "3.Bg4, 3.exd4, 3.f5, 3.Nf6"]
+[Chapter "3...Nf6 4.Nc3 Nbd7 5.Bc4 Be7 6.O-O c6 7.a4 O-O"]
+
+1. e4 e5 2. Nf3 d6 3. d4 Nf6 4. Nc3 Nbd7 5. Bc4 Be7 6. O-O c6 7. a4 O-O 
+
+[Section "3.Bg4, 3.exd4, 3.f5, 3.Nf6"]
+[Chapter "3...c6 4.d4 Nd7 5.O-O Be7 6.dxe5 dxe5 7.Ng5 Bxg5"]
+
+1. e4 e5 2. Nf3 d6 3. Bc4 c6 4. d4 Nd7 5. O-O Be7 6. dxe5 dxe5 7. Ng5 Bxg5 
