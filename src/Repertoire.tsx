@@ -10,9 +10,8 @@ import Chessboard from './Chessboard'
 import { ChesstreeShorten, Treelala2, TwoPaths2 } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
-import { OpeningsChapterStatStore, OpeningsStore } from './repertoire_store'
+import { OpeningsChapterStatStore } from './repertoire_store'
 import { stepwiseScroll } from './common/scroll'
-import SessionStore from './SessionStore'
 import { usePlayer } from './sound'
 
 const DEPTH_COLOR = [
