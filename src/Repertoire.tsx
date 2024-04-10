@@ -207,14 +207,34 @@ const Progress = (props: { width: number }) => {
     </>)
 }
 
-
 class RepertoireStats {
+  constructor(readonly sections: RepertoireStatsSection[]) {}
+
+  get progress() {
+    let n = this.sections.length
+    return this.sections.map(_ => Math.round(_.progress / n)).reduce((a, b) => a + b)
+  }
+
+  section_by_name(section: string) {
+    return this.sections.find(_ => _.name === section)!
+  }
+}
+
+class RepertoireStatsSection {
 
   constructor(readonly chapters: RepertoireStat[]) {}
+
+  get name() {
+    return this.chapters[0].section
+  }
 
   get progress() {
     let n = this.chapters.length
     return this.chapters.map(_ => Math.round(_.progress / n)).reduce((a, b) => a + b)
+  }
+
+  chapter_by_name(chapter: string) {
+    return this.chapters.find(_ => _.chapter === chapter)!
   }
 }
 
@@ -370,6 +390,13 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
   const selected_chapter = createMemo(() => selected_chapters()[i_selected_chapter()])
 
 
+  let overall_stats = createMemo(() => {
+    const s = props.section_study
+    return new RepertoireStats(s.sections.map(section => 
+      new RepertoireStatsSection(section.chapters.map(_ => 
+        RepertoireStat.load_from_store(s, section.name, _.name)))))
+  })
+
   return (<>
       <div class='sections-wrap'>
       <h2 class='title'>
@@ -379,12 +406,12 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
         <For each={sections()}>{(section, i) => 
           <div class='section'>
             <input checked={i_selected_section() === i()} type='radio' name="accordion" id={`accordion-${i()}`}/>
-            <label class={i_selected_section() === i() ? 'active': ''} for={`accordion-${i()}`} onClick={() => set_i_selected_section(i())}>{section.name}</label>
+            <label class={i_selected_section() === i() ? 'active': ''} for={`accordion-${i()}`} onClick={() => set_i_selected_section(i())}>{section.name} <span class='progress'>{overall_stats().section_by_name(section.name).progress}%</span></label>
             <div class='chapters'>
-              <For each={selected_chapters()}>{ (chapter, i_chapter) => 
+              <For each={section.chapters}>{ (chapter, i_chapter) => 
                 <div class={`chapter` + (i_chapter() === i_selected_chapter() ? ' active' : '')} onClick={() => set_i_selected_chapter(i_chapter())}>
-                  <div class='title'><span class='no'>{i_chapter() + 1}.</span> {chapter.name}</div>
-                  <Progress width={RepertoireStat.load_from_store(props.section_study, section.name, chapter.name)?.progress ?? 0}/>
+                  <div class='title'><span class='no'>{i_chapter() + 1}.</span> {chapter.name} </div>
+                  <Progress width={overall_stats().section_by_name(section.name).chapter_by_name(chapter.name).progress}/>
                 </div>
               }</For>
             </div>
@@ -392,11 +419,15 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
         }</For>
       </div>
       </div>
-      <ChapterLoaded el_rep={props.el_rep} study={props.section_study} section={selected_section()} chapter={selected_chapter()}/>
+      <ChapterLoaded el_rep={props.el_rep} 
+      stats={overall_stats().section_by_name(selected_section().name).chapter_by_name(selected_chapter().name)}
+      study={props.section_study} 
+      section={selected_section()} 
+      chapter={selected_chapter()}/>
   </>)
 }
 
-const ChapterLoaded = (props: { el_rep?: HTMLDivElement, study: PGNSectionStudy, section: PGNSection, chapter: PGNSectionChapter}) => {
+const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, study: PGNSectionStudy, section: PGNSection, chapter: PGNSectionChapter}) => {
 
   const Player = usePlayer()
   Player.setVolume(0.2)
@@ -431,13 +462,8 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, study: PGNSectionStudy,
     return untrack(() => RepertoireStat.make(study_name(), section_name(), chapter_name(), t, new TwoPaths2()))
   })
 
-  let overall_stats = createMemo(() => {
-    const s = study()
-    return new RepertoireStats(section().chapters.map(_ => RepertoireStat.load_from_store(s, section_name(), _.name)))
-  })
-
   let overall_repertoire_stat = createMemo(() => {
-    return overall_stats().chapters.find(_ => chapter_name() === _.chapter)!
+    return props.stats
   })
 
 

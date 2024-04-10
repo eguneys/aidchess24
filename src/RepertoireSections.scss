@@ -103,6 +103,8 @@
                 }
 
                 label {
+                    display: flex;
+                    justify-content: space-between;
                     user-select: none;
                     cursor: pointer;
                     border-radius: 2px;
