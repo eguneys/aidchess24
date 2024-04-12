@@ -94,7 +94,7 @@ const AppInRouter = (props: any) => {
       </header>
       <div class={'main-wrap ' + path_klass()}>
         <div class='main'>
-          <ErrorBoundary fallback={err => Beta()}>
+          <ErrorBoundary fallback={_ => Beta()}>
              {props.children}
           </ErrorBoundary>
         </div>
