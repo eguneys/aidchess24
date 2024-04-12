@@ -380,10 +380,19 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
 
   let openings_store = new OpeningsStore(props.section_study.id)
 
-  let d_index = sections().findIndex(_ => _.name === (SessionStore.i_section ?? openings_store.i_section_name))
+  let i_chapter_index = 0
+  let d_index = sections().findIndex(_ => _.name === (SessionStore.i_section))
 
   if (d_index === -1) {
-    d_index = 0
+
+    d_index = sections().findIndex(_ => _.name === openings_store.i_section_name)
+
+    if (d_index === -1) {
+      d_index = 0
+    } else {
+      i_chapter_index = openings_store.i_chapter_index
+    }
+
   }
   const [i_selected_section, _set_i_selected_section] = createSignal(d_index)
 
@@ -391,7 +400,7 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
 
   const selected_chapters = createMemo(() => selected_section().chapters)
 
-  const [i_selected_chapter, set_i_selected_chapter] = createSignal(openings_store.i_chapter_index)
+  const [i_selected_chapter, set_i_selected_chapter] = createSignal(i_chapter_index)
 
   const set_i_selected_section = (i: number) => {
     batch(() => {
