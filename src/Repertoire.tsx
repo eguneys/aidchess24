@@ -392,7 +392,6 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
     } else {
       i_chapter_index = openings_store.i_chapter_index
     }
-
   }
   const [i_selected_section, _set_i_selected_section] = createSignal(d_index)
 
@@ -439,10 +438,12 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
 
 
   return (<>
-      <div class='sections-wrap'>
+
+    <div class='sections-wrap'>
       <h2 class='title'>
-        {props.section_study.name}
+        {props.section_study.name} <span>{overall_stats().progress}%</span>
       </h2>
+      <div class='sections-scroll'>
       <div class='sections'>
         <For each={sections()}>{(section, i) => 
           <div class='section'>
@@ -458,6 +459,7 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
             </div>
           </div>
         }</For>
+      </div>
       </div>
       </div>
       <ChapterLoaded el_rep={props.el_rep} 

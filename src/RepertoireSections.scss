@@ -78,6 +78,15 @@
         }
 
         .sections-wrap {
+            display: flex;
+            flex-flow: column;
+
+            h2.title {
+                display: flex;
+                justify-content: space-between;
+            }
+
+        .sections-scroll {
 
             position: relative;
             display: flex;
@@ -180,6 +189,6 @@
             }
         }
         }
-
+        }
     }
 }
