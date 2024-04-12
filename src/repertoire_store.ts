@@ -1,6 +1,45 @@
 import { Signal } from "solid-js";
 import { makePersistedNamespaced } from "./storage";
 
+
+export class DashboardRepertoireStats {
+
+    make_persisted<T>(def: T, name: string) {
+        return makePersistedNamespaced<T>(def, 
+            `dashboard.openings.id.${this.study_id}.${name}`)
+    }
+
+    _progress: Signal<number>
+
+    _sections_progress: Signal<[string, number][]>
+
+    get progress() {
+      return this._progress[0]()
+    }
+
+    set progress(_: number) {
+      this._progress[1](_)
+    }
+
+    get sections_progress() {
+      return this._sections_progress[0]()
+    }
+
+    set sections_progress(_: [string, number][]) {
+      this._sections_progress[1](_)
+    }
+
+    constructor(readonly study_id: string) {
+
+      this._progress = this.make_persisted(0, 'progress')
+
+      this._sections_progress = this.make_persisted<[string, number][]>([], 'sections')
+
+    }
+
+}
+
+
 export class OpeningsStore {
 
     make_persisted<T>(def: T, name: string) {
@@ -8,8 +47,17 @@ export class OpeningsStore {
             `.openings.id.${this.study_id}.${name}`)
     }
 
+  _i_section_name: Signal<string | undefined>
   _i_chapter_index: Signal<number>
 
+
+  get i_section_name() {
+    return this._i_section_name[0]()
+  }
+
+  set i_section_name(_: string | undefined) {
+    this._i_section_name[1](_)
+  }
 
   get i_chapter_index() {
     return this._i_chapter_index[0]()
@@ -20,6 +68,7 @@ export class OpeningsStore {
   }
 
     constructor(readonly study_id: string) {
+      this._i_section_name = this.make_persisted<string | undefined>(undefined, 'i_section_name')
       this._i_chapter_index = this.make_persisted(0, 'i_chapter_idx')
     }
 }

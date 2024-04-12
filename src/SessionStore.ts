@@ -1,5 +1,5 @@
 class SessionStore {
-    i_chapter?: number
+    i_section?: string
 }
 
 

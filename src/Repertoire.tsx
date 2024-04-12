@@ -10,9 +10,10 @@ import Chessboard from './Chessboard'
 import { ChesstreeShorten, Treelala2, TwoPaths2 } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
-import { OpeningsChapterStatStore } from './repertoire_store'
+import { DashboardRepertoireStats, OpeningsChapterStatStore, OpeningsStore } from './repertoire_store'
 import { stepwiseScroll } from './common/scroll'
 import { usePlayer } from './sound'
+import SessionStore from './SessionStore'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
@@ -27,6 +28,7 @@ const ply_to_index = (ply: number) => {
   let res = Math.floor(ply / 2) + 1
   return `${res}.` + (ply %2 === 0 ? '..' : '')
 }
+
 
 class RepertoirePlayer {
  
@@ -221,15 +223,23 @@ class RepertoireStats {
 
 class RepertoireStatsSection {
 
-  constructor(readonly chapters: RepertoireStat[]) {}
+  m_progress: () => number
+
+  constructor(readonly chapters: RepertoireStat[]) {
+
+    this.m_progress = createMemo(() => {
+      let n = this.chapters.length
+      return this.chapters.map(_ => Math.round(_.progress / n)).reduce((a, b) => a + b)
+    })
+
+  }
 
   get name() {
     return this.chapters[0].section
   }
 
   get progress() {
-    let n = this.chapters.length
-    return this.chapters.map(_ => Math.round(_.progress / n)).reduce((a, b) => a + b)
+    return this.m_progress()
   }
 
   chapter_by_name(chapter: string) {
@@ -369,14 +379,20 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
 
   let sections = createMemo(() => props.section_study.sections)
 
-  const [i_selected_section, _set_i_selected_section] = createSignal(0)
+  let openings_store = new OpeningsStore(props.section_study.id)
+
+  let d_index = sections().findIndex(_ => _.name === (SessionStore.i_section ?? openings_store.i_section_name))
+
+  if (d_index === -1) {
+    d_index = 0
+  }
+  const [i_selected_section, _set_i_selected_section] = createSignal(d_index)
 
   const selected_section = createMemo(() => sections()[i_selected_section()])
 
   const selected_chapters = createMemo(() => selected_section().chapters)
 
-  const [i_selected_chapter, set_i_selected_chapter] = createSignal(0)
-
+  const [i_selected_chapter, set_i_selected_chapter] = createSignal(openings_store.i_chapter_index)
 
   const set_i_selected_section = (i: number) => {
     batch(() => {
@@ -385,6 +401,13 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
     })
   }
 
+  createEffect(() => {
+    openings_store.i_section_name = selected_section().name
+  })
+  
+  createEffect(() => {
+    openings_store.i_chapter_index = i_selected_chapter()
+  })
 
   const selected_chapter = createMemo(() => selected_chapters()[i_selected_chapter()])
 
@@ -395,6 +418,17 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
       new RepertoireStatsSection(section.chapters.map(_ => 
         RepertoireStat.load_from_store(s, section.name, _.name)))))
   })
+
+  const dashboard_stats = new DashboardRepertoireStats(props.section_study.id)
+
+  createEffect(() => {
+    dashboard_stats.progress = overall_stats().progress
+  })
+
+  createEffect(() => {
+    dashboard_stats.sections_progress = overall_stats().sections.map(_ => [_.name, _.progress])
+  })
+
 
   return (<>
       <div class='sections-wrap'>
@@ -464,7 +498,6 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
   let overall_repertoire_stat = createMemo(() => {
     return props.stats
   })
-
 
 
   const [quiz_error_flash, set_quiz_error_flash] = createSignal(false)

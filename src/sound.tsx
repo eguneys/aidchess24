@@ -13,7 +13,7 @@ class Player {
 
     theme = 'standard'
 
-    volumeStorage = makePersistedNamespaced('1', '.sound.volume')
+    volumeStorage = makePersistedNamespaced('1', 'sound.volume')
 
     enabled = () => this.theme !== 'silent'
 
