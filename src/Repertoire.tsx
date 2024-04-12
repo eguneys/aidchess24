@@ -753,6 +753,12 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
     }
   }))
 
+  const set_repertoire_player_mode = (mode: PlayMode) => {
+    if (is_pending_move()) {
+      return
+    }
+    repertoire_player.mode = mode
+  }
 
   const set_silent_cursor_path = (path: string[]) => {
     mute_move_sound = true
@@ -862,7 +868,7 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
 
           <div class='tabs'>
             <h3 class={'tab' + active_if_tab_practice('practice')} onClick={() => repertoire_player.end_match_or_moves() }>Practice</h3>
-            <h3 class={'tab' + active_if_tab_practice('quiz')} onClick={() => repertoire_player.mode = 'quiz' }>Quiz</h3>
+            <h3 class={'tab' + active_if_tab_practice('quiz')} onClick={() => set_repertoire_player_mode('quiz') }>Quiz</h3>
           </div>
 
           <div class='content'>
@@ -872,8 +878,8 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
               <small> Click on variations to expand. </small>
               <small> Your goal is to guess every move correctly to pass the quiz. </small>
               <div class='in_mode'>
-              <button onClick={() => repertoire_player.mode = 'quiz-quiz'}><span> Take Quiz </span></button>
-              <button onClick={() => repertoire_player.mode = 'quiz-deathmatch'}><span> Play Deathmatch </span></button>
+              <button onClick={() => set_repertoire_player_mode('quiz-quiz') }><span> Take Quiz </span></button>
+              <button onClick={() => set_repertoire_player_mode('quiz-deathmatch') }><span> Play Deathmatch </span></button>
               </div>
             </Match>
 
@@ -986,8 +992,8 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
               <small> Click on variations to expand. </small>
               <small> Your goal is to guess every move correctly to fill up the progress bar. </small>
               <div class='in_mode'>
-              <button onClick={() => repertoire_player.mode = 'moves'}><span> Play all Moves </span></button>
-              <button onClick={() => repertoire_player.mode = 'match'}><span> Play as Match </span></button>
+              <button onClick={() => set_repertoire_player_mode('moves')}><span> Play all Moves </span></button>
+              <button onClick={() => set_repertoire_player_mode('match')}><span> Play as Match </span></button>
               </div>
             </Match>
 
