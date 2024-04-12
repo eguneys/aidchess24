@@ -6,7 +6,7 @@ import { DashboardRepertoireStats } from './repertoire_store'
 import { useNavigate } from '@solidjs/router'
 import SessionStore from './SessionStore'
 
-type ShowType = 'hidden' | '101' | 'keep up' | 'good' | 'done'
+type ShowType = 'hidden' | '101' | 'nice' | 'good' | 'almost' | 'done'
 
 class DashboardStatsView {
 
@@ -29,10 +29,13 @@ class DashboardStatsView {
             return '101'
         }
         if (this.progress < 60) {
-            return 'keep up'
+            return 'nice'
         }
         if (this.progress < 80) {
             return 'good'
+        }
+        if (this.progress < 90) {
+            return 'almost'
         }
         return 'done'
     }
