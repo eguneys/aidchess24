@@ -357,7 +357,6 @@ class RepertoireStat {
 
 
 const Repertoire = () => {
-
     const params = useParams()
 
     const [study] = createResource(params.id, StudyRepo.read_section_study)

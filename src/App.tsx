@@ -1,5 +1,5 @@
 import { Route, A, useLocation, HashRouter, useBeforeLeave } from "@solidjs/router";
-import { createMemo, createSignal, lazy } from 'solid-js'
+import { ErrorBoundary, createMemo, createSignal, lazy } from 'solid-js'
 import { MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { PlayerProvider } from "./sound";
@@ -94,7 +94,9 @@ const AppInRouter = (props: any) => {
       </header>
       <div class={'main-wrap ' + path_klass()}>
         <div class='main'>
-          {props.children}
+          <ErrorBoundary fallback={err => Beta()}>
+             {props.children}
+          </ErrorBoundary>
         </div>
       </div>
     </>)
