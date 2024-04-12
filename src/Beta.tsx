@@ -5,6 +5,7 @@ const Beta = () => {
     const clear_local_storage = () => {
         window.localStorage.clear()
         window.alert('Done.')
+        window.location.reload()
     }
 
     return (<>
