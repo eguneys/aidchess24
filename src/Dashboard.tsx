@@ -6,7 +6,7 @@ import { DashboardRepertoireStats } from './repertoire_store'
 import { useNavigate } from '@solidjs/router'
 import SessionStore from './SessionStore'
 
-type ShowType = 'hidden' | '101' | 'good' | 'done'
+type ShowType = 'hidden' | '101' | 'keep up' | 'good' | 'done'
 
 class DashboardStatsView {
 
@@ -27,6 +27,9 @@ class DashboardStatsView {
         }
         if (this.progress < 10) {
             return '101'
+        }
+        if (this.progress < 60) {
+            return 'keep up'
         }
         if (this.progress < 80) {
             return 'good'
@@ -62,7 +65,7 @@ const Dashboard = () => {
         <div class='activities'>
             <For each={dashboard_stats_views}>{stats =>
                 <div class='activity'>
-                    <h3 onClick={_ => navigate_study(stats.study_link)}> {stats.study_name} <span class='show_type'>- {stats.show_type} -</span> <small>8%</small> </h3>
+                    <h3 onClick={_ => navigate_study(stats.study_link)}> {stats.study_name} <span class='show_type'>- {stats.show_type} -</span> <small>{stats.progress}%</small> </h3>
                     <For each={stats.sections}>{ section => 
                        <p onClick={_ => navigate_study(stats.study_link, section[0])}> {section[0]} <small>{section[1]}%</small></p>
                     }</For>
