@@ -58,7 +58,6 @@ const Dashboard = () => {
     return (<>
     <div class='dashboard'>
         <h1> Dashboard </h1>
-
         <h2> Activities </h2>
         <div class='activities'>
             <For each={dashboard_stats_views}>{stats =>
