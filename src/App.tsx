@@ -68,19 +68,6 @@ const AppInRouter = (props: any) => {
   })
 
     return (<>
-      <Meta name="description" content="Learn, Memorize, and Practice All Chess Openings. Play with a Simple User Interface. No ads, No tracking, No plugins." />
-      <Meta property="og:title" content="Learn, Memorize, and Practice All Chess Openings." />
-      <Meta property="og:description" content="Play with a Simple User Interface. No ads, No tracking, No plugins." />
-      <Meta property="og:url" content="https://aidchess.com" />
-      <Meta property="og:type" content="website" />
-      <Meta property="og:site_name" content="aidchess.com" />
-      <Meta property="og:image" content="https://aidchess.com/vite.svg" />
-
-      <Meta property="twitter:card" content="summary" />
-      <Meta property="twitter:title" content="Learn, Memorize, and Practice All Chess Openings." />
-      <Meta property="twitter:description" content="Play with a Simple User Interface. No ads, No tracking, No plugins." />
-      <Meta property="twitter:image" content="https://aidchess.com/vite.svg" />
-
 
       <header id='top'>
           <div class='site-title-nav'>
