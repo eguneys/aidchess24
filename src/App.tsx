@@ -1,6 +1,6 @@
 import { Route, A, useLocation, HashRouter, useBeforeLeave } from "@solidjs/router";
 import { ErrorBoundary, createMemo, createSignal, lazy } from 'solid-js'
-import { Meta, MetaProvider } from '@solidjs/meta'
+import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { PlayerProvider } from "./sound";
 
