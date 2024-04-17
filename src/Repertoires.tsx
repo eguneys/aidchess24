@@ -33,10 +33,12 @@ function Repertoires() {
       <div class='repertoires'>
         <CategoryView name="Openings" list={fixture.openings}/>
         <CategoryView name="Masters" list={fixture.masters}/>
+        {/*
         <CategoryView name="Tactics" list={fixture.tactics}/>
         <CategoryView name="Endgames" list={fixture.endgames}/>
         <CategoryView name="Recent Studies" list={fixture.recent}/>
         <CategoryView name="Completed Studies" list={fixture.completed}/>
+  */}
       </div>
     </>
   )

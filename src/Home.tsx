@@ -23,6 +23,7 @@ const Home = () => {
                 <li><h4>Tata Steel 2023</h4></li>
             </ul>
         </div>
+        {/*
         <div class='feature'>
             <h3>Tactics and Endgame</h3>
             <ul>
@@ -30,14 +31,13 @@ const Home = () => {
                 <li><h4>Endgame Studies</h4></li>
             </ul>
         </div>
+    */}
       </div>
 
 
       <h1>See your progress, and do challenges</h1>
-      <img src='vite.svg' height="180px"></img>
+      <img src='vite.svg' alt="See your Progress" height="180px"></img>
 
-      <h1 class='twitch'><a href="https://twitch.tv/gsoutz" target="_blank">Please Support me on Twitch</a></h1>
-      <iframe src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=aidchess.com"></iframe>
 
       <footer>
         <ul>
