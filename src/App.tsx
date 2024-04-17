@@ -72,7 +72,7 @@ const AppInRouter = (props: any) => {
       <Meta property="og:title" content="Learn, Memorize, and Practice All Chess Openings." />
       <Meta property="og:type" content="website" />
       <Meta property="og:site_name" content="aidchess.com" />
-      <Meta property="og:image" content="https://aidchess.com/#/public/vite.svg" />
+      <Meta property="og:image" content="https://aidchess.com/vite.svg" />
 
       <Meta property="twitter:card" content="summary" />
       <Meta property="twitter:title" content="Learn, Memorize, and Practice All Chess Openings." />
