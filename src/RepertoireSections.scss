@@ -47,7 +47,7 @@
         @include mq-at-least-col3 {
             grid-template-areas: 'board gauge replay sections';
 
-            grid-template-columns: minmax(auto, var(--col3-uniboard-width)) var(--gauge-gap) 320px auto;
+            grid-template-columns: minmax(auto, var(--col3-uniboard-width)) var(--gauge-gap) 320px 1fr;
             grid-template-rows: minmax(auto, var(--col3-uniboard-width));
 
             gap: 0.1em;
