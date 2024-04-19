@@ -151,6 +151,7 @@ const HardCategories: any = {
   'Openings': [
     ['Berlin Defence', 'berlin', 'white'],
     ['Slav Defense', 'slav', 'black'],
+    ['London System', 'london-system', 'black'],
     ['Caro-Kann Defense', 'caro-kann', 'white'],
     ['Petroff Defense', 'petroff', 'white'],
     ['Philidor Defence', 'philidor', 'white'],
