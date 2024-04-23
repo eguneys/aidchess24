@@ -1,5 +1,7 @@
 import { Color } from "chessground/types"
 import { Pgn } from "./chess_pgn_logic"
+import { makePersistedNamespaced } from "./storage"
+import { Signal } from "solid-js"
 
 export type PGNStudy = {
     id: string,
@@ -57,6 +59,7 @@ export type PGNSectionStudy = {
   id: string,
   name: string,
   orientation?: Color,
+  imported?: true,
   sections: PGNSection[]
 }
 
@@ -72,12 +75,12 @@ export type PGNSectionChapter = {
 
 
 
-const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color): PGNSectionStudy => {
+const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color, imported?: true): PGNSectionStudy => {
   let sections: PGNSection[] = []
     Pgn.make_many(pgns).map(pgn => {
 
         let section = pgn.section!
-        let chapter_name = pgn.chapter!
+        let chapter_name = pgn.chapter ?? pgn.event!
 
         let ss = sections.find(_ => _.name === section)
 
@@ -98,6 +101,7 @@ const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, o
         id,
         name: study_name,
         orientation,
+        imported,
         sections
     }
 }
@@ -112,6 +116,11 @@ const read_study_pgn = (id: string, study_name: string, orientation?: Color) =>
 const read_section_study_pgn = (id: string, study_name: string, orientation?: Color) => 
     fetch(`pgns/${id}.section.pgn`).then(_ => _.text()).then(_ => reformatSectionStudyPGN(_, id, study_name, orientation))
 
+const read_imported_study_pgn = (id: string, study_name: string) => {
+  let [pgn] = makePersistedNamespaced('', 'pgn.imported.' + id)
+  return reformatSectionStudyPGN(pgn(), id, study_name, 'white', true)
+}
+
 class StudyRepo {
 
     static init = () => {
@@ -124,7 +133,11 @@ class StudyRepo {
 
 
     read_section_study(id: string) {
-      let { study_name, orientation } = RepertoiresFixture.study_by_id(id)
+      let { study_name, orientation, imported } = RepertoiresFixture.study_by_id(id) || RepertoiresFixture.imported_by_id(id)
+
+      if (imported) {
+        return read_imported_study_pgn(id, study_name)
+      }
       return read_section_study_pgn(id, study_name, orientation)
     }
 
@@ -142,9 +155,9 @@ export default StudyRepo.init()
 export type StudyInRepertoireCategory = {
   study_link: string,
   study_name: string,
-  nb_chapters: number,
   category: string,
   orientation?: Color
+  imported?: true
 }
 
 const HardCategories: any = {
@@ -178,6 +191,7 @@ const HardCategories: any = {
 }
 
 class _RepertoiresFixture {
+
   static init = () => {
 
     function import_hard(category: string) {
@@ -186,7 +200,6 @@ class _RepertoiresFixture {
         category,
         study_name: _[0],
         study_link: _[1],
-        nb_chapters: _[2],
         orientation: _[3]
       }))
 
@@ -205,9 +218,37 @@ class _RepertoiresFixture {
     res.recent = []
     res.completed = []
 
+    res.imported = makePersistedNamespaced<StudyInRepertoireCategory[]>([], 'fixture.imported')
+
     return res
   }
 
+  delete_imported_study(id: string) {
+    let ii = this.imported[0]()
+    ii = ii.filter(_ => _.study_link !== id)
+    this.imported[1](ii)
+
+    let [_, set_pgn] = makePersistedNamespaced('', 'pgn.imported.' + id)
+
+    set_pgn('')
+  }
+
+  save_import_pgn(study_name: string, study_link: string, pgn: string) {
+
+    let ii = this.imported[0]()
+    
+    ii.push({
+      category: 'openings',
+      study_name,
+      study_link,
+      imported: true
+    })
+    this.imported[1](ii)
+
+    let [_, set_pgn] = makePersistedNamespaced('', 'pgn.imported.' + study_link)
+
+    set_pgn(pgn)
+  }
 
   all!: StudyInRepertoireCategory[]
   openings!: StudyInRepertoireCategory[]
@@ -216,6 +257,14 @@ class _RepertoiresFixture {
   endgames!: StudyInRepertoireCategory[]
   recent!: StudyInRepertoireCategory[]
   completed!: StudyInRepertoireCategory[]
+  imported!: Signal<StudyInRepertoireCategory[]>
+
+  imported_by_id(id: string) {
+
+    let _ = this.imported[0]().find(_ => _.study_link === id)!
+    return _
+  }
+
 
 
   study_by_id(id: string) {

@@ -2,12 +2,16 @@
 
 .on-repertoires {
     .repertoires {
+
+
+        .categories {
+
         display: flex;
         flex-flow: row wrap;
         gap: 2em;
 
 
-        div {
+        .category {
             flex: 1 1 45%;
             text-align: center;
 
@@ -47,5 +51,6 @@
             }
            }
         }
+    }
     }
 }

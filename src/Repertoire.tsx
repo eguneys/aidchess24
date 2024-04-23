@@ -1,9 +1,9 @@
 import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack, onMount } from 'solid-js'
 import './Repertoire.scss'
 import './RepertoireSections.scss'
-import { useParams } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 
-import StudyRepo, { PGNSection, PGNSectionChapter, PGNSectionStudy } from './studyrepo'
+import StudyRepo, { PGNSection, PGNSectionChapter, PGNSectionStudy, RepertoiresFixture } from './studyrepo'
 import { Show } from 'solid-js'
 import { Shala } from './Shalala'
 import Chessboard from './Chessboard'
@@ -436,6 +436,13 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
     dashboard_stats.sections_progress = overall_stats().sections.map(_ => [_.name, _.progress])
   })
 
+  const navigate = useNavigate()
+  const on_delete_study = () => {
+    RepertoiresFixture.delete_imported_study(props.section_study.id)
+    console.log('done')
+    navigate('/repertoires')
+  }
+
 
   return (<>
 
@@ -443,6 +450,7 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
       <h2 class='title'>
         {props.section_study.name} <span>{overall_stats().progress}%</span>
       </h2>
+
       <div class='sections-scroll'>
       <div class='sections'>
         <For each={sections()}>{(section, i) => 
@@ -467,6 +475,11 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
       study={props.section_study} 
       section={selected_section()} 
       chapter={selected_chapter()}/>
+      <div class='tools'>
+        <Show when={props.section_study.imported}>
+          <a onClick={() => on_delete_study()} class='delete'> Delete Study </a>
+        </Show>
+      </div>
   </>)
 }
 

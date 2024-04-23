@@ -58,8 +58,6 @@
         }
 
 
-
-
         .eval-gauge {
             grid-area: gauge;
             display: none;
@@ -189,6 +187,17 @@
             }
         }
         }
+        }
+
+
+        & > .tools {
+            display: flex;
+            justify-content: flex-end;
+            a.delete {
+                user-select: none;
+                cursor: pointer;
+                color: $error;
+            }
         }
     }
 }
