@@ -78,9 +78,16 @@ export type PGNSectionChapter = {
 const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color, imported?: true): PGNSectionStudy => {
   let sections: PGNSection[] = []
     Pgn.make_many(pgns).map(pgn => {
+      let section, chapter_name
+      if (pgn.section) {
 
-        let section = pgn.section!
-        let chapter_name = pgn.chapter ?? pgn.event!
+        section = pgn.section
+        chapter_name = pgn.chapter!
+      } else {
+        let event = pgn.event!
+        let _
+        ;[_, section, chapter_name] = event.split(':')
+      }
 
         let ss = sections.find(_ => _.name === section)
 
@@ -231,6 +238,16 @@ class _RepertoiresFixture {
     let [_, set_pgn] = makePersistedNamespaced('', 'pgn.imported.' + id)
 
     set_pgn('')
+
+
+
+    /* https://stackoverflow.com/questions/24551578/clear-localstorage-values-with-certain-prefix */
+    Object.entries(localStorage).map(
+      x => x[0]
+    ).filter(
+      x => x.includes(`.openings.id.${id}`)
+    ).map(
+      x => localStorage.removeItem(x))
   }
 
   save_import_pgn(study_name: string, study_link: string, pgn: string) {
