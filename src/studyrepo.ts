@@ -252,6 +252,8 @@ class _RepertoiresFixture {
 
   save_import_pgn(study_name: string, study_link: string, pgn: string) {
 
+    let ss = reformatSectionStudyPGN(pgn, study_link, study_name, 'white', true)
+    study_name = ss.name
     let ii = this.imported[0]()
     
     ii.push({
