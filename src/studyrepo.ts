@@ -78,15 +78,15 @@ export type PGNSectionChapter = {
 const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color, imported?: true): PGNSectionStudy => {
   let sections: PGNSection[] = []
     Pgn.make_many(pgns).map(pgn => {
-      let section, chapter_name
+      let section: string, chapter_name: string
       if (pgn.section) {
 
         section = pgn.section
         chapter_name = pgn.chapter!
       } else {
         let event = pgn.event!
-        let _
-        ;[_, section, chapter_name] = event.split(':')
+        ;[study_name, section, chapter_name] = event.split(':')
+
       }
 
         let ss = sections.find(_ => _.name === section)
