@@ -41,7 +41,7 @@ function Repertoires() {
 
     let id = m[1]
 
-    let pgn = await fetch(`https://lichess.org/study/${id}.pgn`).then(_ => _.text())
+    let pgn = await fetch(`https://lichess.org/api/study/${id}.pgn`).then(_ => _.text())
 
     RepertoiresFixture.save_import_pgn(id, pgn)
     window.location.reload()
