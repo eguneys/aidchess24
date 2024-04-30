@@ -70,7 +70,7 @@ export class Pgn {
 
             let res = new Pgn({
                 event, site, white, black,
-                puzzle, section, chapter
+                puzzle, section, chapter, fen
              }, t)
             return res
         })
@@ -105,6 +105,10 @@ export class Pgn {
         return this.headers.chapter
     }
 
+    get fen() {
+        return this.headers.fen
+    }
+
     constructor(
         readonly headers: PgnHeaders,
 
@@ -119,6 +123,7 @@ export type PgnHeaders = {
     white?: string,
     black?: string,
     puzzle?: string,
+    fen?: string
 }
 
 export class TreeNode<V> {

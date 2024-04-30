@@ -725,7 +725,7 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
       let [fen, last_move] = res
       shalala.on_set_fen_uci(fen, last_move)
     } else {
-      shalala.on_set_fen_uci(INITIAL_FEN)
+      shalala.on_set_fen_uci(chapter_pgn().fen ?? INITIAL_FEN)
     }
 
   }))
