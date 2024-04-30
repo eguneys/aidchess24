@@ -32,7 +32,7 @@ function Repertoires() {
     let li = import_li.value
 
 
-    let m = li.match(/lichess.org\/study\/(\w*)\//)
+    let m = li.match(/lichess.org\/study\/(\w*)\/?/)
 
     if (!m) {
       import_li.value = 'Incorrect lichess study'
