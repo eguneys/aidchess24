@@ -503,7 +503,6 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
 
   
   const initial_color = createMemo(() => chapter_pgn().tree.initial_color)
-  const initial_opponent_color = createMemo(() => opposite(initial_color()))
 
   let repertoire_player = new RepertoirePlayer()
   let shalala = new Shala()
