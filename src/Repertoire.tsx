@@ -14,7 +14,6 @@ import { DashboardRepertoireStats, OpeningsChapterStatStore, OpeningsStore } fro
 import { stepwiseScroll } from './common/scroll'
 import { usePlayer } from './sound'
 import SessionStore from './SessionStore'
-import { opposite } from 'chessops'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
