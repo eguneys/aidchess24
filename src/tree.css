@@ -8,7 +8,7 @@
     cursor: pointer;
     white-space: normal;
     padding: 0.5em 0.7em;
-   font-family: "Noto Chess", "Kantumruy"; 
+   font-family: "Noto Chess", Kantumruy; 
 }
 
 .chesstree .move {
@@ -80,6 +80,20 @@
 .chesstree .move > .index {
     padding-right: 0.2em;
 }
+
+.chesstree .inline {
+    display: inline;
+    font-style: italic;
+    font-size: .9em;
+}
+
+.chesstree .inline::before {
+    content: '(';
+}
+.chesstree .inline::after {
+    content: ')';
+}
+
 
 
 .chesstree .lines {

@@ -822,7 +822,7 @@ const RenderLinesShorten = (props: {
             </Match>
             <Match when={line.children.length === 2 && can_inline_node(line.children[1])}>
               <RenderData data={line.children[0].data} {...props} show_index={false}/>
-              (<RenderLinesShorten {...props} lines={[line.children[1]]} show_index={true}/>)
+              <div class='inline'><RenderLinesShorten {...props} lines={[line.children[1]]} show_index={true}/></div>
               <RenderLinesShorten {...props} lines={[line.children[0]]} hide_data={true}/>
             </Match>
             <Match when={line.children.length > 1}>
