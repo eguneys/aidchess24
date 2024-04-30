@@ -250,8 +250,11 @@ class _RepertoiresFixture {
       x => localStorage.removeItem(x))
   }
 
-  save_import_pgn(study_name: string, study_link: string, pgn: string) {
+  save_import_pgn(study_link: string, pgn: string) {
 
+    this.delete_imported_study(study_link)
+
+    let study_name = ''
     let ss = reformatSectionStudyPGN(pgn, study_link, study_name, 'white', true)
     study_name = ss.name
     let ii = this.imported[0]()
