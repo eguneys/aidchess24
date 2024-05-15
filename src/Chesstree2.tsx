@@ -311,7 +311,9 @@ export class Treelala2 {
 
     const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? [this.tree.root]
 
-    const c_found = weightedRandomSelect(cc)
+    //const c_found = weightedRandomSelect(cc)
+    const c_found = getRandomWeightedItem(cc)
+
     if (c_found) {
       batch(() => {
         this._hidden_paths.remove_path(c_found.data.path)
@@ -867,6 +869,7 @@ const RenderLinesShortenCollapsed = (props: {
 
 
 /* https://github.com/eguneys/openingsexercise/blob/master/src/pgn.ts#L133 */
+/*
 function weightedRandomSelect<T>(array: T[]) {
   let totalWeight = (array.length * (array.length + 1)) / 2;
   let randNum = Math.floor(Math.random() * totalWeight) + 1;
@@ -874,6 +877,28 @@ function weightedRandomSelect<T>(array: T[]) {
   for (let i = 0; i < array.length; i++) {
     weightSum += array.length - i;
     if (randNum <= weightSum) {
+      return array[i];
+    }
+  }
+}
+*/
+
+/* https://chat.openai.com/share/07606c60-87eb-446d-819a-88e2517d7373 */
+function getRandomWeightedItem<T>(array: T[]) {
+  // Calculate the weights
+  const weights = array.map((_item, index) => 1 / (index + 1.1));
+
+  // Calculate the total weight
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+
+  // Get a random number between 0 and the total weight
+  const random = Math.random() * totalWeight;
+
+  // Select an item based on the random number and weights
+  let cumulativeWeight = 0;
+  for (let i = 0; i < array.length; i++) {
+    cumulativeWeight += weights[i];
+    if (random < cumulativeWeight) {
       return array[i];
     }
   }

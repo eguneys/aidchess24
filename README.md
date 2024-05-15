@@ -1,7 +1,19 @@
 ### Engine Play Challenges
 
 
-- Play a non-blunder queen move
+- Maintain the evaluation above -2.
+- Search every position for tactics. Notify the tactics, notify the threats. notify the single move continuations.
+(Tactics won't be there if evaluation stays above -2.)
+- Extra challenges, like Rosen Trophies
+  - Get a knight vs bishop material imbalance.
+  - Obtain the bishop pair.
+  - Play a non-blunder queen move.
+  - Play specific openings.
+  - Get out of the opening.
+  - Get into an endgame.
+  - Gambit a pawn.
+  - Accept a gambit.
+  - Decline a gambit.
 
 
 ### Sixth Street
