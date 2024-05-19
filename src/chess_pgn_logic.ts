@@ -29,7 +29,7 @@ export class Pgn {
 
 
     static make_many = (pgn: string) => {
-        return parsePgn(pgn).map(g => {
+        return parsePgn(pgn).flatMap(g => {
 
             let event = g.headers.get('Event')
             let site = g.headers.get('Site')
@@ -45,6 +45,11 @@ export class Pgn {
 
 
             let child = g.moves.children[0]
+
+            if (!child) {
+                return []
+            }
+
 
             let before_fen = fen ?? INITIAL_FEN
             let san = child.data.san
