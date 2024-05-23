@@ -1,0 +1,256 @@
+@import '_variables';
+
+
+.on-widen {
+    .widen {
+
+
+        display: grid;
+        grid-template-areas: "board"
+                             "replay";
+        gap: 0.4em;
+
+        --gauge-gap: calc(
+          8px + 9 *
+            ((100vw - 320px) / 880)
+        );
+
+        --col2-uniboard-width: calc(
+            min(calc(100vw - 240px - 20px), 
+                calc(100vh - calc(var(--site-header-height)))));
+        
+        --col3-uniboard-width: calc(90vh - var(--site-header-height));
+
+
+        @include mq-at-least-col2 {
+            grid-template-areas: 'board gauge replay';
+
+            grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) auto;
+
+            gap: 0.1em;
+
+            .eval-gauge {
+                display: flex !important;
+            }
+        }
+
+        @include mq-is-col2-squeeze {
+            grid-template-areas: 'board gauge replay';
+
+            grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) minmax(200px, 300px);
+            gap: 0.1em;
+        }
+
+
+
+        @include mq-at-least-col3 {
+            grid-template-areas: 'board gauge replay';
+
+            grid-template-columns: minmax(auto, var(--col3-uniboard-width)) var(--gauge-gap) 420px;
+            grid-template-rows: minmax(auto, var(--col3-uniboard-width));
+
+            gap: 0.1em;
+
+            .eval-gauge {
+                display: flex !important;
+            }
+        }
+
+
+        .eval-gauge {
+            grid-area: gauge;
+            display: none;
+        }
+
+        .sections-wrap {
+            grid-area: sections;
+        }
+
+        .board-wrap {
+            grid-area: board;
+        }
+
+        .replay-wrap {
+            grid-area: replay;
+        }
+
+
+        .board-wrap {
+            aspect-ratio: 1/1;
+            border: 2px solid $accent;
+            border-radius: 8px;
+            min-height: 200px;
+            overflow: hidden;
+            padding: 2px 0px 0 2px;
+        }
+
+        .replay-wrap {
+            display: flex;
+            flex-flow: column;
+
+            .header {
+                background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
+
+                font-size: 1.3em;
+                text-align: center;
+            }
+
+            .replay {
+                display: flex;
+                color: $dark-text;
+                padding-top: 1em;
+                background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
+                flex: 1;
+            }
+
+            .replay .questions {
+
+                display: flex;
+                flex-flow: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.2em;
+
+                p {
+                    margin: 0.4em 0;
+                }
+
+                .candidates {
+
+                    background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
+                    margin: 1em;
+                    padding: 1em;
+                    align-self:stretch;
+                    flex: 1;
+
+                    li {
+                        margin-left: 1em;
+                        user-select: none;
+                        cursor: pointer;
+                        list-style:decimal;
+                        padding: 0.2em;
+
+
+                        div {
+                            display: flex;
+                            justify-content: space-between;
+
+                            span {
+                                margin-left: 1em;
+
+                            }
+                        }
+
+                        &.active {
+                            span {
+                              text-decoration: underline;
+                              animation: blinker 1s linear infinite;
+                            }
+                        }
+                    }
+                }
+
+                .link {
+                    user-select: none;
+                    cursor: pointer;
+                    align-self: flex-end;
+                    margin-right: 1em;
+                    padding: 1em;
+
+                    &:active {
+                        text-decoration: underline;
+                    }
+                }
+            }
+
+
+            .replay .results {
+                flex: 1;
+                padding: 1em;
+                display: flex;
+                flex-flow: column;
+                align-items: center;
+
+                .analyse {
+                    align-self: flex-end;
+                    user-select: none;
+                    cursor: pointer;
+                    text-decoration: underline;
+                }
+
+                .cc-list {
+                    display: flex;
+                    padding: 1em;
+                    font-size: 1.2em;
+                    align-self: stretch;
+                    justify-content: space-around;
+
+                    li {
+
+                        &.active,
+                        &.active:hover {
+                            text-decoration: underline;
+                            background: $secondary-light;
+                        }
+
+                        text-align: center;
+                        flex: 0 0 1.5em;
+                        user-select: none;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        background: $accent;
+
+                        &:hover {
+                            background: $accent-light;
+                        }
+
+                        &:active {
+                            text-decoration: underline;
+                        }
+                    }
+                }
+
+                .cc-compare {
+                    display: flex;
+                    flex-flow: column;
+                    align-items: stretch;
+                    flex: 1;
+
+                    align-self: stretch;
+                    background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
+
+                .compare {
+
+                    display: flex;
+                    justify-content: space-around;
+
+                    ul {
+                        list-style: decimal;
+                    }
+                }
+
+                .q-score {
+                    text-align: center;
+                }
+                }
+
+                .next-cc {
+                    align-self: flex-end;
+                    user-select: none;
+                    cursor: pointer;
+
+                    &:active {
+                        text-decoration: underline;
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+@keyframes blinker {
+    50% {
+        text-decoration: none;
+    }
+}

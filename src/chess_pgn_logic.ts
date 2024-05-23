@@ -9,6 +9,25 @@ import { chessgroundDests } from 'chessops/compat'
 
 export { INITIAL_FEN } from 'chessops/fen'
 
+
+export function fen_after_apply_uci(fen: string, uci: string) {
+  let setup = parseFen(fen).unwrap()
+  let pos = Chess.fromSetup(setup).unwrap()
+  let move = parseUci(uci)!
+  pos.play(move)
+
+  return makeFen(pos.toSetup())
+}
+
+
+
+export function fen_uci_to_san(fen: string, uci: string) {
+  let setup = parseFen(fen).unwrap()
+  let pos = Chess.fromSetup(setup).unwrap()
+  let move = parseUci(uci)!
+  return makeSan(pos, move)
+}
+
 export const fen_color = (fen: string) => {
     return parseFen(fen).unwrap().turn
 }
