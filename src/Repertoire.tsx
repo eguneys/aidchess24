@@ -800,6 +800,7 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
     if (e.key === 'f') {
       repertoire_player.flip_match_color()
     }
+
   }
 
   onMount(() => {
@@ -810,6 +811,35 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
     document.removeEventListener('keypress', onKeyPress)
   })
 
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    console.log(e.key)
+    if (e.key === 'ArrowLeft') {
+      shalala.set_on_wheel(-1)
+    }
+    if (e.key === 'ArrowRight') {
+
+      shalala.set_on_wheel(1)
+    }
+    if (e.key === 'ArrowUp') {
+      if (repertoire_lala().can_navigate_up) {
+        repertoire_lala().navigate_up()
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      if (repertoire_lala().can_navigate_down) {
+        repertoire_lala().navigate_down()
+      }
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener('keydown', onKeyDown)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener('keydown', onKeyDown)
+  })
 
 
 
@@ -839,7 +869,6 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
       el_rep.removeEventListener('wheel', onWheel)
     })
   })
-
 
 
 
