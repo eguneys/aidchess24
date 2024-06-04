@@ -813,7 +813,6 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
 
 
   const onKeyDown = (e: KeyboardEvent) => {
-    console.log(e.key)
     if (e.key === 'ArrowLeft') {
       shalala.set_on_wheel(-1)
     }

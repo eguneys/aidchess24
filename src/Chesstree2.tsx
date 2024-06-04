@@ -886,7 +886,7 @@ function weightedRandomSelect<T>(array: T[]) {
 /* https://chat.openai.com/share/07606c60-87eb-446d-819a-88e2517d7373 */
 function getRandomWeightedItem<T>(array: T[]) {
   // Calculate the weights
-  const weights = array.map((_item, index) => 1 / (index + 1.1));
+  const weights = array.map((_item, index) => 1 / (index + array.length));
 
   // Calculate the total weight
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
