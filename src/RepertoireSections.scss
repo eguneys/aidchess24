@@ -193,6 +193,7 @@
         & > .tools {
             display: flex;
             justify-content: flex-end;
+            gap: 1em;
             a.delete {
                 user-select: none;
                 cursor: pointer;

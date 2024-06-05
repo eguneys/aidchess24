@@ -230,6 +230,16 @@ class _RepertoiresFixture {
     return res
   }
 
+  clear_progress(id: string) {
+    /* https://stackoverflow.com/questions/24551578/clear-localstorage-values-with-certain-prefix */
+    Object.entries(localStorage).map(
+      x => x[0]
+    ).filter(
+      x => x.includes(`.openings.id.${id}`)
+    ).map(
+      x => localStorage.removeItem(x))
+  }
+
   delete_imported_study(id: string) {
     let ii = this.imported[0]()
     ii = ii.filter(_ => _.study_link !== id)

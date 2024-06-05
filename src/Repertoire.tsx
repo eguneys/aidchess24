@@ -443,6 +443,11 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
     navigate('/repertoires')
   }
 
+  const on_clear_progress = () => {
+    RepertoiresFixture.clear_progress(props.section_study.id)
+    console.log('done')
+    location.reload()
+  }
 
   return (<>
 
@@ -479,6 +484,7 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
         <Show when={props.section_study.imported}>
           <a onClick={() => on_delete_study()} class='delete'> Delete Study </a>
         </Show>
+        <a onClick={() => on_clear_progress()} class='delete'> Clear Progress </a>
       </div>
   </>)
 }
