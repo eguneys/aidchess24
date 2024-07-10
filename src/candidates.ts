@@ -50,7 +50,7 @@ class CandidatesRepertoire {
     }
 
     get_next_8() {
-        let i_next = this.i_next[0]() + 1
+        let i_next = this.i_next[0]() + 8
 
         if (i_next + 8 > this.all.length) {
             i_next = 0
