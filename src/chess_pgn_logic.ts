@@ -62,23 +62,22 @@ export class Pgn {
 
             let fen = g.headers.get('FEN')
 
-
-            let child = g.moves.children[0]
-
-            if (!child) {
-                return []
-            }
-
-
             let before_fen = fen ?? INITIAL_FEN
-            let san = child.data.san
             let i_pos = Chess.fromSetup(parseFen(before_fen).unwrap()).unwrap()
-            let move = parseSan(i_pos, san)!
-            let uci = makeUci(move)
 
-            let t = MoveTree.make(before_fen, [uci])
+            let ucis = g.moves.children.map(child => {
+                let san = child.data.san
+                let move = parseSan(i_pos, san)!
+                let uci = makeUci(move)
+                return [uci]
+            })
 
-            append_children(t, child, i_pos, [])
+
+            let t = MoveTree.make(before_fen, ucis)
+
+            g.moves.children.forEach(child => {
+                append_children(t, child, i_pos, [])
+            })
 
             function append_children(t: MoveTree, child: ChildNode<PgnNodeData>, before_pos: Position, path: string[]) {
                 let move = parseSan(before_pos, child.data.san)!
@@ -272,21 +271,21 @@ export class MoveScoreTree {
         }
 
 
-        let res = score_node(tree.root, 1)
+        let res = tree.root.map(_ => score_node(_, 1))
 
-        let total = calc_score(res)
+        let total = res.map(_ => calc_score(_)).reduce((a, b) => a + b, 0)
 
-        normalize(res, total)
+        res.forEach(_ => normalize(_, total))
 
         return new MoveScoreTree(res)
     }
 
 
     get clone() {
-        return new MoveScoreTree(this.root.clone)
+        return new MoveScoreTree(this.root.map(_ => _.clone))
     }
 
-    constructor(readonly root: TreeNode<MoveScoreData>) {}
+    constructor(readonly root: TreeNode<MoveScoreData>[]) {}
 
     get progress_paths() {
         function find_vs(node: TreeNode<MoveScoreData>, cur: string[][], res: string[][][]) {
@@ -303,7 +302,7 @@ export class MoveScoreTree {
             }
         }
         let res: string[][][] = []
-        find_vs(this.root, [], res)
+        this.root.forEach(_ => find_vs(_, [], res))
         return res
     }
 
@@ -311,10 +310,13 @@ export class MoveScoreTree {
     _traverse_path(path: string[]) {
 
         let res = undefined
-        let i = [this.root]
+        let i = this.root
         for (let p of path) {
             res = i.find(_ => _.data.uci === p)!
-            i = res?.children || this.root
+            if (!res) {
+                return undefined
+            }
+            i = res.children
         }
         return res
     }
@@ -350,22 +352,29 @@ export type MoveData = {
 
 export class MoveTree {
 
-    static make = (before_fen: string, ucis: string[]) => {
-        let uci = ucis[0]
-        let rest = ucis.slice(1)
-        let res = new MoveTree(TreeNode.make(MoveTree.make_data(before_fen, uci, 1, [])))
-        res.append_ucis(rest)
+    static make = (before_fen: string, ucis: string[][]) => {
+        let first_ucis = ucis.map(_ => _[0])
+        let res = new MoveTree(first_ucis.map(uci => TreeNode.make(MoveTree.make_data(before_fen, uci, 1, []))))
+        ucis.forEach(rest => res.append_ucis(rest))
         return res
     }
 
+
+    get before_fen() {
+        return this.root[0]?.data.before_fen ?? INITIAL_FEN
+    }
+
     get initial_color() {
-        return TreeNode.color_of(this.root)
+        if (this.root[0]) {
+           return TreeNode.color_of(this.root[0])
+        }
     }
 
     get clone() {
-        return new MoveTree(this.root.clone)
+        return new MoveTree(this.root.map(_ => _.clone))
     }
-    constructor(public root: TreeNode<MoveData>) {}
+
+    constructor(public root: TreeNode<MoveData>[]) {}
 
     static make_data(before_fen: string, uci: string, ply: number, path: string[]) {
         let setup = parseFen(before_fen).unwrap()
@@ -384,10 +393,9 @@ export class MoveTree {
     }
 
     _traverse_path(path: string[]) {
-
         
         let res = undefined
-        let i = [this.root]
+        let i = this.root
         for (let p of path) {
             res = i.find(_ => _.data.uci === p)
             if (!res) {
@@ -398,25 +406,25 @@ export class MoveTree {
         return res
     }
 
-    _find_path(ucis: string[]): [string[], TreeNode<MoveData>, string[]] {
+    _find_path(ucis: string[]): [string[], TreeNode<MoveData> | undefined, string[]] {
         let path = []
         let rest = []
-        let res = this.root
-        let i = [res]
+        let res: TreeNode<MoveData> | undefined
+        let i: TreeNode<MoveData>[] | undefined = this.root
         let split = false
         for (let p of ucis) {
 
             if (split) {
                 rest.push(p)
             } else {
-                let i_res = i.find(_ => _.data.uci === p)!
+                let i_res = i?.find(_ => _.data.uci === p)!
                 if (!i_res) {
                     split = true
                     rest.push(p)
                 } else {
                     path.push(p)
                     res = i_res
-                    i = untrack(() => res.children)
+                    i = untrack(() => res?.children)
                 }
             }
         }
@@ -426,7 +434,7 @@ export class MoveTree {
 
 
     get all_leaves() {
-        return this.root.all_leaves.map(_ => _.data)
+        return this.root.flatMap(_ => _.all_leaves.map(_ => _.data))
     }
 
     get_children(path: string[]) {
@@ -445,7 +453,7 @@ export class MoveTree {
 
     collect_branch_sums(path: string[]) {
         let res = []
-        let i = [this.root]
+        let i = this.root
         let add_variation = false
         for (let p of path) {
             let next = i.find(_ => _.data.uci === p)
@@ -484,12 +492,15 @@ export class MoveTree {
 
     append_ucis(ucis: string[]) {
         let [path, i, rest] = this._find_path(ucis)
+        if (i === undefined) {
+            return
+        }
         for (let uci of rest) {
-            let child = TreeNode.make(
-                MoveTree.make_data(i.data.after_fen, uci, i.data.ply + 1, path)
+            let child: TreeNode<MoveData> = TreeNode.make(
+                MoveTree.make_data(i!.data.after_fen, uci, i!.data.ply + 1, path)
             )
-            let i_children = untrack(() => i.children)
-            i.children = [...i_children, child]
+            let i_children = untrack(() => i!.children)
+            i!.children = [...i_children, child]
             i = child
             path = [...path, uci]
         }

@@ -107,7 +107,7 @@ export class TwoPaths2 {
 export class Treelala2 {
 
     
-  static make = (tree?: MoveTree, initial_fen: string = tree?.root.data.before_fen || INITIAL_FEN) => {
+  static make = (tree?: MoveTree, initial_fen: string = tree?.before_fen || INITIAL_FEN) => {
     let res = new Treelala2(initial_fen, tree)
     return res
   }
@@ -208,7 +208,7 @@ export class Treelala2 {
     }
 
       let res = []
-      let i = [this.tree.root]
+      let i = this.tree.root
       let add_variation = false
       for (let p of path) {
           let next = i.find(_ => _.data.uci === p)
@@ -309,7 +309,7 @@ export class Treelala2 {
       return false
     }
 
-    const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? [this.tree.root]
+    const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? this.tree.root
 
     //const c_found = weightedRandomSelect(cc)
     const c_found = getRandomWeightedItem(cc)
@@ -332,8 +332,7 @@ export class Treelala2 {
       return false
     }
 
-    const a0 = this.tree?._traverse_path(this.cursor_path) ?? this.tree.root
-    const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? [this.tree.root]
+    const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? this.tree.root
 
     const c_found = cc.find(_ => _.data.uci === uci) ??  cc.find(_ => castles_uci_fix(_.data) === uci)
 
@@ -366,7 +365,7 @@ export class Treelala2 {
       }
 
       this.add_uci(uci)
-      this.add_failed_path([...a0.data.path, uci])
+      this.add_failed_path([uci])
 
       return false
     }
@@ -393,7 +392,7 @@ export class Treelala2 {
 
             let i
             if (path.length === 0) {
-              i = [t.root]
+              i = t.root
             } else {
               i = t._traverse_path(path)?.children
             } 
@@ -411,7 +410,7 @@ export class Treelala2 {
       let t = this.tree
       let path = this.cursor_path
       if (!t) {
-        t = MoveTree.make(this.initial_fen, [uci])
+        t = MoveTree.make(this.initial_fen, [[uci]])
       } else {
         t.append_uci(uci, path)
       }
@@ -447,7 +446,7 @@ export class Treelala2 {
 
       let i
       if (path.length === 0) {
-        i = [t.root]
+        i = t.root
       } else {
         i = t._traverse_path(path)?.children
       }
@@ -480,7 +479,7 @@ export class Treelala2 {
 
       let i
       if (path.length === 0) {
-        i = [t.root]
+        i = t.root
       } else {
         i = t._traverse_path(path)?.children
       }
@@ -499,7 +498,7 @@ export class Treelala2 {
 
       let i
       if (path.length === 0) {
-        i = [t.root]
+        i = t.root
       } else {
         i = t._traverse_path(path)?.children
       }
@@ -661,7 +660,7 @@ const Chesstree2 = (props: { lala: Treelala2 }) => {
             revealed_paths={props.lala.revealed_paths}
             solved_paths={props.lala.solved_paths_expanded}
             failed_paths={props.lala.failed_paths}
-            lines={[tree().root]}/>
+            lines={tree().root}/>
           }</Show>
       </div>
     </>)
@@ -776,7 +775,7 @@ export const ChesstreeShorten = (props: { lala: Treelala2 }) => {
             revealed_paths={props.lala.revealed_paths}
             solved_paths={props.lala.solved_paths_expanded}
             failed_paths={props.lala.failed_paths}
-            lines={[tree().root]}/>
+            lines={tree().root}/>
           }</Show>
       </div>
     </>)
