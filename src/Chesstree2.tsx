@@ -332,6 +332,7 @@ export class Treelala2 {
       return false
     }
 
+    const a0 = this.tree?._traverse_path(this.cursor_path)
     const cc = this.tree?._traverse_path(this.cursor_path)?.children ?? this.tree.root
 
     const c_found = cc.find(_ => _.data.uci === uci) ??  cc.find(_ => castles_uci_fix(_.data) === uci)
@@ -365,7 +366,7 @@ export class Treelala2 {
       }
 
       this.add_uci(uci)
-      this.add_failed_path([uci])
+      this.add_failed_path([...(a0?.data.path ?? []), uci])
 
       return false
     }
