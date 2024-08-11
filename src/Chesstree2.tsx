@@ -530,8 +530,9 @@ export class Treelala2 {
     if (t) {
 
       let i = path
+
       while (i.length > 0) {
-        const cc = t._traverse_path(i.slice(0, -1))?.children
+        const cc = t._traverse_path(i.slice(0, -1))?.children ?? t.root
         if (cc && cc.length > 1) {
 
           let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) - 1
@@ -557,7 +558,7 @@ export class Treelala2 {
 
       let i = path
       while (i.length > 0) {
-        const cc = t._traverse_path(i.slice(0, -1))?.children
+        const cc = t._traverse_path(i.slice(0, -1))?.children ?? t.root
         if (cc && cc.length > 1) {
 
           let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) + 1
@@ -580,7 +581,7 @@ export class Treelala2 {
 
       let i = path
       while (i.length > 0) {
-        const cc = t._traverse_path(i.slice(0, -1))?.children
+        const cc = t._traverse_path(i.slice(0, -1))?.children ?? t.root
         if (cc && cc.length > 1) {
 
           let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) - 1
@@ -604,7 +605,7 @@ export class Treelala2 {
 
       let i = path
       while (i.length > 0) {
-        const cc = t._traverse_path(i.slice(0, -1))?.children
+        const cc = t._traverse_path(i.slice(0, -1))?.children ?? t.root
         if (cc && cc.length > 1) {
 
           let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) + 1
