@@ -1,6 +1,4 @@
 import './Shalala.css'
-import Chessboard from './Chessboard'
-import Chesstree from './Chesstree'
 import { Signal, batch, createMemo, createSignal } from 'solid-js'
 import { INITIAL_FEN, makeFen, parseFen } from 'chessops/fen'
 import { Chess, Color, Position, parseSquare, parseUci, } from 'chessops'
@@ -142,46 +140,3 @@ export class Shala {
         return this.m_dests()
     }
 }
-
-const Shalala = () => {
-
-    let shalala = Shala.init()
-
-
-    const onWheel = (e: WheelEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName !== 'PIECE' &&
-        target.tagName !== 'SQUARE' &&
-        target.tagName !== 'CG-BOARD'
-      )
-        return;
-      e.preventDefault();
-      shalala.set_on_wheel(Math.sign(e.deltaY))
-
-    }
-
-
-
-    return (<>
-    <div onWheel={onWheel} class='shalala'>
-      <div class='chessboard-wrap'>
-        <Chessboard 
-        movable={true}
-        doPromotion={shalala.promotion}
-        onMoveAfter={shalala.on_move_after} 
-        fen_uci={shalala.fen_uci}
-        color={shalala.turnColor} 
-        dests={shalala.dests} />
-      </div>
-      <div class='chesstree-wrap'>
-        <div class='chesstree-v'>
-          <Chesstree on_wheel={shalala.on_wheel} add_uci={shalala.add_uci} on_set_fen_uci={shalala.on_set_fen_uci}/>
-        </div>
-      </div>
-    </div>
-        </>)
-}
-
-
-export default Shalala

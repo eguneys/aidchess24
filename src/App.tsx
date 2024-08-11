@@ -18,7 +18,6 @@ const Explorer = lazy(() => import('./Explorer'))
 
 const Widen = lazy(() => import('./Widen'))
 
-const Shalala = lazy(() => import('./Shalala'))
 const SixthDraw = lazy(() => import('./SixthDraw'))
 
 const Beta = lazy(() => import('./Beta'))
@@ -31,7 +30,6 @@ export const MyApp = () => {
         <PlayerProvider>
             <HashRouter root={AppInRouter}>
               <Route path='/' component={Home}/>
-              <Route path='/shalala' component={Shalala}/>
               <Route path='/sixth' component={SixthDraw}/>
 
               <Route path='/widen' component={Widen}/>

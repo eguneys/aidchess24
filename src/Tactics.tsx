@@ -111,8 +111,8 @@ const Repertoire = () => {
     if (chapter) {
       let res = PuzzlePgn.make(chapter.pgn.puzzle!, chapter.pgn.tree)
 
-      res.attempt.cursor_path = res.attempt.tree!.root.data.path
-      res.attempt.tree!.root.children.map(_ => _.data.path).forEach(_ => res.attempt._hidden_paths.add_path(_))
+      res.attempt.cursor_path = res.attempt.tree!.root[0].data.path
+      res.attempt.tree!.root[0].children.map(_ => _.data.path).forEach(_ => res.attempt._hidden_paths.add_path(_))
 
       return res
     }
