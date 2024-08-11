@@ -209,7 +209,7 @@ export class Treelala2 {
 
       let res = []
       let i = this.tree.root
-      let add_variation = false
+      let add_variation = i.length > 1 
       for (let p of path) {
           let next = i.find(_ => _.data.uci === p)
 
@@ -677,23 +677,35 @@ const RenderLines = (props: {
   lines: TreeNode<MoveData>[], show_index?: true}) => {
 
     return (<>
-    <For each={props.lines}>{ line =>
-    <>
-                <RenderData data={line.data} {...props}/>
-                <Switch>
-                  <Match when={line.children.length === 1}>
-                    <RenderLines  {...props} lines={line.children} />
-                  </Match>
-                  <Match when={line.children.length > 1}>
-                    <div class='lines'>
-                        <For each={line.children}>{ child =>
-                          <div class='line'><RenderLines {...props} lines={[child]} show_index={true}/></div>
-                        }</For>
-                    </div>
-                  </Match>
-                </Switch>
-    </>
-        }</For>
+      <Switch>
+        <Match when={props.lines.length === 1}>
+          <>
+            <RenderData data={props.lines[0].data} {...props} />
+            <RenderLines  {...props} lines={props.lines[0].children} />
+          </>
+        </Match>
+        <Match when={props.lines.length > 1}>
+          <div class='lines'>
+          <For each={props.lines}>{line =>
+            <div class='line'>
+              <RenderData data={line.data} {...props} />
+              <Switch>
+                <Match when={line.children.length === 1}>
+                  <RenderLines  {...props} lines={line.children} />
+                </Match>
+                <Match when={line.children.length > 1}>
+                  <div class='lines'>
+                    <For each={line.children}>{child =>
+                      <div class='line'><RenderLines {...props} lines={[child]} show_index={true} /></div>
+                    }</For>
+                  </div>
+                </Match>
+              </Switch>
+            </div>
+          }</For>
+          </div>
+        </Match>
+        </Switch>
     </>)
 }
 
@@ -769,14 +781,34 @@ export const ChesstreeShorten = (props: { lala: Treelala2 }) => {
               
             </>
           }>{tree =>
-            <RenderLinesShorten
-            on_set_path={path => props.lala.try_set_cursor_path(path)} 
-            cursor_path={props.lala.cursor_path} 
-            hidden_paths={props.lala.hidden_paths}
-            revealed_paths={props.lala.revealed_paths}
-            solved_paths={props.lala.solved_paths_expanded}
-            failed_paths={props.lala.failed_paths}
-            lines={tree().root}/>
+            <Switch>
+              <Match when={tree().root.length === 1}>
+              <RenderLinesShorten
+                on_set_path={path => props.lala.try_set_cursor_path(path)}
+                cursor_path={props.lala.cursor_path}
+                hidden_paths={props.lala.hidden_paths}
+                revealed_paths={props.lala.revealed_paths}
+                solved_paths={props.lala.solved_paths_expanded}
+                failed_paths={props.lala.failed_paths}
+                lines={tree().root} />
+              </Match>
+            <Match when={tree().root.length > 1}>
+            <div class='lines'>
+            <For each={tree().root}>{ line =>
+              <div class='line'>
+              <RenderLinesShorten
+                on_set_path={path => props.lala.try_set_cursor_path(path)}
+                cursor_path={props.lala.cursor_path}
+                hidden_paths={props.lala.hidden_paths}
+                revealed_paths={props.lala.revealed_paths}
+                solved_paths={props.lala.solved_paths_expanded}
+                failed_paths={props.lala.failed_paths}
+                lines={[line]} />
+              </div>
+            }</For>
+            </div>
+            </Match>
+            </Switch>
           }</Show>
       </div>
     </>)

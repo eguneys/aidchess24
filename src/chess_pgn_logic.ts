@@ -454,7 +454,7 @@ export class MoveTree {
     collect_branch_sums(path: string[]) {
         let res = []
         let i = this.root
-        let add_variation = false
+        let add_variation = this.root.length > 1
         for (let p of path) {
             let next = i.find(_ => _.data.uci === p)
 
