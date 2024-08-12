@@ -111,7 +111,7 @@ cg-board piece.fading {
   opacity: 0.3;
 }
 .cg-wrap .cg-shapes, .cg-wrap .cg-custom-svgs {
-  overflow: hidden;
+  overflow: visible;
   position: absolute;
   top: 0px;
   left: 0px;
