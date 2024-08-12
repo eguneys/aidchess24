@@ -3,8 +3,10 @@ import { Chessground } from 'chessground'
 import { Api } from 'chessground/api'
 import { Color, Dests, Key } from 'chessground/types'
 import { INITIAL_FEN } from './chess_pgn_logic'
+import { DrawShape } from 'chessground/draw'
+import './chessground.css'
 
-const Chessboard = (props: { orientation?: Color, movable?: boolean, fen_uci?: [string, string | undefined], doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
+const Chessboard = (props: { shapes?: DrawShape[], orientation?: Color, movable?: boolean, fen_uci?: [string, string | undefined], doPromotion: Key | undefined, onMoveAfter: (orig: Key, dest: Key) => void, color: Color, dests: Dests }) => {
 
     let board: HTMLElement
     let ground: Api
@@ -74,6 +76,11 @@ const Chessboard = (props: { orientation?: Color, movable?: boolean, fen_uci?: [
       }
     })
 
+    createEffect(() => {
+      if (props.shapes) {
+         ground.setAutoShapes(props.shapes)
+      }
+    })
 
     return (<>
       <div ref={(el) => board = el} class='is2d chessboard'>

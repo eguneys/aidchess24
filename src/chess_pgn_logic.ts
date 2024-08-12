@@ -85,7 +85,12 @@ export class Pgn {
                 let after_pos = before_pos.clone()
                 after_pos.play(move)
                 let uci = makeUci(move)
+                let nags = child.data.nags
                 t.append_uci(uci, path)
+
+
+                t.set_nags([...path, uci], nags)
+
                 child.children.forEach(child => {
                     append_children(t, child, after_pos, [...path, uci])
                 })
@@ -346,7 +351,8 @@ export type MoveData = {
     san: string,
     uci: string,
     ply: number,
-    comments?: string,
+    comments?: string[],
+    nags?: number[],
     eval_accuracy?: FinalEvalAccuracy
 }
 
@@ -483,6 +489,13 @@ export class MoveTree {
         const parent = this._traverse_path(path.slice(0, -1))
         if (parent) {
             parent.children = parent.children.filter(_ => _.data.path.join('') !== path.join(''))
+        }
+    }
+
+    set_nags(path: string[], nags?: number[]) {
+        let i = this._traverse_path(path)
+        if (i) {
+           i.data.nags = nags
         }
     }
 

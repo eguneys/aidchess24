@@ -717,6 +717,10 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
   hidden_paths: string[][], 
   cursor_path: string[], data: MoveData, show_index?: boolean, collapsed?: true }) => {
 
+    let nag_klass = ['', 'good', 'mistake', 'best', 'blunder', 'interesting', 'dubious']
+
+
+
     let index = `${Math.ceil(props.data.ply / 2)}.`
     if (props.data.ply % 2 === 0) {
         index += '..'
@@ -736,6 +740,7 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
     let on_solved_path = createMemo(() => props.solved_paths.find(_ => _.join('') === my_path())!)
 
     let move_on_path_klass = createMemo(() => ['move', 
+      nag_klass[props.data.nags?.[0] ?? 0],
     on_path_end()?'on_path_end':on_path()?'on_path':'',
     on_hidden_path_start() ? 'on_hidden_path_start':on_hidden_path_rest() ? 'on_hidden_path': '',
     on_revealed_path() ? 'on_revealed_path': '',
@@ -745,8 +750,14 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
    ].join(' '))
 
     return <>
-      <div onClick={() => props.on_set_path(props.data.path)} class={move_on_path_klass()} ><Show when={props.show_index || props.data.ply & 1}><span class='index'>{index}</span></Show>{props.data.san}</div>
+      <div onClick={() => props.on_set_path(props.data.path)} class={move_on_path_klass()} ><Show when={props.show_index || props.data.ply & 1}><span class='index'>{index}</span></Show>{props.data.san}<RenderNags nags={props.data.nags ?? []}/></div>
     </>
+}
+
+
+const RenderNags = (props: { nags: number[] }) => {
+  let text = ['', '!', '?', '!!', '??', '!?', '?!']
+  return (<> <span class='nag'>{text[props.nags[0]]}</span> </>)
 }
 
 export default Chesstree2

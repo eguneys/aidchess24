@@ -11,12 +11,25 @@
    font-family: "Noto Chess", Kantumruy; 
 }
 
+.chesstree .nag {
+    font-weight: bold;
+}
+
+.chesstree .move.good {
+    color:hsl(88, 67%, 37%);
+}
+
+.chesstree .move.mistake {
+    color: hsl(41, 100%, 45%);
+}
+
 .chesstree .move {
-    display: inline-block;
+    display: inline-flex;
     margin: 0 0.1em;
     padding: 0.1em;
     line-height: 1.4em;
     border-radius: 1px;
+    font-weight: bold;
 }
 
 .chesstree .move:not(.on_path_end) .index {

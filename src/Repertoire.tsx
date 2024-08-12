@@ -14,6 +14,7 @@ import { DashboardRepertoireStats, OpeningsChapterStatStore, OpeningsStore } fro
 import { stepwiseScroll } from './common/scroll'
 import { usePlayer } from './sound'
 import SessionStore from './SessionStore'
+import { annotationShapes } from './annotationShapes'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
@@ -876,10 +877,23 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
   })
 
 
+  const auto_shapes = createMemo(() => {
+    let node = repertoire_lala().tree?._traverse_path(repertoire_lala().cursor_path)
+
+    if (!node || !node.data.nags) {
+
+      return []
+    }
+
+    let text = ['', '!', '?', '!!', '??', '!?', '?!']
+    return annotationShapes(node.data.uci, node.data.san, text[node.data.nags[0]])
+  })
+
 
   return (<>
   <div class='board-wrap'>
     <Chessboard
+        shapes={auto_shapes()}
       orientation={repertoire_player.match_color}
       movable={is_board_movable()}
       doPromotion={shalala.promotion}
