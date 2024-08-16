@@ -742,7 +742,7 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
     let nags = createMemo(() => nag_klass[props.data.nags?.[0] ?? 0])
 
     let move_on_path_klass = createMemo(() => ['move', 
-      nags,
+      nags(),
     on_path_end()?'on_path_end':on_path()?'on_path':'',
     on_hidden_path_start() ? 'on_hidden_path_start':on_hidden_path_rest() ? 'on_hidden_path': '',
     on_revealed_path() ? 'on_revealed_path': '',
