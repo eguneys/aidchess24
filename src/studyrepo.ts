@@ -59,7 +59,8 @@ export type PGNSectionStudy = {
   id: string,
   name: string,
   orientation?: Color,
-  imported?: true,
+  import_lichess_link?: string,
+  import_pgn?: boolean,
   sections: PGNSection[]
 }
 
@@ -75,7 +76,7 @@ export type PGNSectionChapter = {
 
 
 
-const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color, imported?: true): PGNSectionStudy => {
+const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, orientation?: Color, import_lichess_link?: string): PGNSectionStudy => {
   let sections: PGNSection[] = []
     Pgn.make_many(pgns).map(pgn => {
       let section: string, chapter_name: string
@@ -108,7 +109,7 @@ const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, o
         id,
         name: study_name,
         orientation,
-        imported,
+        import_lichess_link,
         sections
     }
 }
@@ -123,9 +124,9 @@ const read_study_pgn = (id: string, study_name: string, orientation?: Color) =>
 const read_section_study_pgn = (id: string, study_name: string, orientation?: Color) => 
     fetch(`pgns/${id}.section.pgn`).then(_ => _.text()).then(_ => reformatSectionStudyPGN(_, id, study_name, orientation))
 
-const read_imported_study_pgn = (id: string, study_name: string) => {
+const read_imported_study_pgn = (id: string, study_name: string, import_lichess_link: string) => {
   let [pgn] = makePersistedNamespaced('', 'pgn.imported.' + id)
-  return reformatSectionStudyPGN(pgn(), id, study_name, 'white', true)
+  return reformatSectionStudyPGN(pgn(), id, study_name, 'white', import_lichess_link)
 }
 
 class StudyRepo {
@@ -140,10 +141,10 @@ class StudyRepo {
 
 
     read_section_study(id: string) {
-      let { study_name, orientation, imported } = RepertoiresFixture.study_by_id(id) || RepertoiresFixture.imported_by_id(id)
+      let { study_name, orientation, import_lichess_link } = RepertoiresFixture.study_by_id(id) || RepertoiresFixture.imported_by_id(id)
 
-      if (imported) {
-        return read_imported_study_pgn(id, study_name)
+      if (import_lichess_link) {
+        return read_imported_study_pgn(id, study_name, import_lichess_link)
       }
       return read_section_study_pgn(id, study_name, orientation)
     }
@@ -160,11 +161,12 @@ export default StudyRepo.init()
 
 
 export type StudyInRepertoireCategory = {
-  study_link: string,
-  study_name: string,
-  category: string,
+  study_id: string
+  study_name: string
+  category: string
   orientation?: Color
-  imported?: true
+  import_lichess_link?: string
+  import_pgn?: boolean
 }
 
 const HardCategories: any = {
@@ -240,9 +242,16 @@ class _RepertoiresFixture {
       x => localStorage.removeItem(x))
   }
 
+  async update_imported_study(id: string) {
+
+    let link = `https://lichess.org/study/${id}`
+    let pgn = await fetch(`https://lichess.org/api/study/${id}.pgn`).then(_ => _.text())
+    RepertoiresFixture.save_import_pgn(id, pgn, link)
+  }
+
   delete_imported_study(id: string) {
     let ii = this.imported[0]()
-    ii = ii.filter(_ => _.study_link !== id)
+    ii = ii.filter(_ => _.study_id !== id)
     this.imported[1](ii)
 
     let [_, set_pgn] = makePersistedNamespaced('', 'pgn.imported.' + id)
@@ -260,24 +269,25 @@ class _RepertoiresFixture {
       x => localStorage.removeItem(x))
   }
 
-  save_import_pgn(study_link: string, pgn: string) {
+  save_import_pgn(study_id: string, pgn: string, import_lichess_link?: string) {
 
-    this.delete_imported_study(study_link)
+    this.delete_imported_study(study_id)
 
     let study_name = ''
-    let ss = reformatSectionStudyPGN(pgn, study_link, study_name, 'white', true)
+    let ss = reformatSectionStudyPGN(pgn, study_id, study_name, 'white', import_lichess_link)
     study_name = ss.name
     let ii = this.imported[0]()
     
     ii.push({
       category: 'openings',
       study_name,
-      study_link,
-      imported: true
+      study_id,
+      import_lichess_link,
+      import_pgn: !import_lichess_link
     })
     this.imported[1](ii)
 
-    let [_, set_pgn] = makePersistedNamespaced('', 'pgn.imported.' + study_link)
+    let [_, set_pgn] = makePersistedNamespaced('', 'pgn.imported.' + study_id)
 
     set_pgn(pgn)
   }
@@ -293,7 +303,7 @@ class _RepertoiresFixture {
 
   imported_by_id(id: string) {
 
-    let _ = this.imported[0]().find(_ => _.study_link === id)!
+    let _ = this.imported[0]().find(_ => _.study_id === id)!
     return _
   }
 
@@ -301,7 +311,7 @@ class _RepertoiresFixture {
 
   study_by_id(id: string) {
 
-    let _ = this.all.find(_ => _.study_link === id)!
+    let _ = this.all.find(_ => _.study_id === id)!
     return _
   }
 

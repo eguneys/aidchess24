@@ -438,9 +438,15 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
   })
 
   const navigate = useNavigate()
+
+  const on_update_study = async () => {
+    await RepertoiresFixture.update_imported_study(props.section_study.id)
+
+    location.reload()
+  }
+
   const on_delete_study = () => {
     RepertoiresFixture.delete_imported_study(props.section_study.id)
-    console.log('done')
     navigate('/repertoires')
   }
 
@@ -456,6 +462,12 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
       <h2 class='title'>
         {props.section_study.name} <span>{overall_stats().progress}%</span>
       </h2>
+
+      <div class='info'>
+        <Show when={props.section_study.import_lichess_link}>{link => 
+        <><a href={link()} target='_blank'>lichess</a> </>
+          }</Show>
+      </div>
 
       <div class='sections-scroll'>
       <div class='sections'>
@@ -482,7 +494,8 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
       section={selected_section()} 
       chapter={selected_chapter()}/>
       <div class='tools'>
-        <Show when={props.section_study.imported}>
+        <Show when={props.section_study.import_lichess_link || props.section_study.import_pgn}>
+          <a onClick={() => on_update_study()} class='update'>Update Study</a>
           <a onClick={() => on_delete_study()} class='delete'> Delete Study </a>
         </Show>
         <a onClick={() => on_clear_progress()} class='delete'> Clear Progress </a>

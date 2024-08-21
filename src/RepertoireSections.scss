@@ -6,7 +6,8 @@
         display: grid;
         grid-template-areas: "board"
                              "replay"
-                             "sections";
+                             "sections"
+                             "tools";
         gap: 0.4em;
 
         --gauge-gap: calc(
@@ -23,7 +24,8 @@
 
         @include mq-at-least-col2 {
             grid-template-areas: 'board gauge replay'
-            'sections sections sections';
+            'sections sections sections'
+            '. tools tools';
 
             grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) auto;
 
@@ -36,7 +38,8 @@
 
         @include mq-is-col2-squeeze {
             grid-template-areas: 'board gauge replay'
-            'sections sections sections';
+            'sections sections sections'
+            '. tools tools';
 
             grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) minmax(200px, 300px);
             gap: 0.1em;
@@ -45,7 +48,8 @@
 
 
         @include mq-at-least-col3 {
-            grid-template-areas: 'board gauge replay sections';
+            grid-template-areas: 'board gauge replay sections'
+            '. . . tools';
 
             grid-template-columns: minmax(auto, var(--col3-uniboard-width)) var(--gauge-gap) 320px 1fr;
             grid-template-rows: minmax(auto, var(--col3-uniboard-width));
@@ -75,6 +79,10 @@
             grid-area: replay;
         }
 
+        .tools {
+            grid-area: tools;
+        }
+
         .sections-wrap {
             display: flex;
             flex-flow: column;
@@ -82,6 +90,9 @@
             h2.title {
                 display: flex;
                 justify-content: space-between;
+            }
+
+            .info {
             }
 
         .sections-scroll {
@@ -194,9 +205,13 @@
             display: flex;
             justify-content: flex-end;
             gap: 1em;
-            a.delete {
+            margin: 1em 0;
+            a {
                 user-select: none;
                 cursor: pointer;
+            }
+
+            a.delete {
                 color: $error;
             }
         }

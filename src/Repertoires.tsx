@@ -13,8 +13,8 @@ const CategoryView = (props: { name: string, list: StudyInRepertoireCategory[]})
        <ul>
         <For each={props.list}>{ (item: StudyInRepertoireCategory) => 
           <Show fallback={
-            <li onClick={() => navigate(`/${item.category.toLowerCase()}/${item.study_link}`)}><h3>{item.study_name}</h3></li>
-          } when={item.study_link === ''}>
+            <li onClick={() => navigate(`/${item.category.toLowerCase()}/${item.study_id}`)}><h3>{item.study_name}</h3></li>
+          } when={item.study_id === ''}>
             <li class='soon'><h3>{item.study_name}</h3><span>Coming Soon</span></li>
           </Show>
         }</For>
@@ -47,17 +47,18 @@ function Repertoires() {
       let li = import_li.value
   
   
-      let m = li.match(/lichess.org\/study\/(\w*)\/?/)
+      let m = li.match(/https:\/\/lichess.org\/study\/(\w*)\/?/)
   
       if (!m) {
         import_li.value = 'Incorrect lichess study'
         return
       }
   
+      let link = m[0]
       let id = m[1]
   
       pgn = await fetch(`https://lichess.org/api/study/${id}.pgn`).then(_ => _.text())
-      RepertoiresFixture.save_import_pgn(id, pgn)
+      RepertoiresFixture.save_import_pgn(id, pgn, link)
     }
 
     window.location.reload()
@@ -95,21 +96,7 @@ function Repertoires() {
             </Show>
           <button onClick={() => on_import_new_study()} style={`align-self: flex-end; padding: 1em;`}>Import</button>
           </div>
-          {/*
-          <input ref={_ => import_id_el = _} style={`padding: 0.2em; margin: 0.2em;`} type='text' placeholder='Short Id'/>
-          <p> Paste the PGN of the Study here </p>
-          <div style={`display: flex; flex-flow: column; gap: 0.2em;`}>
-          <textarea ref={_ => import_text_el = _} rows={10} cols={40}/>
-          <button onClick={() => on_import_new_study()} style={`align-self: flex-end; padding: 1em;`}>Import</button>
-          </div>
-  */}
         </div>
-        {/*
-        <CategoryView name="Tactics" list={fixture.tactics}/>
-        <CategoryView name="Endgames" list={fixture.endgames}/>
-        <CategoryView name="Recent Studies" list={fixture.recent}/>
-        <CategoryView name="Completed Studies" list={fixture.completed}/>
-  */}
       </div>
       </div>
     </>
