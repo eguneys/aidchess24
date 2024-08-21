@@ -52,8 +52,8 @@ const Dashboard = () => {
     let navigate = useNavigate()
 
     let dashboard_stats_views = RepertoiresFixture.openings
-    .filter(_ => _.study_link !== '')
-    .map(_ => new DashboardStatsView(_.study_name, _.study_link))
+    .filter(_ => _.study_id !== '')
+    .map(_ => new DashboardStatsView(_.study_name, _.study_id))
     .filter(_ => _.show_type !== 'hidden')
 
     const navigate_study = (study: string, i_section?: string) => {

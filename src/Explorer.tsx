@@ -12,10 +12,10 @@ import { usePlayer } from './sound'
 
 const Explorer = () => {
 
-    let all = RepertoiresFixture.all.filter(_ => _.study_link !== '' && _.category !== 'Tactics')
+    let all = RepertoiresFixture.all.filter(_ => _.study_id !== '' && _.category !== 'Tactics')
     const [active_index, set_active_index] = createSignal(0)
 
-    const [pgn_study] = createResource(() => all[active_index()].study_link, id => StudyRepo.read_study(id))
+    const [pgn_study] = createResource(() => all[active_index()].study_id, id => StudyRepo.read_study(id))
 
     const [i_chapter_index, set_i_chapter_index] = createSignal(0)
 
