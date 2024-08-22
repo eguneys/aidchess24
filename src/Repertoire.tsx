@@ -661,7 +661,6 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
     repertoire_lala().solved_paths.replace_all(overall_repertoire_stat().solved_paths)
   })
 
-
   createEffect(() => {
     let s = untrack(() => repertoire_stat_for_mode())
     s.solved_paths.replace_all(repertoire_lala().solved_paths)
@@ -734,7 +733,7 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
   createEffect(() => {
     let { mode, match_color } = repertoire_player
 
-    if (mode === 'match' && match_color === 'black') {
+    if (mode === 'match' && match_color !== initial_color()) {
       untrack(() => {
         success_auto_play_or_end()
       })
