@@ -757,8 +757,10 @@ const RenderData = (props: { on_set_path: (_: string[]) => void,
 }
 
 
+export let text = ['', '!', '?', '!!', '??', '!?', '?!']
+text[22] = '⨀'
+
 const RenderNags = (props: { nags: number[] }) => {
-  let text = ['', '!', '?', '!!', '??', '!?', '?!']
   return (<> <span class='nag'>{text[props.nags[0]]}</span> </>)
 }
 

@@ -7,7 +7,7 @@ import StudyRepo, { PGNSection, PGNSectionChapter, PGNSectionStudy, RepertoiresF
 import { Show } from 'solid-js'
 import { Shala } from './Shalala'
 import Chessboard from './Chessboard'
-import { ChesstreeShorten, Treelala2, TwoPaths2 } from './Chesstree2'
+import { ChesstreeShorten, text, Treelala2, TwoPaths2 } from './Chesstree2'
 import { INITIAL_FEN, MoveScoreTree, MoveTree } from './chess_pgn_logic'
 import { Color } from 'chessground/types'
 import { DashboardRepertoireStats, OpeningsChapterStatStore, OpeningsStore } from './repertoire_store'
@@ -897,7 +897,6 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
       return []
     }
 
-    let text = ['', '!', '?', '!!', '??', '!?', '?!']
     return annotationShapes(node.data.uci, node.data.san, text[node.data.nags[0]])
   })
 
