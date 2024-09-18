@@ -208,7 +208,7 @@ class _RepertoiresFixture {
       return HardCategories[category].map((_: any) => ({
         category,
         study_name: _[0],
-        study_link: _[1],
+        study_id: _[1],
         orientation: _[3]
       }))
 

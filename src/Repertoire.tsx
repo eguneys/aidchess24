@@ -1100,10 +1100,12 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
                   <button onClick={() => repertoire_player.restart_match()}><span> Rematch </span></button>
                   <button class='end2' onClick={() => {
                     let pp = repertoire_lala().cursor_path
-                    repertoire_player.end_match_or_moves()
+                    batch(() => {
+                      repertoire_player.end_match_or_moves()
 
-                    repertoire_lala()._hidden_paths.clear()
-                    set_silent_cursor_path(pp)
+                      repertoire_lala()._hidden_paths.clear()
+                      set_silent_cursor_path(pp)
+                    })
                   }}><span> End Practice </span></button>
                 </div>
             </Match>
