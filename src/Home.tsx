@@ -36,7 +36,7 @@ const Home = () => {
 
 
       <h1>See your progress, and do challenges</h1>
-      <img src='vite.svg' alt="See your Progress" height="180px"></img>
+      <img src='logo-big.jpg' alt="See your Progress" height="400px"></img>
 
 
       <footer>
