@@ -58,7 +58,10 @@ const Donate = () => {
       <p class='twitch'><a href="https://twitch.tv/gsoutz" target="_blank">Support me on Twitch</a></p>
       <iframe src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=aidchess.com"></iframe>
       <p>
-        Or <a target="_blank" href="https://www.buymeacoffee.com/eguneys">buymeacoffee.com/eguneys</a>
+          { /*
+            Or < a target="_blank" href="https://www.buymeacoffee.com/eguneys">buymeacoffee.com/eguneys</a>
+            */
+}
       </p>
 
     </div>
