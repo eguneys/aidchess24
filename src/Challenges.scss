@@ -1,0 +1,229 @@
+@import '_variables';
+
+.challenges {
+    display: grid;
+
+    grid-template-areas: 'list details';
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+
+
+    .list {
+        grid-area: list;
+    }
+
+    .details {
+        grid-area: details;
+    }
+
+    .list, .details {
+        padding: 1em;
+        flex: 1 0 0%;
+    }
+
+    .list {
+        display: flex;
+        flex-flow: column;
+
+        .filter {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1em;
+
+            .all {
+                display: flex;
+                gap: 1em;
+
+                span {
+                    user-select: none;
+                    cursor: pointer;
+                    flex: 1 0 0;
+                    padding: 0.2em 1em;
+                    &.active {
+                        border-radius: 2px;
+                        background: $accent;
+                        color: $text-light;
+                    }
+                }
+            }
+        }
+
+        .table-wrap {
+            flex: 1;
+                    .head {
+                        text-align: center;
+                        user-select: none;
+                        cursor: pointer;
+                    }
+
+
+                   
+                    .body {
+                        overflow-y: scroll;
+                        height: 80vh;
+                        display: flex;
+                        flex-flow: column;
+
+                        & > h3 {
+                            align-self: center;
+                            justify-self: center;
+                        }
+                    }
+
+                    .head, .body .row {
+                        display: flex;
+                        gap: 1em;
+
+
+                        & span:nth-child(1) {
+                            flex: 1 0 0;
+                        }
+                        & span:nth-child(2) {
+                            flex: 3 0 0;
+                        }
+                        & span:nth-child(3) {
+                            flex: 3 0 0;
+                        }
+                        & span:nth-child(4) {
+                            flex: 1 0 0;
+                        }
+                    }
+
+                    .body {
+                        border: 1px solid $secondary-dim;
+                        .row {
+                            background: $accent;
+                            color: $dark-text;
+                            border-bottom: 1px solid $secondary-dim;
+                            span {
+                                    padding: 1em;
+                                }
+
+                                user-select: none;
+                                cursor: pointer;
+
+                                &.active, &.active:hover {
+                                    background: $secondary-light;
+                                }
+
+                                &:hover {
+                                    background: $accent-light;
+                                }
+
+                                &:active span:nth-child(2) {
+                                    text-decoration: underline;
+                                }
+                        }
+                    }
+                }
+    }
+
+    .details {
+
+        display: flex;
+        background: linear-gradient($accent-light, $secondary-light);
+        color: $dark-text;
+
+        .opening {
+            flex: 1;
+            display: flex;
+            flex-flow: column;
+            gap: 1em;
+        }
+
+        .header {
+            display: flex;
+            gap: 1em;
+            border-bottom: 1px solid $primary;
+
+            .name {
+                flex: 1;
+            }
+
+            button {
+                padding: 1em;
+                align-self: flex-start;
+            }
+        }
+
+        .settings {
+            display: flex;
+            justify-content: flex-end;
+            .clear {
+                user-select: none;
+                cursor: pointer;
+                color: $dark-text;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+
+        .achievements {
+            padding: 1em;
+            flex: 1;
+
+            h3 {
+                border-bottom: 1px solid $primary;
+            }
+
+            .ul-wrap {
+                display: flex;
+                flex-direction: column;
+                overflow-y: scroll;
+                height: 160px;
+                ul {
+
+                    min-height: 0;
+                }
+            }
+        }
+
+        .challenge {
+            display: flex;
+            flex-flow: column;
+            padding: 1em;
+            gap: 1em;
+
+            h3 {
+                border-bottom: 1px solid $primary;
+            }
+
+            .controls {
+                display: flex;
+                flex-flow: row;
+                justify-content: center;
+                gap: 1em;
+
+                .labels, .selects {
+                    flex: 1 0 0;
+                    display: flex;
+                    flex-flow: column;
+                    gap: 0.5em;
+                }
+
+                .labels {
+                    align-items: flex-end;
+                }
+
+
+                label, select {
+                    flex: 1 0 0;
+                    padding: 0.5em;
+                }
+            }
+            
+            .buttons {
+                display: flex;
+                gap: 1em;
+                button {
+                    flex: 1 0 0;
+                    padding: 0.5em;
+                }
+            }
+        }
+    }
+
+}

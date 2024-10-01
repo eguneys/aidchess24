@@ -832,22 +832,30 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
 
 
   const onKeyDown = (e: KeyboardEvent) => {
+    let catched = false
     if (e.key === 'ArrowLeft') {
       shalala.set_on_wheel(-1)
+      catched = true
     }
     if (e.key === 'ArrowRight') {
 
       shalala.set_on_wheel(1)
+      catched = true
     }
     if (e.key === 'ArrowUp') {
       if (repertoire_lala().can_navigate_up) {
         repertoire_lala().navigate_up()
       }
+      catched = true
     }
     if (e.key === 'ArrowDown') {
       if (repertoire_lala().can_navigate_down) {
         repertoire_lala().navigate_down()
       }
+      catched = true
+    }
+    if (catched) {
+      e.preventDefault()
     }
   }
 

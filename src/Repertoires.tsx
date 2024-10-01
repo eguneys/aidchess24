@@ -77,9 +77,6 @@ function Repertoires() {
       <div class='repertoires'>
 
         <div class='categories'>
-        <CategoryView name="Openings" list={fixture.openings}/>
-        <CategoryView name="Masters" list={fixture.masters}/>
-        <CategoryView name="Imported" list={fixture.imported[0]()}/>
         <div class='category'>
           <h1>Import New Study </h1>
 
@@ -97,6 +94,10 @@ function Repertoires() {
           <button onClick={() => on_import_new_study()} style={`align-self: flex-end; padding: 1em;`}>Import</button>
           </div>
         </div>
+
+        <CategoryView name="Imported" list={fixture.imported[0]()}/>
+        <CategoryView name="Auto Generated" list={fixture.openings}/>
+        {/*<CategoryView name="Masters" list={fixture.masters}/>*/}
       </div>
       </div>
     </>

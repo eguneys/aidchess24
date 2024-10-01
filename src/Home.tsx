@@ -15,6 +15,8 @@ const Home = () => {
                 <li><h4>French Defense</h4></li>
             </ul>
         </div>
+        {
+            /*
         <div class='feature'>
             <h3>Master Games and Events</h3>
             <ul>
@@ -23,6 +25,8 @@ const Home = () => {
                 <li><h4>Tata Steel 2023</h4></li>
             </ul>
         </div>
+        */
+}
         {/*
         <div class='feature'>
             <h3>Tactics and Endgame</h3>

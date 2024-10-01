@@ -14,6 +14,7 @@ const Tactics = lazy(() => import('./Tactics'))
 const Endgames = lazy(() => import('./Endgames'))
 const Dashboard = lazy(() => import('./Dashboard'))
 const Explorer = lazy(() => import('./Explorer'))
+const Challenges = lazy(() => import('./Challenges'))
 
 
 const Widen = lazy(() => import('./Widen'))
@@ -35,6 +36,7 @@ export const MyApp = () => {
               <Route path='/widen' component={Widen}/>
               <Route path='/beta' component={Beta}/>
               <Route path='/explorer' component={Explorer}/>
+              <Route path='/challenges' component={Challenges}/>
               <Route path='/repertoires' component={Repertoires}/>
               <Route path='/openings/:id' component={Repertoire}/>
               <Route path='/masters/:id' component={Masters}/>
@@ -83,7 +85,7 @@ const AppInRouter = (props: any) => {
 
           <nav id='topnav'>
             <section><A class='home' href='/'>aidchess.com</A></section>
-            <section><A href='/explorer'>Explorer</A></section>
+            <section><A href='/challenges'>Challenges</A></section>
             <section><A href='/widen'>Widen</A></section>
             <section><A href='/repertoires'>Repertoires</A></section>
             <section><A class="site-title-nav__donate" href='/donate'>Donate</A></section>
