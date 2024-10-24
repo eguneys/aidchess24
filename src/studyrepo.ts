@@ -140,7 +140,7 @@ class StudyRepo {
     }
 
 
-    read_section_study(id: string) {
+    async read_section_study(id: string) {
       let { study_name, orientation, import_lichess_link } = RepertoiresFixture.study_by_id(id) || RepertoiresFixture.imported_by_id(id)
 
       if (import_lichess_link) {

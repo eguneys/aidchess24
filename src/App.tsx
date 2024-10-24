@@ -22,6 +22,7 @@ const Widen = lazy(() => import('./Widen'))
 const SixthDraw = lazy(() => import('./SixthDraw'))
 
 const Beta = lazy(() => import('./Beta'))
+const RepeatShow = lazy(() => import('./RepeatShow'))
 
 
 export const MyApp = () => {
@@ -33,6 +34,7 @@ export const MyApp = () => {
               <Route path='/' component={Home}/>
               <Route path='/sixth' component={SixthDraw}/>
 
+              <Route path='/repeat' component={RepeatShow}/>
               <Route path='/widen' component={Widen}/>
               <Route path='/beta' component={Beta}/>
               <Route path='/explorer' component={Explorer}/>
@@ -88,6 +90,7 @@ const AppInRouter = (props: any) => {
             <section><A href='/challenges'>Challenges</A></section>
             <section><A href='/widen'>Widen</A></section>
             <section><A href='/repertoires'>Repertoires</A></section>
+            <section><A href='/repeat'>Repeat</A></section>
             <section><A class="site-title-nav__donate" href='/donate'>Donate</A></section>
           </nav>
           </div>
