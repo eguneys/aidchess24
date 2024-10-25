@@ -16,7 +16,6 @@
     "chessops": "^0.14.0",
     "dexie": "^4.0.9",
     "lila-stockfish-web": "^0.0.3",
-    "solid-dexie": "^0.0.5",
     "solid-js": "^1.8.15",
     "ts-fsrs": "^4.4.2"
   },

@@ -29,9 +29,6 @@ importers:
       lila-stockfish-web:
         specifier: ^0.0.3
         version: 0.0.3
-      solid-dexie:
-        specifier: ^0.0.5
-        version: 0.0.5(dexie@4.0.9)(solid-js@1.8.15)
       solid-js:
         specifier: ^1.8.15
         version: 1.8.15
@@ -637,12 +634,6 @@ packages:
   seroval@1.0.4:
     resolution: {integrity: sha512-qQs/N+KfJu83rmszFQaTxcoJoPn6KNUruX4KmnmyD0oZkUoiNvJ1rpdYKDf4YHM05k+HOgCxa3yvf15QbVijGg==}
     engines: {node: '>=10'}
-
-  solid-dexie@0.0.5:
-    resolution: {integrity: sha512-rRcg3IgJSo1+MhF2/3RKCFu3ibvv01OCPq0tNfjcDp3RhHS8VypkMLzGDZrthTrkr2OSluJrC6BXE3DYLEstyQ==}
-    peerDependencies:
-      dexie: ^3.2.2
-      solid-js: ^1.4.6
 
   solid-js@1.8.15:
     resolution: {integrity: sha512-d0QP/efr3UVcwGgWVPveQQ0IHOH6iU7yUhc2piy8arNG8wxKmvUy1kFxyF8owpmfCWGB87usDKMaVnsNYZm+Vw==}
@@ -1260,11 +1251,6 @@ snapshots:
       seroval: 1.0.4
 
   seroval@1.0.4: {}
-
-  solid-dexie@0.0.5(dexie@4.0.9)(solid-js@1.8.15):
-    dependencies:
-      dexie: 4.0.9
-      solid-js: 1.8.15
 
   solid-js@1.8.15:
     dependencies:
