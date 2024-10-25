@@ -1,0 +1,1 @@
+import{f as o,_ as u,$ as s,a0 as i,n as f,q as b,a1 as l,v as m}from"./index-Dw2aBFZW.js";function p(e){const r=o(()=>u(s(e)));return()=>r()()}function x(e){const[r,n]=i([]);return f(b(e,()=>{y(s(e),r,n)})),r}function y(e,r,n,a={key:"id"}){const t=e.subscribe(c=>n(l(c,a)));return m(()=>"unsubscribe"in t?t.unsubscribe():t()),r}export{p as a,x as c};
