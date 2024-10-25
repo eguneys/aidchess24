@@ -1,6 +1,6 @@
 import './tree.css'
 import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal, untrack } from 'solid-js'
-import { INITIAL_FEN, MoveData, MoveTree, TreeNode, fen_color } from './chess_pgn_logic'
+import { INITIAL_FEN, MoveData, MoveTree, TreeNode, fen_turn } from './chess_pgn_logic'
 import { arr_rnd } from './random'
 
 export const _alekhine = `
@@ -124,7 +124,7 @@ export class Treelala2 {
   get cursor_after_color() {
     let p = this.cursor_path
 
-    return fen_color(this.tree?.get_at(p)?.after_fen ?? INITIAL_FEN)
+    return fen_turn(this.tree?.get_at(p)?.after_fen ?? INITIAL_FEN)
   }
 
   get is_cursor_path_at_a_leaf() {

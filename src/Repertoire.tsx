@@ -676,13 +676,14 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
 
 
 
-  createEffect(on(() => shalala.add_uci, (uci?: string) => {
+  createEffect(on(() => shalala.add_uci, (ucisan?: [string, string]) => {
     if (is_pending_move()) {
       return
     }
-    if (!uci) {
+    if (!ucisan) {
       return
     }
+    let [uci] = ucisan
 
     let success = repertoire_lala().try_next_uci_fail(uci)
 

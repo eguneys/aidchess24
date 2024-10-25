@@ -1,8 +1,14 @@
 import './Beta.scss'
+import { RepeatsDbContext } from './repeat/repeats_context'
+import { useContext } from 'solid-js'
 
 const Beta = () => {
 
+    let db = useContext(RepeatsDbContext)!
+
     const clear_local_storage = () => {
+        
+        db.remove_database()
         window.localStorage.clear()
         window.alert('Done.')
         window.location.href = ''

@@ -1,0 +1,15 @@
+.repeat-dues {
+
+    display: flex;
+
+    justify-content: center;
+
+
+    .board-wrap {
+        border-radius: 10px;
+        overflow: hidden;
+        flex: 1;
+        aspect-ratio: 1;
+        max-width: 80vh;
+    }
+}

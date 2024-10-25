@@ -4,6 +4,7 @@ import { INITIAL_FEN, makeFen, parseFen } from 'chessops/fen'
 import { Chess, Color, Position, parseSquare, parseUci, } from 'chessops'
 import { chessgroundDests } from 'chessops/compat'
 import { Dests, Key } from 'chessground/types'
+import { makeSan } from 'chessops/san'
 
 type Memo<A> = () => A
 
@@ -37,7 +38,7 @@ export class Shala {
       return this._add_uci[0]()
     }
 
-    set add_uci(uci: string | undefined) {
+    set add_uci(uci: [string, string] | undefined) {
       this._add_uci[1](uci)
     }
 
@@ -52,7 +53,7 @@ export class Shala {
 
 
 
-    _add_uci: Signal<string | undefined>
+    _add_uci: Signal<[string, string] | undefined>
     _promotion: Signal<Key | undefined>
     _position: Signal<Position>
     m_fen: Memo<string>
@@ -65,7 +66,7 @@ export class Shala {
 
       this._on_wheel = createSignal<number | undefined>(undefined, { equals: false })
       this._last_move = createSignal<string | undefined>(undefined, { equals: false })
-      this._add_uci = createSignal<string | undefined>(undefined, { equals: false })
+      this._add_uci = createSignal<[string, string] | undefined>(undefined, { equals: false })
       this._promotion = createSignal<Key | undefined>(undefined, { equals: false })
 
       this._position = createSignal(Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap(), { equals: false })
@@ -110,7 +111,10 @@ export class Shala {
         uci += 'q'
       }
 
-      this.position.play(parseUci(uci)!)
+      let move = parseUci(uci)!
+      let san = makeSan(this.position, move)
+
+      this.position.play(move)
 
       batch(() => {
 
@@ -120,7 +124,7 @@ export class Shala {
         if (uci.length === 5) {
           this.promotion = dest
         }
-        this.add_uci = uci
+        this.add_uci = [uci, san]
       })
     }
 

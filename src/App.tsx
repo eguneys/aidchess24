@@ -3,6 +3,7 @@ import { ErrorBoundary, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { PlayerProvider } from "./sound";
+import { RepeatsContextProvider } from "./repeat/repeats_context";
 
 const Home = lazy(() => import('./Home'))
 const Repertoires = lazy(() => import('./Repertoires'))
@@ -22,19 +23,22 @@ const Widen = lazy(() => import('./Widen'))
 const SixthDraw = lazy(() => import('./SixthDraw'))
 
 const Beta = lazy(() => import('./Beta'))
-const RepeatShow = lazy(() => import('./RepeatShow'))
+const RepeatShow = lazy(() => import('./repeat/Show'))
+const RepeatDues = lazy(() => import('./repeat/Dues'))
 
 
 export const MyApp = () => {
     return (<>
     
         <MetaProvider>
+        <RepeatsContextProvider>
         <PlayerProvider>
             <HashRouter root={AppInRouter}>
               <Route path='/' component={Home}/>
               <Route path='/sixth' component={SixthDraw}/>
 
               <Route path='/repeat' component={RepeatShow}/>
+              <Route path='/repeat/:id' component={RepeatDues}/>
               <Route path='/widen' component={Widen}/>
               <Route path='/beta' component={Beta}/>
               <Route path='/explorer' component={Explorer}/>
@@ -53,6 +57,7 @@ export const MyApp = () => {
               <Route path='/dashboard' component={Dashboard}/>
             </HashRouter>
         </PlayerProvider>
+        </RepeatsContextProvider>
         </MetaProvider>
     </>)
 }

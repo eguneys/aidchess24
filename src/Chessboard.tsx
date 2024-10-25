@@ -79,6 +79,8 @@ const Chessboard = (props: { shapes?: DrawShape[], orientation?: Color, movable?
     createEffect(() => {
       if (props.shapes) {
          ground.setAutoShapes(props.shapes)
+      } else {
+        ground.setAutoShapes([])
       }
     })
 

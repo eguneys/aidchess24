@@ -28,7 +28,7 @@ export function fen_uci_to_san(fen: string, uci: string) {
   return makeSan(pos, move)
 }
 
-export const fen_color = (fen: string) => {
+export const fen_turn = (fen: string) => {
     return parseFen(fen).unwrap().turn
 }
 
@@ -157,7 +157,7 @@ export type PgnHeaders = {
 export class TreeNode<V> {
 
     static color_of(_: TreeNode<MoveData>) {
-        return fen_color(_.data.before_fen)
+        return fen_turn(_.data.before_fen)
     }
 
     static make = <V>(data: V) => {
@@ -224,6 +224,10 @@ export class TreeNode<V> {
 
     set children(c: TreeNode<V>[]) {
         this._children[1](c)
+    }
+
+    get all_nodes(): V[] {
+        return [this.data, ...this.children.flatMap(_ => _.all_nodes)]
     }
 
     _children: Signal<TreeNode<V>[]>
@@ -438,6 +442,9 @@ export class MoveTree {
         return [path, res, rest]
     }
 
+    get all_moves() {
+        return this.root.flatMap(_ => _.all_nodes)
+    }
 
     get all_leaves() {
         return this.root.flatMap(_ => _.all_leaves.map(_ => _.data))

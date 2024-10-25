@@ -14,10 +14,11 @@
     "@solidjs/router": "^0.13.0",
     "chessground": "^9.0.4",
     "chessops": "^0.14.0",
-    "idb-keyval": "^6.2.1",
+    "dexie": "^4.0.9",
     "lila-stockfish-web": "^0.0.3",
-    "shess": "link:../shess",
-    "solid-js": "^1.8.15"
+    "solid-dexie": "^0.0.5",
+    "solid-js": "^1.8.15",
+    "ts-fsrs": "^4.4.2"
   },
   "devDependencies": {
     "sass": "^1.71.1",
