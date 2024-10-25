@@ -2,7 +2,7 @@ import { For, Show, Signal, batch, createEffect, createMemo, createSignal, on } 
 import Chessboard from './Chessboard'
 import { Shala } from './Shalala'
 import './Widen.scss'
-import { fen_after_apply_uci, fen_color, fen_uci_to_san } from './chess_pgn_logic'
+import { fen_after_apply_uci, fen_turn, fen_uci_to_san } from './chess_pgn_logic'
 import CandidatesRepository from './candidates'
 
 type MoveState = 'guess' | 'none' | 'filled'
@@ -109,7 +109,7 @@ const Widen = () => {
         }
     }
 
-    const orientation = createMemo(() => fen_color(fen()))
+    const orientation = createMemo(() => fen_turn(fen()))
     const all_candidates = createMemo(() => {
         return cc().map(cc => {
             let ff = cc.fen
@@ -149,10 +149,11 @@ const Widen = () => {
         shalala.on_set_fen_uci(fen, uci)
     }))
 
-    createEffect(on(() => shalala.add_uci, (uci?: string) => {
-        if (!uci) {
+    createEffect(on(() => shalala.add_uci, (ucisan?: [string, string]) => {
+        if (!ucisan) {
             return
         }
+        let [uci] = ucisan
         let cc = candidate_move()
         if (cc.state !== 'guess') {
             return

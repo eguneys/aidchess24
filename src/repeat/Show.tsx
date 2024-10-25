@@ -40,7 +40,7 @@ const WithProvider = () => {
         <div class='repeat-show'>
             <RepeatList repeats={repeats} set_i_selected_repeat={set_i_selected_repeat} i_selected_repeat={i_selected_repeat()} on_open_create_repeat={on_open_create_repeat} />
             <Show when={selected_repeat()} fallback={<div class='show'></div>}>{repeat => 
-                <RepeatShow on_delete={on_delete_repeat} repeat={selected_repeat()} on_open_create_repeat={on_open_create_repeat} />
+                <RepeatShow on_delete={on_delete_repeat} repeat={repeat()} on_open_create_repeat={on_open_create_repeat} />
             }</Show>
             <Show when={create_repeat_dialog()}>
                 <CreateNewRepeat onClose={() => {

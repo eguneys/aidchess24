@@ -139,10 +139,11 @@ const SixthDraw = () => {
 
     const next_path = createMemo(() => paths.find(_ => _.is_empty))
 
-    createEffect(on(() => shalala.add_uci, (uci?: string) => {
-        if (!uci) {
+    createEffect(on(() => shalala.add_uci, (ucisan?: [string, string]) => {
+        if (!ucisan) {
             return
         }
+        let [uci] = ucisan
 
         let pp = next_path()
         if (pp) {

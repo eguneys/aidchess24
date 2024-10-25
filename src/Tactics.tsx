@@ -119,10 +119,11 @@ const Repertoire = () => {
   }))
 
 
-  createEffect(on(() => shalala.add_uci, (uci?: string) => {
-    if (!uci) {
+  createEffect(on(() => shalala.add_uci, (ucisan?: [string, string]) => {
+    if (!ucisan) {
       return
     }
+    let [uci] = ucisan
 
     puzzle_pgn()?.attempt.try_next_uci_fail(uci)
   }))
