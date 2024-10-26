@@ -166,7 +166,12 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
         }
 
         set_auto_shapes(annotationShapes(uci, san, glyph))
-        set_i_idle(setTimeout(on_next_due, 600))
+
+        if (glyph === bad) {
+            set_hide_after_path(undefined)
+        } else {
+            set_i_idle(setTimeout(on_next_due, 600))
+        }
     }))
 
     const on_fen_last_move = ([fen, last_move]: [string, string]) => {
