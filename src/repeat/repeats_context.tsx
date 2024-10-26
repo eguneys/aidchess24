@@ -1,6 +1,6 @@
 import { JSX, createContext } from "solid-js";
 import Dexie, { Entity, EntityTable } from 'dexie'
-import { NewRepeat, NewRepeatWithMoves, RepeatMoveItem } from "./types";
+import { NewRepeat, NewRepeatWithMoves, RepeatMoveItem, UciWithPath } from "./types";
 import StudyRepo from '../studyrepo'
 import { Card, createEmptyCard, FSRS, Rating, State } from 'ts-fsrs'
 
@@ -35,32 +35,40 @@ class RepeatsDB extends Dexie {
 
     async add_repeat(repeat: NewRepeat) {
 
-        let sections = await Promise.all(repeat.sections.map(_ => this.sections.add(_)))
+        let section_ids = await this.sections.bulkAdd(repeat.sections, { allKeys: true})
 
         let repeat_id = await this.repeats.add({
             name: repeat.name,
-            sections
+            sections: section_ids
         })
 
 
         let item_by_fen: Record<string, RepeatMoveItem> = {}
 
-        await Promise.all(repeat.sections.map(async _ => {
+        await Promise.all(repeat.sections.map(async (_, i) => {
+            let sections_id = section_ids[i]
             let ss = await StudyRepo.read_section_study(_.study_id)
             let section = ss.sections.find(s => _.section_name === s.name)!
 
             section.chapters.forEach(_ => _.pgn.tree.all_moves.forEach(m => {
+                let path = m.path
                 let fen = m.before_fen
                 let uci = m.uci
 
                 if (!item_by_fen[fen]) {
+                    let ucis = [{
+                        uci,
+                        path,
+                        sections_id
+                    }]
+
                     item_by_fen[fen] = {
                         repeat_id,
                         fen,
-                        ucis: [uci]
+                        ucis,
                     }
                 } else {
-                    item_by_fen[fen].ucis.push(uci)
+                    item_by_fen[fen].ucis.push({sections_id, uci, path})
                 }
             }))
         }))
@@ -107,7 +115,7 @@ class RepeatsDB extends Dexie {
     }
 
 
-    async get_moves_for_repeat(repeat_id: number): Promise<(RepeatMoveItem & Card)[]> {
+    async get_moves_for_repeat(repeat_id: number): Promise<(RepeatMoveItem & { card: Card })[]> {
 
         let moves = await this.moves.where('repeat_id').equals(repeat_id).toArray()
         let move_ids = moves.map(_ => _.id)
@@ -115,7 +123,7 @@ class RepeatsDB extends Dexie {
 
         return moves.map(move => ({
             ...move,
-            ...cards.find(_ => _.move_id === move.id)!
+            card: cards.find(_ => _.move_id === move.id)!
         }))
     }
 
@@ -129,7 +137,7 @@ class RepeatsDB extends Dexie {
             return
         }
 
-        let correct = move.ucis.includes(uci)
+        let correct = move.ucis.map(_ => _.uci).includes(uci)
 
         let card = await this.move_cards.where('move_id').equals(move.id).first()
 
@@ -185,7 +193,7 @@ class RepeatsMoveItem extends Entity<RepeatsDB> {
     id!: number
     repeat_id!: number
     fen!: string
-    ucis!: string[]
+    ucis!: UciWithPath[]
 }
 
 class RepeatsMoveCard extends Entity<RepeatsDB> {

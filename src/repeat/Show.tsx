@@ -4,7 +4,7 @@ import StudyRepo, { RepertoiresFixture } from '../studyrepo'
 import { A, useNavigate } from '@solidjs/router'
 import { RepeatsDbContext } from './repeats_context'
 import { createDexieArrayQuery } from './solid-dexie'
-import { NewRepeat, NewRepeatWithMoves } from './types'
+import { DueFilterKey, DueFilters, NewRepeat, NewRepeatWithMoves } from './types'
 
 
 export default () => {
@@ -195,37 +195,57 @@ const RepeatList = (props: { repeats: NewRepeat[], set_i_selected_repeat: (_: nu
     </div>)
 }
 
-
 const RepeatShow = (props: { repeat: NewRepeatWithMoves, on_delete: () => void, on_open_create_repeat: () => void }) => {
 
     const repeat = createMemo(() => props.repeat)
 
-    const nb_total = createMemo(() => repeat().moves.length)
-    const nb_due = createMemo(() => repeat().moves.filter(_ => _.due.getTime() <= new Date().getTime()).length)
+    const due_filters = createMemo(() => new DueFilters(repeat()))
 
+    const nb_total = createMemo(() => due_filters().total.length)
+    const nb_due = createMemo(() => due_filters().due.length)
+
+    const nb_due_white = createMemo(() => due_filters().due_white.length)
+    const nb_due_black = createMemo(() => due_filters().due_black.length)
+    const nb_due_10 = createMemo(() => due_filters().due_10.length)
+    const nb_due_10_20 = createMemo(() => due_filters().due_10_20.length)
+    const nb_due_20plus = createMemo(() => due_filters().due_20plus.length)
 
     const navigate = useNavigate()
 
-    const on_play_due = () => {
+    const on_play_due = (filter?: DueFilterKey) => {
         let id = repeat().id
 
-        navigate('/repeat/' + id)
+        navigate('/repeat/' + id + (filter ? `?filter=${filter}` : ''))
     }
 
     return (<>
         <div class='show'>
             <h2>{repeat().name}</h2>
-            <h4>Sections</h4>
+            <div class='content'>
+            <div class='sections-wrap'>
+            <h3>Sections</h3>
             <div class='sections'>
                 <For each={repeat().sections}>{section =>
                     <div class='section'>{section.section_name}</div>
                 }</For>
             </div>
+
+                </div>
             <div class='info'>
                 <small>Total Positions: {nb_total()}</small>
-                <p>Due Positions: {nb_due()}</p>
-                <button onClick={on_play_due}>Play Due Positions</button>
+                <p>Total Due: {nb_due()}</p>
+
+                <div class='buttons'>
+                    <button onClick={() => on_play_due('white')}>Play Due White <span>{nb_due_white()}</span></button>
+                    <button onClick={() => on_play_due('black')}>Play Due Black <span>{nb_due_black()}</span></button>
+                    <button onClick={() => on_play_due('first-ten')}>Play Due First 10 moves<span>{nb_due_10()}</span></button>
+                    <button onClick={() => on_play_due('ten-twenty')}>Play Due 10-20 moves <span>{nb_due_10_20()}</span></button>
+                    <button onClick={() => on_play_due('twenty-plus')}>Play Due 20+ moves <span>{nb_due_20plus()}</span></button>
+
+                    <button onClick={() => on_play_due()}>Play All Due <span>{nb_due()}</span></button>
             </div>
+            </div>
+</div>
             <a class='delete' onClick={props.on_delete}>Delete Repeat</a>
         </div>
     </>)

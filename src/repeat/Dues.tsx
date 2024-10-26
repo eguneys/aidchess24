@@ -1,8 +1,8 @@
-import { useParams } from "@solidjs/router"
+import { useParams, useSearchParams } from "@solidjs/router"
 import { RepeatsDbContext } from "./repeats_context"
 import { batch, createEffect, createMemo, createSignal, on, Show, useContext } from "solid-js"
 import { createDexieSignalQuery } from "./solid-dexie"
-import { NewRepeatWithMoves } from "./types"
+import { DueFilters, NewRepeatWithMoves } from "./types"
 import Chessboard from "../Chessboard"
 import { Shala } from "../Shalala"
 import "./Dues.scss"
@@ -32,11 +32,23 @@ export default () => {
 
 const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
 
+    const [params] = useSearchParams()
+
     const db = useContext(RepeatsDbContext)!
     const repeats = createMemo(() => props.repeats)
 
-    const due_moves = createMemo(() => 
-        repeats().moves.filter(_ => _.due.getTime() <= new Date().getTime()))
+    const due_filter = createMemo(() => new DueFilters(repeats()))
+
+    const due_moves = createMemo(() => {
+        switch (params.filter) {
+            case 'white': return due_filter().due_white
+            case 'black': return due_filter().due_black
+            case 'first-ten': return due_filter().due_10
+            case 'ten-twenty': return due_filter().due_10_20
+            case 'twenty-plus': return due_filter().due_20plus
+            default: return due_filter().due
+        }
+    })
 
     const selected_due_move = createMemo(() => arr_rnd(due_moves()))
 
@@ -76,7 +88,7 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
 
         const repeat_id = repeats().id
         const fen = selected.fen
-        const ucis = selected.ucis
+        const ucis = selected.ucis.map(_ => _.uci)
 
         let good = '✓'
         let bad = '✗'
@@ -114,7 +126,7 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
 
         let repeat_id = repeats().id
         let fen = m.fen
-        let uci = m.ucis[m.ucis.length - 1]
+        let uci = m.ucis[m.ucis.length - 1].uci
 
         shalala.on_play_uci(uci)
 
