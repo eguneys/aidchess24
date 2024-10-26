@@ -44,9 +44,14 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
 
     const shalala = new Shala()
 
-    let i_idle: number | undefined = undefined
+    let [i_idle, set_i_idle] = createSignal<number | undefined>(undefined)
     const orientation = createMemo(() => fen_turn(selected_due_move()?.fen ?? INITIAL_FEN))
-    const is_board_movable = createMemo(() => i_idle === undefined && auto_shapes() === undefined)
+    const is_board_movable = createMemo(() => {
+        let a = i_idle()
+        let b = auto_shapes()
+
+        return a !== undefined && b !== undefined
+    })
 
     createEffect(on(selected_due_move, m => {
         if (!m) {
@@ -86,18 +91,18 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
         set_auto_shapes(annotationShapes(uci, san, glyph))
 
 
-        i_idle = setTimeout(() => {
+        set_i_idle(setTimeout(() => {
             batch(() => {
                 set_auto_shapes(undefined)
                 db.play_due_move(repeat_id, fen, uci)
+                set_i_idle(undefined)
             })
-            i_idle = undefined
-        }, 600)
+        }, 600))
     }))
 
     const on_show_answer = () => {
 
-        if (i_idle !== undefined) {
+        if (i_idle() !== undefined) {
             return
         }
 
@@ -113,13 +118,14 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
 
         shalala.on_play_uci(uci)
 
-        i_idle = setTimeout(() => {
+        set_i_idle(setTimeout(() => {
             batch(() => {
                 set_auto_shapes(undefined)
                 db.play_due_move(repeat_id, fen, '')
+
+                set_i_idle(undefined)
             })
-            i_idle = undefined
-        }, 600)
+        }, 600))
     }
 
     return (<>
