@@ -50,7 +50,7 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
         let a = i_idle()
         let b = auto_shapes()
 
-        return a !== undefined && b !== undefined
+        return a === undefined && b === undefined
     })
 
     createEffect(on(selected_due_move, m => {
