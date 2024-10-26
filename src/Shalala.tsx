@@ -5,6 +5,7 @@ import { Chess, Color, Position, parseSquare, parseUci, } from 'chessops'
 import { chessgroundDests } from 'chessops/compat'
 import { Dests, Key } from 'chessground/types'
 import { makeSan } from 'chessops/san'
+import { fen_after_apply_uci } from './chess_pgn_logic'
 
 type Memo<A> = () => A
 
@@ -87,6 +88,12 @@ export class Shala {
 
     get on_wheel() {
       return this._on_wheel[0]()
+    }
+
+    on_play_uci = (uci: string) => {
+      let fen = fen_after_apply_uci(this.fen, uci)
+
+      this.on_set_fen_uci(fen, uci)
     }
 
     on_set_fen_uci = (fen: string, last_move?: string) => {

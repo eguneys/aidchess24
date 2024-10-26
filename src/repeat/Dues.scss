@@ -1,3 +1,5 @@
+@import '../_variables';
+
 .repeat-dues {
 
     display: flex;
@@ -6,10 +8,25 @@
 
 
     .board-wrap {
-        border-radius: 10px;
-        overflow: hidden;
         flex: 1;
         aspect-ratio: 1;
         max-width: 80vh;
+
+        cg-board {
+          border-radius: 10px;
+        }
+    }
+
+    .info {
+
+      button {
+        user-select: none;
+        cursor: pointer;
+        padding: 0.4em;
+        font-size: 1.1em;
+        border: none;
+        background: $text;
+        color: $text-dark;
+      }
     }
 }

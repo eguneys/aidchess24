@@ -44,8 +44,9 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
 
     const shalala = new Shala()
 
+    let i_idle: number | undefined = undefined
     const orientation = createMemo(() => fen_turn(selected_due_move()?.fen ?? INITIAL_FEN))
-    const is_board_movable = createMemo(() => auto_shapes() === undefined)
+    const is_board_movable = createMemo(() => i_idle === undefined && auto_shapes() === undefined)
 
     createEffect(on(selected_due_move, m => {
         if (!m) {
@@ -53,6 +54,7 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
         }
         shalala.on_set_fen_uci(m.fen)
     }))
+
 
     createEffect(on(() => shalala.add_uci, (ucisan) => {
         if (!ucisan) {
@@ -84,13 +86,41 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
         set_auto_shapes(annotationShapes(uci, san, glyph))
 
 
-        setTimeout(() => {
+        i_idle = setTimeout(() => {
             batch(() => {
                 set_auto_shapes(undefined)
                 db.play_due_move(repeat_id, fen, uci)
             })
+            i_idle = undefined
         }, 600)
     }))
+
+    const on_show_answer = () => {
+
+        if (i_idle !== undefined) {
+            return
+        }
+
+        let m = selected_due_move()
+
+        if (!m) {
+            return
+        }
+
+        let repeat_id = repeats().id
+        let fen = m.fen
+        let uci = m.ucis[m.ucis.length - 1]
+
+        shalala.on_play_uci(uci)
+
+        i_idle = setTimeout(() => {
+            batch(() => {
+                set_auto_shapes(undefined)
+                db.play_due_move(repeat_id, fen, '')
+            })
+            i_idle = undefined
+        }, 600)
+    }
 
     return (<>
         <div class='repeat-dues'>
@@ -108,6 +138,7 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
             </div>
             <div class='info'>
             <h3>{due_moves().length} Due Moves</h3>
+            <button onClick={on_show_answer}>Show Answer</button>
             </div>
         </div>
     </>)
