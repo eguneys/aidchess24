@@ -124,19 +124,16 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
 
     let [i_idle, set_i_idle] = createSignal<number | undefined>(undefined)
     const orientation = createMemo(() => fen_turn(due_move()?.fen ?? INITIAL_FEN))
-    const is_board_movable = createMemo(() => {
-        let a = i_idle()
-        let b = auto_shapes()
-
-        return a === undefined && b === undefined
-    })
 
     createEffect(on(due_move, () =>{
-        set_fsrs_rating(undefined)
-        set_hide_after_path([])
+        batch(() => {
+            set_fsrs_rating(undefined)
+            set_hide_after_path([])
+            set_cursor_path(due_move().ucis[0].path.slice(0, -1))
+        })
     }))
 
-    const cursor_path = createMemo(() => due_move().ucis[0].path.slice(0, -1))
+    const [cursor_path, set_cursor_path] = createSignal(due_move().ucis[0].path.slice(0, -1), { equals: false })
 
     const [hide_after_path, set_hide_after_path] = createSignal<string[] | undefined>([])
 
@@ -177,6 +174,9 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     }
 
     const on_hint_previous = () => {
+        if (fsrs_rating() === 'again') {
+            return false
+        }
         set_fsrs_rating('hard')
         set_hide_after_path(due_move().ucis[0].path)
     }
@@ -184,6 +184,7 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     const on_show_answer = () => {
         set_fsrs_rating('again')
         set_hide_after_path(undefined)
+        set_cursor_path(due_move().ucis[0].path)
     }
 
 
@@ -205,6 +206,33 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
             set_i_idle(undefined)
         })
     }
+
+    const on_next_due_visible = createMemo(() => {
+
+        const rating = fsrs_rating()
+        if (!rating || rating === 'hard') {
+            return false
+        }
+        return true
+    })
+
+    const on_show_hint_visible = createMemo(() => {
+        return fsrs_rating() === undefined
+    })
+
+    const on_show_answer_visible = createMemo(() => {
+        return fsrs_rating() !== 'again'
+    })
+
+    const is_board_movable = createMemo(() => {
+        let a = i_idle()
+        let b = fsrs_rating()
+
+
+        return a === undefined && b !== 'again'
+    })
+
+
 
     return (<>
         <div class='board-wrap'>
@@ -228,9 +256,15 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
             <ChessTreeWithTools hide_after_path={hide_after_path()} on_wheel={props.on_wheel} pgn={chapter().pgn} on_fen_last_move={on_fen_last_move} cursor_path={cursor_path()}>
                 <>
                     <div class='info'>
+                        <Show when={on_show_hint_visible()}>
                         <button onClick={on_hint_previous}>Hint: Show Previous Moves</button>
+                        </Show>
+                        <Show when={on_show_answer_visible()}>
                         <button onClick={on_show_answer}>Show Answer</button>
+                        </Show>
+                        <Show when={on_next_due_visible()}>
                         <button onClick={on_next_due}>Next Due</button>
+                        </Show>
                     </div>
                 </>
             </ChessTreeWithTools>
