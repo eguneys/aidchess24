@@ -15,6 +15,7 @@ import { stepwiseScroll } from './common/scroll'
 import { usePlayer } from './sound'
 import SessionStore from './SessionStore'
 import { annotationShapes } from './annotationShapes'
+import { ply_to_index } from './components/ChessTreeWithTools'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
@@ -24,11 +25,6 @@ const total_score_to_color = (n: number) => {
 }
 
 type PlayMode = 'quiz' | 'practice' | 'moves' | 'match' | 'quiz-quiz' | 'quiz-deathmatch'
-
-const ply_to_index = (ply: number) => {
-  let res = Math.floor(ply / 2) + 1
-  return `${res}.` + (ply %2 === 0 ? '..' : '')
-}
 
 
 class RepertoirePlayer {

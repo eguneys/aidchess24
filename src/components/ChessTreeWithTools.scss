@@ -1,0 +1,70 @@
+@import '../_variables';
+
+.replay {
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
+
+    .replay-v {
+        position: relative;
+        overflow-y: scroll;
+
+        background: hsla(40, 57%, 86%);
+        flex: 1;
+        border-bottom: 1px solid $dark-text;
+    }
+
+    .branch-sums {
+        font-family: 'Noto Chess';
+        display: flex;
+        gap: 0.5em;
+        padding-left: 0.5em;
+        border-bottom: 1px solid #0c0c0c;
+
+
+        div {
+            text-transform: none;
+        }
+    }
+
+    .replay-jump {
+        display: flex;
+        flex-flow: row;
+        align-items: stretch;
+        font-size: 1.2rem;
+
+        .fbt {
+            flex: 1 1 30%;
+            border-radius: 0 0 3px 3px;
+
+            &:last-child,
+            &:first-child {
+                font-size: .7em;
+                flex: 1 1 20%;
+            }
+        }
+    }
+
+
+}
+.replay {
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
+}
+
+.repertoire .replay-wrap .replay .replay-v {
+    position: relative;
+    overflow-y: scroll;
+}
+
+.replay .replay-v {
+    background: hsla(40, 57%, 86%);
+    flex: 1;
+    border-bottom: 1px solid black;
+}
+
+.replay-wrap .tools {
+    background: hsla(40, 57%, 86%);
+}
+

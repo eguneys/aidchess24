@@ -24,7 +24,7 @@ const SixthDraw = lazy(() => import('./SixthDraw'))
 
 const Beta = lazy(() => import('./Beta'))
 const RepeatShow = lazy(() => import('./repeat/Show'))
-const RepeatDues = lazy(() => import('./repeat/Dues'))
+const RepeatDues = lazy(() => import('./repeat/PlayDues'))
 
 
 export const MyApp = () => {

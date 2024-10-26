@@ -1,6 +1,6 @@
 import { JSX, createContext } from "solid-js";
 import Dexie, { Entity, EntityTable } from 'dexie'
-import { NewRepeat, NewRepeatWithMoves, RepeatMoveItem, UciWithPath } from "./types";
+import { FSRSRating, NewRepeat, NewRepeatWithMoves, RepeatMoveItem as TRepeatMoveItem } from "./types";
 import StudyRepo from '../studyrepo'
 import { Card, createEmptyCard, FSRS, Rating, State } from 'ts-fsrs'
 
@@ -43,7 +43,7 @@ class RepeatsDB extends Dexie {
         })
 
 
-        let item_by_fen: Record<string, RepeatMoveItem> = {}
+        let item_by_fen: Record<string, RepeatsMoveItemProps> = {}
 
         await Promise.all(repeat.sections.map(async (_, i) => {
             let sections_id = section_ids[i]
@@ -54,12 +54,14 @@ class RepeatsDB extends Dexie {
                 let path = m.path
                 let fen = m.before_fen
                 let uci = m.uci
+                const chapter_name = _.name
 
                 if (!item_by_fen[fen]) {
                     let ucis = [{
                         uci,
                         path,
-                        sections_id
+                        sections_id,
+                        chapter_name
                     }]
 
                     item_by_fen[fen] = {
@@ -68,7 +70,7 @@ class RepeatsDB extends Dexie {
                         ucis,
                     }
                 } else {
-                    item_by_fen[fen].ucis.push({sections_id, uci, path})
+                    item_by_fen[fen].ucis.push({sections_id, uci, path, chapter_name})
                 }
             }))
         }))
@@ -115,20 +117,33 @@ class RepeatsDB extends Dexie {
     }
 
 
-    async get_moves_for_repeat(repeat_id: number): Promise<(RepeatMoveItem & { card: Card })[]> {
+    async get_moves_for_repeat(repeat_id: number): Promise<(TRepeatMoveItem & { card: Card })[]> {
 
         let moves = await this.moves.where('repeat_id').equals(repeat_id).toArray()
         let move_ids = moves.map(_ => _.id)
         let cards = await this.move_cards.where('move_id').anyOf(move_ids).toArray()
 
-        return moves.map(move => ({
-            ...move,
+        return await Promise.all(moves.map(async move => ({
+            repeat_id: move.repeat_id,
+            fen: move.fen,
+            ucis: await Promise.all(move.ucis.map(async ucis => {
+
+                let { uci, path, sections_id, chapter_name } = ucis
+
+                let section = (await this.sections.where('id').equals(sections_id).first())!
+
+                return {
+                    uci,
+                    path,
+                    section: { chapter_name, ...section}
+                }
+            })),
             card: cards.find(_ => _.move_id === move.id)!
-        }))
+        })))
     }
 
 
-    async play_due_move(repeat_id: number, fen: string, uci: string) {
+    async play_due_move(repeat_id: number, fen: string, rating: FSRSRating) {
         let repeat_moves = await this.moves.where('repeat_id').equals(repeat_id).toArray()
 
         let move = repeat_moves.find(_ => _.fen === fen)
@@ -136,8 +151,6 @@ class RepeatsDB extends Dexie {
         if (!move) {
             return
         }
-
-        let correct = move.ucis.map(_ => _.uci).includes(uci)
 
         let card = await this.move_cards.where('move_id').equals(move.id).first()
 
@@ -147,10 +160,18 @@ class RepeatsDB extends Dexie {
 
         const f = new FSRS({})
 
+        let r = Rating.Easy
+        switch (rating) {
+            case 'again': r = Rating.Again
+            break
+            case 'easy': r = Rating.Easy
+            break
+            case 'hard': r = Rating.Hard
+            break
+        }
 
-        let new_card = f.repeat(card.get_card(), new Date())[correct ? Rating.Good : Rating.Again].card
+        let new_card = f.repeat(card.get_card(), new Date())[r].card
 
-        console.log(card, new_card)
         this.move_cards.update(card.id, new_card)
     }
 }
@@ -187,6 +208,19 @@ class RepeatsSection extends Entity<RepeatsDB> {
     id!: number
     study_id!: string
     section_name!: string
+}
+
+type RepeatsMoveItemProps = {
+    repeat_id: number,
+    fen: string,
+    ucis: UciWithPath[]
+}
+
+type UciWithPath = {
+    sections_id: number,
+    chapter_name: string,
+    uci: string,
+    path: string[]
 }
 
 class RepeatsMoveItem extends Entity<RepeatsDB> {

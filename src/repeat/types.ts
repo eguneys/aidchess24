@@ -1,6 +1,8 @@
 import { Card } from "ts-fsrs"
 import { fen_turn } from "../chess_pgn_logic"
 
+export type FSRSRating = 'easy' | 'again' | 'hard'
+
 export type NewRepeat = {
     id: number,
     name: string,
@@ -8,9 +10,9 @@ export type NewRepeat = {
 }
 
 export type UciWithPath = {
-    sections_id: number,
     uci: string,
-    path: string[]
+    path: string[],
+    section: { study_id: string, section_name: string, chapter_name: string }
 }
 
 export type RepeatMoveItem = {

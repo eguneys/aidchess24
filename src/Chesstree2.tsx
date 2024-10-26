@@ -188,7 +188,7 @@ export class Treelala2 {
     this._tree[1](tree)
   }
 
-  get fen_last_move() {
+  get fen_last_move(): [string, string] | undefined {
     let t = this.tree
     if (t) {
       let i = t.get_at(this.cursor_path)
@@ -534,8 +534,11 @@ export class Treelala2 {
 
       while (i.length > 0) {
         const cc = t._traverse_path(i.slice(0, -1))?.children ?? t.root
-        if (cc && cc.length > 1) {
 
+        if (cc && cc.length > 1) {
+          if (this.hidden_paths?.some(h => cc[0].data.path.join('').startsWith(h.join('')))) {
+            break
+          }
           let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) - 1
 
           return ic >= 0
@@ -561,7 +564,9 @@ export class Treelala2 {
       while (i.length > 0) {
         const cc = t._traverse_path(i.slice(0, -1))?.children ?? t.root
         if (cc && cc.length > 1) {
-
+          if (this.hidden_paths?.some(h => cc[0].data.path.join('').startsWith(h.join('')))) {
+            break
+          }
           let ic = cc?.findIndex(_ => _.data.path.join('') === i.join('')) + 1
 
           return ic < cc.length

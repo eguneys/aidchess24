@@ -2,31 +2,98 @@
 
 .repeat-dues {
 
+
+  display: grid;
+
+  grid-template-areas: 'header board replay';
+  grid-template-columns: 1fr 80vh 2fr;
+  grid-template-rows: 80vh;
+  justify-items: center;
+
+
+  .header {
+    grid-area: header;
+  }
+
+  .board-wrap {
+    grid-area: board;
+  }
+
+  .replay-wrap {
+    grid-area: replay;
+  }
+
+
+  .board-wrap {
+    aspect-ratio: 1;
+  }
+
+  .replay-wrap {
     display: flex;
 
-    justify-content: center;
+    flex-flow: column;
 
 
-    .board-wrap {
+
+    .replay-header {
+      border-radius: 8px 8px 0px 0;
+      background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
+      padding: 0.1em 1em;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+
+      .title {
         flex: 1;
-        aspect-ratio: 1;
-        max-width: 80vh;
+        min-width: 0;
+        color: $secondary;
+      }
 
-        cg-board {
-          border-radius: 10px;
-        }
+      h4 {
+        font-family: Kantumruy;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+
+      h5 {
+        padding-left: 1em;
+        color: #994d1c;
+      }
+
+      .progress {
+        flex: 0;
+        margin: 0 0.2em;
+      }
+
+      .lichess a {
+        flex: 0;
+        color: #2e4567;
+      }
+    }
+
+    .replay {
+      flex: 2 1 300px;
     }
 
     .info {
+      display: flex;
+      flex-flow: column;
+      gap: 0.5em;
+      margin: 0 1em;
 
       button {
+        padding: 0.5em;
+        border: none;
+        border-radius: 3px;
+        background: $secondary;
         user-select: none;
         cursor: pointer;
-        padding: 0.4em;
-        font-size: 1.1em;
-        border: none;
-        background: $text;
-        color: $text-dark;
+
+        &:hover {
+          background: $secondary-light;
+        }
       }
     }
+  }
 }
