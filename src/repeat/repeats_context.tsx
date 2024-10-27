@@ -54,10 +54,12 @@ class RepeatsDB extends Dexie {
                 let path = m.path
                 let fen = m.before_fen
                 let uci = m.uci
+                let san = m.san
                 const chapter_name = _.name
 
                 if (!item_by_fen[fen]) {
                     let ucis = [{
+                        san,
                         uci,
                         path,
                         sections_id,
@@ -70,7 +72,7 @@ class RepeatsDB extends Dexie {
                         ucis,
                     }
                 } else {
-                    item_by_fen[fen].ucis.push({sections_id, uci, path, chapter_name})
+                    item_by_fen[fen].ucis.push({sections_id, uci, san, path, chapter_name})
                 }
             }))
         }))
@@ -128,11 +130,12 @@ class RepeatsDB extends Dexie {
             fen: move.fen,
             ucis: await Promise.all(move.ucis.map(async ucis => {
 
-                let { uci, path, sections_id, chapter_name } = ucis
+                let { san, uci, path, sections_id, chapter_name } = ucis
 
                 let section = (await this.sections.where('id').equals(sections_id).first())!
 
                 return {
+                    san,
                     uci,
                     path,
                     section: { chapter_name, ...section}
@@ -220,6 +223,7 @@ type UciWithPath = {
     sections_id: number,
     chapter_name: string,
     uci: string,
+    san: string,
     path: string[]
 }
 

@@ -116,6 +116,8 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     let [i_idle, set_i_idle] = createSignal<number | undefined>(undefined)
     const orientation = createMemo(() => fen_turn(due_move()?.fen ?? INITIAL_FEN))
 
+    shalala.on_set_fen_uci(due_move().fen)
+
     createEffect(on(due_move, () =>{
         batch(() => {
             set_fsrs_rating(undefined)
@@ -137,14 +139,14 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
 
         let [uci, san] = ucisan
 
-        const ucis = move.ucis.map(_ => _.uci)
+        const sans = move.ucis.map(_ => _.san)
 
         let good = '✓'
         let bad = '✗'
 
         const rating = fsrs_rating()
         let glyph = good
-        if (ucis.includes(uci)) {
+        if (sans.includes(san)) {
             glyph = good
             if (!rating) {
                 set_fsrs_rating('easy')

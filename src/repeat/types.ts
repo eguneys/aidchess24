@@ -10,6 +10,7 @@ export type NewRepeat = {
 }
 
 export type UciWithPath = {
+    san: string,
     uci: string,
     path: string[],
     section: { study_id: string, section_name: string, chapter_name: string }
