@@ -116,7 +116,9 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     let [i_idle, set_i_idle] = createSignal<number | undefined>(undefined)
     const orientation = createMemo(() => fen_turn(due_move()?.fen ?? INITIAL_FEN))
 
-    shalala.on_set_fen_uci(due_move().fen)
+    createEffect(() => {
+        shalala.on_set_fen_uci(due_move().fen)
+    })
 
     createEffect(on(due_move, () =>{
         batch(() => {
@@ -168,6 +170,7 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     }))
 
     const on_fen_last_move = ([fen, last_move]: [string, string]) => {
+        console.log('on fen last move', fen, last_move)
         shalala.on_set_fen_uci(fen, last_move)
     }
 
@@ -180,9 +183,11 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     }
 
     const on_show_answer = () => {
-        set_fsrs_rating('again')
-        set_hide_after_path(undefined)
-        set_cursor_path(due_move().ucis[0].path)
+        batch(() => {
+            set_fsrs_rating('again')
+            set_hide_after_path(undefined)
+            set_cursor_path(due_move().ucis[0].path)
+        })
     }
 
 
