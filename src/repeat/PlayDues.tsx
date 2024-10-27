@@ -117,7 +117,7 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     const orientation = createMemo(() => fen_turn(due_move()?.fen ?? INITIAL_FEN))
 
     createEffect(() => {
-        shalala.on_set_fen_uci(due_move().fen)
+        //shalala.on_set_fen_uci(due_move().fen)
     })
 
     createEffect(on(due_move, () =>{
@@ -170,7 +170,6 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     }))
 
     const on_fen_last_move = ([fen, last_move]: [string, string]) => {
-        console.log('on fen last move', fen, last_move)
         shalala.on_set_fen_uci(fen, last_move)
     }
 

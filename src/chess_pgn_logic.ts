@@ -403,7 +403,6 @@ export class MoveTree {
     }
 
     _traverse_path(path: string[]) {
-        
         let res = undefined
         let i = this.root
         for (let p of path) {
