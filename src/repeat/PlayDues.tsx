@@ -117,7 +117,7 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
     const orientation = createMemo(() => fen_turn(due_move()?.fen ?? INITIAL_FEN))
 
     createEffect(() => {
-        //shalala.on_set_fen_uci(due_move().fen)
+        shalala.on_set_fen_uci(due_move().fen)
     })
 
     createEffect(on(due_move, () =>{
