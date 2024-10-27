@@ -64,18 +64,9 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
 
     const selected_due_move = createMemo(() => arr_rnd(due_moves()))
 
-    const [on_wheel, set_on_wheel] = createSignal<number | undefined>(undefined, { equals: false })
-
-    let $el: HTMLElement
-
-    onMount(() => {
-        $el.addEventListener('wheel', e => {
-            set_on_wheel(Math.sign(e.deltaY))
-        }, { passive: true})
-    })
 
     return (<>
-        <div ref={_ => $el = _} class='repeat-dues'>
+        <div class='repeat-dues'>
             <Show when={selected_due_move()} fallback={
                 <p>Completed All Due Moves.</p>
             }>{due_move =>
@@ -85,7 +76,7 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
                         <p>{filter_name()}</p>
                         <p>{due_moves().length} Due Moves</p>
                     </div>
-                    <StudyLoader on_wheel={on_wheel()} repeats={repeats()} due_move={due_move()}/>
+                    <StudyLoader repeats={repeats()} due_move={due_move()}/>
                 </>
                 }</Show>
         </div>
@@ -160,7 +151,7 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
             }
         } else {
             glyph = bad
-            if (!rating) {
+            if (!rating || rating === 'hard') {
                 set_fsrs_rating('again')
             }
         }
@@ -201,10 +192,6 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
         const fen = due_move().fen
         const rating = fsrs_rating()
 
-        if (!rating || rating==='hard') {
-            return
-        }
-
         batch(() => {
             set_auto_shapes(undefined)
             db.play_due_move(repeat_id, fen, rating ?? 'again')
@@ -237,10 +224,19 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
         return a === undefined && b !== 'again'
     })
 
+    const [on_wheel, set_on_wheel] = createSignal<number | undefined>(undefined, { equals: false })
+
+    let $el: HTMLElement
+    onMount(() => {
+        $el.addEventListener('wheel', e => {
+            set_on_wheel(Math.sign(e.deltaY))
+        }, { passive: true})
+    })
+
 
 
     return (<>
-        <div class='board-wrap'>
+        <div ref={_ => $el = _} class='board-wrap'>
             <Chessboard
                 shapes={auto_shapes()}
                 orientation={orientation()}
@@ -258,17 +254,24 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
                     <h4>{chapter().name}</h4>
                 </div>
             </div>
-            <ChessTreeWithTools hide_after_path={hide_after_path()} on_wheel={props.on_wheel} pgn={chapter().pgn} on_fen_last_move={on_fen_last_move} cursor_path={cursor_path()}>
+            <ChessTreeWithTools hide_after_path={hide_after_path()} on_wheel={on_wheel()} pgn={chapter().pgn} on_fen_last_move={on_fen_last_move} cursor_path={cursor_path()}>
                 <>
                     <div class='info'>
-                        <Show when={on_show_hint_visible()}>
-                        <button onClick={on_hint_previous}>Hint: Show Previous Moves</button>
-                        </Show>
-                        <Show when={on_show_answer_visible()}>
-                        <button onClick={on_show_answer}>Show Answer</button>
-                        </Show>
-                        <Show when={on_next_due_visible()}>
-                        <button onClick={on_next_due}>Next Due</button>
+                        <Show when={i_idle()} fallback={
+
+                            <>
+                                <Show when={on_show_hint_visible()}>
+                                    <button onClick={on_hint_previous}>Hint: Show Previous Moves</button>
+                                </Show>
+                                <Show when={on_show_answer_visible()}>
+                                    <button onClick={on_show_answer}>Show Answer</button>
+                                </Show>
+                                <Show when={on_next_due_visible()}>
+                                    <button onClick={on_next_due}>Next Due</button>
+                                </Show>
+                            </>
+                        }>
+                            <></>
                         </Show>
                     </div>
                 </>

@@ -460,7 +460,10 @@ export class Treelala2 {
   }
 
   get can_navigate_prev() {
-    return this.cursor_path.length > 0
+
+    if (this.cursor_path.length > 0) {
+      return !this.hidden_paths?.some(h => this.cursor_path.join('').startsWith(h.join('')))
+    }
   }
 
   navigate_first(): void {
