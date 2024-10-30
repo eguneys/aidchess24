@@ -1,10 +1,10 @@
-import { JSX, children, createSignal, Show, createMemo, For, createResource, useContext } from 'solid-js'
+import { JSX, children, createSignal, Show, createMemo, For, createResource, useContext, createEffect } from 'solid-js'
 import './Show.scss'
 import StudyRepo, { RepertoiresFixture } from '../studyrepo'
 import { A, useNavigate } from '@solidjs/router'
 import { RepeatsDbContext } from './repeats_context'
 import { createDexieArrayQuery } from './solid-dexie'
-import { DueFilterKey, DueFilters, NewRepeat, NewRepeatWithMoves } from './types'
+import { DueFilterKey, DueFilters, LightRepeat, NewRepeatWithMoves } from './types'
 
 
 export default () => {
@@ -23,9 +23,11 @@ const WithProvider = () => {
     }
 
     const db = useContext(RepeatsDbContext)!
-    const repeats = createDexieArrayQuery(() => db.get_repeats())
+    const repeats = createDexieArrayQuery(() => db.get_light_repeats())
     const [i_selected_repeat, set_i_selected_repeat] = createSignal(0)
+
     const selected_repeat = createMemo(() => repeats[i_selected_repeat()])
+    const [selected_repeat_with_moves] = createResource(() => selected_repeat(), repeat => db.get_repeat_with_moves_by_light(repeat))
 
     const on_delete_repeat = () => {
         const s = selected_repeat()
@@ -39,7 +41,7 @@ const WithProvider = () => {
     return (<>
         <div class='repeat-show'>
             <RepeatList repeats={repeats} set_i_selected_repeat={set_i_selected_repeat} i_selected_repeat={i_selected_repeat()} on_open_create_repeat={on_open_create_repeat} />
-            <Show when={selected_repeat()} fallback={<div class='show'></div>}>{repeat => 
+            <Show when={selected_repeat_with_moves()} fallback={<div class='show'></div>}>{repeat => 
                 <RepeatShow on_delete={on_delete_repeat} repeat={repeat()} on_open_create_repeat={on_open_create_repeat} />
             }</Show>
             <Show when={create_repeat_dialog()}>
@@ -87,8 +89,16 @@ const CreateNewRepeat = (props: { onClose: () => void }) => {
     const on_checked = (section_name: string, is_checked: boolean) => {
         if (is_checked) {
             model.add_section(selected_study_id(), section_name)
+
+            if ($el_name.value === '') {
+                $el_name.value = section_name
+            }
+
         } else {
             model.remove_section(selected_study_id(), section_name)
+            if ($el_name.value === section_name) {
+                $el_name.value = ''
+            }
         }
     }
 
@@ -128,7 +138,7 @@ const CreateNewRepeat = (props: { onClose: () => void }) => {
         <Dialog onClose={props.onClose}>
             <div class='new-repeat'>
                 <h3>Create a New Repeat</h3>
-                <input ref={_ => $el_name = _} type='text' placeholder="Repeat Name" value="My Repeat"/>
+                <input ref={_ => $el_name = _} type='text' placeholder="Repeat Name"/>
                 <div class='study-list'>
                     <h3>Studies</h3>
                     <div class='list'>
@@ -179,7 +189,7 @@ const Dialog = (props: { onClose: () => void, children: JSX.Element }) => {
 }
 
 
-const RepeatList = (props: { repeats: NewRepeat[], set_i_selected_repeat: (_: number) => void, i_selected_repeat: number, on_open_create_repeat: () => void }) => {
+const RepeatList = (props: { repeats: LightRepeat[], set_i_selected_repeat: (_: number) => void, i_selected_repeat: number, on_open_create_repeat: () => void }) => {
 
 
     const repeats = createMemo(() => props.repeats)

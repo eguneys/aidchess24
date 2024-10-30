@@ -1,6 +1,6 @@
 import { JSX, createContext } from "solid-js";
 import Dexie, { Entity, EntityTable } from 'dexie'
-import { FSRSRating, NewRepeat, NewRepeatWithMoves, RepeatMoveItem as TRepeatMoveItem } from "./types";
+import { FSRSRating, LightRepeat, NewRepeat, NewRepeatWithMoves, RepeatMoveItem as TRepeatMoveItem } from "./types";
 import StudyRepo from '../studyrepo'
 import { Card, createEmptyCard, FSRS, Rating, State } from 'ts-fsrs'
 
@@ -103,10 +103,23 @@ class RepeatsDB extends Dexie {
         return await this.get_repeat_with_moves(repeat)
     }
 
+    async get_light_repeats(): Promise<LightRepeat[]> {
+        let res = await this.repeats.toArray()
+
+        return res.map(_ => ({
+            id: _.id,
+            name: _.name
+        }))
+    }
+
     async get_repeats(): Promise<NewRepeatWithMoves[]> {
         return await Promise.all((await this.repeats.toArray()).map(async repeat => 
             this.get_repeat_with_moves(repeat)
         ))
+    }
+
+    async get_repeat_with_moves_by_light(repeat: LightRepeat) {
+        return await this.repeat_by_id(repeat.id)
     }
 
     async get_repeat_with_moves(repeat: RepeatsRepeat) {

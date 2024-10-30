@@ -16,6 +16,11 @@ export type UciWithPath = {
     section: { study_id: string, section_name: string, chapter_name: string }
 }
 
+export type LightRepeat = {
+    id: number,
+    name: string
+}
+
 export type RepeatMoveItem = {
     repeat_id: number,
     fen: string,
