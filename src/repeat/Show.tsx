@@ -1,4 +1,4 @@
-import { JSX, children, createSignal, Show, createMemo, For, createResource, useContext, createEffect } from 'solid-js'
+import { JSX, children, createSignal, Show, createMemo, For, createResource, useContext } from 'solid-js'
 import './Show.scss'
 import StudyRepo, { RepertoiresFixture } from '../studyrepo'
 import { A, useNavigate } from '@solidjs/router'
