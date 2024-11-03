@@ -8,13 +8,6 @@ import { DueFilterKey, DueFilters, LightRepeat, NewRepeatWithMoves } from './typ
 
 
 export default () => {
-    return (<>
-        <WithProvider />
-    </>)
-}
-
-
-const WithProvider = () => {
 
     const [create_repeat_dialog, set_create_repeat_dialog] = createSignal(false)
 
