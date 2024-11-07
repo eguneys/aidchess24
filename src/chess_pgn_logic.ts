@@ -469,6 +469,10 @@ export class MoveTree {
         }
     }
 
+    siblings_of(path: string[]) {
+        let i = this._traverse_path(path.slice(0, -1))
+        return i?.children
+    }
 
     collect_branch_sums(path: string[]) {
         let res = []

@@ -1,5 +1,5 @@
 import './tree.css'
-import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal, untrack } from 'solid-js'
+import { For, Match, Show, Signal, Switch, batch, createEffect, createMemo, createSignal, on, untrack } from 'solid-js'
 import { INITIAL_FEN, MoveData, MoveTree, TreeNode, fen_turn } from './chess_pgn_logic'
 import { arr_rnd } from './random'
 
@@ -265,6 +265,24 @@ export class Treelala2 {
     this._revealed_paths = createSignal<string[][]>([], { equals: false })
     this._failed_paths = createSignal<string[][]>([], { equals: false })
     this._solved_paths = new TwoPaths2()
+
+
+    createEffect(on(() => this.cursor_path, (path: string[]) => {
+      const tree = this.tree
+      if (!tree) {
+        return
+      }
+
+      tree.collect_branch_sums(path)?.map(branch => {
+        if (!this.wheel_sticky_paths.includes(branch.path.join(''))) {
+          tree.siblings_of(branch.path)?.forEach(sibling => {
+            this.wheel_sticky_paths = this.wheel_sticky_paths.filter(_ => _!== sibling.data.path.join(''))
+          })
+
+          this.wheel_sticky_paths.push(branch.path.join(''))
+        }
+      })
+    }))
   }
 
   get is_revealed() {
@@ -380,32 +398,35 @@ export class Treelala2 {
   }
 
 
+  wheel_sticky_paths: string[] = []
 
-    on_wheel = (dir: number) => {
-        let path = this.cursor_path
-        if (dir < 0) {
-          if (path.length > 0) {
-            this.try_set_cursor_path(path.slice(0, -1))
-          }
+  on_wheel = (dir: number) => {
+    let path = this.cursor_path
+    if (dir < 0) {
+      if (path.length > 0) {
+        this.try_set_cursor_path(path.slice(0, -1))
+      }
+    } else {
+      let t = this.tree
+      if (t) {
+
+        let i
+        if (path.length === 0) {
+          i = t.root
         } else {
-          let t = this.tree
-          if (t) {
-
-            let i
-            if (path.length === 0) {
-              i = t.root
-            } else {
-              i = t._traverse_path(path)?.children
-            } 
-
-            let new_path = i?.map(_ => _.data.path)
-            .find(_ => !this.hidden_paths?.some(h => _.join('').startsWith(h.join(''))))
-            if (new_path) {
-              this.try_set_cursor_path(new_path)
-            }
-          }
+          i = t._traverse_path(path)?.children
         }
+
+        let new_paths = i?.map(_ => _.data.path)
+          .filter(_ => !this.hidden_paths?.some(h => _.join('').startsWith(h.join(''))))
+        if (new_paths) {
+          let new_path = new_paths.find(_ => this.wheel_sticky_paths.includes(_.join(''))) ?? new_paths[0]
+
+          this.try_set_cursor_path(new_path)
+        }
+      }
     }
+  }
 
     add_uci(uci: string) {
       let t = this.tree
