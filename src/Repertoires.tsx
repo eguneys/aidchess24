@@ -1,6 +1,7 @@
-import { For, Show, createSignal } from 'solid-js'
+import { For, Show, createSignal, useContext } from 'solid-js'
 import { useNavigate } from '@solidjs/router'
 import './Repertoires.scss'
+import { RepertoiresDBContext } from './components/idb_repository'
 
 import { RepertoiresFixture, StudyInRepertoireCategory  } from './studyrepo'
 
@@ -26,6 +27,7 @@ const CategoryView = (props: { name: string, list: StudyInRepertoireCategory[]})
 
 function Repertoires() {
 
+  const rdb = useContext(RepertoiresDBContext)!
   let fixture = RepertoiresFixture
 
   const on_import_new_study = async () => {
@@ -59,6 +61,12 @@ function Repertoires() {
   
       pgn = await fetch(`https://lichess.org/api/study/${id}.pgn`).then(_ => _.text())
       RepertoiresFixture.save_import_pgn(id, pgn, link)
+
+      try {
+        await rdb.import_study_from_lichess_id(id, pgn)
+      } catch (e) {
+        console.log(e)
+      }
     }
 
     window.location.reload()

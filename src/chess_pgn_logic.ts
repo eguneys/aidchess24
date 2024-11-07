@@ -1,5 +1,5 @@
 
-import { Chess, Position, makeUci, parseUci } from 'chessops'
+import { Chess, Color, Position, makeUci, parseUci } from 'chessops'
 import { INITIAL_FEN, makeFen, parseFen } from 'chessops/fen'
 import { PgnNodeData, ChildNode, parsePgn } from 'chessops/pgn'
 import { makeSan, parseSan } from 'chessops/san'
@@ -59,6 +59,8 @@ export class Pgn {
 
             let section = g.headers.get('Section')
             let chapter = g.headers.get('Chapter')
+            let orientation_ = g.headers.get('Orientation')
+            let orientation: Color | undefined = orientation_ === 'white' ? 'white' : orientation_ === 'black' ? 'black' : undefined
 
             let fen = g.headers.get('FEN')
 
@@ -98,7 +100,7 @@ export class Pgn {
 
             let res = new Pgn({
                 event, site, white, black,
-                puzzle, section, chapter, fen
+                puzzle, section, chapter, fen, orientation
              }, t)
             return res
         })
@@ -137,6 +139,10 @@ export class Pgn {
         return this.headers.fen
     }
 
+    get orientation() {
+        return this.headers.orientation
+    }
+
     constructor(
         readonly headers: PgnHeaders,
 
@@ -144,6 +150,7 @@ export class Pgn {
 }
 
 export type PgnHeaders = {
+    orientation?: Color,
     section?: string,
     chapter?: string,
     event?: string,

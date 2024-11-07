@@ -3,7 +3,7 @@ import { ErrorBoundary, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { PlayerProvider } from "./sound";
-import { RepeatsContextProvider } from "./repeat/repeats_context";
+import { RepertoireDBProvider } from "./components/idb_repository";
 
 const Home = lazy(() => import('./Home'))
 const Repertoires = lazy(() => import('./Repertoires'))
@@ -23,7 +23,7 @@ const Widen = lazy(() => import('./Widen'))
 const SixthDraw = lazy(() => import('./SixthDraw'))
 
 const Beta = lazy(() => import('./Beta'))
-const RepeatShow = lazy(() => import('./repeat/Show'))
+const RepeatShow = lazy(() => import('./repeat/Show2'))
 const RepeatDues = lazy(() => import('./repeat/PlayDues'))
 
 
@@ -31,7 +31,7 @@ export const MyApp = () => {
     return (<>
     
         <MetaProvider>
-        <RepeatsContextProvider>
+        <RepertoireDBProvider>
         <PlayerProvider>
             <HashRouter root={AppInRouter}>
               <Route path='/' component={Home}/>
@@ -57,7 +57,7 @@ export const MyApp = () => {
               <Route path='/dashboard' component={Dashboard}/>
             </HashRouter>
         </PlayerProvider>
-        </RepeatsContextProvider>
+        </RepertoireDBProvider>
         </MetaProvider>
     </>)
 }

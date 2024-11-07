@@ -1,0 +1,114 @@
+@import '../_variables';
+
+.repeat-show {
+    display: flex;
+    gap: 1em;
+
+    height: 18em;
+
+        h3 {
+            background: $primary;
+            color: $text-light;
+            text-align: center;
+        }
+
+        .list {
+            overflow-y: auto;
+            color: $text-light;
+            display: flex;
+            flex-flow: column;
+
+            div {
+                padding: 0.3em;
+                user-select: none;
+                cursor: pointer;
+                background: $accent;
+
+                &:hover {
+                    background: $secondary-light;
+                }
+
+                &.selected,
+                &.active {
+                    background: $secondary;
+                    color: $text-light;
+                }
+            }
+        }
+
+
+        .studies {
+            flex: 3;
+        }
+
+        .study-side {
+            flex: 7;
+
+            display: flex;
+            gap: 1em;
+
+            .sections {
+                flex: 1;
+            }
+
+            .dues {
+                flex: 1;
+            }
+
+            .dues {
+
+                display: flex;
+                flex-flow: column;
+                justify-content: space-between;
+                background: $accent;
+                p {
+                    padding: 0.3em 1em;
+                }
+
+                .buttons {
+                    margin: 0.5em;
+                    display: flex;
+                    flex-flow: column;
+                    gap: 0.3em;
+
+                    .small {
+                        display: flex;
+                        font-size: 0.8em;
+                        gap: 0.3em;
+                    }
+                    
+                    button {
+                        user-select: none;
+                        cursor: pointer;
+                        flex: 1;
+                        border: none;
+                        background: linear-gradient($primary-light, $primary);
+                        border-radius: 3px;
+                        padding: 1em;
+                        display: flex;
+                        justify-content: space-between;
+                        color: $text-light;
+
+                        &:hover {
+                            background: $primary-light;
+                        }
+
+                        &:active {
+                            background: $primary;
+                        }
+
+                        span {
+                            display: flex;
+                            gap: 0.1em;
+                            border-bottom: 1px solid $text-light;
+                            &:before {
+                                content: 'Due:';
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+}

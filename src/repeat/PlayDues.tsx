@@ -1,16 +1,16 @@
 import { useParams, useSearchParams } from "@solidjs/router"
-import { RepeatsDbContext } from "./repeats_context"
 import { batch, createEffect, createMemo, createResource, createSignal, on, onMount, Show, useContext } from "solid-js"
-import { createDexieSignalQuery } from "./solid-dexie"
-import { DueFilters, FSRSRating, NewRepeatWithMoves, RepeatMoveItem } from "./types"
+import { FSRSRating } from "./types"
 import Chessboard from "../Chessboard"
 import { Shala } from "../Shalala"
 import "./Dues.scss"
 import { annotationShapes } from "../annotationShapes"
 import { DrawShape } from "chessground/draw"
-import { fen_turn, INITIAL_FEN } from "../chess_pgn_logic"
-import StudyRepo, { PGNSectionStudy } from '../studyrepo'
+import { fen_turn, INITIAL_FEN, MoveData } from "../chess_pgn_logic"
 import { ChessTreeWithTools } from "../components/ChessTreeWithTools"
+import { EntityPGNChapter, EntityPGNSection, EntityPGNStudy, RepertoiresDBContext, Study } from "../components/idb_repository"
+import { Due_Component, PersistedSelectionComponent } from "./Show2"
+import { createDexieSignalQuery } from "./solid-dexie"
 
 function arr_rnd<T>(arr: T[]): T | undefined {
     return arr[Math.floor(Math.random() * arr.length)]
@@ -19,26 +19,29 @@ function arr_rnd<T>(arr: T[]): T | undefined {
 export default () => {
 
     let params = useParams()
-    const repeat_id = parseInt(params.id)
+    const study_id = parseInt(params.id)
 
-    const db = useContext(RepeatsDbContext)!
-
-    const repeat = createDexieSignalQuery<NewRepeatWithMoves | undefined>(() => db.repeat_by_id(repeat_id))
+    const rdb = useContext(RepertoiresDBContext)!
+    const study = createDexieSignalQuery(() => rdb.get_study_by_id(study_id))
 
     return (<>
-    <Show when={repeat()} fallback={<NotFound/>}>{repeat => 
-    <RepeatDues repeats={repeat()!}/>
+        <Show when={study()} fallback={<NotFound />}>{ study =>
+            <RepeatDues study={study()} />
         }</Show>
     </>)
 }
 
-const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
+const RepeatDues = (props: { study: EntityPGNStudy }) => {
 
+    const study = createMemo(() => props.study)
     const [params] = useSearchParams()
 
-    const repeats = createMemo(() => props.repeats)
 
-    const due_filter = createMemo(() => new DueFilters(repeats()))
+    const selection_component = createMemo(() => PersistedSelectionComponent(props.study.id))
+    const selected_sections = createMemo(() => selection_component()[0]())
+    let due_filter = createMemo(on(selected_sections, sections => Due_Component(sections)))
+
+
 
     const due_moves = createMemo(() => {
         switch (params.filter) {
@@ -72,63 +75,82 @@ const RepeatDues = (props: { repeats: NewRepeatWithMoves }) => {
             }>{due_move =>
                 <>
                     <div class='header'>
-                        <h3>{repeats().name}</h3>
+                        <h3>{study().name}</h3>
                         <p>{filter_name()}</p>
                         <p>{due_moves().length} Due Moves</p>
                     </div>
-                    <StudyLoader repeats={repeats()} due_move={due_move()}/>
+                    <StudyLoader study={study()} due_move={due_move()}/>
                 </>
                 }</Show>
         </div>
     </>)
 }
 
-const StudyLoader = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, due_move: RepeatMoveItem }) => {
+type DueMove = {
+    id: number,
+    before_fen: string,
+    due: number,
+    section: EntityPGNSection,
+    moves: { 
+        data: MoveData, 
+        chapter: EntityPGNChapter
+    }[]
+}
 
-    const [section_study] = createResource(() =>
-         props.due_move.ucis[0].section.study_id, 
-        (id: string) => StudyRepo.read_section_study(id))
+const StudyLoader = (props: { on_wheel?: number, due_move: DueMove, study: EntityPGNStudy }) => {
+
+    const rdb = useContext(RepertoiresDBContext)!
+    const [section_study] = createResource(() => props.study.id, id => rdb.get_study_imported_by_id(id))
 
 
         return (<>
-            <Show when={section_study()}>{study =>
-                <PlayDueMove on_wheel={props.on_wheel} repeats={props.repeats} due_move={props.due_move} study={study()} />
+            <Show when={section_study()} fallback={
+                <NotFound/>
+            }>{study =>
+                <PlayDueMove on_wheel={props.on_wheel} due_move={props.due_move} study={study()} />
             }</Show>
         </>)
 }
 
-const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, due_move: RepeatMoveItem, study: PGNSectionStudy }) => {
+const PlayDueMove = (props: { on_wheel?: number, due_move: DueMove, study: Study }) => {
 
-    const db = useContext(RepeatsDbContext)!
-
+    const rdb = useContext(RepertoiresDBContext)!
     const study = createMemo(() => props.study)
 
-    const repeats = createMemo(() => props.repeats)
     const due_move = createMemo(() => props.due_move)
+    const path = createMemo(() => due_move().moves[0].data.path)
 
-    const section = createMemo(() => study().sections.find(_ => _.name === due_move().ucis[0].section.section_name)!)
-    const chapter = createMemo(() => section().chapters.find(_ => _.name === due_move().ucis[0].section.chapter_name)!)
+    const section = createMemo(() => study().sections.find(_ => _.name === due_move().section.name)!)
+    const chapter = createMemo(() => section().chapters.find(_ => _.name === due_move().moves[0].chapter.name)!)
+
+    /*
+    const section = createMemo(() => study().sections[0])
+    const chapter = createMemo(() => section().chapters[0])
+    createEffect(() => {
+        console.log(due_move().moves[0].chapter)
+    })
+        */
 
     const [auto_shapes, set_auto_shapes] = createSignal<DrawShape[] | undefined>(undefined)
 
     const shalala = new Shala()
 
     let [i_idle, set_i_idle] = createSignal<number | undefined>(undefined)
-    const orientation = createMemo(() => fen_turn(due_move()?.fen ?? INITIAL_FEN))
+    const orientation = createMemo(() => fen_turn(due_move()?.before_fen ?? INITIAL_FEN))
 
     createEffect(() => {
-        shalala.on_set_fen_uci(due_move().fen)
+        shalala.on_set_fen_uci(due_move().before_fen)
     })
 
     createEffect(on(due_move, () =>{
         batch(() => {
             set_fsrs_rating(undefined)
             set_hide_after_path([])
-            set_cursor_path(due_move().ucis[0].path.slice(0, -1))
+            set_cursor_path(path().slice(0, -1))
         })
     }))
 
-    const [cursor_path, set_cursor_path] = createSignal(due_move().ucis[0].path.slice(0, -1), { equals: false })
+    const [cursor_path, set_cursor_path] = createSignal(path().slice(0, -1), { equals: false })
 
     const [hide_after_path, set_hide_after_path] = createSignal<string[] | undefined>([])
 
@@ -141,7 +163,7 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
 
         let [uci, san] = ucisan
 
-        const sans = move.ucis.map(_ => _.san)
+        const sans = move.moves.map(_ => _.data.san)
 
         let good = '✓'
         let bad = '✗'
@@ -178,14 +200,14 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
             return false
         }
         set_fsrs_rating('hard')
-        set_hide_after_path(due_move().ucis[0].path)
+        set_hide_after_path(path())
     }
 
     const on_show_answer = () => {
         batch(() => {
             set_fsrs_rating('again')
             set_hide_after_path(undefined)
-            set_cursor_path(due_move().ucis[0].path)
+            set_cursor_path(path())
         })
     }
 
@@ -194,13 +216,12 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
 
     const on_next_due = () => {
 
-        const repeat_id = repeats().id
-        const fen = due_move().fen
+        const fen = due_move().before_fen
         const rating = fsrs_rating()
 
         batch(() => {
             set_auto_shapes(undefined)
-            db.play_due_move(repeat_id, fen, rating ?? 'again')
+            rdb.play_due_move(fen, rating ?? 'again')
             set_i_idle(undefined)
         })
     }
@@ -289,6 +310,6 @@ const PlayDueMove = (props: { on_wheel?: number, repeats: NewRepeatWithMoves, du
 
 const NotFound = () => {
     return (<>
-        <span>Repeat Not Found</span>
-     </>)
+    <p> Study Not Found </p>
+    </>)
 }

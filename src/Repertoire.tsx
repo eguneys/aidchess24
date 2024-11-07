@@ -1,4 +1,4 @@
-import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack, onMount } from 'solid-js'
+import { For, createSignal, createEffect, createResource, createMemo, on, Signal, Match, Switch, batch, onCleanup, untrack, onMount, useContext } from 'solid-js'
 import './Repertoire.scss'
 import './RepertoireSections.scss'
 import { useNavigate, useParams } from '@solidjs/router'
@@ -16,6 +16,7 @@ import { usePlayer } from './sound'
 import SessionStore from './SessionStore'
 import { annotationShapes } from './annotationShapes'
 import { ply_to_index } from './components/ChessTreeWithTools'
+import { RepertoiresDBContext } from './components/idb_repository'
 
 const DEPTH_COLOR = [
    '#afacc6', '#0d2b45', '#203c56', '#544e68', '#8d697a', '#d08159',
@@ -441,7 +442,10 @@ const SectionLoaded = (props: { el_rep?: HTMLDivElement, section_study: PGNSecti
     location.reload()
   }
 
+  const rdb = useContext(RepertoiresDBContext)!
+
   const on_delete_study = () => {
+    rdb.remove_study_by_lichess_id(props.section_study.id)
     RepertoiresFixture.delete_imported_study(props.section_study.id)
     navigate('/repertoires')
   }
