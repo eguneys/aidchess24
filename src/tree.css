@@ -25,9 +25,9 @@
 
 .chesstree .move {
     display: inline-flex;
-    margin: 0 0.1em;
-    padding: 0.1em;
-    line-height: 1.4em;
+    margin: 0.1em 0.1em;
+    padding: 0.12em;
+    line-height: 1.5em;
     border-radius: 1px;
     font-weight: bold;
 }
@@ -81,7 +81,7 @@
 .chesstree .move.on_hidden_path:hover,
 .chesstree .move.on_hidden_path_start:hover {
     color: transparent;
-    background: hsla(30, 50%, 30%, 1);
+    background: hsla(31, 21%, 28%, 0.8);
 }
 
 .chesstree .move:hover {

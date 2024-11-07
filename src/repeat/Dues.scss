@@ -6,10 +6,11 @@
   display: grid;
 
   grid-template-areas: 'header board replay';
-  grid-template-columns: 1fr 80vh 2fr;
+  grid-template-columns: 2fr 80vh 3fr;
   grid-template-rows: 80vh;
   justify-items: center;
 
+  gap: 0.5em;
 
   .header {
     grid-area: header;
@@ -28,11 +29,24 @@
     aspect-ratio: 1;
   }
 
+  .replay-wrap, .header {
+
+    background: $accent-lighter;
+      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14),
+          0 3px 1px -2px rgba(0, 0, 0, .2),
+          0 1px 5px 0 rgba(0, 0, 0, .12);
+      
+  }
+
+  .header {
+    align-self: flex-start; 
+    padding: 1em;
+  }
+
   .replay-wrap {
     display: flex;
 
     flex-flow: column;
-
 
 
     .replay-header {
@@ -92,8 +106,22 @@
         cursor: pointer;
 
         &:hover {
-          background: $secondary-light;
+          background: $primary-light;
         }
+      }
+    }
+
+
+    .tools {
+      padding: 1em;
+
+      background: $accent-light;
+
+      button {
+        color: $text-light;
+        background: linear-gradient($primary-light, $primary);
+        padding: 1em;
+        margin: 0 3em;
       }
     }
   }

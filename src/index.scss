@@ -53,7 +53,10 @@ html {
 
 body {
   display: flex;
-  color: $dark-text;
+
+  color-scheme: light dark;
+  color: $secondary;
+  background: linear-gradient(#f8eec9, #ffe3e3);
 }
 
 #root {
@@ -61,9 +64,6 @@ body {
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: $secondary;
-  background: linear-gradient(#f8eec9, #ffe3e3);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
