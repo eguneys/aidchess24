@@ -419,7 +419,7 @@ export class Treelala2 {
 
         let new_paths = i?.map(_ => _.data.path)
           .filter(_ => !this.hidden_paths?.some(h => _.join('').startsWith(h.join(''))))
-        if (new_paths) {
+        if (new_paths && new_paths.length > 0) {
           let new_path = new_paths.find(_ => this.wheel_sticky_paths.includes(_.join(''))) ?? new_paths[0]
 
           this.try_set_cursor_path(new_path)
