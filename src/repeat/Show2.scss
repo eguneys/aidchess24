@@ -25,8 +25,12 @@
             text-align: center;
         }
 
-        .list {
+        .list-wrap {
             overflow-y: auto;
+            height: 100%;
+        }
+
+        .list {
             color: $text-light;
             display: flex;
             flex-flow: column;

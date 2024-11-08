@@ -21,12 +21,14 @@ export default () => {
     <div class='repeat-show'>
         <div class='studies'>
             <h3>Repertoires</h3>
+                <div class='list-wrap'>
             <div class='list'>
                 <For each={studies} fallback={
                     <A href="/repertoires">Import some studies first</A>
                 }>{(study, i) =>
                     <div onClick={() => set_i_selected_study(i())} class={'study' + (i_selected_study() === i() ? ' active': '')}>{study.name}</div>
                 }</For>
+                </div>
                 </div>
         </div>
             <Show when={selected_study()}>{study =>
@@ -130,10 +132,12 @@ const StudySideView = (props: { study: EntityPGNStudy }) => {
         <div class='study-side'>
             <div class='sections'>
             <h3>Sections</h3>
-                <div class='list'>
+                <div class='list-wrap'>
+                    <div class='list'>
                     <For each={sections}>{section =>
                         <div onClick={() => add_section(section.id)} class={'section' + (selected_sections().includes(section.id) ? ' selected' : '')}>{section.name}</div>
                     }</For>
+                    </div>
                 </div>
             </div>
             <div class='dues'>
