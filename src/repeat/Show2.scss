@@ -127,10 +127,17 @@
 
         }
 
+        .studies
+
         .studies, .study-side .dues, .study-side .sections {
             border-radius: 3px;
             overflow: hidden;
             background: $accent;
         }
 
+        .studies, .study-side .sections {
+
+            display: flex;
+            flex-flow: column;
+        }
 }
