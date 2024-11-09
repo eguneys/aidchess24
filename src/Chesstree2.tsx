@@ -266,7 +266,6 @@ export class Treelala2 {
     this._failed_paths = createSignal<string[][]>([], { equals: false })
     this._solved_paths = new TwoPaths2()
 
-
     createEffect(on(() => this.cursor_path, (path: string[]) => {
       const tree = this.tree
       if (!tree) {

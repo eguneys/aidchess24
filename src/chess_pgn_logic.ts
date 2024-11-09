@@ -470,6 +470,9 @@ export class MoveTree {
     }
 
     siblings_of(path: string[]) {
+        if (path.length === 1) {
+            return this.root
+        }
         let i = this._traverse_path(path.slice(0, -1))
         return i?.children
     }
