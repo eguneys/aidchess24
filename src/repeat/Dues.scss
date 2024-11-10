@@ -6,7 +6,7 @@
   display: grid;
 
   grid-template-areas: 'header board replay';
-  grid-template-columns: 2fr 80vh 3fr;
+  grid-template-columns: minmax(250px, 300px) 80vh minmax(300px, 400px);
   grid-template-rows: 80vh;
   justify-items: center;
 

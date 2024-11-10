@@ -144,6 +144,7 @@ const PlayDueMove = (props: { on_wheel?: number, due_move: DueMove, study: Study
 
     createEffect(on(due_move, () =>{
         batch(() => {
+            set_i_idle(undefined)
             set_fsrs_rating(undefined)
             set_hide_after_path([])
             set_cursor_path(path().slice(0, -1))
@@ -222,7 +223,6 @@ const PlayDueMove = (props: { on_wheel?: number, due_move: DueMove, study: Study
         batch(() => {
             set_auto_shapes(undefined)
             rdb.play_due_move(fen, rating ?? 'again')
-            set_i_idle(undefined)
         })
     }
 
