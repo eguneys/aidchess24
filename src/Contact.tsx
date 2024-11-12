@@ -52,16 +52,11 @@ const Donate = () => {
     return (<>
     <div class='donate'>
       <h1>Free Chess Education Tools for everyone</h1>
-    </div>
-    <div>
 
       <p class='twitch'><a href="https://twitch.tv/gsoutz" target="_blank">Support me on Twitch</a></p>
-      <iframe src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=aidchess.com"></iframe>
+      <iframe width="520px" height="270px" src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=aidchess.com"></iframe>
       <p>
-          { /*
-            Or < a target="_blank" href="https://www.buymeacoffee.com/eguneys">buymeacoffee.com/eguneys</a>
-            */
-}
+          < a target="_blank" href="https://patreon.com/eguneys?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink">Patreon</a>
       </p>
 
     </div>
