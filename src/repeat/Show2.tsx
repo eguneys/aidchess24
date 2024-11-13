@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, on, Show, useContext } from "solid-js"
+import { createMemo, For, on, Show, useContext } from "solid-js"
 import { EntityPGNStudy, RepertoiresDBContext } from "../components/idb_repository"
 import { createDexieArrayQuery } from "./solid-dexie"
 import { A, useNavigate } from "@solidjs/router"

@@ -1,5 +1,5 @@
 import Dexie, { Entity, EntityTable } from "dexie";
-import { Card, FSRS, Rating } from "ts-fsrs";
+import { Card, FSRS, Grade, Rating } from "ts-fsrs";
 import { MoveData, Pgn } from "../chess_pgn_logic";
 import { PGNSection } from "../studyrepo";
 import { createEmptyCard } from "ts-fsrs";
@@ -218,7 +218,7 @@ class RepertoiresDB extends Dexie {
 
         const f = new FSRS({})
 
-        let r = Rating.Easy
+        let r: Grade
         switch (rating) {
             case 'again': r = Rating.Again
             break
