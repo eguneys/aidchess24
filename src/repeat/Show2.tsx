@@ -13,7 +13,7 @@ export default () => {
 
     const studies = createDexieArrayQuery(() => rdb.studies.toArray())
 
-    const [i_selected_study, set_i_selected_study] = createSignal<number>(0)
+    const [i_selected_study, set_i_selected_study] = makePersistedNamespaced(0, 'dues.show')
 
     const selected_study = createMemo(() => studies[i_selected_study()])
 
