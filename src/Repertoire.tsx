@@ -600,6 +600,9 @@ const ChapterLoaded = (props: { el_rep?: HTMLDivElement, stats: RepertoireStat, 
     return `${x} out of ${y}`
   }))
 
+  createEffect(on(chapter, () => {
+    repertoire_player.end_match_or_moves()
+  }))
 
 
   createEffect(() => {

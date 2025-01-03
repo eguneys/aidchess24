@@ -92,7 +92,7 @@ const AppInRouter = (props: any) => {
 
           <nav id='topnav'>
             <section><A class='home' href='/'>aidchess.com</A></section>
-            <section><A href='/challenges'>Challenges</A></section>
+            <section><A href='/spider'>Spider Chess</A></section>
             <section><A href='/widen'>Widen</A></section>
             <section><A href='/repertoires'>Repertoires</A></section>
             <section><A href='/repeat'>Repeat</A></section>
