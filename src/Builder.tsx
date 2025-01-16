@@ -1,4 +1,4 @@
-import { batch, createEffect, createResource, createSignal, on, Show, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, on, Show, useContext } from "solid-js"
 import { StockfishContext, StockfishContextRes, StockfishProvider } from "./ceval2/StockfishContext"
 import { INITIAL_FEN } from "chessops/fen"
 import { Color, opposite } from "chessops"
@@ -21,12 +21,19 @@ function LoadingStockfishContext() {
 
     let [ss] = createResource(() => useContext(StockfishContext))
 
+    const loading_percent = createMemo(() => {
+        let nb = ss()?.download_nb
+        if (nb) {
+            return (nb.bytes / nb.total) * 100
+        }
+    })
+
     return (<>
         <Show when={ss()}>{s =>
             <Show when={s().state === 'loading'} fallback={
                 <WithStockfishLoaded s={s()!} />
             }><>
-            "Loading"
+            <span class='info'>Loading ${loading_percent()??'--'}%</span>
                 </> </Show>
         }</Show>
     </>)
