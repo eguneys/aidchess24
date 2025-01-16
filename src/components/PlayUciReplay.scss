@@ -1,0 +1,54 @@
+$bg: rgb(63, 61, 56);
+$bg-hi: rgb(104, 98, 88);
+$color: rgb(232, 232, 232);
+$blue: rgb(159, 172, 225);
+$blue-light: rgb(176, 187, 230);
+
+.replay-single {
+
+    background: $bg;
+    color: $color;
+
+    .moves {
+        font-family: 'Noto Chess', 'Kantumruy';
+        user-select: none;
+        display: flex;
+        flex-flow: row wrap;
+        -webkit-font-smoothing: antialiased;
+
+
+        .index {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 10%;
+            background: $bg-hi;
+        }
+
+        .move,
+        .index {
+            line-height: 1.7;
+            font-size: 1.1em;
+        }
+
+        .move {
+            padding: 0.16em;
+            padding-left: 0.5em;
+            flex: 0 0 45%;
+            cursor: pointer;
+
+            &:hover,
+            &.active:hover {
+                background: $blue-light;
+                color: $bg;
+            }
+
+            &.active {
+                background: $blue;
+                color: $bg;
+            }
+            
+            transition: all 0.1s;
+        }
+    }
+}

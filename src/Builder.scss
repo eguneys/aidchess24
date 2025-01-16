@@ -1,0 +1,36 @@
+.on-builder {
+    .builder {
+        --gauge-gap: calc(
+          8px + 9 *
+            ((100vw - 320px) / 880)
+        );
+
+        --col2-uniboard-width: calc(
+            min(calc(100vw - 240px - 20px), 
+                calc(100vh - calc(var(--site-header-height)))));
+        
+        --col3-uniboard-width: calc(90vh - var(--site-header-height));
+
+
+
+
+        display: grid;
+
+        grid-template-areas:
+        'board gauge replay';
+
+        grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) minmax(240px, 400px);
+
+        .board-wrap {
+            grid-area: board;
+        }
+
+        .board-wrap {
+            aspect-ratio: 1;
+        }
+
+        .replay-wrap {
+            grid-area: replay;
+        }
+    }
+}

@@ -1,5 +1,5 @@
 import { Route, A, useLocation, HashRouter, useBeforeLeave } from "@solidjs/router";
-import { ErrorBoundary, createMemo, createSignal, lazy } from 'solid-js'
+import { ErrorBoundary, Show, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { PlayerProvider } from "./sound";
@@ -21,6 +21,7 @@ const Challenges = lazy(() => import('./Challenges'))
 const Widen = lazy(() => import('./Widen'))
 
 const SixthDraw = lazy(() => import('./SixthDraw'))
+const Builder = lazy(() => import('./Builder'))
 
 const Beta = lazy(() => import('./Beta'))
 const RepeatShow = lazy(() => import('./repeat/Show2'))
@@ -36,6 +37,8 @@ export const MyApp = () => {
             <HashRouter root={AppInRouter}>
               <Route path='/' component={Home}/>
               <Route path='/sixth' component={SixthDraw}/>
+
+              <Route path='/builder' component={Builder}/>
 
               <Route path='/repeat' component={RepeatShow}/>
               <Route path='/repeat/:id' component={RepeatDues}/>
@@ -92,7 +95,7 @@ const AppInRouter = (props: any) => {
 
           <nav id='topnav'>
             <section><A class='home' href='/'>aidchess.com</A></section>
-            <section><A href='/spider'>Spider Chess</A></section>
+            <section><A href='/builder'>Builder</A></section>
             <section><A href='/widen'>Widen</A></section>
             <section><A href='/repertoires'>Repertoires</A></section>
             <section><A href='/repeat'>Repeat</A></section>
@@ -108,9 +111,13 @@ const AppInRouter = (props: any) => {
       </header>
       <div class={'main-wrap ' + path_klass()}>
         <div class='main'>
-          <ErrorBoundary fallback={_ => Beta()}>
-             {props.children}
-          </ErrorBoundary>
+          <Show when={import.meta.env.DEV} fallback= {
+            <ErrorBoundary fallback={_ => Beta()}>
+              {props.children}
+            </ErrorBoundary>
+          }>
+            {props.children}
+          </Show>
         </div>
       </div>
     </>)

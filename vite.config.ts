@@ -6,5 +6,12 @@ export default defineConfig({
   plugins: [solid()],
   build: {
 	  target: 'esnext'
-  }
+  },
+  server: {
+    headers: {
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    },
+  },
+  optimizeDeps: { exclude: ['lila-stockfish-web'] },
 })

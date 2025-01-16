@@ -27,8 +27,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       lila-stockfish-web:
-        specifier: ^0.0.3
-        version: 0.0.3
+        specifier: ^0.0.7
+        version: 0.0.7
       solid-js:
         specifier: ^1.8.15
         version: 1.8.15
@@ -571,8 +571,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  lila-stockfish-web@0.0.3:
-    resolution: {integrity: sha512-HyoLNUhA8wEFw4fJLhhz3FupPtntylz8e7ERmzOHEM0mJ4cznBaKHWjdA7QB/vY/egwRB4bvbTCKpVo9M+drUg==}
+  lila-stockfish-web@0.0.7:
+    resolution: {integrity: sha512-W+NBi/y19zubvnAlxdSC3oh9QrM9dLA46pw/tT/0NvBKrR/ZLDgYgm1jiBizQPAjq7gp4Kl7jp6yidO1JoJgJw==}
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
@@ -1187,7 +1187,7 @@ snapshots:
 
   json5@2.2.3: {}
 
-  lila-stockfish-web@0.0.3: {}
+  lila-stockfish-web@0.0.7: {}
 
   lru-cache@5.1.1:
     dependencies:

@@ -1,0 +1,7 @@
+cg-container .cg-custom-svgs {
+    z-index: 4;
+}
+
+cg-container .cg-custom-svgs svg {
+    overflow: visible;
+}
