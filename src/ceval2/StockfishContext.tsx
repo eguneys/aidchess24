@@ -14,6 +14,7 @@ export type StockfishContextRes = {
     get_best_move(game_id: string, fen: string, ply: number, multi_pv: number, depth: number): Promise<LocalEval | undefined>
 }
 
+// @ts-ignore
 const sortPvsInPlace = (pvs: PvData[], color: Color) =>
     pvs.sort((a, b) => povChances(color, b) - povChances(color, a));
 
