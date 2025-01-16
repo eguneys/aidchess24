@@ -55,7 +55,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     const engine_color = createMemo(() => opposite(player_color()))
 
     createEffect(() => {
-        let last = play_replay.last_sf_step
+        const last = play_replay.last_sf_step
 
         if (!last) {
             return
