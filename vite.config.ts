@@ -5,7 +5,7 @@ export default defineConfig({
   base: './',
   plugins: [solid()],
   build: {
-	  target: 'esnext'
+    target: 'esnext',
   },
   worker: {
     format: 'es'

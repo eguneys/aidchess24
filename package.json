@@ -17,12 +17,12 @@
     "dexie": "^4.0.9",
     "lila-stockfish-web": "^0.0.7",
     "solid-js": "^1.8.15",
-    "ts-fsrs": "^4.4.2"
+    "ts-fsrs": "^4.4.2",
+    "vite": "^6.0.7",
+    "vite-plugin-solid": "^2.11.0"
   },
   "devDependencies": {
     "sass": "^1.71.1",
-    "typescript": "^5.3.3",
-    "vite": "^5.1.7",
-    "vite-plugin-solid": "^2.10.1"
+    "typescript": "^5.3.3"
   }
 }
