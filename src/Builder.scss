@@ -1,3 +1,5 @@
+@import '_variables';
+
 .on-builder {
     .builder {
         --gauge-gap: calc(
@@ -10,8 +12,6 @@
                 calc(100vh - calc(var(--site-header-height)))));
         
         --col3-uniboard-width: calc(90vh - var(--site-header-height));
-
-
 
 
         display: grid;
@@ -33,8 +33,27 @@
             grid-area: replay;
         }
 
+$replay-bg: rgb(63, 61, 56);
 
         .replay-wrap {
+
+            .result-wrap {
+                display: flex;
+                flex-flow: column;
+                align-items: center;
+
+                background: $replay-bg;
+                color: $text-light;
+
+                .result {
+                    font-size: 1.4em;
+                }
+
+                .drop {
+                    color: $error;
+                }
+            }
+
             .tools-wrap {
                 display: flex;
                 flex-flow: column;

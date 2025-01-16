@@ -16,7 +16,7 @@ $blue-light: rgb(176, 187, 230);
     color: $color;
 
     overflow-y: scroll;
-    height: 460px;
+    max-height: 460px;
 
     .moves {
         font-family: 'Noto Chess', 'Kantumruy';

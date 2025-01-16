@@ -39,6 +39,8 @@ function LoadingStockfishContext() {
     </>)
 }
 
+type BuilderResult = 'drop'
+
 function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
     const Player = usePlayer()
@@ -122,7 +124,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     }
 
     const movable = () => {
-        return !play_uci.isEnd && play_replay.is_on_last_ply
+        return !play_uci.isEnd && play_replay.is_on_last_ply && builder_result() === undefined
     }
 
 
@@ -131,8 +133,33 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     const on_rematch = () => {
         set_sans([])
         play_replay.set_sans(sans())
+        set_builder_result(undefined)
     }
 
+    createEffect(on(() => play_replay.last_sf_step, (sf_step) => {
+
+        if (!sf_step) {
+            return
+        }
+
+        createEffect(on(() => sf_step.search, search => {
+            if (!search) {
+                return
+            }
+
+            let cp = search.search.search.eval.cp ?? search.search.search.eval.mate
+
+            if (!cp) {
+                return
+            }
+
+            if (cp < -200) {
+                set_builder_result('drop')
+            }
+        }))
+    }))
+
+    const [builder_result, set_builder_result] = createSignal<BuilderResult | undefined>(undefined)
 
     return (<>
     <div onWheel={onWheel} class='builder'>
@@ -141,6 +168,12 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         </div>
         <div class='replay-wrap'>
             <PlayUciSingleReplay play_replay={play_replay}/>
+            <div class='result-wrap'>
+                <Show when={builder_result() === 'drop'}>
+                    <span class='result'>Game Over</span>
+                    <small class='drop'>Evaluation Dropped Below -2</small>
+                </Show>
+            </div>
             <div class='tools-wrap'>
                 <button onClick={on_rematch} class='rematch'>Rematch</button>
             </div>

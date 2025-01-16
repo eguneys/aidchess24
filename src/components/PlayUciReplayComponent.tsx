@@ -1,7 +1,7 @@
 import { Chess, makeUci, Position } from "chessops"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { parseSan } from "chessops/san"
-import { createMemo, createResource, createSignal, For, mapArray, Setter, Show } from "solid-js"
+import { createEffect, createMemo, createResource, createSignal, For, mapArray, on, Setter, Show } from "solid-js"
 import './PlayUciReplay.scss'
 import { StockfishContextRes } from "../ceval2/StockfishContext"
 import { LocalEval } from "../ceval2/stockfish-module"
@@ -75,6 +75,7 @@ export type PlayUciSingleReplayComponent = {
     steps: Step[],
     last_step: Step | undefined,
     ply_step: Step | undefined,
+    ply: number,
     play_san: (san: SAN) => void,
     goto_ply: (ply: Ply) => void
     get_prev_ply: () => Ply | undefined,
@@ -177,6 +178,9 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
         get last_step() {
             return last_step()
         },
+        get ply() {
+            return i_ply()
+        },
         goto_ply,
         get_prev_ply,
         get_next_ply,
@@ -241,9 +245,32 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
         return res.search.judgement
     }
 
+    let $moves_el: HTMLElement
+
+    createEffect(on(ply_sans, (sans) => {
+        if (sans.length < 7) return
+
+        let cont = $moves_el.parentElement!
+
+        let st: number | undefined
+        if (props.play_replay.ply < 3) {
+            st = 0
+        } else if (props.play_replay.is_on_last_ply) {
+            st = 99999
+        } else {
+            let ply_el = cont.querySelector('.active') as HTMLElement | undefined
+            if (ply_el) {
+                st = ply_el.offsetTop - $moves_el.offsetHeight / 2 + ply_el.offsetHeight / 2
+            }
+        }
+        if (st !== undefined) {
+            cont.scrollTo({behavior: 'smooth', top: st })
+        }
+    }))
+
     return (<>
         <div class='replay-single'>
-            <div class='moves'>
+            <div ref={_ => $moves_el = _} class='moves'>
             <For each={ply_sans()}>{(ply_san, i) => 
                 <>
                     <Show when={ply_san.ply % 2 === 1}>
@@ -276,6 +303,12 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
     </>)
 }
 
+export type Search = {
+    depth: number,
+    multi_pv: number,
+    eval: LocalEval
+}
+
 
 export type FenWithSearch = {
     fen: FEN,
@@ -285,16 +318,6 @@ export type FenWithSearch = {
         eval: LocalEval
     }
 }
-
-export const diff_eval = (a: FenWithSearch, b: FenWithSearch) => {
-    return povDiff(fen_turn(a.fen), a.search.eval, b.search.eval)
-}
-
-const judgement_glyph = (j: Judgement) => {
-    return j === 'good' ? '✓' : j === 'inaccuracy' ? '?!' : j === 'mistake' ? '?' : '??'
-}
-
-type Judgement = 'good' | 'inaccuracy' | 'mistake' | 'blunder'
 
 export type StepWithSearch = Step & {
     before_search: FenWithSearch,
@@ -308,6 +331,18 @@ export type ResWithSearchReturn = {
     state: 'loading' | 'success',
     search: StepWithSearch | undefined
 }
+
+export const diff_eval = (a: FenWithSearch, b: FenWithSearch) => {
+    return povDiff(fen_turn(a.fen), a.search.eval, b.search.eval)
+}
+
+const judgement_glyph = (j: Judgement) => {
+    return j === 'good' ? '✓' : j === 'inaccuracy' ? '?!' : j === 'mistake' ? '?' : '??'
+}
+
+type Judgement = 'good' | 'inaccuracy' | 'mistake' | 'blunder'
+
+
 
 export type StockfishBuilderComponent = {
     res_with_search: (step: Step) => ResWithSearchReturn | undefined
