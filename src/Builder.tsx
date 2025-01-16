@@ -11,7 +11,7 @@ import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
 
-export default () => {total
+export default () => {
     return (<StockfishProvider>
         <LoadingStockfishContext/>
     </StockfishProvider>)
@@ -24,7 +24,6 @@ function LoadingStockfishContext() {
     const loading_percent = createMemo(() => {
         let nb = ss()?.download_nb
         if (nb) {
-            console.log(nb.bytes, nb.total)
             return Math.ceil((nb.bytes / nb.total) * 100)
         }
     })
