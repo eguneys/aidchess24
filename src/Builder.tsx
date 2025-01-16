@@ -1,15 +1,17 @@
-import { batch, createEffect, createMemo, createResource, createSignal, on, Show, useContext } from "solid-js"
+import { createEffect, createMemo, createResource, createSignal, mapArray, on, Show, useContext } from "solid-js"
 import { StockfishContext, StockfishContextRes, StockfishProvider } from "./ceval2/StockfishContext"
 import { INITIAL_FEN } from "chessops/fen"
 import { Color, opposite } from "chessops"
-import { fen_turn } from "./chess_pgn_logic"
 import { LocalEval } from "./ceval2/stockfish-module"
 import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
 import './Builder.scss'
-import { FEN, PlayUciSingleReplay, PlayUciSingleReplayComponent, Ply, SAN, UCI } from "./components/PlayUciReplayComponent"
+
+import { FEN, PlayUciSingleReplay, PlayUciSingleReplayComponent, SAN, Step } from "./components/PlayUciReplayComponent"
 import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
+import { povDiff } from "./chess_winningChances"
+import { fen_turn } from "./chess_pgn_logic"
 
 export default () => {
     return (<StockfishProvider>
@@ -24,7 +26,7 @@ function LoadingStockfishContext() {
     const loading_percent = createMemo(() => {
         let nb = ss()?.download_nb
         if (nb) {
-            return Math.ceil((nb.bytes / nb.total) * 100)
+            return Math.ceil((nb.bytes / (nb.total === 0 ? 70 * 1024 * 1024 : nb.total)) * 100)
         }
     })
 
@@ -39,56 +41,140 @@ function LoadingStockfishContext() {
     </>)
 }
 
+export type FenWithSearch = {
+    fen: FEN,
+    search: {
+        depth: number,
+        multi_pv: number,
+        eval: LocalEval
+    }
+}
 
-function StockfishRouletteGameComponent(props: { on_play_uci: (_: UCI) => void,   get_fen_ply_and_play: [FEN, Ply] | undefined, s: StockfishContextRes }) {
+export const diff_evals = (a: FenWithSearch, b: FenWithSearch) => {
+    return povDiff(fen_turn(a.fen), a.search.eval, b.search.eval)
+}
 
-    let game_id = `${Math.random()}`
-    let [engine_color, set_engine_color] = createSignal<Color>('white', { equals: false})
 
-    let multi_pv = 6
-    let depth = 8
+export type StepWithSearch = Step & {
+    before_search: FenWithSearch,
+    search: FenWithSearch,
+    diff_eval: number
+}
 
-    let [working, set_working] = createSignal(false)
+export type GameId = string
 
-    createEffect(on(() => props.get_fen_ply_and_play, (fen_ply) => {
-        if (!fen_ply) {
+export type ResWithSearchReturn = {
+    state: 'loading' | 'success',
+    search: StepWithSearch | undefined
+}
+
+export type StockfishBuilderComponent = {
+    res_with_search: (step: Step) => ResWithSearchReturn
+}
+
+export type Skill = 'level8' | 'level13' | 'level20'
+
+function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: string, skill: Skill }): StockfishBuilderComponent {
+
+    type QueueItem = { resolve_ev: (_?: LocalEval) => void, fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number }
+
+    let queue: QueueItem[] = []
+
+    const queue_item = (fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number) => {
+        return new Promise<LocalEval | undefined>(resolve_ev => {
+            queue.push({ fen, ply, game_id, multi_pv, depth, resolve_ev })
+            dequeue()
+        })
+    }
+
+    let working_item: QueueItem | undefined
+    const dequeue = async () => {
+        if (working_item) {
             return
         }
-        let [fen, ply] = fen_ply
-        let turn = fen_turn(fen)
-        if (turn === engine_color()) {
 
-            if (working()) {
-                return
+        working_item = queue.pop()
+        if (!working_item) {
+            return
+        }
+
+        let { game_id, fen, ply, multi_pv, depth } = working_item
+        let ev = await props.s.get_best_move(game_id, fen, ply, multi_pv, depth)
+
+        working_item.resolve_ev(ev)
+        working_item = undefined
+        dequeue()
+    }
+
+    let cache: Record<string, LocalEval> = {}
+    const get_eval_with_cached = async (fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number) => {
+
+        const make_key = (depth: number) => [fen, ply, multi_pv, depth].join('$$')
+
+        let key = make_key(depth)
+
+        if (!cache[key]) {
+            let ev = await queue_item(fen, ply, game_id, multi_pv, depth)
+            if (ev) {
+                cache[key] = ev
+            }
+        }
+
+        return cache[key]
+    }
+
+    let res_with_search = (step: Step): ResWithSearchReturn => {
+
+        let [r] = createResource(() => props.skill, async (skill: Skill) => {
+            let multi_pv = step.ply < 10 ? 6 : step.ply < 15 ? 3 : 1
+            let depth = skill === 'level8' ? 8 : skill === 'level13' ? 13 : 20
+            let off_depth = Math.ceil(Math.random() * 3)
+            let [before_eval, fen_eval] = await Promise.all([
+                get_eval_with_cached(step.before_fen, step.ply - 1, props.game_id, multi_pv, depth + off_depth),
+                get_eval_with_cached(step.fen, step.ply, props.game_id, multi_pv, depth)
+            ])
+
+            let before_search = {
+                fen: step.before_fen,
+                search: {
+                    depth,
+                    multi_pv,
+                    eval: before_eval
+                }
             }
 
-            set_working(true)
-            props.s.get_best_move(game_id, fen, ply, multi_pv, depth).then(ev => {
-                set_working(false)
-                if (ev) {
-                    engine_play_eval(ev)
+            let search = {
+                fen: step.fen,
+                search: {
+                    depth,
+                    multi_pv,
+                    eval: fen_eval
                 }
-            })
+            }
+
+            let diff_eval = diff_evals(before_search, search)
+
+            return {
+                ...step,
+                before_search,
+                search,
+                diff_eval
+            }
+        })
+
+
+
+        return {
+            get state() {
+                return r.loading ? 'loading' : 'success'
+            },
+            get search() {
+                return r()
+            }
         }
-    }))
-
-    const engine_play_eval = (ev: LocalEval) => {
-        let uci = ev.pvs[0].moves[0]
-
-        props.on_play_uci(uci)
     }
 
-
-    return {
-        get engine_color() {
-            return engine_color()
-        },
-        reset_game(engine_color: Color) {
-            batch(() => {
-                set_engine_color(engine_color)
-            })
-        }
-    }
+    return { res_with_search }
 }
 
 function WithStockfishLoaded(props: { s: StockfishContextRes }) {
@@ -101,22 +187,55 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     const play_replay = PlayUciSingleReplayComponent(INITIAL_FEN, sans())
     let play_uci = PlayUciComponent()
 
-    let [fen_ply_for_engine_play, set_fen_ply_for_engine_play] = createSignal<[FEN, Ply] | undefined>(undefined)
-
-    let cc = StockfishRouletteGameComponent({ 
-        on_play_uci(uci: string) { play_uci.play_uci(uci) },  
-        get get_fen_ply_and_play() { 
-            return fen_ply_for_engine_play()
-        }, 
-        s: props.s })
+    let [skill, set_skill] = createSignal<Skill>('level8')
+    let game_id = ''
+    let sf_builder = StockfishBuilderComponent({ s: props.s, game_id, get skill() { return skill() } })
 
     const [player_color, _set_player_color] = createSignal<Color>('white')
 
-    cc.reset_game(opposite(player_color()))
+    const engine_color = createMemo(() => opposite(player_color()))
+
+    const sf_steps = createMemo(mapArray(() => play_replay.steps, step =>
+        sf_builder.res_with_search(step)
+    ))
+
+    const last_sf_step = createMemo(() => {
+        let ss = sf_steps()
+        return ss[ss.length - 1]
+    })
 
     createEffect(() => {
-        console.log(play_uci.last_move)
+        console.log(sf_steps())
     })
+
+    createEffect(() => {
+        let last = last_sf_step()
+
+        if (!last) {
+            return
+        }
+
+        createEffect(on(() => last.search, (s) => {
+            if (!s) {
+                return
+            }
+
+            let turn = fen_turn(s.fen)
+
+            if (turn === engine_color()) {
+
+                let pvs = s.search.search.eval.pvs
+
+                play_uci.play_uci(pvs[0].moves[0])
+            }
+        }))
+
+        createEffect(on(() => last.state, (s) => {
+            console.log(s)
+        }))
+    })
+
+
     createEffect(on(() => play_uci.add_last_move, (last_move) => {
         if (last_move) {
             play_replay.play_san(last_move[1])
@@ -124,12 +243,6 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     }))
 
     createEffect(on(() => play_replay.sans, set_sans))
-
-    createEffect(on(() => play_replay.last_step, (ls) => {
-        if (ls) {
-            set_fen_ply_for_engine_play([ls.fen, ls.ply])
-        }
-    }))
 
     createEffect(on(() => play_replay.ply_step, (ps) => {
         if (ps) {
@@ -184,4 +297,3 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     </div>
     </>)
 }
-

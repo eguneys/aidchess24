@@ -8,8 +8,10 @@ export type FEN = string
 export type UCI = string
 export type SAN = string
 export type Ply = number
+export type Path = string
 
 export type Step = {
+    path: Path,
     ply: Ply,
     before_fen: FEN,
     fen: FEN,
@@ -17,7 +19,7 @@ export type Step = {
     san: SAN
 }
 
-function make_step_and_play(ply: Ply, pos: Position, san: SAN) {
+function make_step_and_play(ply: Ply, pos: Position, san: SAN, base_path: Path): Step {
     let move = parseSan(pos, san)!
     let uci = makeUci(move)
 
@@ -27,7 +29,10 @@ function make_step_and_play(ply: Ply, pos: Position, san: SAN) {
 
     let fen = makeFen(pos.toSetup())
 
+    let path = `${base_path} ${uci}`
+
     return {
+        path,
         ply,
         before_fen,
         fen,
@@ -36,12 +41,22 @@ function make_step_and_play(ply: Ply, pos: Position, san: SAN) {
     }
 }
 
-function build_steps(sans: SAN[], fen: FEN = INITIAL_FEN, ply: Ply = 0) {
-    let res = []
+type StepsSingle = Step[]
+
+function push_san(san: SAN, res: StepsSingle, pos?: Position) {
+    let last = res[res.length - 1]
+    if (!pos) {
+        pos = Chess.fromSetup(parseFen(last?.fen ?? INITIAL_FEN).unwrap()).unwrap()
+    }
+    return [...res, make_step_and_play((last?.ply ?? 0) + 1, pos, san, last?.path ?? '')]
+}
+
+function build_steps(sans: SAN[], fen: FEN = INITIAL_FEN): StepsSingle {
+    let res: StepsSingle = []
 
     let pos = Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
     for (let san of sans) {
-        res.push(make_step_and_play(++ply, pos, san))
+        res = push_san(san, res, pos)
     }
 
     return res
@@ -52,6 +67,7 @@ export type PlayUciSingleReplayComponent = {
     plies: Ply[],
     sans: SAN[],
     ply_sans: string[],
+    steps: Step[],
     last_step: Step | undefined,
     ply_step: Step | undefined,
     play_san: (san: SAN) => void,
@@ -109,6 +125,9 @@ export function PlayUciSingleReplayComponent(initial_fen: FEN = INITIAL_FEN, _sa
     
     return {
         initial_fen,
+        get steps() {
+            return steps()
+        },
         get plies() {
             return plies()
         },
@@ -149,9 +168,8 @@ export function PlayUciSingleReplayComponent(initial_fen: FEN = INITIAL_FEN, _sa
                 return
             }
 
-            let last_pos = Chess.fromSetup(parseFen(last.fen).unwrap()).unwrap()
-
-            set_steps([...steps(), make_step_and_play(last.ply + 1, last_pos, san)])
+            let ss = steps()
+            set_steps(push_san(san, ss))
 
             set_i_ply(last.ply + 1)
         },
