@@ -47,7 +47,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     let [sans, set_sans] = makePersistedNamespaced<SAN[]>([], 'builder.current.sans')
 
     let game_id = ''
-    const play_replay = PlayUciSingleReplayComponent(props.s, game_id, INITIAL_FEN, sans())
+    const play_replay = PlayUciSingleReplayComponent(props.s, game_id)
     let play_uci = PlayUciComponent()
 
     const [player_color, _set_player_color] = createSignal<Color>('white')
@@ -89,7 +89,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         if (ps) {
             play_uci.set_fen_last_move(ps.fen, [ps.uci, ps.san])
         } else {
-            play_uci.set_fen_last_move(play_replay.initial_fen)
+            play_uci.set_fen_last_move(INITIAL_FEN)
         }
     }))
 
@@ -126,6 +126,13 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     }
 
 
+    play_replay.set_sans(sans())
+
+    const on_rematch = () => {
+        set_sans([])
+        play_replay.set_sans(sans())
+    }
+
 
     return (<>
     <div onWheel={onWheel} class='builder'>
@@ -134,7 +141,11 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         </div>
         <div class='replay-wrap'>
             <PlayUciSingleReplay play_replay={play_replay}/>
+            <div class='tools-wrap'>
+                <button onClick={on_rematch} class='rematch'>Rematch</button>
+            </div>
         </div>
+
     </div>
     </>)
 }

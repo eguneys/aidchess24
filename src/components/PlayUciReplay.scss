@@ -1,3 +1,9 @@
+
+$good: rgb(105, 196, 95);
+$inaccuracy: rgb(90, 177, 194);
+$mistake: rgb(206, 175, 64);
+$blunder: rgb(196, 87, 75);
+
 $bg: rgb(63, 61, 56);
 $bg-hi: rgb(104, 98, 88);
 $color: rgb(232, 232, 232);
@@ -8,6 +14,9 @@ $blue-light: rgb(176, 187, 230);
 
     background: $bg;
     color: $color;
+
+    overflow-y: scroll;
+    height: 460px;
 
     .moves {
         font-family: 'Noto Chess', 'Kantumruy';
@@ -49,6 +58,38 @@ $blue-light: rgb(176, 187, 230);
             }
             
             transition: all 0.1s;
+        }
+
+        .move {
+            display: flex;
+            justify-content: space-between;
+            .eval {
+                margin-left: -1em;
+                margin-right: 0.5em;
+                font-size: 0.9em;
+            }
+
+            &.good {
+                color: $good;
+            }
+
+            &.inaccuracy {
+                color: $inaccuracy;
+            }
+            &.mistake {
+                color: $mistake;
+            }
+            &.blunder {
+                color: $blunder;
+            }
+
+            &.active {
+                color: $bg;
+            }
+
+            &.loading {
+                opacity: 0.6;
+            }
         }
     }
 }

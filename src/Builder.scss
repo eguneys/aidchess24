@@ -32,5 +32,17 @@
         .replay-wrap {
             grid-area: replay;
         }
+
+
+        .replay-wrap {
+            .tools-wrap {
+                display: flex;
+                flex-flow: column;
+
+                button {
+                    padding: 1em;
+                }
+            }
+        }
     }
 }

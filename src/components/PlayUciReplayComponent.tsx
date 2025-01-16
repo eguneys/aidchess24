@@ -1,7 +1,7 @@
 import { Chess, makeUci, Position } from "chessops"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { parseSan } from "chessops/san"
-import { createEffect, createMemo, createResource, createSignal, For, mapArray, Setter, Show } from "solid-js"
+import { createMemo, createResource, createSignal, For, mapArray, Setter, Show } from "solid-js"
 import './PlayUciReplay.scss'
 import { StockfishContextRes } from "../ceval2/StockfishContext"
 import { LocalEval } from "../ceval2/stockfish-module"
@@ -69,7 +69,6 @@ function build_steps(sans: SAN[], fen: FEN = INITIAL_FEN): StepsSingle {
 }
 
 export type PlayUciSingleReplayComponent = {
-    initial_fen: FEN,
     plies: Ply[],
     sans: SAN[],
     ply_sans: string[],
@@ -85,18 +84,19 @@ export type PlayUciSingleReplayComponent = {
     is_on_last_ply: boolean,
     sf_steps: (ResWithSearchReturn | undefined)[],
     last_sf_step: ResWithSearchReturn | undefined,
-    set_skill: Setter<Skill>
+    set_skill: Setter<Skill>,
+    set_sans(_: SAN[]): void
 }
 
-export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: GameId, initial_fen: FEN = INITIAL_FEN, _sans: SAN[] = []): PlayUciSingleReplayComponent {
+export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: GameId): PlayUciSingleReplayComponent {
 
-    let [skill, set_skill] = createSignal<Skill>('level8')
+    let [skill, set_skill] = createSignal<Skill>('level10')
 
     let sf_builder = StockfishBuilderComponent({ s, game_id, get skill() { return skill() } })
 
 
 
-    let [steps, set_steps] = createSignal<Step[]>(build_steps(_sans, initial_fen))
+    let [steps, set_steps] = createSignal<Step[]>([])
     const last_step = createMemo(() => { 
         let ss = steps()
         return ss[ss.length - 1]
@@ -153,9 +153,12 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
     
     return {
         set_skill,
+        set_sans(sans: SAN[]) {
+            set_steps(build_steps(sans))
+            set_i_ply(sans.length)
+        },
         get sf_steps() { return sf_steps() },
         get last_sf_step() { return last_sf_step() },
-        initial_fen,
         get steps() {
             return steps()
         },
@@ -227,6 +230,17 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
 
     const i_ply = createMemo(() => props.play_replay.ply_step?.ply)
 
+    const judgement_klass = (i: number) => {
+        let res = props.play_replay.sf_steps[i]
+        if (!res) {
+            return 'no-eval'
+        }
+        if (res.state === 'loading' || !res.search) {
+            return ' loading'
+        }
+        return res.search.judgement
+    }
+
     return (<>
         <div class='replay-single'>
             <div class='moves'>
@@ -235,10 +249,22 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                     <Show when={ply_san.ply % 2 === 1}>
                         <span class='index'>{Math.ceil(ply_san.ply / 2)}</span>
                     </Show>
-                    <span onClick={() => goto_ply(ply_san.ply)} class={'move' + (ply_san.ply === i_ply() ? ' active' : '')}>
+                    <span onClick={() => goto_ply(ply_san.ply)} class={'move ' + (judgement_klass(i())) + (ply_san.ply === i_ply() ? ' active' : '')}>
                             <span class='san'>{ply_san.san}</span>
                             <Show when={props.play_replay.sf_steps[i()]}>{res =>
-                                <Show when={res().state === 'loading'}>{
+                                <Show when={res().state === 'loading'} fallback={
+
+                                    <Show when={res().search}>{search => 
+                                        <>
+                                        <Show when={search().before_search.search.eval.cp}>{ cp => 
+                                                <span class='eval'>{renderEval(cp())}</span>
+                                            }</Show>
+                                         <span class='judgement'>{judgement_glyph(search().judgement)}</span>
+
+                                        </>
+                                    }</Show>
+
+                                }>{
                                     <span class='loading'>l</span>
                                 }</Show>
                             }</Show>
@@ -260,15 +286,20 @@ export type FenWithSearch = {
     }
 }
 
-export const diff_evals = (a: FenWithSearch, b: FenWithSearch) => {
+export const diff_eval = (a: FenWithSearch, b: FenWithSearch) => {
     return povDiff(fen_turn(a.fen), a.search.eval, b.search.eval)
 }
 
+const judgement_glyph = (j: Judgement) => {
+    return j === 'good' ? '✓' : j === 'inaccuracy' ? '?!' : j === 'mistake' ? '?' : '??'
+}
+
+type Judgement = 'good' | 'inaccuracy' | 'mistake' | 'blunder'
 
 export type StepWithSearch = Step & {
     before_search: FenWithSearch,
     search: FenWithSearch,
-    diff_eval: number
+    judgement: Judgement
 }
 
 export type GameId = string
@@ -282,7 +313,7 @@ export type StockfishBuilderComponent = {
     res_with_search: (step: Step) => ResWithSearchReturn | undefined
 }
 
-export type Skill = 'level8' | 'level13' | 'level20'
+export type Skill = 'level10' | 'level16' | 'level20'
 
 function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: string, skill: Skill }): StockfishBuilderComponent {
 
@@ -342,7 +373,7 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
 
         let [r] = createResource(() => props.skill, async (skill: Skill) => {
             let multi_pv = step.ply < 10 ? 6 : step.ply < 15 ? 3 : 1
-            let depth = skill === 'level8' ? 8 : skill === 'level13' ? 13 : 20
+            let depth = skill === 'level10' ? 10 : skill === 'level16' ? 16 : 20
             let [before_eval, fen_eval] = await Promise.all([
                 get_eval_with_cached(step.before_fen, step.ply - 1, props.game_id, multi_pv, depth),
                 get_eval_with_cached(step.fen, step.ply, props.game_id, multi_pv, depth)
@@ -366,13 +397,15 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
                 }
             }
 
-            let diff_eval = diff_evals(before_search, search)
+            let diff = diff_eval(before_search, search)
+
+            let judgement: Judgement = diff < 0.03 ? 'good' : diff < 0.05 ? 'inaccuracy' : diff < 0.12 ? 'mistake' : 'blunder'
 
             return {
                 ...step,
                 before_search,
                 search,
-                diff_eval
+                judgement
             }
         })
 
@@ -389,3 +422,8 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
     return { res_with_search }
 }
 
+/* lila/ui/ceval/src/util.ts */
+export function renderEval(e: number): string {
+  e = Math.max(Math.min(Math.round(e / 10) / 10, 99), -99);
+  return (e > 0 ? '+' : '') + e.toFixed(1);
+}
