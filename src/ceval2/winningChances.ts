@@ -1,4 +1,4 @@
-import type { WinningChances } from './types';
+type WinningChances = number;
 
 const toPov = (color: Color, diff: number): number => (color === 'white' ? diff : -diff);
 
