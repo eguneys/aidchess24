@@ -5,7 +5,7 @@ import { Color, opposite } from "chessops"
 import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
 import './Builder.scss'
 
-import { PlayUciSingleReplay, PlayUciSingleReplayComponent, SAN } from "./components/PlayUciReplayComponent"
+import { PlayUciSingleReplay, PlayUciSingleReplayComponent, SAN, SearchParams } from "./components/PlayUciReplayComponent"
 import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
@@ -56,6 +56,17 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
     const engine_color = createMemo(() => opposite(player_color()))
 
+    const prev_steps_params: SearchParams = {
+        depth: 8,
+        multi_pv: 1
+    }
+
+    const engine_play_params: SearchParams = {
+        depth: 8,
+        multi_pv: 6,
+    }
+
+
     createEffect(() => {
         const last = play_replay.last_sf_step
 
@@ -63,8 +74,13 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             return
         }
 
-        createEffect(on(() => last.search, (s) => {
+        createEffect(on(last.request_search(engine_play_params), (s) => {
             if (!s) {
+                return
+            }
+
+            if (!s.search) {
+                // TODO warn
                 return
             }
 
@@ -72,7 +88,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
             if (turn === engine_color()) {
 
-                let pvs = s.search.search.eval.pvs
+                let pvs = s.search.pvs
 
                 play_uci.play_uci(pvs[0].moves[0])
             }
@@ -130,6 +146,8 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
     play_replay.set_sans(sans())
 
+    play_replay.sf_steps.forEach(_ => _?.request_search(prev_steps_params))
+
     const on_rematch = () => {
         set_sans([])
         play_replay.set_sans(sans())
@@ -142,12 +160,16 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             return
         }
 
-        createEffect(on(() => sf_step.search, search => {
-            if (!search) {
+        createEffect(on(sf_step.request_search(engine_play_params), ss => {
+            if (!ss) {
                 return
             }
 
-            let cp = search.search.search.eval.cp ?? search.search.search.eval.mate
+            if (!ss.search) {
+                return
+            }
+
+            let cp = ss.search.cp ?? ss.search.mate
 
             if (!cp) {
                 return

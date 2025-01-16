@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@solid-primitives/map':
+        specifier: ^0.5.0
+        version: 0.5.0(solid-js@1.8.15)
       '@solid-primitives/storage':
         specifier: ^2.1.4
         version: 2.1.4(solid-js@1.8.15)
@@ -398,6 +401,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@solid-primitives/map@0.5.0':
+    resolution: {integrity: sha512-m8hGPvqCNMfefcXKRVdwFQmpC6vNkYD77GoZuFiQLDP9f1XF+tY+4fjCmiuWsK+j7cNZ2jk9r2hzd4DEf2Driw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
   '@solid-primitives/storage@2.1.4':
     resolution: {integrity: sha512-ziGRMSPi2PDnY6L6YPGWYnzmUEPIwO0PaDT9N1WNW9P2tUMMhgqKLXBrYfjytpjwY3UM6kIrbONMRADjyGtzAw==}
     peerDependencies:
@@ -406,6 +414,11 @@ packages:
     peerDependenciesMeta:
       solid-start:
         optional: true
+
+  '@solid-primitives/trigger@1.1.0':
+    resolution: {integrity: sha512-00BbAiXV66WwjHuKZc3wr0+GLb9C24mMUmi3JdTpNFgHBbrQGrIHubmZDg36c5/7wH+E0GQtOOanwQS063PO+A==}
+    peerDependencies:
+      solid-js: ^1.6.12
 
   '@solid-primitives/utils@6.2.3':
     resolution: {integrity: sha512-CqAwKb2T5Vi72+rhebSsqNZ9o67buYRdEJrIFzRXz3U59QqezuuxPsyzTSVCacwS5Pf109VRsgCJQoxKRoECZQ==}
@@ -1004,7 +1017,17 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.30.1':
     optional: true
 
+  '@solid-primitives/map@0.5.0(solid-js@1.8.15)':
+    dependencies:
+      '@solid-primitives/trigger': 1.1.0(solid-js@1.8.15)
+      solid-js: 1.8.15
+
   '@solid-primitives/storage@2.1.4(solid-js@1.8.15)':
+    dependencies:
+      '@solid-primitives/utils': 6.2.3(solid-js@1.8.15)
+      solid-js: 1.8.15
+
+  '@solid-primitives/trigger@1.1.0(solid-js@1.8.15)':
     dependencies:
       '@solid-primitives/utils': 6.2.3(solid-js@1.8.15)
       solid-js: 1.8.15

@@ -1,12 +1,13 @@
 import { Chess, makeUci, Position } from "chessops"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { parseSan } from "chessops/san"
-import { createEffect, createMemo, createResource, createSignal, For, mapArray, on, Setter, Show } from "solid-js"
+import { Accessor, createEffect, createMemo, createResource, createSignal, For, mapArray, on, Resource, Show } from "solid-js"
 import './PlayUciReplay.scss'
 import { StockfishContextRes } from "../ceval2/StockfishContext"
 import { LocalEval } from "../ceval2/stockfish-module"
 import { povDiff } from "../chess_winningChances"
 import { fen_turn } from "../chess_pgn_logic"
+import { ReactiveMap } from "@solid-primitives/map"
 
 export type FEN = string
 export type UCI = string
@@ -83,17 +84,14 @@ export type PlayUciSingleReplayComponent = {
     goto_prev_ply_if_can: () => void,
     goto_next_ply_if_can: () => void,
     is_on_last_ply: boolean,
-    sf_steps: (ResWithSearchReturn | undefined)[],
-    last_sf_step: ResWithSearchReturn | undefined,
-    set_skill: Setter<Skill>,
+    sf_steps: (RequestStepWithSearch | undefined)[],
+    last_sf_step: RequestStepWithSearch | undefined,
     set_sans(_: SAN[]): void
 }
 
 export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: GameId): PlayUciSingleReplayComponent {
 
-    let [skill, set_skill] = createSignal<Skill>('level10')
-
-    let sf_builder = StockfishBuilderComponent({ s, game_id, get skill() { return skill() } })
+    let sf_builder = StockfishBuilderComponent({ s, game_id })
 
 
 
@@ -141,7 +139,7 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
 
 
     const sf_steps = createMemo(mapArray(steps, step =>
-        sf_builder.res_with_search(step)
+        sf_builder.request_step_with_search(step)
     ))
 
     const last_sf_step = createMemo(() => {
@@ -153,7 +151,6 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
 
     
     return {
-        set_skill,
         set_sans(sans: SAN[]) {
             set_steps(build_steps(sans))
             set_i_ply(sans.length)
@@ -234,16 +231,6 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
 
     const i_ply = createMemo(() => props.play_replay.ply_step?.ply)
 
-    const judgement_klass = (i: number) => {
-        let res = props.play_replay.sf_steps[i]
-        if (!res) {
-            return 'no-eval'
-        }
-        if (res.state === 'loading' || !res.search) {
-            return ' loading'
-        }
-        return res.search.judgement
-    }
 
     let $moves_el: HTMLElement
 
@@ -268,6 +255,18 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
         }
     }))
 
+    const judgement_klass = (i: number) => {
+        let sf_step = props.play_replay.sf_steps[i]
+
+        if (!sf_step) {
+            return ''
+        }
+
+        let res = sf_step.request_search()()
+
+        return res?.judgement ?? ''
+    }
+
     return (<>
         <div class='replay-single'>
             <div ref={_ => $moves_el = _} class='moves'>
@@ -279,20 +278,10 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                     <span onClick={() => goto_ply(ply_san.ply)} class={'move ' + (judgement_klass(i())) + (ply_san.ply === i_ply() ? ' active' : '')}>
                             <span class='san'>{ply_san.san}</span>
                             <Show when={props.play_replay.sf_steps[i()]}>{res =>
-                                <Show when={res().state === 'loading'} fallback={
-
-                                    <Show when={res().search}>{search => 
-                                        <>
-                                        <Show when={search().before_search.search.eval.cp}>{ cp => 
-                                                <span class='eval'>{renderEval(cp())}</span>
-                                            }</Show>
-                                         <span class='judgement'>{judgement_glyph(search().judgement)}</span>
-
-                                        </>
+                                <Show when={res().request_search()}>{ss =>
+                                    <Show when={ss()()}>{ss =>
+                                        <StepWithSearchForParams ss={ss()} />
                                     }</Show>
-
-                                }>{
-                                    <span class='loading'>l</span>
                                 }</Show>
                             }</Show>
                         </span>
@@ -303,37 +292,40 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
     </>)
 }
 
-export type Search = {
-    depth: number,
-    multi_pv: number,
-    eval: LocalEval
+const StepWithSearchForParams = (props: { ss: StepWithSearch }) => {
+
+    const cp = () => props.ss.search?.cp
+    const judgement = () => props.ss.judgement
+
+    return (<>
+        <Show when={cp()}>{cp =>
+            <span class='eval'>{renderEval(cp())}</span>
+        }</Show>
+        <span class='judgement'>{judgement_glyph(judgement())}</span>
+    </>)
 }
 
-
-export type FenWithSearch = {
-    fen: FEN,
-    search: {
-        depth: number,
-        multi_pv: number,
-        eval: LocalEval
-    }
+export type SearchParams = {
+    server?: true,
+    depth: number,
+    multi_pv: number
 }
 
 export type StepWithSearch = Step & {
-    before_search: FenWithSearch,
-    search: FenWithSearch,
+    params: SearchParams
+    before_search: LocalEval | undefined,
+    search: LocalEval | undefined,
     judgement: Judgement
+}
+
+export type RequestStepWithSearch = {
+    request_search(params?: SearchParams): Accessor<StepWithSearch | undefined>,
 }
 
 export type GameId = string
 
-export type ResWithSearchReturn = {
-    state: 'loading' | 'success',
-    search: StepWithSearch | undefined
-}
-
-export const diff_eval = (a: FenWithSearch, b: FenWithSearch) => {
-    return povDiff(fen_turn(a.fen), a.search.eval, b.search.eval)
+export const diff_eval = (fen: FEN, before: LocalEval, after: LocalEval) => {
+    return povDiff(fen_turn(fen), before, after)
 }
 
 const judgement_glyph = (j: Judgement) => {
@@ -345,12 +337,12 @@ type Judgement = 'good' | 'inaccuracy' | 'mistake' | 'blunder'
 
 
 export type StockfishBuilderComponent = {
-    res_with_search: (step: Step) => ResWithSearchReturn | undefined
+    request_step_with_search: (step: Step) => RequestStepWithSearch | undefined
 }
 
 export type Skill = 'level10' | 'level16' | 'level20'
 
-function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: string, skill: Skill }): StockfishBuilderComponent {
+function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: string }): StockfishBuilderComponent {
 
     type QueueItem = { resolve_ev: (_?: LocalEval) => void, fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number }
 
@@ -400,61 +392,62 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
         return cache[key]
     }
 
-    let res_with_search = (step: Step): ResWithSearchReturn | undefined => {
+    let request_step_with_search = (step: Step): RequestStepWithSearch | undefined => {
 
         if (fen_is_end(step.fen)) {
             return undefined
         }
 
-        let [r] = createResource(() => props.skill, async (skill: Skill) => {
-            let multi_pv = step.ply < 10 ? 6 : step.ply < 15 ? 3 : 1
-            let depth = skill === 'level10' ? 10 : skill === 'level16' ? 16 : 20
-            let [before_eval, fen_eval] = await Promise.all([
-                get_eval_with_cached(step.before_fen, step.ply - 1, props.game_id, multi_pv, depth),
-                get_eval_with_cached(step.fen, step.ply, props.game_id, multi_pv, depth)
-            ])
+        let cache = new ReactiveMap<string, Resource<StepWithSearch>>()
 
-            let before_search = {
-                fen: step.before_fen,
-                search: {
-                    depth,
-                    multi_pv,
-                    eval: before_eval
+        function request_search(params?: SearchParams): Accessor<StepWithSearch | undefined> {
+
+            if (!params) {
+                return () => {
+                    let res = [...cache.values()]
+                    return res[res.length - 1]?.()
                 }
             }
 
-            let search = {
-                fen: step.fen,
-                search: {
-                    depth,
-                    multi_pv,
-                    eval: fen_eval
+            let key = [params.depth, params.multi_pv, params.server].join('$$')
+
+            if (cache.get(key)) {
+                return cache.get(key)!
+            }
+
+            let { multi_pv, depth } = params
+            let [r] = createResource(async () => {
+
+                let [before_search, search] = await Promise.all([
+                    get_eval_with_cached(step.before_fen, step.ply - 1, props.game_id, multi_pv, depth),
+                    get_eval_with_cached(step.fen, step.ply, props.game_id, multi_pv, depth)
+                ])
+
+                let diff = diff_eval(step.before_fen, before_search, search)
+
+                let judgement: Judgement = diff < 0.03 ? 'good' : diff < 0.05 ? 'inaccuracy' : diff < 0.12 ? 'mistake' : 'blunder'
+
+                return {
+                    params,
+                    ...step,
+                    before_search,
+                    search,
+                    judgement
                 }
-            }
+            })
 
-            let diff = diff_eval(before_search, search)
 
-            let judgement: Judgement = diff < 0.03 ? 'good' : diff < 0.05 ? 'inaccuracy' : diff < 0.12 ? 'mistake' : 'blunder'
+            cache.set(key, r)
 
-            return {
-                ...step,
-                before_search,
-                search,
-                judgement
-            }
-        })
+            return r
+        }
 
         return {
-            get state() {
-                return r.loading ? 'loading' : 'success'
-            },
-            get search() {
-                return r()
-            }
+            request_search
         }
     }
 
-    return { res_with_search }
+    return { request_step_with_search }
 }
 
 /* lila/ui/ceval/src/util.ts */
