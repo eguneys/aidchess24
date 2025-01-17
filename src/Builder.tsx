@@ -5,11 +5,12 @@ import { Color, opposite } from "chessops"
 import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
 import './Builder.scss'
 
-import { PlayUciSingleReplay, PlayUciSingleReplayComponent, SAN, SearchParams } from "./components/PlayUciReplayComponent"
+import { PlayUciSingleReplay, PlayUciSingleReplayComponent, SearchParams } from "./components/PlayUciReplayComponent"
 import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
 import { fen_turn } from "./chess_pgn_logic"
+import { SAN } from "./components/step_types"
 
 export default () => {
     return (<StockfishProvider>
