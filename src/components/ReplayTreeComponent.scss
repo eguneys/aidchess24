@@ -1,0 +1,85 @@
+.replay-tree {
+
+    overflow-y: scroll;
+
+    .moves {
+
+        padding: 0.2em;
+
+        $text-gray: rgb(73, 70, 70);
+        $text-light: rgb(210, 217, 230);
+        $blue-bg: rgb(47, 99, 222);
+        $blue-hover: rgb(79, 122, 223);
+
+        .move {
+            user-select: none;
+            cursor: pointer;
+            margin: 0.1em;
+            padding: 0.2em;
+            display: inline-flex;
+            line-height: 1.3em;
+            font-weight: bold;
+            font-family: 'Noto Chess', 'Kantumruy';
+            border-radius: 2px;
+
+
+            .index {
+                margin-right: 0.2em;
+                color: $text-gray;
+            }
+
+            &.on-path {
+                box-shadow: inset 0 -2px $blue-bg;
+            }
+
+
+
+            &.on-path-end {
+                background: $blue-bg;
+                color: $text-light;
+
+                .index {
+                    color: $text-light;
+                }
+            }
+
+            &:hover {
+                color: $text-light;
+                background: $blue-hover;
+                .index {
+                    color: $text-light;
+                    background: $blue-hover;
+                }
+            }
+        }
+
+
+        .lines {
+            position: relative;
+            margin-left: 12px;
+            padding-left: 12px; 
+
+            border-left: 2px solid $text-gray;
+
+            &:before {
+                position: absolute;
+                content: '';
+                width: 12px;
+                border-top: 2px solid $text-gray;
+                margin-left: -24px;
+            }
+
+
+            .line {
+                &:before {
+                    position: absolute;
+                    content: '';
+                    width: 12px;
+                    border-top: 2px solid $text-gray;
+                    margin-left: -12px;
+                    margin-top: 0.8em;
+                }
+            }
+        }
+    }
+}

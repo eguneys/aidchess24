@@ -11,6 +11,7 @@ import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
 import { fen_turn } from "./chess_pgn_logic"
 import { SAN } from "./components/step_types"
+import { PlayUciTreeReplay, PlayUciTreeReplayComponent } from "./components/ReplayTreeComponent"
 
 export default () => {
     return (<StockfishProvider>
@@ -134,9 +135,19 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
     const set_on_wheel = (i: number) => {
         if (i > 0) {
-            play_replay.goto_next_ply_if_can()
+            if (tab() === 'match') {
+                play_replay.goto_next_ply_if_can()
+            }
+            if (tab() === 'repertoire') {
+                play_replay_tree.goto_next_path_if_can()
+            }
         } else {
-            play_replay.goto_prev_ply_if_can()
+            if (tab() === 'match') {
+                play_replay.goto_prev_ply_if_can()
+            }
+            if (tab() === 'repertoire') {
+                play_replay_tree.goto_prev_path_if_can()
+            }
         }
     }
 
@@ -184,23 +195,50 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
     const [builder_result, set_builder_result] = createSignal<BuilderResult | undefined>(undefined)
 
+    const play_replay_tree = PlayUciTreeReplayComponent()
+
+    const on_save_line = () => {
+        let steps = play_replay.steps_up_to_ply
+
+        let sans = steps.map(_ => _.san)
+
+        play_replay_tree.steps.add_sans_at_root(sans)
+    }
+
+    const [tab, set_tab] = createSignal('repertoire')
+
     return (<>
     <div onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
             <PlayUciBoard color={player_color()} movable={movable()} play_uci={play_uci} />
         </div>
         <div class='replay-wrap'>
-            <PlayUciSingleReplay play_replay={play_replay}/>
-            <div class='result-wrap'>
-                <Show when={builder_result() === 'drop'}>
-                    <span class='result'>Game Over</span>
-                    <small class='drop'>Evaluation Dropped Below -2</small>
+            <div class='tabs-wrap'>
+                <div onClick={() => set_tab('match')}  class={'tab' + (tab() === 'match' ? ' active' : '')}>Match</div>
+                <div onClick={() => set_tab('repertoire')} class={'tab' + (tab() === 'repertoire' ? ' active' : '')}>Repertoire</div>
+            </div>
+                <Show when={tab() === 'match'}>
+                    <>
+                        <PlayUciSingleReplay play_replay={play_replay} />
+                        <div class='result-wrap'>
+                            <Show when={builder_result() === 'drop'}>
+                                <span class='result'>Game Over</span>
+                                <small class='drop'>Evaluation Dropped Below -2</small>
+                            </Show>
+                        </div>
+                        <div class='tools-wrap'>
+                            <button onClick={on_save_line} class='save'>Save Line</button>
+                            <button onClick={on_rematch} class='rematch'>Rematch</button>
+                        </div>
+                    </>
+                </Show>
+
+                <Show when={tab() === 'repertoire'}>
+                    <>
+                    <PlayUciTreeReplay play_replay={play_replay_tree}/>
+                    </>
                 </Show>
             </div>
-            <div class='tools-wrap'>
-                <button onClick={on_rematch} class='rematch'>Rematch</button>
-            </div>
-        </div>
 
     </div>
     </>)

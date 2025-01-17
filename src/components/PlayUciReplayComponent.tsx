@@ -10,7 +10,8 @@ import { build_steps, FEN, fen_is_end, Ply, push_san, SAN, Step } from "./step_t
 export type PlayUciSingleReplayComponent = {
     plies: Ply[],
     sans: SAN[],
-    ply_sans: string[],
+    ply_sans: SAN[],
+    steps_up_to_ply: Step[],
     steps: Step[],
     last_step: Step | undefined,
     ply_step: Step | undefined,
@@ -98,6 +99,9 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
         get steps() {
             return steps()
         },
+        get steps_up_to_ply() {
+            return steps().slice(0, i_ply())
+        },
         get plies() {
             return plies()
         },
@@ -110,6 +114,7 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
         get ply_step() {
             return ply_step()
         },
+
         get last_step() {
             return last_step()
         },

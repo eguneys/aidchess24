@@ -35,7 +35,56 @@
 
 $replay-bg: rgb(63, 61, 56);
 
+$bg-g1: rgb(216, 166, 85);
+$bg-g2: rgb(226, 186, 121);
+
+$tree-bg: rgb(234, 219, 198);
+
         .replay-wrap {
+            display: flex;
+            flex-flow: column;
+
+
+            .tabs-wrap {
+                display: flex;
+                background: linear-gradient($bg-g1, $bg-g2);
+
+                .tab {
+                    margin-top: 0.3em;
+                    border-left: 1px solid $text;
+                    background: $replay-bg;
+                    user-select: none;
+                    cursor: pointer;
+                    padding: 0.2em 0.4em;
+                    color: $text;
+                    border-bottom: 1px solid rgb(190, 99, 65);
+
+                    &.active,
+                    &:hover {
+                        color: $text-light;
+                        border-bottom: 3px solid rgb(190, 99, 65);
+                    }
+
+                    &.active {
+                        background: $bg-g2;
+                        color: $replay-bg;
+                    }
+
+
+
+                    transition: all .1s;
+                }
+            }
+
+            .replay-single {
+                flex: 1;
+            }
+
+            .replay-tree {
+                background: $tree-bg;
+                border: 1px solid $bg-g1;
+                max-height: 400px;
+            }
 
             .result-wrap {
                 display: flex;

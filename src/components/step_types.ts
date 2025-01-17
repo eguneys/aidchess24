@@ -7,6 +7,7 @@ export type UCI = string
 export type SAN = string
 export type Ply = number
 export type Path = string
+export type NAG = number
 
 export type Step = {
     path: Path,
