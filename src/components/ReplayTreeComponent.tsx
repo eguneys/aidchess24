@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js"
 import { FEN, make_step_and_play, NAG, Path, Ply, SAN, Step } from "./step_types"
 import { Chess, Color, makeUci, Position } from "chessops"
 import { INITIAL_FEN, parseFen } from "chessops/fen"
@@ -491,11 +491,75 @@ export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
     }
 
     const get_up_path = () => {
-        return undefined
+        let pc = steps.find_parent_and_child_at_path(cursor_path())
+
+        if (!pc) {
+            return undefined
+        }
+
+        if (!pc[0]) {
+            return undefined
+        }
+
+
+        if (pc[0].children.length === 1) {
+            while (true) {
+                pc = steps.find_parent_and_child_at_path(pc[0].path)
+                if (!pc || !pc[0]) {
+                    return undefined
+                }
+
+                if (pc[0].children.length > 1) {
+                    break
+                }
+            }
+        }
+
+        let i = pc[0].children.indexOf(pc[1])
+
+        let c = pc[0].children[i - 1]
+
+        if (!c) {
+            return undefined
+        }
+
+        return c.path
     }
 
     const get_down_path = () => {
-        return undefined
+        let pc = steps.find_parent_and_child_at_path(cursor_path())
+
+        if (!pc) {
+            return undefined
+        }
+
+        if (!pc[0]) {
+            return undefined
+        }
+
+
+        if (pc[0].children.length === 1) {
+            while (true) {
+                pc = steps.find_parent_and_child_at_path(pc[0].path)
+                if (!pc || !pc[0]) {
+                    return undefined
+                }
+
+                if (pc[0].children.length > 1) {
+                    break
+                }
+            }
+        }
+
+        let i = pc[0].children.indexOf(pc[1])
+
+        let c = pc[0].children[i + 1]
+
+        if (!c) {
+            return undefined
+        }
+
+        return c.path
     }
 
 
@@ -590,6 +654,37 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
         return `${res}.` + (ply % 2 === 0 ? '..' : '')
     }
 
+    const on_key_down = (e: KeyboardEvent) => {
+        let catched = false
+        if (e.key === 'ArrowLeft') {
+            props.play_replay.goto_prev_if_can()
+            catched = true
+        }
+        if (e.key === 'ArrowRight') {
+            props.play_replay.goto_next_if_can()
+            catched = true
+        }
+        if (e.key === 'ArrowUp') {
+            props.play_replay.goto_up_if_can()
+            catched = true
+        }
+        if (e.key === 'ArrowDown') {
+            props.play_replay.goto_down_if_can()
+            catched = true
+        }
+        if (catched) {
+            e.preventDefault()
+        }
+    }
+
+    onMount(() => {
+
+        document.addEventListener('keydown', on_key_down)
+
+        onCleanup(() => {
+            document.removeEventListener('keydown', on_key_down)
+        })
+    })
 
 
     return (<>
