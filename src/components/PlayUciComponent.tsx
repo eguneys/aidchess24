@@ -8,7 +8,7 @@ import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { makeSan } from "chessops/san"
 import { batch, createEffect, createMemo, createSignal, onMount } from "solid-js"
 import './chessground.css'
-import { SAN, UCI } from "./PlayUciReplayComponent"
+import { SAN, UCI } from "./step_types"
 
 export type PlayUciComponent = {
     play_orig_key: (orig: Key, dest: Key) => void,
