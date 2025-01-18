@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, on, Show } from "solid-js"
 import { FEN, make_step_and_play, NAG, Path, Ply, SAN, Step } from "./step_types"
 import { Chess, Color, makeUci, Position } from "chessops"
 import { INITIAL_FEN, parseFen } from "chessops/fen"
@@ -86,6 +86,9 @@ export type TreeStepNode = {
     add_child_san(san: SAN): TreeStepNode
     remove_child_san(san: SAN): TreeStepNode | undefined
     remove_child(child: TreeStepNode): TreeStepNode | undefined
+    nb_first_variations: number
+    first_node_with_variations: TreeStepNode | undefined
+    length: number
 }
 
 export type StepsTree = {
@@ -95,8 +98,9 @@ export type StepsTree = {
     add_child_san(path: Path, san: SAN): TreeStepNode | undefined
     remove_child_at_path(path: Path): TreeStepNode | undefined
     find_at_path(path: Path): TreeStepNode | undefined
+    find_parent_and_child_at_path(path: Path): [TreeStepNode | undefined, TreeStepNode] | undefined
     siblings_of(path: any): TreeStepNode[] | undefined
-    previous_branch_points(path: string): TreeStepNode[]
+    previous_branch_points(path: string): TreeStepNode[] | undefined
 }
 
 export function StepsTree(): StepsTree {
@@ -204,6 +208,7 @@ export function StepsTree(): StepsTree {
             return pc[1]
         },
         find_at_path,
+        find_parent_and_child_at_path,
         siblings_of(path: Path) {
             let parent = find_parent_and_child_at_path(path)?.[0]
             if (parent) {
@@ -248,7 +253,25 @@ export function TreeStepNode(ply: Ply, pos: Position, san: SAN, base_path: Path)
     pos = pos.clone()
     let step = make_step_and_play(ply, pos, san, base_path)
 
-    return {
+    let nb_first_variations = () => {
+        return children_first_variations()?.length ?? 0
+    }
+    let children_first_variations = () => {
+        return first_node_with_variations()?.children
+    }
+
+    let first_node_with_variations = (): TreeStepNode | undefined => {
+        let cc = children()
+        if (cc.length === 0) {
+            return undefined
+        } else if (cc.length === 1) {
+            return cc[0].first_node_with_variations
+        } else {
+            return self
+        }
+    }
+
+    let self = {
         get nags() {
             return nags()
         },
@@ -301,8 +324,32 @@ export function TreeStepNode(ply: Ply, pos: Position, san: SAN, base_path: Path)
             let child = cc.splice(i, 1)[0]
             set_children([...cc])
             return child
+        },
+        
+        get nb_first_variations() {
+            return nb_first_variations()
+        },
+        get first_node_with_variations() {
+            return first_node_with_variations()
+        },
+        get length() {
+            let cc = children()
+            if (cc.length > 1) {
+                return 1
+            }
+            if (cc.length === 0) {
+                return 0
+            }
+            let res = 1
+            let i = cc[0]
+            while (i?.children.length === 1) {
+                res ++
+                i = i.children[0]
+            }
+            return res
         }
     }
+    return self
 }
 
 const alekhine = `
@@ -323,11 +370,21 @@ const alekhine = `
 export type PlayUciTreeReplayComponent = {
     steps: StepsTree,
     cursor_path: Path,
+    cursor_path_step: Step | undefined,
     goto_path: (path: Path) => void,
     get_prev_path: () => Path | undefined,
     get_next_path: () => Path | undefined,
-    goto_prev_path_if_can: () => void,
-    goto_next_path_if_can: () => void,
+    get_last_path(): Path
+    get_first_path(): Path | undefined
+    goto_last_if_can(): void
+    goto_next_if_can(): void
+    goto_prev_if_can(): void
+    goto_first_if_can(): void
+    get_down_path(): Path | undefined
+    goto_down_if_can(): void
+    get_up_path(): Path | undefined
+    goto_up_if_can(): void
+    previous_branch_points_at_cursor_path: TreeStepNode[]
 }
 
 export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
@@ -360,6 +417,10 @@ export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
     const get_prev_path = () => {
         let c = cursor_path()
 
+        if (c === '') {
+            return undefined
+        }
+
         return c.split(' ').slice(0, -1).join(' ')
     }
 
@@ -372,8 +433,72 @@ export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
             return children[0].path
         }
 
-        return children.find(_ => sticky_paths.includes(_.path))?.path ?? children[0].path
+        return children.find(_ => sticky_paths.includes(_.path))?.path ?? children[0]?.path
     }
+
+    const get_first_path = () => {
+        let pc = steps.find_parent_and_child_at_path(cursor_path())
+
+        if (!pc) {
+            return undefined
+        }
+
+        let i = pc
+
+        if (!i[0]) {
+            return ''
+        }
+
+        if (i[0].children.length > 1) {
+            return i[0].path
+        }
+
+        while (true) {
+            if (!i[0]) {
+                break
+            }
+            if (i[0].children.length > 1) {
+                break
+            }
+
+            let _i = steps.find_parent_and_child_at_path(i[0].path)
+
+            if (!_i) {
+                break
+            }
+            i = _i
+        }
+        return i[1].path
+    }
+
+    const get_last_path = () => {
+        let step = steps.find_at_path(cursor_path())
+
+        if (!step) {
+            return steps.root.find(_ => sticky_paths.includes(_.path))?.path ?? steps.root[0]?.path
+        }
+
+        let i = step
+
+        if (i.children.length > 1) {
+            return i.children.find(_ => sticky_paths.includes(_.path))?.path ?? i.children[0]?.path
+        }
+
+        while (i.children.length === 1) {
+            i = i.children[0]
+        }
+        return i.path
+    }
+
+    const get_up_path = () => {
+        return undefined
+    }
+
+    const get_down_path = () => {
+        return undefined
+    }
+
+
 
 
     return {
@@ -384,21 +509,55 @@ export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
         set cursor_path(path: Path) {
             set_cursor_path(path)
         },
+        get cursor_path_step() {
+            return steps.find_at_path(cursor_path())?.step
+        },
         goto_path,
         get_prev_path,
         get_next_path,
-        goto_prev_path_if_can() {
+        goto_prev_if_can() {
             let res = get_prev_path()
             if (res !== undefined) {
                 goto_path(res)
             }
         },
-        goto_next_path_if_can() {
+        goto_next_if_can() {
             let res = get_next_path()
             if (res !== undefined) {
                 goto_path(res)
             }
         },
+        get_first_path,
+        get_last_path,
+        get_up_path,
+        get_down_path,
+        goto_up_if_can() {
+            let res = get_up_path()
+            if (res !== undefined) {
+                goto_path(res)
+            }
+        },
+        goto_down_if_can() {
+            let res = get_down_path()
+            if (res !== undefined) {
+                goto_path(res)
+            }
+        },
+        goto_last_if_can() {
+            let res = get_last_path()
+            if (res !== undefined) {
+                goto_path(res)
+            }
+        },
+        goto_first_if_can() {
+            let res = get_first_path()
+            if (res !== undefined) {
+                goto_path(res)
+            }
+        },
+        get previous_branch_points_at_cursor_path() {
+            return steps.previous_branch_points(cursor_path()) ?? []
+        }
     }
 }
 
@@ -426,13 +585,58 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
         cont.scrollTo({ behavior: 'smooth', top })
     })
 
+    const ply_to_index = (ply: number) => {
+        let res = Math.floor(ply / 2) + 1
+        return `${res}.` + (ply % 2 === 0 ? '..' : '')
+    }
+
+
+
     return (<>
         <div class='replay-tree'>
-            <div ref={_ => $moves_el = _} class='moves'>
-                <NodesShorten nodes={steps.root} 
-                    cursor_path={props.play_replay.cursor_path}
-                    on_set_cursor={(path: Path) => props.play_replay.cursor_path = path} />
+            <div class='moves-wrap'>
+                <div ref={_ => $moves_el = _} class='moves'>
+                    <NodesShorten nodes={steps.root}
+                        cursor_path={props.play_replay.cursor_path}
+                        on_set_cursor={(path: Path) => props.play_replay.cursor_path = path} />
+                </div>
             </div>
+            <div class='branch-sums'>
+                <button 
+                    disabled={props.play_replay.get_up_path() === undefined}
+                    class={"fbt prev" + (props.play_replay.get_up_path() === undefined ? ' disabled' : '')}
+                    onClick={() => props.play_replay.goto_up_if_can()}
+                    data-icon="" />
+                <button 
+                    disabled={props.play_replay.get_down_path() === undefined} 
+                    class={"fbt prev" + (props.play_replay.get_down_path() === undefined ? ' disabled' : '')} 
+                    onClick={() => props.play_replay.goto_down_if_can()} 
+                    data-icon="" />
+
+                <For each={props.play_replay.previous_branch_points_at_cursor_path}>{branch =>
+                    <div class='fbt' onClick={() => props.play_replay.cursor_path = branch.path}>
+                        <Show when={branch.ply & 1}>
+                            <span class='index'>{ply_to_index(branch.ply)}</span>
+                        </Show>
+                        {branch.san}
+                    </div>
+                }</For>
+            </div>
+            <div class='replay-jump'>
+                <button disabled={props.play_replay.get_first_path() === undefined} 
+                    class={"fbt first" + (props.play_replay.get_first_path() === undefined ? ' disabled' : '')}
+                    onClick={() => props.play_replay.goto_first_if_can()} data-icon="" />
+                <button disabled={props.play_replay.get_prev_path() === undefined} 
+                    class={"fbt prev" + (props.play_replay.get_prev_path() === undefined ? ' disabled' : '')} 
+                    onClick={() => props.play_replay.goto_prev_if_can()} data-icon="" />
+                <button disabled={props.play_replay.get_next_path() === undefined} 
+                    class={"fbt next" + (props.play_replay.get_next_path() === undefined ? ' disabled' : '')}
+                    onClick={() => props.play_replay.goto_next_if_can()} data-icon="" />
+                <button disabled={props.play_replay.get_last_path() === undefined} 
+                    class={"fbt last" + (props.play_replay.get_last_path() === undefined ? 'disabled' : '')} 
+                    onClick={() => props.play_replay.goto_last_if_can()} data-icon="" />
+            </div>
+
         </div>
     </>)
 }
@@ -450,8 +654,18 @@ function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_c
                     <div class='lines'>
                         <Key each={node().children} by="path">{node =>
                             <div class='line'>
-                                <StepNode {...props} node={node()} show_index={true}/>
-                                <NodesShorten {...props} nodes={node().children} />
+                                <Show when={props.cursor_path.startsWith(node().path)} fallback={
+                                    <>
+                                        <StepNode {...props} node={node()} show_index={true} collapsed={true}/>
+                                        <span class='collapsed'>..{node().length} {node().nb_first_variations}</span>
+                                    </>
+                                }>
+                                    <>
+
+                                        <StepNode {...props} node={node()} show_index={true} />
+                                        <NodesShorten {...props} nodes={node().children} />
+                                    </>
+                                </Show>
                             </div>
                         }</Key>
                     </div>
@@ -461,7 +675,7 @@ function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_c
     </>)
 }
 
-function StepNode(props: { node: TreeStepNode, show_index?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void }) {
+function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void }) {
 
     let show_index = createMemo(() => props.node.ply % 2 === 0 || props.show_index)
     let dots = createMemo(() => props.node.ply % 2 === 0 ? '.' : '...')
@@ -473,6 +687,10 @@ function StepNode(props: { node: TreeStepNode, show_index?: boolean, cursor_path
 
     const klass = createMemo(() => {
         let res = ['move']
+
+        if (props.collapsed) {
+            res.push('collapsed')
+        }
 
         if (on_path()) {
             res.push('on-path')

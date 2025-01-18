@@ -1,6 +1,44 @@
 .replay-tree {
 
-    overflow-y: scroll;
+    display: flex;
+    flex-flow: column;
+
+
+    .branch-sums {
+        font-family: 'Noto Chess', 'Kantumruy';
+        display: flex;
+        gap: 0.5em;
+        padding-left: 0.5em;
+        border-bottom: 1px solid #0c0c0c;
+
+
+        div {
+            text-transform: none;
+        }
+    }
+
+    .replay-jump {
+        display: flex;
+        flex-flow: row;
+        align-items: stretch;
+        font-size: 1.2rem;
+
+        .fbt {
+            flex: 1 1 30%;
+            border-radius: 0 0 3px 3px;
+
+            &:last-child,
+            &:first-child {
+                font-size: .7em;
+                flex: 1 1 20%;
+            }
+        }
+    }
+
+    .moves-wrap {
+        flex: 1;
+        overflow-y: scroll;
+    }
 
     .moves {
 
@@ -51,8 +89,12 @@
                     background: $blue-hover;
                 }
             }
+
         }
 
+        .collapsed {
+            opacity: 0.6;
+        }
 
         .lines {
             position: relative;

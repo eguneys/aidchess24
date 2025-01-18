@@ -70,8 +70,6 @@ $tree-bg: rgb(234, 219, 198);
                         color: $replay-bg;
                     }
 
-
-
                     transition: all .1s;
                 }
             }
@@ -83,7 +81,7 @@ $tree-bg: rgb(234, 219, 198);
             .replay-tree {
                 background: $tree-bg;
                 border: 1px solid $bg-g1;
-                max-height: 400px;
+                flex: 2 1 300px;
             }
 
             .result-wrap {

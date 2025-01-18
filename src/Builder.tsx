@@ -139,14 +139,14 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
                 play_replay.goto_next_ply_if_can()
             }
             if (tab() === 'repertoire') {
-                play_replay_tree.goto_next_path_if_can()
+                play_replay_tree.goto_next_if_can()
             }
         } else {
             if (tab() === 'match') {
                 play_replay.goto_prev_ply_if_can()
             }
             if (tab() === 'repertoire') {
-                play_replay_tree.goto_prev_path_if_can()
+                play_replay_tree.goto_prev_if_can()
             }
         }
     }
@@ -196,6 +196,14 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     const [builder_result, set_builder_result] = createSignal<BuilderResult | undefined>(undefined)
 
     const play_replay_tree = PlayUciTreeReplayComponent()
+
+    createEffect(on(() => play_replay_tree.cursor_path_step, (ps) => {
+        if (ps) {
+            play_uci.set_fen_last_move(ps.fen, [ps.uci, ps.san])
+        } else {
+            play_uci.set_fen_last_move(INITIAL_FEN)
+        }
+    }))
 
     const on_save_line = () => {
         let steps = play_replay.steps_up_to_ply
