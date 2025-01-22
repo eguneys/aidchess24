@@ -95,6 +95,7 @@ export type TreeStepNode = {
 
 export type StepsTree = {
     initial_fen: FEN | undefined,
+    as_pgn: string,
     root: TreeStepNode[]
     add_sans_at_root(san: SAN[]): TreeStepNode[]
     add_child_san(path: Path, san: SAN): TreeStepNode | undefined
@@ -146,7 +147,33 @@ export function StepsTree(): StepsTree {
         
     }
 
+
+    function render_data(data: Step, show_index = false) {
+        let ply = data.ply
+        let i = (ply % 2 === 1 || show_index) ? (Math.ceil(ply / 2) + (ply % 2 === 1 ? '.' : '...')) : ''
+        let tail = ply % 2 === 1 ? '' : ' '
+        return `${i} ${data.san}${data.comments ? ' { ' + data.comments + ' }' : ''}${tail}`
+    }
+
+    function render_lines(ts: TreeStepNode[], show_index = false) {
+
+        let res = ''
+        if (ts.length === 0) {
+        } else if (ts.length === 1) {
+            res += render_data(ts[0].step, show_index)
+            res += render_lines(ts[0].children, false)
+        } else {
+            res += render_data(ts[0].step, false).trimEnd()
+            res += ' ' + ts.slice(1).map(_ => `(${render_lines([_], true).trimEnd()})`).join(' ')
+            res += ' ' + render_lines(ts[0].children, true)
+        }
+        return res
+    }
+
     return {
+        get as_pgn() {
+            return render_lines(root(), true)
+        },
         get initial_fen() {
             if (root().length === 0) {
                 return undefined
@@ -359,6 +386,7 @@ export function TreeStepNode(ply: Ply, pos: Position, san: SAN, base_path: Path)
     return self
 }
 
+/*
 const alekhine = `
 [Event "e4 vs Minor Defences: Alekhine"]
 [Site "https://lichess.org/study/F8wyMEli/XtCmR5GS"]
@@ -372,6 +400,7 @@ const alekhine = `
 
 1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 Nc6 (4... Nb6 5. a4 a5 6. Nc3 g6 (6... Bf5 7. d5 e6 8. dxe6 Bxe6 9. Bg5 Qd7 10. exd6 Bxd6 11. Nb5 Nd5 12. Nxd6+ Qxd6) 7. exd6 cxd6 (7... exd6 8. Bg5 f6 9. Bf4 d5 10. Bd3 Bd6 11. Bxd6 Qxd6 12. O-O O-O 13. Qd2) 8. d5 Bg7 9. Be3 O-O 10. Bd4 N8d7 11. Bxg7 Kxg7 12. Qd4+ Nf6 13. Nd2 Bd7 14. Nde4 Rc8 15. h4 h5 16. f3) (4... c6 5. Be2 g6 6. c4 Nc7 7. exd6 Qxd6 8. Nc3 Bg7 9. O-O O-O 10. h3 Ne6 11. Be3 Nf4 12. Re1) (4... Bf5 5. Bd3 Bxd3 6. Qxd3 e6 7. O-O Nc6 8. c4 Nb6 9. exd6 cxd6 10. Nc3 Be7 11. d5 Nb4 12. Qe4 e5 13. c5 dxc5 14. a3 Na6 15. Rd1 O-O) 5. c4 Nb6 6. e6 fxe6 7. Nc3 g6 8. h4 Bg7 9. Be3 e5 10. d5 Nd4 11. Nxd4 exd4 12. Bxd4 Bxd4 13. Qxd4 e5 14. Qe3 *
 `
+*/
 
 
 export type PlayUciTreeReplayComponent = {
@@ -394,11 +423,13 @@ export type PlayUciTreeReplayComponent = {
     previous_branch_points_at_cursor_path: TreeStepNode[]
 }
 
-export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
+export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayComponent {
 
     let steps = StepsTree()
 
-    steps = parse_PGNS(alekhine)[0].tree
+    if (pgn) {
+        steps = parse_PGNS(pgn)[0].tree
+    }
 
     let [cursor_path, set_cursor_path] = createSignal<Path>('')
 
@@ -808,7 +839,7 @@ function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?:
     })
 
     return (<>
-    <div onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, props.node.path) }} onClick={(e) => { props.on_set_cursor(props.node.path) } } class={klass()}>
+    <div onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, props.node.path) }} onClick={() => { props.on_set_cursor(props.node.path) } } class={klass()}>
         <Show when={show_index()}><span class='index'>{Math.floor(props.node.ply / 2) + 1}{dots()}</span></Show>
         {props.node.san}
     </div>

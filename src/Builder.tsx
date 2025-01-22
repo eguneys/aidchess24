@@ -193,9 +193,18 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         }))
     }))
 
+
+    let [first_cursor_path, set_first_cursor_path] = makePersistedNamespaced<Path>('', 'builder.current.cursor_path')
+
+    let [first_pgn, set_first_pgn] = makePersistedNamespaced<string | undefined>(undefined, 'builder.current.pgn')
     const [builder_result, set_builder_result] = createSignal<BuilderResult | undefined>(undefined)
 
-    const play_replay_tree = PlayUciTreeReplayComponent()
+    const play_replay_tree = PlayUciTreeReplayComponent(first_pgn())
+    play_replay_tree.cursor_path = first_cursor_path()
+
+    createEffect(on(() => play_replay_tree.cursor_path, path => {
+        set_first_cursor_path(path)
+    }))
 
     createEffect(on(() => play_replay_tree.cursor_path_step, (ps) => {
         if (ps) {
@@ -220,6 +229,8 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
             set_tab('repertoire')
             play_replay_tree.cursor_path = final_path
+
+            set_first_pgn(play_replay_tree.steps.as_pgn)
         })
     }
 

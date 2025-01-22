@@ -15,7 +15,8 @@ export type Step = {
     before_fen: FEN,
     fen: FEN,
     uci: UCI,
-    san: SAN
+    san: SAN,
+    comments?: string
 }
 
 export const fen_is_end = (fen: FEN) => Chess.fromSetup(parseFen(fen).unwrap()).unwrap().isEnd()
