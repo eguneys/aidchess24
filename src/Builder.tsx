@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createResource, createSignal, on, Show, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, on, Show, useContext } from "solid-js"
 import { StockfishContext, StockfishContextRes, StockfishProvider } from "./ceval2/StockfishContext"
 import { INITIAL_FEN } from "chessops/fen"
 import { Color, opposite } from "chessops"
@@ -206,11 +206,21 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     }))
 
     const on_save_line = () => {
-        let steps = play_replay.steps_up_to_ply
+        batch(() => {
+            let steps = play_replay.steps_up_to_ply
 
-        let sans = steps.map(_ => _.san)
+            let sans = steps.map(_ => _.san)
 
-        play_replay_tree.steps.add_sans_at_root(sans)
+            let res = play_replay_tree.steps.add_sans_at_root(sans)
+            let final_path = res[res.length - 1]?.path
+
+            if (!final_path) {
+                return
+            }
+
+            set_tab('repertoire')
+            play_replay_tree.cursor_path = final_path
+        })
     }
 
     const [tab, set_tab] = createSignal('repertoire')

@@ -33,8 +33,9 @@ export function PlayUciComponent(): PlayUciComponent {
   let [add_last_move, set_add_last_move] = createSignal<[UCI, SAN] | undefined>(undefined)
 
   let fen = createMemo(() => makeFen(pos().toSetup()))
-  let color = createMemo(() => pos().turn)
-  let dests = createMemo(() => chessgroundDests(pos()))
+  const m_pos = createMemo(() => Chess.fromSetup(parseFen(fen()).unwrap()).unwrap())
+  let color = createMemo(() => m_pos().turn)
+  let dests = createMemo(() => chessgroundDests(m_pos()))
 
   const play_uci = (uci: string) => {
 
@@ -46,7 +47,6 @@ export function PlayUciComponent(): PlayUciComponent {
     position.play(move)
 
     batch(() => {
-
       set_last_move([uci, san])
       set_add_last_move([uci, san])
       set_pos(position)
@@ -139,14 +139,25 @@ export function PlayUciBoard(props: { shapes?: DrawShape[], color: Color, orient
       ground = Chessground(board, config)
     })
 
+  const fen_last_move = createMemo(() => props.play_uci.fen_last_move, undefined, {
+    equals(a, b) {
+      function key(flm: [string, [string, string]] | undefined) {
+        if (!flm) {
+          return ''
+        }
+        return `${flm[0]}$$${flm[1].join('$$')}`
+      }
+      return key(a) === key(b)
+    }
+  })
+
     createEffect(() => {
+      let flm = fen_last_move()
       let fen, uci
-      if (!props.play_uci.fen_last_move) {
+      if (!flm) {
         fen = INITIAL_FEN
       } else {
-        // @ts-ignore
-        let _
-        [fen, [uci, _]] = props.play_uci.fen_last_move
+        [fen, [uci]] = flm
       }
       let lastMove: Key[] = []
       if (uci) {
@@ -154,6 +165,7 @@ export function PlayUciBoard(props: { shapes?: DrawShape[], color: Color, orient
         lastMove.push(uci.slice(2, 4) as Key)
       }
       let movableColor = props.movable ? props.color : undefined
+
       ground.set({fen, lastMove, turnColor: props.color, movable: {
         color: movableColor,
         dests: props.play_uci.dests

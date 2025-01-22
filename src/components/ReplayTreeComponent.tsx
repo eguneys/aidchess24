@@ -214,12 +214,17 @@ export function StepsTree(): StepsTree {
             if (parent) {
                 return parent.children
             }
+            if (path.split(' ').length === 1) {
+                return root()
+            }
         },
         previous_branch_points(path: Path) {
+
+
             let res = []
             let i = root()
 
-            let add_variation = root.length > 1
+            let add_variation = i.length > 1
 
             for (let uci of path.split(' ')) {
 
@@ -497,27 +502,32 @@ export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
             return undefined
         }
 
+        let cc: TreeStepNode[] = pc[0]?.children ?? []
+
         if (!pc[0]) {
-            return undefined
-        }
-
-
-        if (pc[0].children.length === 1) {
+            cc = steps.root
+        } else if (pc[0].children.length === 1) {
             while (true) {
                 pc = steps.find_parent_and_child_at_path(pc[0].path)
-                if (!pc || !pc[0]) {
+                if (!pc) {
                     return undefined
                 }
 
+                if (!pc[0]) {
+                    cc = steps.root
+                    break
+                }
+
                 if (pc[0].children.length > 1) {
+                    cc = pc[0].children
                     break
                 }
             }
         }
 
-        let i = pc[0].children.indexOf(pc[1])
+        let i = cc.indexOf(pc[1])
 
-        let c = pc[0].children[i - 1]
+        let c = cc[i - 1]
 
         if (!c) {
             return undefined
@@ -533,27 +543,32 @@ export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
             return undefined
         }
 
+        let cc: TreeStepNode[] = pc[0]?.children ?? []
+
         if (!pc[0]) {
-            return undefined
-        }
-
-
-        if (pc[0].children.length === 1) {
+            cc = steps.root
+        } else if (pc[0].children.length === 1) {
             while (true) {
                 pc = steps.find_parent_and_child_at_path(pc[0].path)
-                if (!pc || !pc[0]) {
+                if (!pc) {
                     return undefined
                 }
 
+                if (!pc[0]) {
+                    cc = steps.root
+                    break
+                }
+
                 if (pc[0].children.length > 1) {
+                    cc = pc[0].children
                     break
                 }
             }
         }
 
-        let i = pc[0].children.indexOf(pc[1])
+        let i = cc.indexOf(pc[1])
 
-        let c = pc[0].children[i + 1]
+        let c = cc[i + 1]
 
         if (!c) {
             return undefined
@@ -739,34 +754,29 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
 
 function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void }) {
     return (<>
-        <Key each={props.nodes} by="path">{node =>
-            <>
-                <StepNode {...props} node={node()} />
-                <Show when={node().children.length === 1}>
-                    <NodesShorten {...props} nodes={node().children} />
-                </Show>
-                <Show when={node().children.length > 1}>
-                    <div class='lines'>
-                        <Key each={node().children} by="path">{node =>
-                            <div class='line'>
-                                <Show when={props.cursor_path.startsWith(node().path)} fallback={
-                                    <>
-                                        <StepNode {...props} node={node()} show_index={true} collapsed={true}/>
-                                        <span class='collapsed'>..{node().length} {node().nb_first_variations}</span>
-                                    </>
-                                }>
-                                    <>
-
-                                        <StepNode {...props} node={node()} show_index={true} />
-                                        <NodesShorten {...props} nodes={node().children} />
-                                    </>
-                                </Show>
-                            </div>
-                        }</Key>
-                    </div>
-                </Show>
-            </>
-    }</Key>
+    <Show when={props.nodes.length === 1}>
+        <StepNode {...props} node={props.nodes[0]} />
+        <NodesShorten {...props} nodes={props.nodes[0].children} />
+    </Show>
+    <Show when={props.nodes.length > 1}>
+        <div class='lines'>
+            <Key each={props.nodes} by="path">{node =>
+                <div class='line'>
+                    <Show when={props.cursor_path.startsWith(node().path)} fallback={
+                        <>
+                            <StepNode {...props} node={node()} show_index={true} collapsed={true} />
+                            <span class='collapsed'>..{node().length} {node().nb_first_variations}</span>
+                        </>
+                    }>
+                        <>
+                            <StepNode {...props} node={node()} show_index={true} />
+                            <NodesShorten {...props} nodes={node().children} />
+                        </>
+                    </Show>
+                </div>
+            }</Key>
+        </div>
+        </Show >
     </>)
 }
 
