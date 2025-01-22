@@ -1,4 +1,4 @@
-import { batch, createEffect, createMemo, createResource, createSignal, on, Show, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, on, onCleanup, onMount, Show, useContext } from "solid-js"
 import { StockfishContext, StockfishContextRes, StockfishProvider } from "./ceval2/StockfishContext"
 import { INITIAL_FEN } from "chessops/fen"
 import { Color, opposite } from "chessops"
@@ -10,8 +10,8 @@ import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
 import { fen_turn } from "./chess_pgn_logic"
-import { SAN } from "./components/step_types"
-import { PlayUciTreeReplay, PlayUciTreeReplayComponent } from "./components/ReplayTreeComponent"
+import { Path, SAN } from "./components/step_types"
+import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
 
 export default () => {
     return (<StockfishProvider>
@@ -223,10 +223,63 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         })
     }
 
+
+
     const [tab, set_tab] = createSignal('repertoire')
 
+
+    createEffect(on(tab, (t) => {
+        let ps = t === 'repertoire' ? play_replay_tree.cursor_path_step : play_replay.ply_step
+        if (ps) {
+            play_uci.set_fen_last_move(ps.fen, [ps.uci, ps.san])
+        } else {
+            play_uci.set_fen_last_move(INITIAL_FEN)
+        }
+    }))
+
+    let $el_builder_ref: HTMLElement
+    let $el_context_menu: HTMLElement
+
+    const on_tree_context_menu = (e: MouseEvent, path: Path) => {
+        play_replay_tree.cursor_path = path
+        set_context_menu_step(play_replay_tree.steps.find_at_path(path))
+
+        let x = e.clientX
+        let y = e.clientY
+
+        let bounds = $el_builder_ref.getBoundingClientRect()
+        x -= bounds.left
+        y -= bounds.top
+
+        let top = `${y}px`
+        let left = `${x}px`
+
+        $el_context_menu.style.top = top
+        $el_context_menu.style.left = left
+    }
+
+    onMount(() => {
+
+        const on_click = () => {
+            set_context_menu_step(undefined)
+        }
+
+        document.addEventListener('click', on_click)
+
+        onCleanup(() => {
+            document.removeEventListener('click', on_click)
+        })
+    })
+
+    const [context_menu_step, set_context_menu_step] = createSignal<TreeStepNode | undefined>(undefined)
+
+    const on_delete_move = (path: Path) => {
+        play_replay_tree.steps.remove_child_at_path(path)
+        set_context_menu_step(undefined)
+    }
+
     return (<>
-    <div onWheel={onWheel} class='builder'>
+    <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
             <PlayUciBoard color={player_color()} movable={movable()} play_uci={play_uci} />
         </div>
@@ -253,11 +306,17 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
                 <Show when={tab() === 'repertoire'}>
                     <>
-                    <PlayUciTreeReplay play_replay={play_replay_tree}/>
+                    <PlayUciTreeReplay play_replay={play_replay_tree} on_context_menu={on_tree_context_menu}/>
                     </>
                 </Show>
             </div>
 
+            <Show when={context_menu_step()}>{step =>
+                <div onClick={e => { e.preventDefault(); e.stopImmediatePropagation(); }} ref={_ => $el_context_menu = _} class='context-menu'>
+                    <div class='title'>{ply_to_index(step().ply)}{step().san}</div>
+                    <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete move</a>
+                </div>
+            }</Show>
     </div>
     </>)
 }

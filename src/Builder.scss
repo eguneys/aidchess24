@@ -2,6 +2,9 @@
 
 .on-builder {
     .builder {
+
+        position: relative;
+
         --gauge-gap: calc(
           8px + 9 *
             ((100vw - 320px) / 880)
@@ -39,6 +42,8 @@ $bg-g1: rgb(216, 166, 85);
 $bg-g2: rgb(226, 186, 121);
 
 $tree-bg: rgb(234, 219, 198);
+
+$hover-bg: rgb(113, 99, 67);
 
         .replay-wrap {
             display: flex;
@@ -109,6 +114,37 @@ $tree-bg: rgb(234, 219, 198);
                     padding: 1em;
                 }
             }
+        }
+
+
+        .context-menu {
+            position: absolute;
+            user-select: none;
+            cursor: pointer;
+            border-radius: 3px;
+
+            .title {
+                color: $text;
+                text-align: center;
+                padding: 0.4em;
+                border-bottom: 1px solid $text;
+            }
+
+            a {
+                display: flex;
+                padding: 0.2em 0.6em;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.6em;
+                color: $text;
+
+                &:hover {
+                    background: $hover-bg;
+                }
+            }
+
+            background: $replay-bg;
+
         }
     }
 }

@@ -8,6 +8,8 @@ import { Key } from "@solid-primitives/keyed"
 import './ReplayTreeComponent.scss'
 
 
+
+
 export type PGN = {
     orientation?: Color,
     chapter?: string,
@@ -641,7 +643,7 @@ export function PlayUciTreeReplayComponent(): PlayUciTreeReplayComponent {
 }
 
 
-export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayComponent }) {
+export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayComponent, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
 
     const steps = props.play_replay.steps
 
@@ -663,11 +665,6 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
         let top = target.offsetTop - cont.offsetHeight / 2 + target.offsetHeight
         cont.scrollTo({ behavior: 'smooth', top })
     })
-
-    const ply_to_index = (ply: number) => {
-        let res = Math.floor(ply / 2) + 1
-        return `${res}.` + (ply % 2 === 0 ? '..' : '')
-    }
 
     const on_key_down = (e: KeyboardEvent) => {
         let catched = false
@@ -708,7 +705,9 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
                 <div ref={_ => $moves_el = _} class='moves'>
                     <NodesShorten nodes={steps.root}
                         cursor_path={props.play_replay.cursor_path}
-                        on_set_cursor={(path: Path) => props.play_replay.cursor_path = path} />
+                        on_set_cursor={(path: Path) => props.play_replay.cursor_path = path}
+                        on_context_menu={(e: MouseEvent, path: Path) => props.on_context_menu?.(e, path)}
+                         />
                 </div>
             </div>
             <div class='branch-sums'>
@@ -716,12 +715,12 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
                     disabled={props.play_replay.get_up_path() === undefined}
                     class={"fbt prev" + (props.play_replay.get_up_path() === undefined ? ' disabled' : '')}
                     onClick={() => props.play_replay.goto_up_if_can()}
-                    data-icon="" />
+                    data-icon="" />
                 <button 
                     disabled={props.play_replay.get_down_path() === undefined} 
                     class={"fbt prev" + (props.play_replay.get_down_path() === undefined ? ' disabled' : '')} 
                     onClick={() => props.play_replay.goto_down_if_can()} 
-                    data-icon="" />
+                    data-icon="" />
 
                 <For each={props.play_replay.previous_branch_points_at_cursor_path}>{branch =>
                     <div class='fbt' onClick={() => props.play_replay.cursor_path = branch.path}>
@@ -735,16 +734,16 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
             <div class='replay-jump'>
                 <button disabled={props.play_replay.get_first_path() === undefined} 
                     class={"fbt first" + (props.play_replay.get_first_path() === undefined ? ' disabled' : '')}
-                    onClick={() => props.play_replay.goto_first_if_can()} data-icon="" />
+                    onClick={() => props.play_replay.goto_first_if_can()} data-icon="" />
                 <button disabled={props.play_replay.get_prev_path() === undefined} 
                     class={"fbt prev" + (props.play_replay.get_prev_path() === undefined ? ' disabled' : '')} 
-                    onClick={() => props.play_replay.goto_prev_if_can()} data-icon="" />
+                    onClick={() => props.play_replay.goto_prev_if_can()} data-icon="" />
                 <button disabled={props.play_replay.get_next_path() === undefined} 
                     class={"fbt next" + (props.play_replay.get_next_path() === undefined ? ' disabled' : '')}
-                    onClick={() => props.play_replay.goto_next_if_can()} data-icon="" />
+                    onClick={() => props.play_replay.goto_next_if_can()} data-icon="" />
                 <button disabled={props.play_replay.get_last_path() === undefined} 
                     class={"fbt last" + (props.play_replay.get_last_path() === undefined ? 'disabled' : '')} 
-                    onClick={() => props.play_replay.goto_last_if_can()} data-icon="" />
+                    onClick={() => props.play_replay.goto_last_if_can()} data-icon="" />
             </div>
 
         </div>
@@ -752,7 +751,7 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
 }
 
 
-function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void }) {
+function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
     return (<>
     <Show when={props.nodes.length === 1}>
         <StepNode {...props} node={props.nodes[0]} />
@@ -780,7 +779,7 @@ function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_c
     </>)
 }
 
-function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void }) {
+function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
 
     let show_index = createMemo(() => props.node.ply % 2 === 0 || props.show_index)
     let dots = createMemo(() => props.node.ply % 2 === 0 ? '.' : '...')
@@ -809,9 +808,15 @@ function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?:
     })
 
     return (<>
-    <div onClick={() => props.on_set_cursor(props.node.path)} class={klass()}>
+    <div onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, props.node.path) }} onClick={(e) => { props.on_set_cursor(props.node.path) } } class={klass()}>
         <Show when={show_index()}><span class='index'>{Math.floor(props.node.ply / 2) + 1}{dots()}</span></Show>
         {props.node.san}
     </div>
     </>)
 }
+
+export const ply_to_index = (ply: number) => {
+    let res = Math.floor(ply / 2) + 1
+    return `${res}.` + (ply % 2 === 1 ? '..' : '')
+}
+
