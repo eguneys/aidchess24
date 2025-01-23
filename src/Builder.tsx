@@ -1,6 +1,5 @@
 import { batch, createEffect, createMemo, createResource, createSignal, on, onCleanup, onMount, Show, useContext } from "solid-js"
 import { StockfishContext, StockfishContextRes, StockfishProvider } from "./ceval2/StockfishContext"
-import { INITIAL_FEN } from "chessops/fen"
 import { Color, opposite } from "chessops"
 import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
 import './Builder.scss'
@@ -9,7 +8,7 @@ import { PlayUciSingleReplay, PlayUciSingleReplayComponent, SearchParams } from 
 import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
-import { fen_turn } from "./chess_pgn_logic"
+import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
 import { Path, SAN } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
 
@@ -82,11 +81,6 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
 
         let turn = fen_turn(last.step.fen)
 
-        createEffect(() => {
-            console.log('yes')
-            console.log(last.request_search(engine_play_params())())
-        })
-
         if (turn === engine_color()) {
             createEffect(on(() => last.request_search(engine_play_params())(), (s) => {
                 if (!s) {
@@ -105,7 +99,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         }
     })
 
-    createEffect(on(() => play_uci.add_last_move, (last_move) => {
+    createEffect(on(() => play_uci.on_last_move_added, (last_move) => {
         if (last_move) {
             play_replay.play_san(last_move[1])
         }
@@ -114,11 +108,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     createEffect(on(() => play_replay.sans, set_sans))
 
     createEffect(on(() => play_replay.ply_step, (ps) => {
-        if (ps) {
-            play_uci.set_fen_last_move(ps.fen, [ps.uci, ps.san])
-        } else {
-            play_uci.set_fen_last_move(INITIAL_FEN)
-        }
+        play_uci.set_fen_and_last_move(ps?.fen ?? INITIAL_FEN, ps?.uci)
     }))
 
     createEffect(on(() => play_replay.ply_step, (current, prev) => {
@@ -157,10 +147,6 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
                 play_replay_tree.goto_prev_if_can()
             }
         }
-    }
-
-    const movable = () => {
-        return !play_uci.isEnd && play_replay.is_on_last_ply && builder_result() === undefined
     }
 
 
@@ -214,6 +200,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         set_first_cursor_path(path)
     }))
 
+    /*
     createEffect(on(() => play_replay_tree.cursor_path_step, (ps) => {
         if (ps) {
             play_uci.set_fen_last_move(ps.fen, [ps.uci, ps.san])
@@ -221,6 +208,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             play_uci.set_fen_last_move(INITIAL_FEN)
         }
     }))
+        */
 
     const on_save_line = () => {
         batch(() => {
@@ -247,6 +235,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     const [tab, set_tab] = createSignal('repertoire')
 
 
+    /*
     createEffect(on(tab, (t) => {
         let ps = t === 'repertoire' ? play_replay_tree.cursor_path_step : play_replay.ply_step
         if (ps) {
@@ -255,6 +244,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             play_uci.set_fen_last_move(INITIAL_FEN)
         }
     }))
+        */
 
     let $el_builder_ref: HTMLElement
     let $el_context_menu: HTMLElement
@@ -319,6 +309,12 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             })
         }
     }))
+
+    const movable = createMemo(() => {
+        return !play_uci.isEnd && play_replay.is_on_last_ply && builder_result() === undefined
+    })
+
+
 
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>

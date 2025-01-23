@@ -6,19 +6,20 @@ import { Chess, Color, parseSquare, parseUci } from "chessops"
 import { chessgroundDests } from "chessops/compat"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { makeSan } from "chessops/san"
-import { batch, createEffect, createMemo, createSignal, onMount } from "solid-js"
+import { batch, createEffect, createMemo, createSignal, on, onMount } from "solid-js"
 import './chessground.css'
 import { SAN, UCI } from "./step_types"
 
 export type PlayUciComponent = {
     play_orig_key: (orig: Key, dest: Key) => void,
     play_uci: (uci: UCI) => void,
-    set_fen_last_move: (fen: FEN, last_move?: [UCI, SAN]) => void,
+    set_fen: (fen: FEN) => void,
+    set_last_move: (last_move?: UCI) => void,
+    set_fen_and_last_move: (fen: FEN, last_move?: UCI) => void
     dests: Map<Key, Key[]>,
-    fen_last_move: [FEN, [UCI, SAN]] | undefined,
     fen: FEN,
     last_move: [UCI, SAN] | undefined,
-    add_last_move: [UCI, SAN] | undefined,
+    on_last_move_added: [UCI, SAN] | undefined,
     check: boolean,
     isEnd: boolean
 }
@@ -27,15 +28,14 @@ export type PlayUciComponent = {
 
 export function PlayUciComponent(): PlayUciComponent {
 
-  let [pos, set_pos] = createSignal(Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap(), { equals: false })
+  let [fen, set_fen] = createSignal<FEN>(INITIAL_FEN)
 
   let [last_move, set_last_move] = createSignal<[UCI, SAN] | undefined>(undefined)
-  let [add_last_move, set_add_last_move] = createSignal<[UCI, SAN] | undefined>(undefined)
+  let [on_last_move_added, set_on_last_move_added] = createSignal<[UCI, SAN] | undefined>(undefined)
 
-  let fen = createMemo(() => makeFen(pos().toSetup()))
-  const m_pos = createMemo(() => Chess.fromSetup(parseFen(fen()).unwrap()).unwrap())
-  let color = createMemo(() => m_pos().turn)
-  let dests = createMemo(() => chessgroundDests(m_pos()))
+  let pos = createMemo(() => Chess.fromSetup(parseFen(fen()).unwrap()).unwrap())
+  let color = createMemo(() => pos().turn)
+  let dests = createMemo(() => chessgroundDests(pos()))
 
   const play_uci = (uci: string) => {
 
@@ -48,8 +48,8 @@ export function PlayUciComponent(): PlayUciComponent {
 
     batch(() => {
       set_last_move([uci, san])
-      set_add_last_move([uci, san])
-      set_pos(position)
+      set_on_last_move_added([uci, san])
+      set_fen(makeFen(position.toSetup()))
 
       if (uci.length === 5) {
         //set_promotion(dest)
@@ -57,6 +57,14 @@ export function PlayUciComponent(): PlayUciComponent {
     })
   }
 
+  const set_last_move_uci = (uci?: UCI) => {
+    if (!uci) {
+      set_last_move(undefined)
+      return
+    }
+    let san = makeSan(pos(), parseUci(uci)!)
+    set_last_move([uci, san])
+  }
 
     return {
         play_orig_key(orig: Key, dest: Key) {
@@ -75,32 +83,29 @@ export function PlayUciComponent(): PlayUciComponent {
             play_uci(uci)
         },
         play_uci,
-        set_fen_last_move(fen: string, last_move?: [UCI, SAN]) {
+        set_fen_and_last_move(fen: FEN, last_move?: UCI) {
           batch(() => {
-            set_pos(Chess.fromSetup(parseFen(fen).unwrap()).unwrap())
-            set_last_move(last_move)
+            set_last_move_uci(last_move)
+            set_fen(fen)
           })
+        },
+        set_fen(fen: string) {
+          set_fen(fen)
+        },
+        set_last_move(uci?: UCI) {
+          set_last_move_uci(uci)
         },
         get dests() {
             return dests()
-        },
-        get fen_last_move() {
-            let f = fen()
-            let l = last_move()
-            if (!l) {
-                return undefined
-            }
-            let res: [string, [string, string]] = [f, l]
-            return res
         },
         get fen() {
             return fen()
         },
         get last_move() {
-            return last_move()
+          return last_move()
         },
-        get add_last_move() {
-          return add_last_move()
+        get on_last_move_added() {
+          return on_last_move_added()
         },
         get check() {
           return pos().isCheck()
@@ -139,49 +144,23 @@ export function PlayUciBoard(props: { shapes?: DrawShape[], color: Color, orient
       ground = Chessground(board, config)
     })
 
-  const fen_last_move = createMemo(() => props.play_uci.fen_last_move, undefined, {
-    equals(a, b) {
-      function key(flm: [string, [string, string]] | undefined) {
-        if (!flm) {
-          return ''
-        }
-        return `${flm[0]}$$${flm[1].join('$$')}`
-      }
-      return key(a) === key(b)
-    }
-  })
-
     createEffect(() => {
-      let flm = fen_last_move()
-      let fen, uci
-      if (!flm) {
-        fen = INITIAL_FEN
-      } else {
-        [fen, [uci]] = flm
+      let lastMove: Key[] | undefined = undefined
+      if (props.play_uci.last_move) {
+        let [uci] = props.play_uci.last_move
+        lastMove = [uci.slice(0, 2) as Key, uci.slice(2, 4) as Key]
       }
-      let lastMove: Key[] = []
-      if (uci) {
-        lastMove.push(uci.slice(0, 2) as Key)
-        lastMove.push(uci.slice(2, 4) as Key)
-      }
-      let movableColor = props.movable ? props.color : undefined
-
-      ground.set({fen, lastMove, turnColor: props.color, movable: {
-        color: movableColor,
-        dests: props.play_uci.dests
-      }})
-    })
-
-    createEffect(() => {
-      let color = props.orientation ?? 'white'
       ground.set({
-        orientation: color
-      })
-    })
-
-    createEffect(() => {
-      let check = props.play_uci.check
-      ground.set({ check })
+        lastMove,
+        fen: props.play_uci.fen,
+        turnColor: props.color,
+        orientation: props.orientation ?? 'white',
+        check: props.play_uci.check,
+        movable: {
+          color: props.movable ? props.color : undefined,
+          dests: props.play_uci.dests
+        }
+      }) 
     })
 
     /*
@@ -205,13 +184,7 @@ export function PlayUciBoard(props: { shapes?: DrawShape[], color: Color, orient
     })
       */
 
-    createEffect(() => {
-      if (props.shapes) {
-         ground.setAutoShapes(props.shapes)
-      } else {
-        ground.setAutoShapes([])
-      }
-    })
+    createEffect(() => { ground.setAutoShapes(props.shapes ?? []) })
 
     return (<>
       <div ref={(el) => board = el} class='is2d chessboard'>
