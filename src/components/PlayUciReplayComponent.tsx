@@ -1,4 +1,4 @@
-import { Accessor, createEffect, createMemo, createResource, createSignal, For, mapArray, on, Resource, Show } from "solid-js"
+import { Accessor, createEffect, createMemo, createResource, createSignal, For, mapArray, on, Show } from "solid-js"
 import './PlayUciReplay.scss'
 import { StockfishContextRes } from "../ceval2/StockfishContext"
 import { LocalEval } from "../ceval2/stockfish-module"
@@ -290,15 +290,33 @@ export type Skill = 'level10' | 'level16' | 'level20'
 
 function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: string }): StockfishBuilderComponent {
 
-    type QueueItem = { resolve_ev: (_?: LocalEval) => void, fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number }
+    type QueueItem = { reject_ev?: (_: Error) => void, resolve_ev?: (_?: LocalEval) => void, fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number }
 
     let queue: QueueItem[] = []
 
     const queue_item = (fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number) => {
-        return new Promise<LocalEval | undefined>(resolve_ev => {
-            queue.push({ fen, ply, game_id, multi_pv, depth, resolve_ev })
+
+        let item: QueueItem = { fen, ply, game_id, multi_pv, depth }
+        let res = new Promise<LocalEval | undefined>((resolve_ev, reject_ev) => {
+            item.resolve_ev = resolve_ev
+            item.reject_ev = reject_ev
+            queue.push(item)
             dequeue()
         })
+
+        return [res, () => {
+            let i = queue.indexOf(item)
+            if (i !== -1) {
+                queue.splice(i, 1)
+                dequeue()
+                return
+            }
+            if (working_item === item) {
+                working_item.reject_ev?.(new Error('Work cancelled'))
+                working_item = undefined
+                dequeue()
+            }
+        }] as [Promise<LocalEval | undefined> , () => void]
     }
 
     let working_item: QueueItem | undefined
@@ -312,16 +330,21 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
             return
         }
 
-        let { game_id, fen, ply, multi_pv, depth } = working_item
+        console.log(queue)
+        let item = working_item
+        let { game_id, fen, ply, multi_pv, depth } = item
         let ev = await props.s.get_best_move(game_id, fen, ply, multi_pv, depth)
 
-        working_item.resolve_ev(ev)
-        working_item = undefined
+        item.resolve_ev?.(ev)
+        if (item === working_item) {
+            working_item = undefined
+        }
+
         dequeue()
     }
 
     let cache: Record<string, LocalEval> = {}
-    const get_eval_with_cached = async (fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number) => {
+    const get_eval_with_cached_cancellable = (fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number): [Promise<LocalEval | undefined>, () => void] => {
 
         const make_key = (depth: number) => [fen, ply, multi_pv, depth].join('$$')
 
@@ -329,14 +352,20 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
 
         if (!cache[key]) {
             let off_depth = Math.floor(Math.random() * 3)
-            let ev = await queue_item(fen, ply, game_id, multi_pv, depth + off_depth)
-            if (ev) {
-                cache[key] = ev
-            }
+            let [res, cancel_ev] = queue_item(fen, ply, game_id, multi_pv, depth + off_depth)
+            res = res.then(ev => {
+                if (ev) {
+                    cache[key] = ev
+                }
+                return ev
+            })
+
+            return [res, cancel_ev]
         }
 
-        return cache[key]
+        return [Promise.resolve(cache[key]), () => {}]
     }
+    
 
     let request_step_with_search = (step: Step): RequestStepWithSearch | undefined => {
 
@@ -344,7 +373,10 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
             return undefined
         }
 
-        let cache = new ReactiveMap<string, Resource<StepWithSearch>>()
+        let cache = new ReactiveMap<string, Accessor<StepWithSearch | undefined>>()
+
+        let a_cancel = () => { },
+            b_cancel = () => {}
 
         function request_search(params?: SearchParams): Accessor<StepWithSearch | undefined> {
 
@@ -354,7 +386,6 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
                     return res[res.length - 1]?.()
                 }
             }
-            //console.trace(step.san, params)
 
             let key = [params.depth, params.multi_pv, params.server].join('$$')
 
@@ -362,13 +393,22 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
                 return cache.get(key)!
             }
 
+
             let { multi_pv, depth } = params
             let [r] = createResource(async () => {
 
-                let [before_search, search] = await Promise.all([
-                    get_eval_with_cached(step.before_fen, step.ply - 1, props.game_id, multi_pv, depth),
-                    get_eval_with_cached(step.fen, step.ply, props.game_id, multi_pv, depth)
-                ])
+                let a: Promise<LocalEval | undefined>, b: Promise<LocalEval | undefined>
+
+                a_cancel()
+                b_cancel()
+                ;[a, a_cancel] = get_eval_with_cached_cancellable(step.before_fen, step.ply - 1, props.game_id, multi_pv, depth)
+                ;[b, b_cancel] = get_eval_with_cached_cancellable(step.fen, step.ply, props.game_id, multi_pv, depth)
+
+                let [before_search, search] = await Promise.all([a, b])
+
+                if (!before_search || !search) {
+                    return undefined
+                }
 
                 let diff = diff_eval(step.before_fen, before_search, search)
 
@@ -384,9 +424,16 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
             })
 
 
-            cache.set(key, r)
+            let res = () => {
+                if (r.state === 'ready') {
+                    return r()
+                }
+                return undefined
+            }
 
-            return r
+            cache.set(key, res)
+
+            return res
         }
 
         return {

@@ -53,7 +53,8 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     const play_replay = PlayUciSingleReplayComponent(props.s, game_id)
     let play_uci = PlayUciComponent()
 
-    const [player_color, _set_player_color] = createSignal<Color>('white')
+
+    const [player_color, set_player_color] = createSignal<Color>('white')
 
     const engine_color = createMemo(() => opposite(player_color()))
 
@@ -166,6 +167,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             return
         }
 
+        createEffect(() => console.log(sf_step.step.san, sf_step.request_search(engine_play_params())()))
         createEffect(on(() => sf_step.request_search(engine_play_params())(), ss => {
             if (!ss) {
                 return
@@ -315,11 +317,27 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     })
 
 
+    onMount(() => {
+
+        const on_key_press = (e: KeyboardEvent) => {
+            if (e.key === 'f') {
+                set_player_color(opposite(player_color()))
+            }
+        }
+
+        document.addEventListener('keypress', on_key_press)
+
+        onCleanup(() => {
+            document.removeEventListener('keypress', on_key_press)
+        })
+    })
+
+
 
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
-            <PlayUciBoard color={player_color()} movable={movable()} play_uci={play_uci} />
+            <PlayUciBoard orientation={player_color()} color={player_color()} movable={movable()} play_uci={play_uci} />
         </div>
         <div class='replay-wrap'>
             <div class='tabs-wrap'>
