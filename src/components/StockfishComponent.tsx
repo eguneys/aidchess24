@@ -1,0 +1,178 @@
+import { onCleanup, useContext } from "solid-js";
+import { BestMoveWithDepthProgress, createLazyMemoAndCacheGet, StockfishContext } from "../ceval2/StockfishContext";
+import { Step } from "./step_types";
+import { LocalEval } from "../ceval2/stockfish-module";
+import { povDiff } from "../ceval2/winningChances";
+import { fen_turn } from "../chess_pgn_logic";
+import { Accessor, createEffect, createMemo, createSignal, on } from "solid-js";
+import { Color } from "chessops";
+import { keyArray } from "@solid-primitives/keyed";
+
+export type GameId = string
+
+export const diff_eval = (color: Color, before: LocalEval, after: LocalEval) => {
+    return povDiff(color, before, after)
+}
+
+export type Judgement = 'good' | 'inaccuracy' | 'mistake' | 'blunder'
+
+
+export type StepWithSearch = Step & {
+    before_search?: LocalEval,
+    search?: LocalEval,
+    judgement?: Judgement,
+    progress?: LocalEval
+}
+
+export type StepLazyQueueWork = {
+    step: Step,
+    d8pv6: [Accessor<StepWithSearch>, Accessor<StepWithSearch | undefined>]
+    d20pv6: [Accessor<StepWithSearch>, Accessor<StepWithSearch | undefined>]
+    d8pv1: [Accessor<StepWithSearch>, Accessor<StepWithSearch | undefined>]
+    d20pv1: [Accessor<StepWithSearch>, Accessor<StepWithSearch | undefined>]
+    clear(): void
+}
+
+export type StepsWithStockfishComponent = {
+    set_game_id: (_: string) => void
+    set_steps: (_: Step[]) => void
+    steps_with_stockfish: StepLazyQueueWork[]
+}
+
+export function StepsWithStockfishComponent() {
+    let s = useContext(StockfishContext)!
+    function calc_fen_ply(fen: string, ply: number, multi_pv: number, depth: number) {
+        return s.best_move_with_depth_progress(game_id(), fen, ply, multi_pv, depth)
+    }
+
+    type Work = { cancel: () => void, fen: string, ply: number, depth: number, multi_pv: number, set_e: (_: BestMoveWithDepthProgress) => void }
+
+    let working: Work | undefined = undefined
+    let queue: Work[] = []
+
+    function queue_calc_fen_ply(fen: string, ply: number, depth: number, multi_pv: number) {
+        let [e, set_e] = createSignal<BestMoveWithDepthProgress | undefined>(undefined)
+
+        let item: Work = { cancel, fen, ply, depth, multi_pv, set_e}
+
+        function cancel() {
+            let i = queue.indexOf(item)
+            if (i !== -1) {
+                queue.splice(i, 1)
+            }
+            if (working === item) {
+                working = undefined
+                s.stop()
+            }
+            dequeue()
+        }
+
+        queue.push(item)
+        dequeue()
+        return [e, cancel] as [Accessor<BestMoveWithDepthProgress>, () => void]
+    }
+
+    function dequeue() {
+        if (working) {
+            return
+        }
+        
+        working = queue.pop()
+
+        if (!working) {
+            return
+        }
+
+        let e = calc_fen_ply(working.fen, working.ply, working.multi_pv, working.depth)
+
+        createEffect(on(() => e.best_eval, (e) => {
+            if (e) {
+                working = undefined
+                dequeue()
+            }
+        }))
+
+        working.set_e(e)
+    }
+
+    function queue_calc_step(step: Step, depth: number, multi_pv: number) {
+
+        let [be, be_cancel] = queue_calc_fen_ply(step.before_fen, step.ply, depth, multi_pv)
+        let [e, e_cancel] = queue_calc_fen_ply(step.fen, step.ply, depth, multi_pv)
+
+        function judge(turn: Color, before_search: LocalEval, search: LocalEval) {
+            let diff = diff_eval(turn, before_search, search)
+
+            let judgement: Judgement = diff < 0.03 ? 'good' : diff < 0.05 ? 'inaccuracy' : diff < 0.12 ? 'mistake' : 'blunder'
+            return judgement
+        }
+
+        return createMemo<StepWithSearch>(() => {
+
+            onCleanup(() => {
+                e_cancel()
+                be_cancel()
+            })
+
+            return {
+                ...step,
+                get before_search() {
+                    return be()?.best_eval
+                },
+                get search() {
+                    return e()?.best_eval
+                },
+                get judgement() {
+
+                    let before = be()?.best_eval
+                    let after = e()?.best_eval
+
+                    if (before && after) {
+                        return judge(fen_turn(step.before_fen), before, after)
+                    }
+                },
+                get progress() {
+                    return e()?.depth_eval
+                }
+            }
+        })
+    }
+
+    function step_lazy_queue_work(step: Step): StepLazyQueueWork {
+
+        let [d8pv6, set_d8pv6] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 6)()))
+        let [d8pv1, set_d8pv1] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 1)()))
+        let [d20pv6, set_d20pv6] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 6)()))
+        let [d20pv1, set_d20pv1] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 1)()))
+
+        return {
+            step,
+            get d8pv6() { return d8pv6() },
+            get d8pv1() { return d8pv1() },
+            get d20pv6() { return d20pv6() },
+            get d20pv1() { return d20pv1() },
+            clear() {
+                set_d8pv6(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 6)()))
+                set_d20pv6(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 6)()))
+                set_d8pv1(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 1)()))
+                set_d20pv1(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 1)()))
+            }
+        }
+    }
+
+    let [game_id, set_game_id] = createSignal('')
+
+    let [steps, set_steps] = createSignal<Step[]>([])
+
+    let steps_with_stockfish = keyArray(steps, step => [step.fen, step.uci].join('$$'),
+        step => step_lazy_queue_work(step()))
+
+
+    return {
+        set_game_id,
+        set_steps,
+        get steps_with_stockfish() {
+            return steps_with_stockfish()
+        }
+    }
+}

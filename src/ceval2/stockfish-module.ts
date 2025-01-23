@@ -47,7 +47,7 @@ export type Work = {
   current_fen: string,
   moves: string[],
   emit: (ev: LocalEval) => void
-
+  on_pvs: (ev: LocalEval) => void
 }
 
 
@@ -179,6 +179,7 @@ export async function protocol(hooks: ProtocolHooks) {
       } else if (current_eval) {
         current_eval.pvs.push(pv_data)
         current_eval.depth = Math.min(current_eval.depth, depth)
+        work.on_pvs(current_eval)
       }
 
       if (multi_pv === expected_pvs && current_eval) {

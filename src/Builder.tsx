@@ -1,16 +1,17 @@
 import { batch, createEffect, createMemo, createResource, createSignal, on, onCleanup, onMount, Show, useContext } from "solid-js"
-import { StockfishContext, StockfishContextRes, StockfishProvider } from "./ceval2/StockfishContext"
+import { StockfishContext, StockfishProvider } from "./ceval2/StockfishContext"
 import { Color, opposite } from "chessops"
 import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
 import './Builder.scss'
 
-import { PlayUciSingleReplay, PlayUciSingleReplayComponent, SearchParams } from "./components/PlayUciReplayComponent"
+import { PlayUciSingleReplay, PlayUciSingleReplayComponent } from "./components/PlayUciReplayComponent"
 import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
 import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
 import { Path, SAN } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
+import { StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 
 export default () => {
     return (<StockfishProvider>
@@ -32,50 +33,60 @@ function LoadingStockfishContext() {
     return (<>
         <Show when={ss()}>{s =>
             <Show when={s().state === 'loading'} fallback={
-                <WithStockfishLoaded s={s()!} />
-            }><>
-            <span class='info'>Loading {loading_percent()??'--'}%</span>
-                </> </Show>
+                <WithStockfishLoaded/>
+            }>
+                <div class='loading'>
+                    <span class='info'>Loading {loading_percent() ?? '--'}%</span>
+                </div>
+            </Show>
+
         }</Show>
     </>)
 }
 
 type BuilderResult = 'drop'
 
-function WithStockfishLoaded(props: { s: StockfishContextRes }) {
+function WithStockfishLoaded() {
 
     const Player = usePlayer()
     Player.setVolume(0.2)
 
     let [sans, set_sans] = makePersistedNamespaced<SAN[]>([], 'builder.current.sans')
 
-    let game_id = ''
-    const play_replay = PlayUciSingleReplayComponent(props.s, game_id)
-    let play_uci = PlayUciComponent()
+    const [search_depth, set_search_depth] = createSignal(8)
 
+    let game_id = ''
+    const steps_stockfish = StepsWithStockfishComponent()
+
+    const play_replay = PlayUciSingleReplayComponent()
+    let play_uci = PlayUciComponent()
 
     const [player_color, set_player_color] = createSignal<Color>('white')
 
     const engine_color = createMemo(() => opposite(player_color()))
 
-    const prev_steps_params: SearchParams = {
-        depth: 8,
-        multi_pv: 1
-    }
-
-    const prev_steps_params20: SearchParams = {
-        depth: 20,
-        multi_pv: 1
-    }
-
-    const [engine_play_params, set_engine_play_params] = createSignal<SearchParams>({
-        depth: 8,
-        multi_pv: 6,
+    const last_stockfish_step = createMemo(() => {
+        let ss = steps_stockfish.steps_with_stockfish
+        return ss[ss.length - 1]
     })
 
-    createEffect(() => {
-        const last = play_replay.last_sf_step
+    function pv6_for_depth_option(work: StepLazyQueueWork) {
+        if (search_depth() === 8) {
+            return work.d8pv6
+        }
+        return work.d20pv6
+    }
 
+    function pv1_for_depth_option_force(work: StepLazyQueueWork) {
+        if (search_depth() === 8) {
+            return work.d8pv6[1]() ?? work.d8pv1[0]()
+        }
+        return work.d20pv6[1]() ?? work.d20pv1[0]()
+    }
+
+
+
+    createEffect(on(last_stockfish_step, last => {
         if (!last) {
             return
         }
@@ -83,22 +94,17 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         let turn = fen_turn(last.step.fen)
 
         if (turn === engine_color()) {
-            createEffect(on(() => last.request_search(engine_play_params())(), (s) => {
+            createEffect(on(() => pv6_for_depth_option(last)[0]().search, (s) => {
                 if (!s) {
                     return
                 }
 
-                if (!s.search) {
-                    // TODO warn
-                    return
-                }
-
-                let pvs = s.search.pvs
+                let pvs = s.pvs
 
                 play_uci.play_uci(pvs[0].moves[0])
             }))
         }
-    })
+    }))
 
     createEffect(on(() => play_uci.on_last_move_added, (last_move) => {
         if (last_move) {
@@ -151,9 +157,8 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
     }
 
 
+    steps_stockfish.set_game_id(game_id)
     play_replay.set_sans(sans())
-
-    play_replay.sf_steps.forEach(_ => _?.request_search(prev_steps_params))
 
     const on_rematch = () => {
         set_sans([])
@@ -161,23 +166,26 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         set_builder_result(undefined)
     }
 
-    createEffect(on(() => play_replay.last_sf_step, (sf_step) => {
+    createEffect(on(search_depth, () => {
+        steps_stockfish.steps_with_stockfish.forEach(_ => {
+            batch(() => {
+                _.clear()
+                pv1_for_depth_option_force(_)
+            })
+        })
+        let last = last_stockfish_step()
+        if (last) {
+            pv6_for_depth_option(last)[0]()
+        }
+    }))
 
-        if (!sf_step) {
+    createEffect(on(last_stockfish_step, (last_step) => {
+        if (!last_step) {
             return
         }
 
-        createEffect(() => console.log(sf_step.step.san, sf_step.request_search(engine_play_params())()))
-        createEffect(on(() => sf_step.request_search(engine_play_params())(), ss => {
-            if (!ss) {
-                return
-            }
-
-            if (!ss.search) {
-                return
-            }
-
-            let cp = ss.search.cp ?? ss.search.mate
+        createEffect(on(() => pv1_for_depth_option_force(last_step).search, search => {
+            let cp = search?.cp
 
             if (!cp) {
                 return
@@ -289,28 +297,10 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         set_context_menu_step(undefined)
     }
 
-    const [search_depth, set_search_depth] = createSignal(8)
 
-    const on_depth_changed = (depth: string) => {
-        set_search_depth(depth === 'level20'? 20: 8)
+    const on_depth_changed = (depth: number) => {
+        set_search_depth(depth)
     }
-
-    // TODO be careful
-    createEffect(on(search_depth, (depth) => {
-        if (depth === 20) {
-            play_replay.sf_steps.forEach(_ => _?.request_search(prev_steps_params20))
-            set_engine_play_params({
-                depth: 20,
-                multi_pv: 6
-            })
-        } else {
-            play_replay.sf_steps.forEach(_ => _?.request_search(prev_steps_params))
-            set_engine_play_params({
-                depth: 8,
-                multi_pv: 6
-            })
-        }
-    }))
 
     const movable = createMemo(() => {
         return !play_uci.isEnd && play_replay.is_on_last_ply && builder_result() === undefined
@@ -349,16 +339,16 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
                         <div class='engine-wrap'>
                             <fieldset>
                                 <div class='option'>
-                                    <input checked={true} onChange={(e) => {if (e.target.checked) { on_depth_changed('level8') }}} type='radio' name='depth' id='level8' />
+                                    <input checked={true} onChange={(e) => {if (e.target.checked) { on_depth_changed(8) }}} type='radio' name='depth' id='level8' />
                                     <label for='level8'>Depth 8</label>
                                 </div>
                                 <div class='option'>
-                                    <input onChange={(e) => {if (e.target.checked) { on_depth_changed('level20') }}} type='radio' name='depth' id='level20' />
+                                    <input onChange={(e) => {if (e.target.checked) { on_depth_changed(20) }}} type='radio' name='depth' id='level20' />
                                     <label for='level20'>Depth 20</label>
                                 </div>
                             </fieldset>
                         </div>
-                        <PlayUciSingleReplay play_replay={play_replay} />
+                        <PlayUciSingleReplay play_replay={play_replay} steps_stockfish={steps_stockfish} />
                         <div class='result-wrap'>
                             <Show when={builder_result() === 'drop'}>
                                 <span class='result'>Game Over</span>

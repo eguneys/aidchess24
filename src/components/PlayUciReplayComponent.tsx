@@ -1,11 +1,7 @@
-import { Accessor, createEffect, createMemo, createResource, createSignal, For, mapArray, on, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, mapArray, Match, on, Show, Switch } from "solid-js"
 import './PlayUciReplay.scss'
-import { StockfishContextRes } from "../ceval2/StockfishContext"
-import { LocalEval } from "../ceval2/stockfish-module"
-import { povDiff } from "../chess_winningChances"
-import { fen_turn } from "../chess_pgn_logic"
-import { ReactiveMap } from "@solid-primitives/map"
-import { build_steps, FEN, fen_is_end, Ply, push_san, SAN, Step } from "./step_types"
+import { build_steps, Ply, push_san, SAN, Step } from "./step_types"
+import { Judgement, StepLazyQueueWork, StepsWithStockfishComponent, StepWithSearch } from "./StockfishComponent"
 
 export type PlayUciSingleReplayComponent = {
     plies: Ply[],
@@ -23,16 +19,10 @@ export type PlayUciSingleReplayComponent = {
     goto_prev_ply_if_can: () => void,
     goto_next_ply_if_can: () => void,
     is_on_last_ply: boolean,
-    sf_steps: (RequestStepWithSearch | undefined)[],
-    last_sf_step: RequestStepWithSearch | undefined,
     set_sans(_: SAN[]): void
 }
 
-export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: GameId): PlayUciSingleReplayComponent {
-
-    let sf_builder = StockfishBuilderComponent({ s, game_id })
-
-
+export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
 
     let [steps, set_steps] = createSignal<Step[]>([])
     const last_step = createMemo(() => { 
@@ -76,26 +66,11 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
         return plies().find(_ => _ === res)
     }
 
-
-    const sf_steps = createMemo(mapArray(steps, step =>
-        sf_builder.request_step_with_search(step)
-    ))
-
-    const last_sf_step = createMemo(() => {
-        let ss = sf_steps()
-        return ss[ss.length - 1]
-    })
-
-
-
-    
     return {
         set_sans(sans: SAN[]) {
             set_steps(build_steps(sans))
             set_i_ply(sans.length)
         },
-        get sf_steps() { return sf_steps() },
-        get last_sf_step() { return last_sf_step() },
         get steps() {
             return steps()
         },
@@ -159,7 +134,7 @@ export function PlayUciSingleReplayComponent(s: StockfishContextRes, game_id: Ga
 }
 
 
-export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayComponent }) {
+export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayComponent, steps_stockfish: StepsWithStockfishComponent }) {
     const ply_sans = createMemo(mapArray(() => props.play_replay.ply_sans, ply_san => {
         let [ply, san] = ply_san.split(' ')
         return {
@@ -174,8 +149,39 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
 
     const i_ply = createMemo(() => props.play_replay.ply_step?.ply)
 
+    createEffect(on(() => props.play_replay.steps, (steps) => 
+        props.steps_stockfish.set_steps(steps)))
 
     let $moves_el: HTMLElement
+
+    const judgement_klass = (i: number) => {
+
+        let ss = props.steps_stockfish.steps_with_stockfish[i]
+
+        if (!ss) {
+            return ''
+        }
+
+        let d20pv6 = ss.d20pv6[1]()
+        let d20pv1 = ss.d20pv1[1]()
+        let d8pv6 = ss.d8pv6[1]()
+        let d8pv1 = ss.d8pv1[1]()
+
+        if (d20pv6) {
+            return (d20pv6.judgement ?? '') + ' d20pv6'
+        }
+
+        if (d20pv1) {
+            return (d20pv1.judgement ?? '') + ' d20pv1'
+        }
+
+        if (d8pv6) {
+            return (d8pv6.judgement ?? '') + ' d8pv6'
+        }
+        if (d8pv1) {
+            return (d8pv1.judgement ?? '') + ' d8pv1'
+        }
+    }
 
     createEffect(on(ply_sans, (sans) => {
         if (sans.length < 7) return
@@ -198,18 +204,6 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
         }
     }))
 
-    const judgement_klass = (i: number) => {
-        let sf_step = props.play_replay.sf_steps[i]
-
-        if (!sf_step) {
-            return ''
-        }
-
-        let res = sf_step.request_search()()
-
-        return res?.judgement ?? ''
-    }
-
     return (<>
         <div class='replay-single'>
             <div ref={_ => $moves_el = _} class='moves'>
@@ -220,14 +214,8 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                     </Show>
                     <span onClick={() => goto_ply(ply_san.ply)} class={'move ' + (judgement_klass(i())) + (ply_san.ply === i_ply() ? ' active' : '')}>
                             <span class='san'>{ply_san.san}</span>
-                            <Show when={props.play_replay.sf_steps[i()]}>{res =>
-                                <Show when={res().request_search()}>{ss =>
-                                    <Show when={ss()()} fallback={
-                                        "..."
-                                    }>{ss =>
-                                        <StepWithSearchForParams ss={ss()} />
-                                    }</Show>
-                                }</Show>
+                            <Show when={props.steps_stockfish.steps_with_stockfish[i()]}>{ ss =>
+                                <StepLazyQueueWorkOnSingleReplay ss={ss()} />
                             }</Show>
                         </span>
                 </>
@@ -237,212 +225,43 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
     </>)
 }
 
-const StepWithSearchForParams = (props: { ss: StepWithSearch }) => {
 
-    const cp = () => props.ss.search?.cp
-    const judgement = () => props.ss.judgement
+function StepLazyQueueWorkOnSingleReplay(props: { ss: StepLazyQueueWork }) {
 
     return (<>
-        <Show when={cp()}>{cp =>
-            <span class='eval'>{renderEval(cp())}</span>
-        }</Show>
-        <span class='judgement'>{judgement_glyph(judgement())}</span>
+        <Switch fallback={
+            <StepWithSearchOnReplay step={props.ss.d8pv1[0]()}/>
+        }>
+            <Match when={props.ss.d20pv6[1]()}>{ step => <StepWithSearchOnReplay step={step()}/> }</Match>
+            <Match when={props.ss.d20pv1[1]()}>{ step => <StepWithSearchOnReplay step={step()}/> }</Match>
+            <Match when={props.ss.d8pv6[1]()}>{ step => <StepWithSearchOnReplay step={step()}/> }</Match>
+            <Match when={props.ss.d8pv1[1]()}>{ step => <StepWithSearchOnReplay step={step()}/> }</Match>
+        </Switch>
     </>)
 }
 
-export type SearchParams = {
-    server?: true,
-    depth: number,
-    multi_pv: number
-}
+export function StepWithSearchOnReplay(props: { step: StepWithSearch }) {
 
-export type StepWithSearch = Step & {
-    params: SearchParams
-    before_search: LocalEval | undefined,
-    search: LocalEval | undefined,
-    judgement: Judgement
-}
+    const cp = () => props.step.search?.cp
+    const judgement = () => props.step.judgement
 
-export type RequestStepWithSearch = {
-    step: Step,
-    request_search(params?: SearchParams): Accessor<StepWithSearch | undefined>,
-}
-
-export type GameId = string
-
-export const diff_eval = (fen: FEN, before: LocalEval, after: LocalEval) => {
-    return povDiff(fen_turn(fen), before, after)
-}
-
-const judgement_glyph = (j: Judgement) => {
-    return j === 'good' ? '✓' : j === 'inaccuracy' ? '?!' : j === 'mistake' ? '?' : '??'
-}
-
-type Judgement = 'good' | 'inaccuracy' | 'mistake' | 'blunder'
-
-
-
-export type StockfishBuilderComponent = {
-    request_step_with_search: (step: Step) => RequestStepWithSearch | undefined
-}
-
-export type Skill = 'level10' | 'level16' | 'level20'
-
-function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: string }): StockfishBuilderComponent {
-
-    type QueueItem = { reject_ev?: (_: Error) => void, resolve_ev?: (_?: LocalEval) => void, fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number }
-
-    let queue: QueueItem[] = []
-
-    const queue_item = (fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number) => {
-
-        let item: QueueItem = { fen, ply, game_id, multi_pv, depth }
-        let res = new Promise<LocalEval | undefined>((resolve_ev, reject_ev) => {
-            item.resolve_ev = resolve_ev
-            item.reject_ev = reject_ev
-            queue.push(item)
-            dequeue()
-        })
-
-        return [res, () => {
-            let i = queue.indexOf(item)
-            if (i !== -1) {
-                queue.splice(i, 1)
-                dequeue()
-                return
-            }
-            if (working_item === item) {
-                working_item.reject_ev?.(new Error('Work cancelled'))
-                working_item = undefined
-                dequeue()
-            }
-        }] as [Promise<LocalEval | undefined> , () => void]
+    const judgement_glyph = (j: Judgement) => {
+        return j === 'good' ? '✓' : j === 'inaccuracy' ? '?!' : j === 'mistake' ? '?' : '??'
     }
+    const depth = () => props.step.progress?.depth
 
-    let working_item: QueueItem | undefined
-    const dequeue = async () => {
-        if (working_item) {
-            return
-        }
-
-        working_item = queue.pop()
-        if (!working_item) {
-            return
-        }
-
-        console.log(queue)
-        let item = working_item
-        let { game_id, fen, ply, multi_pv, depth } = item
-        let ev = await props.s.get_best_move(game_id, fen, ply, multi_pv, depth)
-
-        item.resolve_ev?.(ev)
-        if (item === working_item) {
-            working_item = undefined
-        }
-
-        dequeue()
-    }
-
-    let cache: Record<string, LocalEval> = {}
-    const get_eval_with_cached_cancellable = (fen: FEN, ply: number, game_id: GameId, multi_pv: number, depth: number): [Promise<LocalEval | undefined>, () => void] => {
-
-        const make_key = (depth: number) => [fen, ply, multi_pv, depth].join('$$')
-
-        let key = make_key(depth)
-
-        if (!cache[key]) {
-            let off_depth = Math.floor(Math.random() * 3)
-            let [res, cancel_ev] = queue_item(fen, ply, game_id, multi_pv, depth + off_depth)
-            res = res.then(ev => {
-                if (ev) {
-                    cache[key] = ev
-                }
-                return ev
-            })
-
-            return [res, cancel_ev]
-        }
-
-        return [Promise.resolve(cache[key]), () => {}]
-    }
-    
-
-    let request_step_with_search = (step: Step): RequestStepWithSearch | undefined => {
-
-        if (fen_is_end(step.fen)) {
-            return undefined
-        }
-
-        let cache = new ReactiveMap<string, Accessor<StepWithSearch | undefined>>()
-
-        let a_cancel = () => { },
-            b_cancel = () => {}
-
-        function request_search(params?: SearchParams): Accessor<StepWithSearch | undefined> {
-
-            if (!params) {
-                return () => {
-                    let res = [...cache.values()]
-                    return res[res.length - 1]?.()
-                }
-            }
-
-            let key = [params.depth, params.multi_pv, params.server].join('$$')
-
-            if (cache.get(key)) {
-                return cache.get(key)!
-            }
-
-
-            let { multi_pv, depth } = params
-            let [r] = createResource(async () => {
-
-                let a: Promise<LocalEval | undefined>, b: Promise<LocalEval | undefined>
-
-                a_cancel()
-                b_cancel()
-                ;[a, a_cancel] = get_eval_with_cached_cancellable(step.before_fen, step.ply - 1, props.game_id, multi_pv, depth)
-                ;[b, b_cancel] = get_eval_with_cached_cancellable(step.fen, step.ply, props.game_id, multi_pv, depth)
-
-                let [before_search, search] = await Promise.all([a, b])
-
-                if (!before_search || !search) {
-                    return undefined
-                }
-
-                let diff = diff_eval(step.before_fen, before_search, search)
-
-                let judgement: Judgement = diff < 0.03 ? 'good' : diff < 0.05 ? 'inaccuracy' : diff < 0.12 ? 'mistake' : 'blunder'
-
-                return {
-                    params,
-                    ...step,
-                    before_search,
-                    search,
-                    judgement
-                }
-            })
-
-
-            let res = () => {
-                if (r.state === 'ready') {
-                    return r()
-                }
-                return undefined
-            }
-
-            cache.set(key, res)
-
-            return res
-        }
-
-        return {
-            step,
-            request_search
-        }
-    }
-
-    return { request_step_with_search }
+    return (<>
+        <span class='eval'>
+            <Show when={cp() !== undefined} fallback={
+                <span class='loading'>.{depth()}</span>
+            }>
+                <span class='eval'>{renderEval(cp()!)}</span>
+            </Show>
+            <Show when={judgement()}>{judgement =>
+                <span class='judgement'>{judgement_glyph(judgement())}</span>
+            }</Show>
+        </span>
+    </>)
 }
 
 /* lila/ui/ceval/src/util.ts */
