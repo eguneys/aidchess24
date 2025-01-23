@@ -84,8 +84,6 @@ function WithStockfishLoaded() {
         return work.d20pv1[0]()
     }
 
-
-
     createEffect(on(last_stockfish_step, last => {
         if (!last) {
             return

@@ -1,14 +1,16 @@
-import { Accessor, batch, createContext, createMemo, createResource, createSignal, DEV, EffectOptions, JSXElement, SignalOptions } from "solid-js";
+import { Accessor, createContext, createMemo, createResource, createSignal, DEV, EffectOptions, JSXElement, SignalOptions } from "solid-js";
 import { LocalEval, protocol } from "./stockfish-module";
 import throttle from "../common/throttle";
 import { isServer } from "solid-js/web";
+import { start } from "chessground/drag";
 
 export const StockfishContext = createContext<StockfishContextRes>()
 
 export type BestMoveWithDepthProgress =  {
-    loading: boolean,
+    loading: void,
     depth_eval: LocalEval | undefined,
     best_eval: LocalEval | undefined,
+    cancel: () => void
 }
 
 export type StockfishContextRes = {
@@ -16,7 +18,11 @@ export type StockfishContextRes = {
     engine_failed: string | undefined,
 
     state: 'loading' | 'computing' | 'idle'
-    best_move_with_depth_progress: (game_id: string, fen: string, ply: number, multi_pv: number, depth: number) => BestMoveWithDepthProgress
+    best_move_with_cache: (game_id: string, fen: string, ply: number, multi_pv: number, depth: number, 
+        on_loading: () => void,
+        on_depth: (e: LocalEval) => void,
+        on_best_move: (e: LocalEval) => void,
+    ) => void
     stop: () => void
 }
 
@@ -52,7 +58,7 @@ export function StockfishProvider(props: { children: JSXElement }) {
         let threads = Math.max(1, navigator.hardwareConcurrency - 2)
         let hash_size = 256
 
-
+        console.log('query', fen)
         p.start({
             threads,
             hash_size,
@@ -70,42 +76,25 @@ export function StockfishProvider(props: { children: JSXElement }) {
             moves: [],
             emit: throttle(200, function (ev: LocalEval): void {
                 if (ev.depth === depth) {
+                    console.log('best', fen, ev.depth)
                     on_best_move(ev)
                 }
             }),
             on_pvs: throttle(200, function (ev: LocalEval): void {
+                console.log('pvs')
                 on_depth(ev)
             }),
         })
     }
 
 
-    let cache: Record<string, BestMoveWithDepthProgress> = {}
+    let cache: Record<string, LocalEval> = {}
 
-    function best_move_with_depth_progress(game_id: string, fen: string, ply: number, multi_pv: number, depth: number) {
+    function best_move_with_cache(game_id: string, fen: string, ply: number, multi_pv: number, depth: number, 
+        on_loading: () => void, 
+        on_depth: (e: LocalEval) => void, 
+        on_best_move: (e: LocalEval) => void) {
 
-        let [loading, set_loading] = createSignal(true)
-        let [depth_eval, set_depth_eval] = createSignal<LocalEval | undefined>(undefined)
-        let [best_eval, set_best_eval] = createSignal<LocalEval | undefined>(undefined)
-
-        const on_loading = () => {
-            set_loading(true)
-        }
-
-        const on_depth = (d: LocalEval) => {
-            batch(() => {
-                set_loading(false)
-                set_depth_eval(d)
-            })
-        }
-
-        const on_best_move = (ev: LocalEval) => {
-            batch(() => {
-                set_loading(false)
-                set_depth_eval(undefined)
-                set_best_eval(ev)
-            })
-        }
 
         let key = [fen, multi_pv, depth].join('$$')
         let keys = (() => {
@@ -118,18 +107,16 @@ export function StockfishProvider(props: { children: JSXElement }) {
 
         let cc = keys.find(key => cache[key])
         if (cc) {
-            return cache[cc]
+            on_best_move(cache[cc])
         } else {
-             get_best_move(game_id, fen, ply, multi_pv, depth, on_loading, on_depth, on_best_move)
+             get_best_move(game_id, fen, ply, multi_pv, depth, on_loading, on_depth, on_best_move_set_cache)
         }
 
-        cache[key] = {
-            get loading() { return loading() },
-            get depth_eval() { return depth_eval() },
-            get best_eval() { return best_eval() },
-        }
 
-        return cache[key]
+        function on_best_move_set_cache(e: LocalEval) {
+            cache[key] = e
+            on_best_move(e)
+        }
     }
 
 
@@ -147,7 +134,7 @@ export function StockfishProvider(props: { children: JSXElement }) {
             }
             return p.state
         },
-        best_move_with_depth_progress,
+        best_move_with_cache,
         stop() {
             pp()?.stop()
         }

@@ -4,7 +4,7 @@ import { Step } from "./step_types";
 import { LocalEval } from "../ceval2/stockfish-module";
 import { povDiff } from "../ceval2/winningChances";
 import { fen_turn } from "../chess_pgn_logic";
-import { Accessor, createEffect, createMemo, createSignal, on } from "solid-js";
+import { Accessor, createMemo, createSignal } from "solid-js";
 import { Color } from "chessops";
 import { keyArray } from "@solid-primitives/keyed";
 
@@ -41,19 +41,42 @@ export type StepsWithStockfishComponent = {
 
 export function StepsWithStockfishComponent() {
     let s = useContext(StockfishContext)!
-    function calc_fen_ply(fen: string, ply: number, multi_pv: number, depth: number) {
-        return s.best_move_with_depth_progress(game_id(), fen, ply, multi_pv, depth)
+    function calc_fen_ply(fen: string, ply: number, multi_pv: number, depth: number, 
+        on_loading: () => void, 
+        on_depth: (e: LocalEval) => void, 
+        on_best_move: (e: LocalEval) => void) {
+        s.best_move_with_cache(game_id(), fen, ply, multi_pv, depth, on_loading, on_depth, on_best_move)
     }
 
-    type Work = { cancel: () => void, fen: string, ply: number, depth: number, multi_pv: number, set_e: (_: BestMoveWithDepthProgress) => void }
+    type Work = { 
+        set_loading: () => void, 
+        set_depth_eval: (_: LocalEval) => void, 
+        set_best_eval: (_: LocalEval) => void, 
+        cancel: () => void, 
+        fen: string, ply: number, depth: number, multi_pv: number }
 
     let working: Work | undefined = undefined
     let queue: Work[] = []
 
     function queue_calc_fen_ply(fen: string, ply: number, depth: number, multi_pv: number) {
-        let [e, set_e] = createSignal<BestMoveWithDepthProgress | undefined>(undefined)
+        let [loading, set_loading] = createSignal(void 0)
+        let [depth_eval, set_depth_eval] = createSignal<LocalEval | undefined>(undefined)
+        let [best_eval, set_best_eval] = createSignal<LocalEval | undefined>(undefined)
 
-        let item: Work = { cancel, fen, ply, depth, multi_pv, set_e}
+
+        let e: BestMoveWithDepthProgress = {
+            get loading() {
+                return loading()
+            },
+            get depth_eval() {
+                return depth_eval()
+            },
+            get best_eval() {
+                return best_eval()
+            },
+            cancel
+        }
+        let item: Work = { cancel, fen, ply, depth, multi_pv, set_loading, set_depth_eval, set_best_eval }
 
         function cancel() {
             let i = queue.indexOf(item)
@@ -69,7 +92,7 @@ export function StepsWithStockfishComponent() {
 
         queue.push(item)
         dequeue()
-        return [e, cancel] as [Accessor<BestMoveWithDepthProgress>, () => void]
+        return e
     }
 
     function dequeue() {
@@ -83,22 +106,20 @@ export function StepsWithStockfishComponent() {
             return
         }
 
-        let e = calc_fen_ply(working.fen, working.ply, working.multi_pv, working.depth)
+        console.log(working.fen, 'working on')
+        const on_best_move = (e: LocalEval) => {
+            working?.set_best_eval(e)
+            working = undefined
+            dequeue()
+        }
 
-        createEffect(on(() => e.best_eval, (e) => {
-            if (e) {
-                working = undefined
-                dequeue()
-            }
-        }))
-
-        working.set_e(e)
+        calc_fen_ply(working.fen, working.ply, working.multi_pv, working.depth, working.set_loading, working.set_depth_eval, on_best_move)
     }
 
     function queue_calc_step(step: Step, depth: number, multi_pv: number) {
 
-        let [be, be_cancel] = queue_calc_fen_ply(step.before_fen, step.ply, depth, multi_pv)
-        let [e, e_cancel] = queue_calc_fen_ply(step.fen, step.ply, depth, multi_pv)
+        let be = queue_calc_fen_ply(step.before_fen, step.ply, depth, multi_pv)
+        let e = queue_calc_fen_ply(step.fen, step.ply, depth, multi_pv)
 
         function judge(turn: Color, before_search: LocalEval, search: LocalEval) {
             let diff = diff_eval(turn, before_search, search)
@@ -110,29 +131,29 @@ export function StepsWithStockfishComponent() {
         return createMemo<StepWithSearch>(() => {
 
             onCleanup(() => {
-                e_cancel()
-                be_cancel()
+                e.cancel()
+                be.cancel()
             })
 
             return {
                 ...step,
                 get before_search() {
-                    return be()?.best_eval
+                    return be?.best_eval
                 },
                 get search() {
-                    return e()?.best_eval
+                    return e?.best_eval
                 },
                 get judgement() {
 
-                    let before = be()?.best_eval
-                    let after = e()?.best_eval
+                    let before = be?.best_eval
+                    let after = e?.best_eval
 
                     if (before && after) {
                         return judge(fen_turn(step.before_fen), before, after)
                     }
                 },
                 get progress() {
-                    return e()?.depth_eval
+                    return e?.depth_eval
                 }
             }
         })
