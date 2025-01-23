@@ -257,7 +257,9 @@ export function StepWithSearchOnReplay(props: { step: StepWithSearch }) {
             }>
                 <span class='eval'>{renderEval(cp()!)}</span>
             </Show>
-            <Show when={judgement()}>{judgement =>
+            <Show when={judgement()} fallback={
+                <span class='loading'>.</span>
+            }>{judgement =>
                 <span class='judgement'>{judgement_glyph(judgement())}</span>
             }</Show>
         </span>

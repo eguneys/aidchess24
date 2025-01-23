@@ -58,7 +58,6 @@ export function StockfishProvider(props: { children: JSXElement }) {
         let threads = Math.max(1, navigator.hardwareConcurrency - 2)
         let hash_size = 256
 
-        console.log('query', fen)
         p.start({
             threads,
             hash_size,
@@ -76,12 +75,10 @@ export function StockfishProvider(props: { children: JSXElement }) {
             moves: [],
             emit: throttle(200, function (ev: LocalEval): void {
                 if (ev.depth === depth) {
-                    console.log('best', fen, ev.depth)
                     on_best_move(ev)
                 }
             }),
             on_pvs: throttle(200, function (ev: LocalEval): void {
-                console.log('pvs')
                 on_depth(ev)
             }),
         })

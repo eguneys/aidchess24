@@ -106,7 +106,6 @@ export function StepsWithStockfishComponent() {
             return
         }
 
-        console.log(working.fen, 'working on')
         const on_best_move = (e: LocalEval) => {
             working?.set_best_eval(e)
             working = undefined
