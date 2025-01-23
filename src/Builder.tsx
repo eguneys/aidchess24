@@ -266,9 +266,13 @@ function WithStockfishLoaded() {
         let x = e.clientX
         let y = e.clientY
 
+        let context_bounds = $el_context_menu.getBoundingClientRect()
         let bounds = $el_builder_ref.getBoundingClientRect()
         x -= bounds.left
         y -= bounds.top
+
+
+        x = Math.min(x, document.body.clientWidth - context_bounds.width - bounds.left - 20)
 
         let top = `${y}px`
         let left = `${x}px`
