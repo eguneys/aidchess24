@@ -63,11 +63,15 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         multi_pv: 1
     }
 
-    const engine_play_params: SearchParams = {
-        depth: 8,
-        multi_pv: 6,
+    const prev_steps_params20: SearchParams = {
+        depth: 20,
+        multi_pv: 1
     }
 
+    const [engine_play_params, set_engine_play_params] = createSignal<SearchParams>({
+        depth: 8,
+        multi_pv: 6,
+    })
 
     createEffect(() => {
         const last = play_replay.last_sf_step
@@ -76,25 +80,29 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             return
         }
 
-        createEffect(on(last.request_search(engine_play_params), (s) => {
-            if (!s) {
-                return
-            }
+        let turn = fen_turn(last.step.fen)
 
-            if (!s.search) {
-                // TODO warn
-                return
-            }
+        createEffect(() => {
+            console.log('yes')
+            console.log(last.request_search(engine_play_params())())
+        })
 
-            let turn = fen_turn(s.fen)
+        if (turn === engine_color()) {
+            createEffect(on(() => last.request_search(engine_play_params())(), (s) => {
+                if (!s) {
+                    return
+                }
 
-            if (turn === engine_color()) {
+                if (!s.search) {
+                    // TODO warn
+                    return
+                }
 
                 let pvs = s.search.pvs
 
                 play_uci.play_uci(pvs[0].moves[0])
-            }
-        }))
+            }))
+        }
     })
 
     createEffect(on(() => play_uci.add_last_move, (last_move) => {
@@ -172,7 +180,7 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             return
         }
 
-        createEffect(on(sf_step.request_search(engine_play_params), ss => {
+        createEffect(on(() => sf_step.request_search(engine_play_params())(), ss => {
             if (!ss) {
                 return
             }
@@ -289,6 +297,29 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
         set_context_menu_step(undefined)
     }
 
+    const [search_depth, set_search_depth] = createSignal(8)
+
+    const on_depth_changed = (depth: string) => {
+        set_search_depth(depth === 'level20'? 20: 8)
+    }
+
+    // TODO be careful
+    createEffect(on(search_depth, (depth) => {
+        if (depth === 20) {
+            play_replay.sf_steps.forEach(_ => _?.request_search(prev_steps_params20))
+            set_engine_play_params({
+                depth: 20,
+                multi_pv: 6
+            })
+        } else {
+            play_replay.sf_steps.forEach(_ => _?.request_search(prev_steps_params))
+            set_engine_play_params({
+                depth: 8,
+                multi_pv: 6
+            })
+        }
+    }))
+
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
@@ -301,6 +332,18 @@ function WithStockfishLoaded(props: { s: StockfishContextRes }) {
             </div>
                 <Show when={tab() === 'match'}>
                     <>
+                        <div class='engine-wrap'>
+                            <fieldset>
+                                <div class='option'>
+                                    <input checked={true} onChange={(e) => {if (e.target.checked) { on_depth_changed('level8') }}} type='radio' name='depth' id='level8' />
+                                    <label for='level8'>Depth 8</label>
+                                </div>
+                                <div class='option'>
+                                    <input onChange={(e) => {if (e.target.checked) { on_depth_changed('level20') }}} type='radio' name='depth' id='level20' />
+                                    <label for='level20'>Depth 20</label>
+                                </div>
+                            </fieldset>
+                        </div>
                         <PlayUciSingleReplay play_replay={play_replay} />
                         <div class='result-wrap'>
                             <Show when={builder_result() === 'drop'}>

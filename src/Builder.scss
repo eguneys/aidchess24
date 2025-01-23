@@ -45,6 +45,7 @@ $tree-bg: rgb(234, 219, 198);
 
 $hover-bg: rgb(113, 99, 67);
 
+
         .replay-wrap {
             display: flex;
             flex-flow: column;
@@ -116,6 +117,27 @@ $hover-bg: rgb(113, 99, 67);
             }
         }
 
+        .engine-wrap {
+            fieldset {
+                    display: flex;
+                    flex-flow: row;
+
+                    align-items: center;
+                    .option {
+                        padding: 0.2em;
+
+                        display: flex;
+                        align-items: center;
+                        gap: 0.1em;
+
+                        input, label {
+
+                            display: inline;
+                            vertical-align: middle;
+                        }
+                    }
+                }
+        }
 
         .context-menu {
             position: absolute;

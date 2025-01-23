@@ -222,7 +222,9 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                             <span class='san'>{ply_san.san}</span>
                             <Show when={props.play_replay.sf_steps[i()]}>{res =>
                                 <Show when={res().request_search()}>{ss =>
-                                    <Show when={ss()()}>{ss =>
+                                    <Show when={ss()()} fallback={
+                                        "..."
+                                    }>{ss =>
                                         <StepWithSearchForParams ss={ss()} />
                                     }</Show>
                                 }</Show>
@@ -262,6 +264,7 @@ export type StepWithSearch = Step & {
 }
 
 export type RequestStepWithSearch = {
+    step: Step,
     request_search(params?: SearchParams): Accessor<StepWithSearch | undefined>,
 }
 
@@ -351,6 +354,7 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
                     return res[res.length - 1]?.()
                 }
             }
+            //console.trace(step.san, params)
 
             let key = [params.depth, params.multi_pv, params.server].join('$$')
 
@@ -386,6 +390,7 @@ function StockfishBuilderComponent(props: { s: StockfishContextRes, game_id: str
         }
 
         return {
+            step,
             request_search
         }
     }
