@@ -79,9 +79,9 @@ function WithStockfishLoaded() {
 
     function pv1_for_depth_option_force(work: StepLazyQueueWork) {
         if (search_depth() === 8) {
-            return work.d8pv6[1]() ?? work.d8pv1[0]()
+            return work.d8pv1[0]()
         }
-        return work.d20pv6[1]() ?? work.d20pv1[0]()
+        return work.d20pv1[0]()
     }
 
 
@@ -94,7 +94,8 @@ function WithStockfishLoaded() {
         let turn = fen_turn(last.step.fen)
 
         if (turn === engine_color()) {
-            createEffect(on(() => pv6_for_depth_option(last)[0]().search, (s) => {
+            let pdd = pv6_for_depth_option(last)[0]()
+            createEffect(on(() => pdd.search, (s) => {
                 if (!s) {
                     return
                 }
@@ -184,7 +185,8 @@ function WithStockfishLoaded() {
             return
         }
 
-        createEffect(on(() => pv1_for_depth_option_force(last_step).search, search => {
+        let pdd = pv1_for_depth_option_force(last_step)
+        createEffect(on(() => pdd.search, search => {
             let cp = search?.cp
 
             if (!cp) {
@@ -242,7 +244,7 @@ function WithStockfishLoaded() {
 
 
 
-    const [tab, set_tab] = createSignal('repertoire')
+    const [tab, set_tab] = createSignal('match')
 
 
     /*

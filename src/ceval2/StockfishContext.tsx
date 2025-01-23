@@ -80,6 +80,8 @@ export function StockfishProvider(props: { children: JSXElement }) {
     }
 
 
+    let cache: Record<string, BestMoveWithDepthProgress> = {}
+
     function best_move_with_depth_progress(game_id: string, fen: string, ply: number, multi_pv: number, depth: number) {
 
         let [loading, set_loading] = createSignal(true)
@@ -98,7 +100,6 @@ export function StockfishProvider(props: { children: JSXElement }) {
         }
 
         const on_best_move = (ev: LocalEval) => {
-
             batch(() => {
                 set_loading(false)
                 set_depth_eval(undefined)
@@ -106,13 +107,29 @@ export function StockfishProvider(props: { children: JSXElement }) {
             })
         }
 
-        get_best_move(game_id, fen, ply, multi_pv, depth, on_loading, on_depth, on_best_move)
+        let key = [fen, multi_pv, depth].join('$$')
+        let keys = (() => {
+            let depths = depth === 8 ? [20, 8] : [20]
+            let pvs = multi_pv === 1 ? [6, 1] : [1]
 
-        return {
+            return depths.flatMap(depth => pvs.map(multi_pv =>
+                [fen, multi_pv, depth].join('$$')))
+        })()
+
+        let cc = keys.find(key => cache[key])
+        if (cc) {
+            return cache[cc]
+        } else {
+             get_best_move(game_id, fen, ply, multi_pv, depth, on_loading, on_depth, on_best_move)
+        }
+
+        cache[key] = {
             get loading() { return loading() },
             get depth_eval() { return depth_eval() },
             get best_eval() { return best_eval() },
         }
+
+        return cache[key]
     }
 
 
