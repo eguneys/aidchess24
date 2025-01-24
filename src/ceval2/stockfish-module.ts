@@ -156,7 +156,6 @@ export async function protocol(hooks: ProtocolHooks) {
       const pivot = 1
       const ev = work.ply % 2 === pivot ? -pov_ev : pov_ev
 
-
       if (eval_type && multi_pv === 1) return
 
       const pv_data = {

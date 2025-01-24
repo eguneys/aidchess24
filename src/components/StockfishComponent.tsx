@@ -118,7 +118,7 @@ export function StepsWithStockfishComponent() {
 
     function queue_calc_step(step: Step, depth: number, multi_pv: number) {
 
-        let be = queue_calc_fen_ply(step.before_fen, step.ply, depth, multi_pv)
+        let be = queue_calc_fen_ply(step.before_fen, step.ply - 1, depth, multi_pv)
         let e = queue_calc_fen_ply(step.fen, step.ply, depth, multi_pv)
 
         function judge(turn: Color, before_search: LocalEval, search: LocalEval) {
