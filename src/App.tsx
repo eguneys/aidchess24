@@ -1,4 +1,4 @@
-import { Route, A, useLocation, HashRouter, useBeforeLeave } from "@solidjs/router";
+import { Route, A, useLocation, useBeforeLeave, Router } from "@solidjs/router";
 import { ErrorBoundary, Show, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
@@ -34,7 +34,7 @@ export const MyApp = () => {
         <MetaProvider>
         <RepertoireDBProvider>
         <PlayerProvider>
-            <HashRouter root={AppInRouter}>
+            <Router root={AppInRouter}>
               <Route path='/' component={Home}/>
               <Route path='/sixth' component={SixthDraw}/>
 
@@ -58,7 +58,7 @@ export const MyApp = () => {
               <Route path='/donate' component={Contact}/>
               <Route path='/thanks' component={Contact}/>
               <Route path='/dashboard' component={Dashboard}/>
-            </HashRouter>
+            </Router>
         </PlayerProvider>
         </RepertoireDBProvider>
         </MetaProvider>
