@@ -2,7 +2,6 @@ import { Accessor, createContext, createMemo, createResource, createSignal, DEV,
 import { LocalEval, protocol } from "./stockfish-module";
 import throttle from "../common/throttle";
 import { isServer } from "solid-js/web";
-import { start } from "chessground/drag";
 
 export const StockfishContext = createContext<StockfishContextRes>()
 
@@ -58,11 +57,13 @@ export function StockfishProvider(props: { children: JSXElement }) {
         let threads = Math.max(1, navigator.hardwareConcurrency - 2)
         let hash_size = 256
 
+        //console.log('p start', fen, depth)
         p.start({
             threads,
             hash_size,
             game_id,
             stop_requested: false,
+            swap_requested: false,
             path: [],
             search: {
                 depth
@@ -73,11 +74,9 @@ export function StockfishProvider(props: { children: JSXElement }) {
             initial_fen: fen,
             current_fen: fen,
             moves: [],
-            emit: throttle(200, function (ev: LocalEval): void {
-                if (ev.depth === depth) {
-                    on_best_move(ev)
-                }
-            }),
+            emit: function (ev: LocalEval): void {
+                on_best_move(ev)
+            },
             on_pvs: throttle(200, function (ev: LocalEval): void {
                 on_depth(ev)
             }),

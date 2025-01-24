@@ -37,6 +37,7 @@ export type Work = {
   hash_size: number | undefined,
   game_id: string | undefined,
   stop_requested: boolean,
+  swap_requested: boolean,
 
   path: string[],
   search: SearchBy,
@@ -86,12 +87,11 @@ export async function protocol(hooks: ProtocolHooks) {
 
   function compute(work?: Work) {
     next_work = work
-    stop()
-    swap_work()
+    stop_and_wait_for_swap()
   }
 
   function is_computing() {
-    return !!work && !work.stop_requested
+    return !!work && !work.stop_requested && !work.swap_requested
   }
 
   function parse_received(command: string) {
@@ -110,7 +110,7 @@ export async function protocol(hooks: ProtocolHooks) {
       work = undefined
       swap_work()
       return
-    } else if(work && !work.stop_requested && parts[0] === 'info') {
+    } else if(work && !work.swap_requested && !work.stop_requested && parts[0] === 'info') {
       let depth = 0,
       nodes,
       multi_pv = 1,
@@ -179,11 +179,10 @@ export async function protocol(hooks: ProtocolHooks) {
       } else if (current_eval) {
         current_eval.pvs.push(pv_data)
         current_eval.depth = Math.min(current_eval.depth, depth)
-        work.on_pvs(current_eval)
       }
 
       if (multi_pv === expected_pvs && current_eval) {
-        work.emit(current_eval)
+        work.on_pvs(current_eval)
         if (depth >= 40) stop()
       }
     } else if (command && !['Stockfish', 'id', 'option', 'info'].includes(parts[0])) {
@@ -244,6 +243,14 @@ export async function protocol(hooks: ProtocolHooks) {
       work.stop_requested = true
       send('stop')
     }
+  }
+
+  function stop_and_wait_for_swap() {
+    if (work && !work.swap_requested) {
+      work.swap_requested = true
+      send('stop')
+    }
+    send('isready')
   }
 
   let game_id: string | undefined

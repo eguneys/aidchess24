@@ -84,6 +84,7 @@ export function StepsWithStockfishComponent() {
                 queue.splice(i, 1)
             }
             if (working === item) {
+                console.trace('working cancel')
                 working = undefined
                 s.stop()
             }
@@ -137,15 +138,18 @@ export function StepsWithStockfishComponent() {
             return {
                 ...step,
                 get before_search() {
-                    return be?.best_eval
+                    return be.best_eval
                 },
                 get search() {
-                    return e?.best_eval
+                    if (step.fen !== e.best_eval?.fen) {
+                       // console.log(step.fen, e.best_eval?.fen)
+                    }
+                    return e.best_eval
                 },
                 get judgement() {
 
-                    let before = be?.best_eval
-                    let after = e?.best_eval
+                    let before = be.best_eval
+                    let after = e.best_eval
 
                     if (before && after) {
                         return judge(fen_turn(step.before_fen), before, after)

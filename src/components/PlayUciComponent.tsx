@@ -6,7 +6,7 @@ import { Chess, Color, parseSquare, parseUci } from "chessops"
 import { chessgroundDests } from "chessops/compat"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { makeSan } from "chessops/san"
-import { batch, createEffect, createMemo, createSignal, on, onMount } from "solid-js"
+import { batch, createEffect, createMemo, createSignal, onMount } from "solid-js"
 import './chessground.css'
 import { SAN, UCI } from "./step_types"
 

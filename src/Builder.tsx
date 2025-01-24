@@ -162,6 +162,7 @@ function WithStockfishLoaded() {
     const on_rematch = () => {
         set_sans([])
         play_replay.set_sans(sans())
+        play_uci.set_fen_and_last_move(INITIAL_FEN)
         set_builder_result(undefined)
     }
 
