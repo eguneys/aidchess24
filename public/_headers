@@ -1,3 +1,6 @@
 /builder
   Cross-Origin-Embedder-Policy : require-corp
   Cross-Origin-Opener-Policy : same-origin
+/assets
+  Cross-Origin-Embedder-Policy : require-corp
+  Cross-Origin-Opener-Policy : same-origin
