@@ -95,7 +95,7 @@ export function StockfishProvider(props: { children: JSXElement }) {
         let key = [fen, multi_pv, depth].join('$$')
         let keys = (() => {
             let depths = depth === 8 ? [20, 8] : [20]
-            let pvs = multi_pv === 1 ? [6, 1] : [1]
+            let pvs = multi_pv === 1 ? [6, 1] : [6]
 
             return depths.flatMap(depth => pvs.map(multi_pv =>
                 [fen, multi_pv, depth].join('$$')))

@@ -118,22 +118,37 @@ $hover-bg: rgb(113, 99, 67);
         }
 
         .engine-wrap {
-            fieldset {
-                    display: flex;
-                    flex-flow: row;
+            display: flex;
+            justify-content: space-between;
+            .skill {
+                display: flex;
+                align-items: center;
+                gap: 0.2em;
+            }
 
-                    align-items: center;
-                    .option {
-                        padding: 0.2em;
-
+            .depth {
+                    fieldset {
                         display: flex;
+                        flex-flow: row;
+            
                         align-items: center;
-                        gap: 0.1em;
-
-                        input, label {
-
-                            display: inline;
-                            vertical-align: middle;
+                        border: none;
+            
+                        .option {
+                            user-select: none;
+                            cursor: pointer;
+                            padding: 0.2em;
+            
+                            display: flex;
+                            align-items: center;
+                            gap: 0.1em;
+            
+                            input,
+                            label {
+                                cursor: pointer;
+                                display: inline;
+                                vertical-align: middle;
+                            }
                         }
                     }
                 }

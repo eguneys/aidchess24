@@ -12,6 +12,7 @@ import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
 import { Path, SAN } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
 import { StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
+import { arr_rnd } from "./random"
 
 export default () => {
     return (<StockfishProvider>
@@ -98,9 +99,41 @@ function WithStockfishLoaded() {
                     return
                 }
 
-                let pvs = s.pvs
+                let cp = s.cp!
 
-                play_uci.play_uci(pvs[0].moves[0])
+                let a = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 10)
+                let b = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 30)
+                let c = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 60)
+                let d = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 100)
+                let e = s.pvs.filter(_ => Math.abs(_.cp! - cp) < 200)
+
+                a = a.filter(_ => _.cp! < 150)
+                b = b.filter(_ => _.cp! < 150)
+                c = c.filter(_ => _.cp! < 150)
+                d = d.filter(_ => _.cp! < 150)
+                e = e.filter(_ => _.cp! < 150)
+
+                console.log(e, s)
+
+                function first_non_zero<T>(a: T[][]) {
+                    return a.find(_ => _.length > 0)!
+                }
+                let pvs
+                let skill = get_skill()
+                switch(skill) {
+                    case "A": pvs = first_non_zero([a])
+                     break
+                    case "B": pvs = first_non_zero([b, a])
+                     break
+                    case "C": pvs = first_non_zero([c, b, a])
+                     break
+                    case "D": pvs = first_non_zero([d, c, b, a])
+                     break
+                    case "E": pvs = first_non_zero([e, d, c, b, a])
+                     break
+                }
+
+                play_uci.play_uci(arr_rnd(pvs).moves[0])
             }))
         }
     }))
@@ -327,7 +360,9 @@ function WithStockfishLoaded() {
         })
     })
 
+    type Skill = "A" | "B" | "C" | "D" | "E"
 
+    const [get_skill, set_skill] = createSignal<Skill>("A")
 
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
@@ -342,6 +377,17 @@ function WithStockfishLoaded() {
                 <Show when={tab() === 'match'}>
                     <>
                         <div class='engine-wrap'>
+                            <div class='skill'>
+                            <label for="skill">Skill:</label>
+                            <select name="skill" id="skill" onChange={e => set_skill(e.currentTarget.value as Skill)}>
+                                <option value="A" selected={get_skill()==="A"}>Top</option>
+                                <option value="B" selected={get_skill()==="B"}>Second</option>
+                                <option value="C" selected={get_skill()==="C"}>Third</option>
+                                <option value="D" selected={get_skill()==="D"}>Fourth</option>
+                                <option value="E" selected={get_skill()==="E"}>Fifth</option>
+                            </select>
+                            </div>
+                            <div class='depth'>
                             <fieldset>
                                 <div class='option'>
                                     <input checked={true} onChange={(e) => {if (e.target.checked) { on_depth_changed(8) }}} type='radio' name='depth' id='level8' />
@@ -352,6 +398,7 @@ function WithStockfishLoaded() {
                                     <label for='level20'>Depth 20</label>
                                 </div>
                             </fieldset>
+                            </div>
                         </div>
                         <PlayUciSingleReplay play_replay={play_replay} steps_stockfish={steps_stockfish} />
                         <div class='result-wrap'>
