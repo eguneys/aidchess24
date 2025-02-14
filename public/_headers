@@ -1,11 +1,11 @@
 /
   Cross-Origin-Embedder-Policy : require-corp
   Cross-Origin-Opener-Policy : same-origin
-  Cross-Origin-Resource-Policy : same-site
+  Cross-Origin-Resource-Policy : cross-origin
 /builder
   Cross-Origin-Embedder-Policy : require-corp
   Cross-Origin-Opener-Policy : same-origin
-  Cross-Origin-Resource-Policy : same-site
+  Cross-Origin-Resource-Policy : cross-origin
 /assets/*
   Cross-Origin-Embedder-Policy : require-corp
   Cross-Origin-Opener-Policy : same-origin
