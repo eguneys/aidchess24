@@ -83,7 +83,7 @@ $blue-light: rgb(176, 187, 230);
                 color: $blunder;
             }
 
-            &.active {
+            &.active, &:hover {
                 color: $bg;
             }
 
