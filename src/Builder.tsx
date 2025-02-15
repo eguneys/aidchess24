@@ -93,6 +93,20 @@ function WithStockfishLoaded() {
         let turn = fen_turn(last.step.fen)
 
         if (turn === engine_color()) {
+
+            let stick_line = get_stick_line()
+
+            if (stick_line && stick_line.startsWith(last.step.path)) {
+                let next_uci = stick_line.slice(last.step.path.length).trim().split(' ')[0]
+
+                if (next_uci) {
+                    play_uci.play_uci(next_uci)
+                    return
+                }
+
+            }
+
+
             let pdd = pv6_for_depth_option(last)[0]()
             createEffect(on(() => pdd.search, (s) => {
                 if (!s) {
@@ -360,6 +374,13 @@ function WithStockfishLoaded() {
 
     const [get_skill, set_skill] = createSignal<Skill>("A")
 
+    const [get_stick_line, set_stick_line] = createSignal<Path | undefined>(undefined)
+
+    const on_stick_line = (path: Path) => {
+        set_stick_line(path)
+        set_context_menu_step(undefined)
+    }
+
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
@@ -420,6 +441,7 @@ function WithStockfishLoaded() {
             <Show when={context_menu_step()}>{step =>
                 <div onClick={e => { e.preventDefault(); e.stopImmediatePropagation(); }} ref={_ => $el_context_menu = _} class='context-menu'>
                     <div class='title'>{ply_to_index(step().ply)}{step().san}</div>
+                    <a onClick={() => on_stick_line(step().path)} class='stick' data-icon=''>Play only this line</a>
                     <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete move</a>
                 </div>
             }</Show>

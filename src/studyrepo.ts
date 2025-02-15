@@ -119,10 +119,10 @@ const reformatSectionStudyPGN = (pgns: string, id: string, study_name: string, o
 
 
 const read_study_pgn = (id: string, study_name: string, orientation?: Color) => 
-    fetch(`pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, id, study_name, orientation))
+    fetch(`/pgns/${id}.pgn`).then(_ => _.text()).then(_ => reformatStudyPGN(_, id, study_name, orientation))
 
 const read_section_study_pgn = (id: string, study_name: string, orientation?: Color) => 
-    fetch(`pgns/${id}.section.pgn`).then(_ => _.text()).then(_ => reformatSectionStudyPGN(_, id, study_name, orientation))
+    fetch(`/pgns/${id}.section.pgn`).then(_ => _.text()).then(_ => reformatSectionStudyPGN(_, id, study_name, orientation))
 
 const read_imported_study_pgn = (id: string, study_name: string, import_lichess_link: string) => {
   let [pgn] = makePersistedNamespaced('', 'pgn.imported.' + id)
