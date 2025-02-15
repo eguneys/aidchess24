@@ -1,4 +1,4 @@
-import { Route, A, useLocation, useBeforeLeave, Router, useNavigate } from "@solidjs/router";
+import { Route, A, useLocation, useBeforeLeave, Router } from "@solidjs/router";
 import { ErrorBoundary, Show, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
@@ -80,8 +80,6 @@ const AppInRouter = (props: any) => {
   useBeforeLeave(() => {
     set_checked(false)
   })
-
-  let navigate = useNavigate()
 
     return (<>
 
