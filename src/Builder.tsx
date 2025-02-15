@@ -244,15 +244,13 @@ function WithStockfishLoaded() {
         set_first_cursor_path(path)
     }))
 
-    /*
     createEffect(on(() => play_replay_tree.cursor_path_step, (ps) => {
         if (ps) {
-            play_uci.set_fen_last_move(ps.fen, [ps.uci, ps.san])
+            play_uci.set_fen_and_last_move(ps.fen, ps.uci)
         } else {
-            play_uci.set_fen_last_move(INITIAL_FEN)
+            play_uci.set_fen_and_last_move(INITIAL_FEN)
         }
     }))
-        */
 
     const on_save_line = () => {
         batch(() => {
@@ -279,16 +277,14 @@ function WithStockfishLoaded() {
     const [tab, set_tab] = createSignal('match')
 
 
-    /*
     createEffect(on(tab, (t) => {
         let ps = t === 'repertoire' ? play_replay_tree.cursor_path_step : play_replay.ply_step
         if (ps) {
-            play_uci.set_fen_last_move(ps.fen, [ps.uci, ps.san])
+            play_uci.set_fen_and_last_move(ps.fen, ps.uci)
         } else {
-            play_uci.set_fen_last_move(INITIAL_FEN)
+            play_uci.set_fen_and_last_move(INITIAL_FEN)
         }
     }))
-        */
 
     let $el_builder_ref: HTMLElement
     let $el_context_menu: HTMLElement
