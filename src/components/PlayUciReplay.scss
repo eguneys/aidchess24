@@ -12,10 +12,13 @@ $blue-light: rgb(176, 187, 230);
 
 .replay-single {
 
+    display: flex;
+    flex-flow: column;
+    position: relative;
+
     background: $bg;
     color: $color;
 
-    overflow-y: scroll;
     max-height: 360px;
 
     .moves {
@@ -24,6 +27,7 @@ $blue-light: rgb(176, 187, 230);
         display: flex;
         flex-flow: row wrap;
         -webkit-font-smoothing: antialiased;
+        overflow-y: auto;
 
 
         .index {

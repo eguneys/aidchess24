@@ -202,7 +202,8 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
             }
         }
         if (st !== undefined) {
-            cont.scrollTo({top: st })
+            //cont.scrollTo({top: st })
+            $moves_el.scrollTop = st;
         }
     })
 
