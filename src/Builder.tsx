@@ -132,7 +132,7 @@ function WithStockfishLoaded() {
                 function first_non_zero<T>(a: T[][]) {
                     return a.find(_ => _.length > 0)!
                 }
-                console.log(c, b, a, all)
+                //console.log(c, b, a, all)
                 let pvs
                 let skill = get_skill()
                 switch(skill) {

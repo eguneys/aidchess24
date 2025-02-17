@@ -183,7 +183,9 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
         }
     }
 
-    createEffect(on(ply_sans, (sans) => {
+    createEffect(() => {
+        const sans = ply_sans()
+
         if (sans.length < 7) return
 
         let cont = $moves_el.parentElement!
@@ -200,9 +202,9 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
             }
         }
         if (st !== undefined) {
-            cont.scrollTo({behavior: 'smooth', top: st })
+            cont.scrollTo({top: st })
         }
-    }))
+    })
 
     return (<>
         <div class='replay-single'>
