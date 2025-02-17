@@ -115,6 +115,8 @@ function WithStockfishLoaded() {
 
                 let cp = s.cp!
 
+                let all = s.pvs
+
                 let a = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 10)
                 let b = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 30)
                 let c = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 60)
@@ -127,23 +129,21 @@ function WithStockfishLoaded() {
                 d = d.filter(_ => _.cp! < 150)
                 e = e.filter(_ => _.cp! < 150)
 
-                console.log(e, s)
-
                 function first_non_zero<T>(a: T[][]) {
                     return a.find(_ => _.length > 0)!
                 }
                 let pvs
                 let skill = get_skill()
                 switch(skill) {
-                    case "A": pvs = first_non_zero([a])
+                    case "A": pvs = first_non_zero([a, all])
                      break
-                    case "B": pvs = first_non_zero([b, a])
+                    case "B": pvs = first_non_zero([b, a, all])
                      break
-                    case "C": pvs = first_non_zero([c, b, a])
+                    case "C": pvs = first_non_zero([c, b, a, all])
                      break
-                    case "D": pvs = first_non_zero([d, c, b, a])
+                    case "D": pvs = first_non_zero([d, c, b, a, all])
                      break
-                    case "E": pvs = first_non_zero([e, d, c, b, a])
+                    case "E": pvs = first_non_zero([e, d, c, b, a, all])
                      break
                 }
 
