@@ -250,8 +250,6 @@ export function StepWithSearchOnReplay(props: { step: StepWithSearch }) {
     }
     const depth = () => props.step.progress?.depth
 
-    console.log(props.step.san, props.step.search)
-
     return (<>
         <span class='eval'>
             <Show when={cp() !== undefined} fallback={
