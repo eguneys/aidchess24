@@ -9,7 +9,7 @@ import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
 import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
-import { Path, SAN } from "./components/step_types"
+import { Path, Ply, SAN, Step } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
 import { StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 import { arr_rnd } from "./random"
@@ -284,8 +284,13 @@ function WithStockfishLoaded() {
         }
     }))
 
-    const on_save_line = () => {
+    const on_save_line = (ply?: Ply) => {
         batch(() => {
+            set_context_menu_step_single(undefined)
+            if (ply) {
+                play_replay.goto_ply(ply)
+            }
+
             let steps = play_replay.steps_up_to_ply
 
             let sans = steps.map(_ => _.san)
@@ -343,10 +348,36 @@ function WithStockfishLoaded() {
         $el_context_menu.style.left = left
     }
 
+    let $el_replay_context_menu: HTMLElement
+    const on_replay_context_menu = (e: MouseEvent, ply: Ply) => {
+        play_replay.goto_ply(ply)
+        set_context_menu_step_single(play_replay.ply_step)
+
+        let x = e.clientX
+        let y = e.clientY
+
+        let context_bounds = $el_replay_context_menu.getBoundingClientRect()
+        let bounds = $el_builder_ref.getBoundingClientRect()
+        x -= bounds.left
+        y -= bounds.top
+
+
+        x = Math.min(x, document.body.clientWidth - context_bounds.width - bounds.left - 20)
+
+        let top = `${y}px`
+        let left = `${x}px`
+
+        $el_replay_context_menu.style.top = top
+        $el_replay_context_menu.style.left = left
+    }
+
+
+
     onMount(() => {
 
         const on_click = () => {
             set_context_menu_step(undefined)
+            set_context_menu_step_single(undefined)
         }
 
         document.addEventListener('click', on_click)
@@ -357,6 +388,7 @@ function WithStockfishLoaded() {
     })
 
     const [context_menu_step, set_context_menu_step] = createSignal<TreeStepNode | undefined>(undefined)
+    const [context_menu_step_single, set_context_menu_step_single] = createSignal<Step | undefined>(undefined)
 
     const on_delete_move = (path: Path) => {
         play_replay_tree.steps.remove_child_at_path(path)
@@ -396,6 +428,7 @@ function WithStockfishLoaded() {
     const on_stick_line = (path: Path) => {
         set_stick_line(path)
         set_context_menu_step(undefined)
+        set_context_menu_step_single(undefined)
     }
 
     const last_step_sharpness = createMemo(() => {
@@ -421,6 +454,13 @@ function WithStockfishLoaded() {
         }))
         return mm()
     })
+
+    const on_analyze_lichess = (step: Step) => {
+        let fen = step.fen
+        window.open(`https://lichess.org/analysis?fen=${fen}`, '_blank')
+        set_context_menu_step_single(undefined)
+        set_context_menu_step(undefined)
+    }
 
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
@@ -458,7 +498,12 @@ function WithStockfishLoaded() {
                             </fieldset>
                             </div>
                         </div>
-                        <PlayUciSingleReplay play_replay={play_replay} steps_stockfish={steps_stockfish} last_step_sharpness={last_step_sharpness()} />
+                        <PlayUciSingleReplay 
+                            play_replay={play_replay} 
+                            steps_stockfish={steps_stockfish} 
+                            last_step_sharpness={last_step_sharpness()}
+                            on_context_menu={on_replay_context_menu}
+                        />
                         <div class='result-wrap'>
 
                             <Switch>
@@ -481,7 +526,6 @@ function WithStockfishLoaded() {
                             </Switch>
                         </div>
                         <div class='tools-wrap'>
-                            <button onClick={on_save_line} class='save'>Save Line</button>
                             <button onClick={on_rematch} class='rematch'>Rematch</button>
                         </div>
                     </>
@@ -499,6 +543,14 @@ function WithStockfishLoaded() {
                     <div class='title'>{ply_to_index(step().ply)}{step().san}</div>
                     <a onClick={() => on_stick_line(step().path)} class='stick' data-icon=''>Play only this line</a>
                     <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete move</a>
+                </div>
+            }</Show>
+            <Show when={context_menu_step_single()}>{step =>
+                <div onClick={e => { e.preventDefault(); e.stopImmediatePropagation(); }} ref={_ => $el_replay_context_menu = _} class='context-menu'>
+                    <div class='title'>{ply_to_index(step().ply)}{step().san}</div>
+                    <a onClick={() => on_stick_line(step().path)} class='stick' data-icon=''>Play only this line</a>
+                    <a onClick={() => on_save_line(step().ply)} class='save' data-icon=''>Save this line</a>
+                    <a onClick={() => on_analyze_lichess(step())} class='analyze' data-icon=''>Analyze on lichess</a>
                 </div>
             }</Show>
     </div>

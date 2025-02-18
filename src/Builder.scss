@@ -36,7 +36,9 @@
             grid-area: replay;
         }
 
-$replay-bg: rgb(63, 61, 56);
+$replay-bg: rgb(52, 50, 46);
+$replay-bg2: rgb(62, 61, 55);
+$replay-bg3: rgb(88, 87, 82);
 
 $bg-g1: rgb(216, 166, 85);
 $bg-g2: rgb(226, 186, 121);
@@ -160,11 +162,17 @@ $hover-bg: rgb(113, 99, 67);
             cursor: pointer;
             border-radius: 3px;
 
+            box-shadow: 0 14px 28px rgba(0,0,0,.25),0 10px 10px rgba(0,0,0,.22);
+
             .title {
                 color: $text;
                 text-align: center;
                 padding: 0.4em;
-                border-bottom: 1px solid $text;
+                border-bottom: 1px solid $replay-bg3;
+                border-radius: 2px 2px 0 0;
+                font-size: 1.1em;
+                text-shadow: 0 1px 0 $replay-bg;
+                background: linear-gradient(to bottom, $replay-bg, $replay-bg2)
             }
 
             a {

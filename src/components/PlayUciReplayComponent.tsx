@@ -188,7 +188,7 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
 }
 
 
-export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayComponent, steps_stockfish: StepsWithStockfishComponent, last_step_sharpness?: number }) {
+export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayComponent, steps_stockfish: StepsWithStockfishComponent, last_step_sharpness?: number, on_context_menu: (e: MouseEvent, ply: Ply) => void }) {
     const ply_sans = createMemo(mapArray(() => props.play_replay.ply_sans, ply_san => {
         let [ply, san] = ply_san.split(' ')
         return {
@@ -269,7 +269,7 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                     <Show when={ply_san.ply % 2 === 1}>
                         <span class='index'>{Math.ceil(ply_san.ply / 2)}</span>
                     </Show>
-                    <span onClick={() => goto_ply(ply_san.ply)} class={'move ' + (judgement_klass(i())) + (ply_san.ply === i_ply() ? ' active' : '')}>
+                    <span onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, ply_san.ply)}} onClick={() => goto_ply(ply_san.ply)} class={'move ' + (judgement_klass(i())) + (ply_san.ply === i_ply() ? ' active' : '')}>
                             <span class='san'>{ply_san.san}</span>
                             <Show when={props.steps_stockfish.steps_with_stockfish[i()]}>{ ss =>
                                 <StepLazyQueueWorkOnSingleReplay ss={ss()} />
