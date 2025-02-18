@@ -1,7 +1,14 @@
 import { createEffect, createMemo, createSignal, For, mapArray, Match, on, Show, Switch } from "solid-js"
 import './PlayUciReplay.scss'
-import { build_steps, Ply, push_san, SAN, Step } from "./step_types"
+import { build_steps, FEN, Ply, push_san, SAN, Step } from "./step_types"
 import { Judgement, StepLazyQueueWork, StepsWithStockfishComponent, StepWithSearch } from "./StockfishComponent"
+import { combine_hash, hash, is_repetition, PositionHash } from "./position_hash"
+import { Chess } from "chessops"
+import { parseFen } from "chessops/fen"
+
+function fen_pos(fen: FEN) {
+    return Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
+}
 
 export type PlayUciSingleReplayComponent = {
     plies: Ply[],
@@ -20,10 +27,14 @@ export type PlayUciSingleReplayComponent = {
     goto_next_ply_if_can: () => void,
     is_on_last_ply: boolean,
     set_sans(_: SAN[]): void
+    is_threefold: boolean,
+    is_stalemate: boolean,
+    is_checkmate: boolean
 }
 
 export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
 
+    let [steps_hashes, set_steps_hashes] = createSignal<PositionHash>([])
     let [steps, set_steps] = createSignal<Step[]>([])
     const last_step = createMemo(() => { 
         let ss = steps()
@@ -66,10 +77,35 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
         return plies().find(_ => _ === res)
     }
 
+    const is_threefold = createMemo(() => {
+        return is_repetition(steps_hashes())
+    })
+    const is_stalemate = createMemo(() => {
+        let last = last_step()
+        if (!last) {
+            return false
+        }
+        return fen_pos(last.fen).isStalemate()
+    })
+    const is_checkmate = createMemo(() => {
+        let last = last_step()
+        if (!last) {
+            return false
+        }
+        return fen_pos(last.fen).isCheckmate()
+    })
+
+
+
+
     return {
         set_sans(sans: SAN[]) {
             set_steps(build_steps(sans))
             set_i_ply(sans.length)
+
+            let ss = steps()
+            set_steps_hashes(ss.reduce<PositionHash>((acc, s) => 
+                combine_hash([hash(fen_pos(s.fen))], acc), []))
         },
         get steps() {
             return steps()
@@ -118,16 +154,34 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
             let last = last_step()
             if (!last) {
                 set_steps(build_steps([san]))
+
+                // duplicate
+                let ss = steps()
+                set_steps_hashes(ss.reduce<PositionHash>((acc, s) =>
+                    combine_hash([hash(fen_pos(s.fen))], acc), []))
                 return
             }
 
             let ss = steps()
             set_steps(push_san(san, ss))
 
-            set_i_ply(last.ply + 1)
+
+            last = last_step()
+            set_steps_hashes(combine_hash([hash(fen_pos(last.fen))], steps_hashes()))
+
+            set_i_ply(last.ply)
         },
         get is_on_last_ply() {
             return i_ply() === (last_step()?.ply ?? 0)
+        },
+        get is_threefold() {
+            return is_threefold()
+        },
+        get is_checkmate() {
+            return is_checkmate()
+        },
+        get is_stalemate() {
+            return is_stalemate()
         }
     }
 

@@ -1,4 +1,4 @@
-import { batch, createEffect, createMemo, createResource, createSignal, on, onCleanup, onMount, Show, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, Match, on, onCleanup, onMount, Show, Switch, useContext } from "solid-js"
 import { StockfishContext, StockfishProvider } from "./ceval2/StockfishContext"
 import { Color, opposite } from "chessops"
 import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
@@ -45,7 +45,7 @@ function LoadingStockfishContext() {
     </>)
 }
 
-type BuilderResult = 'drop'
+type BuilderResult = 'drop' | 'checkmate' | 'stalemate' | 'threefold'
 
 function WithStockfishLoaded() {
 
@@ -117,34 +117,35 @@ function WithStockfishLoaded() {
 
                 let all = s.pvs
 
-                let a = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 10)
-                let b = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 30)
-                let c = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 60)
-                let d = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 100)
-                let e = s.pvs.filter(_ => Math.abs(_.cp! - cp) < 200)
+                let ca = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 10)
+                let cb = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 30)
+                let cc = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 60)
+                let cd = s.pvs.filter(_ => Math.abs(_.cp! - cp) <= 100)
+                let ce = s.pvs.filter(_ => Math.abs(_.cp! - cp) < 200)
 
-                a = a.filter(_ => _.cp! < 150)
-                b = b.filter(_ => _.cp! < 150)
-                c = c.filter(_ => _.cp! < 150)
-                d = d.filter(_ => _.cp! < 150)
-                e = e.filter(_ => _.cp! < 150)
+                let a = ca.filter(_ => _.cp! < 150)
+                let b = cb.filter(_ => _.cp! < 150)
+                let c = cc.filter(_ => _.cp! < 150)
+                let d = cd.filter(_ => _.cp! < 150)
+                let e = ce.filter(_ => _.cp! < 150)
 
                 function first_non_zero<T>(a: T[][]) {
                     return a.find(_ => _.length > 0)!
                 }
-                //console.log(c, b, a, all)
+                console.log(c, b, a, cc, all)
+
                 let pvs
                 let skill = get_skill()
                 switch(skill) {
-                    case "A": pvs = first_non_zero([a, all])
+                    case "A": pvs = first_non_zero([a, ca, all])
                      break
-                    case "B": pvs = first_non_zero([b, a, all])
+                    case "B": pvs = first_non_zero([b, a, cb, all])
                      break
-                    case "C": pvs = first_non_zero([c, b, a, all])
+                    case "C": pvs = first_non_zero([c, b, a, cc, all])
                      break
-                    case "D": pvs = first_non_zero([d, c, b, a, all])
+                    case "D": pvs = first_non_zero([d, c, b, a, cd, all])
                      break
-                    case "E": pvs = first_non_zero([e, d, c, b, a, all])
+                    case "E": pvs = first_non_zero([e, d, c, b, a, ce, all])
                      break
                 }
 
@@ -246,6 +247,22 @@ function WithStockfishLoaded() {
         }))
     }))
 
+    createEffect(() => {
+        let is_checkmate = play_replay.is_checkmate
+        let is_stalemate = play_replay.is_stalemate
+        let is_threefold = play_replay.is_threefold
+
+
+        if (is_checkmate) {
+            set_builder_result('checkmate')
+        }
+        if (is_stalemate) {
+            set_builder_result('stalemate')
+        }
+        if (is_threefold) {
+            set_builder_result('threefold')
+        }
+    })
 
     let [first_cursor_path, set_first_cursor_path] = makePersistedNamespaced<Path>('', 'builder.current.cursor_path')
 
@@ -355,7 +372,6 @@ function WithStockfishLoaded() {
         return !play_uci.isEnd && play_replay.is_on_last_ply && builder_result() === undefined
     })
 
-
     onMount(() => {
 
         const on_key_press = (e: KeyboardEvent) => {
@@ -420,10 +436,24 @@ function WithStockfishLoaded() {
                         </div>
                         <PlayUciSingleReplay play_replay={play_replay} steps_stockfish={steps_stockfish} />
                         <div class='result-wrap'>
-                            <Show when={builder_result() === 'drop'}>
-                                <span class='result'>Game Over</span>
-                                <small class='drop'>Evaluation Dropped Below -2</small>
-                            </Show>
+                            <Switch>
+                                <Match when={builder_result() === 'drop'}>
+                                    <span class='result'>Game Over</span>
+                                    <small class='drop'>Evaluation Dropped Below -2</small>
+                                </Match>
+                                <Match when={builder_result() === 'checkmate'}>
+                                    <span class='result'>Checkmate</span>
+                                    <small class='drop'>Victory is <span class='victory'>{fen_turn(play_replay.last_step!.before_fen)}</span></small>
+                                </Match>
+                                <Match when={builder_result() === 'stalemate'}>
+                                    <span class='result'>Stalemate</span>
+                                    <small class='drop'>Game is a draw</small>
+                                </Match>
+                                <Match when={builder_result() === 'threefold'}>
+                                    <span class='result'>3 Fold Repetition</span>
+                                    <small class='drop'>Game is a draw</small>
+                                </Match>
+                            </Switch>
                         </div>
                         <div class='tools-wrap'>
                             <button onClick={on_save_line} class='save'>Save Line</button>
