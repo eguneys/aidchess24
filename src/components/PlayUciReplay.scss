@@ -21,6 +21,48 @@ $blue-light: rgb(176, 187, 230);
 
     max-height: 360px;
 
+    .sharpness {
+        display: flex;
+        gap: 0.2em;
+        align-self: center;
+
+
+        .word {
+            display: flex;
+            gap: 0.2em;
+            &:before {
+                align-self: center;
+                content: '';
+                width: 1em;
+                height: 1em;
+                border-radius: 50%;
+                background: green;
+                border: 1px solid black;
+            }
+            font-weight: bold;
+            small {
+                align-self: center;
+            }
+
+
+            &.safe:before {
+                background: green;
+            }
+
+            &.playable:before {
+                background: yellow;
+            }
+
+            &.sharp:before {
+                background: orange;
+            }
+
+            &.critical:before {
+                background: red;
+            }
+        }
+    }
+
     .moves {
         font-family: 'Noto Chess', 'Kantumruy';
         user-select: none;

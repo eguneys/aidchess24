@@ -398,6 +398,30 @@ function WithStockfishLoaded() {
         set_context_menu_step(undefined)
     }
 
+    const last_step_sharpness = createMemo(() => {
+
+        let last_step = last_stockfish_step()
+
+        if (!last_step) {
+            return undefined
+        }
+
+        let last_eval = pv6_for_depth_option(last_step)[0]()
+
+        if (!last_eval) {
+            return undefined
+        }
+        let mm = createMemo(on(() => last_eval.search, search => {
+            if (!search) {
+                return undefined
+            }
+
+            let cp = search.cp!
+            return search.pvs.filter(_ => Math.abs(cp - _.cp!) < 45).length
+        }))
+        return mm()
+    })
+
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
@@ -434,8 +458,9 @@ function WithStockfishLoaded() {
                             </fieldset>
                             </div>
                         </div>
-                        <PlayUciSingleReplay play_replay={play_replay} steps_stockfish={steps_stockfish} />
+                        <PlayUciSingleReplay play_replay={play_replay} steps_stockfish={steps_stockfish} last_step_sharpness={last_step_sharpness()} />
                         <div class='result-wrap'>
+
                             <Switch>
                                 <Match when={builder_result() === 'drop'}>
                                     <span class='result'>Game Over</span>

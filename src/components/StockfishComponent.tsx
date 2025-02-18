@@ -141,9 +141,6 @@ export function StepsWithStockfishComponent() {
                     return be.best_eval
                 },
                 get search() {
-                    if (step.fen !== e.best_eval?.fen) {
-                       // console.log(step.fen, e.best_eval?.fen)
-                    }
                     return e.best_eval
                 },
                 get judgement() {
@@ -190,7 +187,6 @@ export function StepsWithStockfishComponent() {
 
     let steps_with_stockfish = keyArray(steps, step => [step.fen, step.uci].join('$$'),
         step => step_lazy_queue_work(step()))
-
 
     return {
         set_game_id,

@@ -188,7 +188,7 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
 }
 
 
-export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayComponent, steps_stockfish: StepsWithStockfishComponent }) {
+export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayComponent, steps_stockfish: StepsWithStockfishComponent, last_step_sharpness?: number }) {
     const ply_sans = createMemo(mapArray(() => props.play_replay.ply_sans, ply_san => {
         let [ply, san] = ply_san.split(' ')
         return {
@@ -278,10 +278,37 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                 </>
             }</For>
             </div>
+            <div class='sharpness'>
+                <span class='label'>Sharpness:</span> <SharpnessComponent sharpness={props.last_step_sharpness}/>
+            </div>
         </div>
     </>)
 }
 
+function SharpnessComponent(props: { sharpness?: number }) {
+
+    return (<>
+    <Switch>
+        <Match when={props.sharpness === undefined}>
+            ...
+        </Match>
+
+        <Match when={props.sharpness && props.sharpness >= 5}>
+                <span class='word safe'>Safe <small>(+5 moves maintains eval)</small></span>
+        </Match>
+        <Match when={props.sharpness === 3 || props.sharpness === 4}>
+                <span class='word playable'>Playable <small>(3-4 moves maintains eval)</small></span>
+        </Match>
+        <Match when={props.sharpness === 2}>
+                <span class='word sharp'>Sharp <small>(2 moves maintains eval)</small></span>
+        </Match>
+        <Match when={props.sharpness === 1}>
+                <span class='word critical'>Critical <small>(Only 1 move maintains eval)</small></span>
+        </Match>
+    </Switch>
+    </>)
+
+}
 
 function StepLazyQueueWorkOnSingleReplay(props: { ss: StepLazyQueueWork }) {
 
