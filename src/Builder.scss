@@ -24,6 +24,8 @@
 
         grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) minmax(240px, 400px);
 
+        margin-bottom: 3em;
+
         .board-wrap {
             grid-area: board;
         }
