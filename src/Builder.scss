@@ -202,10 +202,56 @@ $hover-bg: rgb(113, 99, 67);
 
             .tools-wrap {
                 display: flex;
-                flex-flow: column;
+
+                    .rematch {
+                        flex: 3;
+                        border-right: 1px solid $text-dark;
+                    }
+
+                    .color {
+                        flex: 1;
+                    }
 
                 button {
-                    padding: 1em;
+                    font-size: 1.1em;
+                    flex: 1;
+                    border: none;
+                    background: $secondary;
+                    color: $text-light;
+                    padding: 0.5em;
+                    user-select: none;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                    transition: background .1s;
+
+                &:hover {
+                    background: $secondary-light;
+                }
+                &:active {
+                    text-decoration: underline;
+                }
+                &:active i {
+                    border-bottom: 1px solid $text-dark;
+                }
+
+                &.white i {
+                    background-image: url('assets/images/wK.svg');
+                }  
+                &.black i {
+                    background-image: url('assets/images/bK.svg');
+                }  
+
+
+
+                &{
+                        i {
+                            justify-self: center;
+                            display: block;
+                            width: 65px;
+                            height: 65px;
+                            background-size: 65px 65px;
+                        }
+                    }
                 }
             }
         }

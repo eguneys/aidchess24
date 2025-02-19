@@ -14,7 +14,6 @@ import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNo
 import { DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 import { arr_rnd } from "./random"
 import { annotationShapes } from "./annotationShapes"
-import { Properties } from "solid-js/web"
 
 export default () => {
     return (<StockfishProvider>
@@ -118,7 +117,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
     const play_replay = PlayUciSingleReplayComponent()
     let play_uci = PlayUciComponent()
 
-    const [player_color, set_player_color] = createSignal<Color>('white')
+    const [player_color, set_player_color] = makePersistedNamespaced<Color>('white', 'builder.player_color')
 
     const engine_color = createMemo(() => opposite(player_color()))
 
@@ -150,7 +149,13 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
     }
 
 
-    const [play_cooldown, set_play_cooldown] = createSignal<number | undefined>(undefined)
+    const [play_cooldown, set_play_cooldown] = createSignal<number | undefined>(1)
+
+    batch(() => {
+        steps_stockfish.set_game_id(game_id)
+        play_replay.set_sans(sans())
+        start_play_cooldown()
+    })
 
     function start_play_cooldown() {
         clearTimeout(play_cooldown())
@@ -174,7 +179,11 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
         let last = last_stockfish_step()
         if (!last) {
-            return
+            if (engine_color() === 'white') {
+                last = steps_stockfish.initial_step
+            } else {
+                return
+            }
         }
 
         let turn = fen_turn(last.step.fen)
@@ -305,14 +314,16 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
     }
 
 
-    steps_stockfish.set_game_id(game_id)
-    play_replay.set_sans(sans())
 
-    const on_rematch = () => {
-        set_sans([])
-        play_replay.set_sans(sans())
-        play_uci.set_fen_and_last_move(INITIAL_FEN)
-        set_builder_result(undefined)
+    const on_rematch = (color: Color = player_color()) => {
+        batch(() => {
+            set_player_color(color)
+            set_sans([])
+            play_replay.set_sans(sans())
+            play_uci.set_fen_and_last_move(INITIAL_FEN)
+            set_builder_result(undefined)
+            set_play_cooldown()
+        })
     }
 
     createEffect(on(search_depth, () => {
@@ -341,7 +352,8 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                 return
             }
 
-            if (cp < -200) {
+            if ((player_color() === 'white' && cp < -200) 
+                || (player_color() === 'black' && cp > 200)) {
                 set_builder_result('drop')
             }
         }))
@@ -580,12 +592,16 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
             let pdd = pv1_for_depth_option_force(last)
 
-            if (!pdd.judgement) {
-                return undefined
-            }
-            let glyph = judgement_to_glyph(pdd.judgement)
+            let mm = createMemo(() => {
+                if (!pdd.judgement) {
+                    return undefined
+                }
+                let glyph = judgement_to_glyph(pdd.judgement)
 
-            return annotationShapes(uci, san, glyph)
+                return annotationShapes(uci, san, glyph)
+            })
+
+            return mm()
         }
     })
 
@@ -660,7 +676,8 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                             </Switch>
                         </div>
                         <div class='tools-wrap'>
-                            <button onClick={on_rematch} class='rematch'>Rematch</button>
+                            <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
+                            <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
                         </div>
                     </>
                 </Show>

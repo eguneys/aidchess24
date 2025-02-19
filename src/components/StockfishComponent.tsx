@@ -3,7 +3,7 @@ import { BestMoveWithDepthProgress, createLazyMemoAndCacheGet, StockfishContext 
 import { Step } from "./step_types";
 import { LocalEval } from "../ceval2/stockfish-module";
 import { povDiff } from "../ceval2/winningChances";
-import { fen_turn } from "../chess_pgn_logic";
+import { fen_turn, INITIAL_FEN } from "../chess_pgn_logic";
 import { Accessor, createMemo, createSignal } from "solid-js";
 import { Color } from "chessops";
 import { keyArray } from "@solid-primitives/keyed";
@@ -192,11 +192,23 @@ export function StepsWithStockfishComponent() {
     let steps_with_stockfish = keyArray(steps, step => [step.fen, step.uci].join('$$'),
         step => step_lazy_queue_work(step()))
 
+    let initial_work = step_lazy_queue_work({
+        before_fen: INITIAL_FEN,
+        fen: INITIAL_FEN,
+        path: '',
+        ply: 0,
+        san: '',
+        uci: '',
+    })
+
     return {
         set_game_id,
         set_steps,
         get steps_with_stockfish() {
             return steps_with_stockfish()
+        },
+        get initial_step() {
+            return initial_work
         }
     }
 }
