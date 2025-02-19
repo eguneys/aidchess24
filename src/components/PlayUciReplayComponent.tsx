@@ -171,6 +171,9 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
                 let ss = steps()
                 set_steps_hashes(ss.reduce<PositionHash>((acc, s) =>
                     combine_hash([hash(fen_pos(s.fen))], acc), []))
+
+
+                set_i_ply(last_step().ply)
                 return
             }
 

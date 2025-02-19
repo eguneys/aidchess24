@@ -67,6 +67,14 @@ function WithStockfishLoaded() {
 
     const engine_color = createMemo(() => opposite(player_color()))
 
+    const ply_stockfish_step = createMemo(() => {
+        let ply = play_replay.ply
+        let ss = steps_stockfish.steps_with_stockfish
+        return ss.find(_ => _.step.ply === ply)
+    })
+
+
+
     const last_stockfish_step = createMemo(() => {
         let ss = steps_stockfish.steps_with_stockfish
         return ss[ss.length - 1]
@@ -156,14 +164,17 @@ function WithStockfishLoaded() {
                 function first_non_zero<T>(a: T[][]) {
                     return a.find(_ => _.length > 0)!
                 }
-                console.log('cbaccall', 
-                    cp, 
-                    c.map(_ => `${_.cp}, ${_.moves[0]}`),
-                    b.map(_ => `${_.cp}, ${_.moves[0]}`),
-                    a.map(_ => `${_.cp}, ${_.moves[0]}`),
-                    cc.map(_ => `${_.cp}, ${_.moves[0]}`),
-                    all.map(_ => `${_.cp}, ${_.moves[0]}`),
-                )
+
+                /*
+                    console.log('cbaccall',
+                        cp,
+                        c.map(_ => `${_.cp}, ${_.moves[0]}`),
+                        b.map(_ => `${_.cp}, ${_.moves[0]}`),
+                        a.map(_ => `${_.cp}, ${_.moves[0]}`),
+                        cc.map(_ => `${_.cp}, ${_.moves[0]}`),
+                        all.map(_ => `${_.cp}, ${_.moves[0]}`),
+                    )
+                        */
 
                 let pvs
                 let skill = get_skill()
@@ -472,7 +483,7 @@ function WithStockfishLoaded() {
 
     const last_step_sharpness = createMemo(() => {
 
-        let last_step = last_stockfish_step()
+        let last_step = ply_stockfish_step()
 
         if (!last_step) {
             return undefined
@@ -502,7 +513,7 @@ function WithStockfishLoaded() {
     }
 
     const annotation = createMemo(() => {
-        let last = last_stockfish_step()
+        let last = ply_stockfish_step()
         if (!last) {
             return undefined
         }
