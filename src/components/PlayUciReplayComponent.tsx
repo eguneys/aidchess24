@@ -324,14 +324,21 @@ function StepLazyQueueWorkOnSingleReplay(props: { ss: StepLazyQueueWork }) {
     </>)
 }
 
+export const judgement_to_glyph = (j: Judgement) => {
+    return j === 'top' ? '!' : j === 'ok' ? '✓' : j === 'inaccuracy' ? '?!' : j === 'mistake' ? '?' : '??'
+}
+
+
+
+
+
+
+
 export function StepWithSearchOnReplay(props: { step: StepWithSearch }) {
 
     const cp = () => props.step.search?.cp
     const judgement = () => props.step.judgement
 
-    const judgement_glyph = (j: Judgement) => {
-        return j === 'good' ? '✓' : j === 'inaccuracy' ? '?!' : j === 'mistake' ? '?' : '??'
-    }
     const depth = () => props.step.progress?.depth
 
     return (<>
@@ -344,7 +351,7 @@ export function StepWithSearchOnReplay(props: { step: StepWithSearch }) {
             <Show when={judgement()} fallback={
                 <span class='loading'>.</span>
             }>{judgement =>
-                <span class='judgement'>{judgement_glyph(judgement())}</span>
+                <span class='judgement'>{judgement_to_glyph(judgement())}</span>
             }</Show>
         </span>
     </>)

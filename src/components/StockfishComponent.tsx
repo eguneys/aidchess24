@@ -14,7 +14,7 @@ export const diff_eval = (color: Color, before: LocalEval, after: LocalEval) => 
     return povDiff(color, before, after)
 }
 
-export type Judgement = 'good' | 'inaccuracy' | 'mistake' | 'blunder'
+export type Judgement = 'top' | 'ok' | 'inaccuracy' | 'mistake' | 'blunder'
 
 
 export type StepWithSearch = Step & {
@@ -124,7 +124,7 @@ export function StepsWithStockfishComponent() {
         function judge(turn: Color, before_search: LocalEval, search: LocalEval) {
             let diff = diff_eval(turn, before_search, search)
 
-            let judgement: Judgement = diff < 0.03 ? 'good' : diff < 0.05 ? 'inaccuracy' : diff < 0.12 ? 'mistake' : 'blunder'
+            let judgement: Judgement = diff < 0.02 ? 'top' : diff < 0.03 ? 'ok' : diff < 0.05 ? 'inaccuracy' : diff < 0.12 ? 'mistake' : 'blunder'
             return judgement
         }
 

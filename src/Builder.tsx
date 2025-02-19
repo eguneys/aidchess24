@@ -4,15 +4,16 @@ import { Color, opposite } from "chessops"
 import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
 import './Builder.scss'
 
-import { PlayUciSingleReplay, PlayUciSingleReplayComponent } from "./components/PlayUciReplayComponent"
+import { judgement_to_glyph, PlayUciSingleReplay, PlayUciSingleReplayComponent } from "./components/PlayUciReplayComponent"
 import { makePersistedNamespaced } from "./storage"
 import { stepwiseScroll } from "./common/scroll"
 import { usePlayer } from "./sound"
 import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
 import { Path, Ply, SAN, Step } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
-import { StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
+import { Judgement, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 import { arr_rnd } from "./random"
+import { annotationShapes } from "./annotationShapes"
 
 export default () => {
     return (<StockfishProvider>
@@ -85,7 +86,26 @@ function WithStockfishLoaded() {
         return work.d20pv1[0]()
     }
 
-    createEffect(on(last_stockfish_step, last => {
+
+    const [play_cooldown, set_play_cooldown] = createSignal<number | undefined>(undefined)
+
+    function start_play_cooldown() {
+        clearTimeout(play_cooldown())
+
+        set_play_cooldown(setTimeout(() => {
+            set_play_cooldown(undefined)
+        }, 710))
+    }
+
+    createEffect(() => {
+
+        let cooldown = play_cooldown()
+
+        if (cooldown !== undefined) {
+            return
+        }
+
+        let last = last_stockfish_step()
         if (!last) {
             return
         }
@@ -132,7 +152,7 @@ function WithStockfishLoaded() {
                 function first_non_zero<T>(a: T[][]) {
                     return a.find(_ => _.length > 0)!
                 }
-                console.log(c, b, a, cc, all)
+                //console.log(c, b, a, cc, all)
 
                 let pvs
                 let skill = get_skill()
@@ -152,11 +172,14 @@ function WithStockfishLoaded() {
                 play_uci.play_uci(arr_rnd(pvs).moves[0])
             }))
         }
-    }))
+    })
 
     createEffect(on(() => play_uci.on_last_move_added, (last_move) => {
         if (last_move) {
-            play_replay.play_san(last_move[1])
+            batch(() => {
+                start_play_cooldown()
+                play_replay.play_san(last_move[1])
+            })
         }
     }))
 
@@ -462,10 +485,32 @@ function WithStockfishLoaded() {
         set_context_menu_step(undefined)
     }
 
+    const annotation = createMemo(() => {
+        let last = last_stockfish_step()
+        if (!last) {
+            return undefined
+        }
+        let turn = fen_turn(last.step.fen)
+
+
+        if (turn === engine_color()) {
+            let { uci, san } = last.step
+
+            let pdd = pv1_for_depth_option_force(last)
+
+            if (!pdd.judgement) {
+                return undefined
+            }
+            let glyph = judgement_to_glyph(pdd.judgement)
+
+            return annotationShapes(uci, san, glyph)
+        }
+    })
+
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
-            <PlayUciBoard orientation={player_color()} color={player_color()} movable={movable()} play_uci={play_uci} />
+            <PlayUciBoard shapes={annotation()} orientation={player_color()} color={player_color()} movable={movable()} play_uci={play_uci} />
         </div>
         <div class='replay-wrap'>
             <div class='tabs-wrap'>

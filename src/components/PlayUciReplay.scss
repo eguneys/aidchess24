@@ -1,4 +1,5 @@
 
+$top: rgb(156, 208, 101);
 $good: rgb(105, 196, 95);
 $inaccuracy: rgb(90, 177, 194);
 $mistake: rgb(206, 175, 64);
@@ -115,7 +116,11 @@ $blue-light: rgb(176, 187, 230);
                 font-size: 0.9em;
             }
 
-            &.good {
+            &.top {
+                color: $top;
+            }
+
+            &.ok {
                 color: $good;
             }
 
