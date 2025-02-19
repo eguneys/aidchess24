@@ -1,6 +1,78 @@
 @use '_variables' as *;
 
 .on-builder {
+    .welcome {
+
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+
+        .info {
+            background: $secondary;
+            color: $text;
+            box-shadow: 1px 1px 3px $text-dark;
+            padding: 1em;
+            margin: 1em;
+
+        h2 {
+                font-size: 2em;
+            }
+
+            p {
+                margin: 0.5em;
+            }
+
+            .right {
+                justify-self: flex-end;
+            }
+
+        }
+
+        .start {
+            display: flex;
+            flex-flow: column;
+            padding-top: 2em;
+            min-width: 400px;
+
+            gap: 0.8em;
+
+            .hide-box {
+                display: flex;
+                justify-content: center;
+                align-self: flex-end;
+                user-select: none;
+                gap: 0.4em;
+
+                input, label {
+                    cursor: pointer;
+                }
+            }
+
+            button {
+                user-select: none;
+                cursor: pointer;
+                padding: 0.5em;
+                font-size: 1.1em;
+                border-radius: 2px;
+                border: none;
+                background: $primary;
+                color: $text-light;
+                text-transform: uppercase;
+
+                transition: background .2s;
+                box-shadow: 1px 1px 4px black;
+                &:hover {
+                    background: $primary-light;
+                }
+
+                &:active {
+                    text-decoration: underline;
+                }
+            }
+        }
+
+    }
+
     .builder {
 
         position: relative;
@@ -55,33 +127,49 @@ $hover-bg: rgb(113, 99, 67);
             display: flex;
             flex-flow: column;
 
-
-            .tabs-wrap {
+            .header {
                 display: flex;
+                justify-content: space-between;
                 background: linear-gradient($bg-g1, $bg-g2);
 
-                .tab {
-                    margin-top: 0.3em;
-                    border-left: 1px solid $text;
-                    background: $replay-bg;
+                i {
                     user-select: none;
                     cursor: pointer;
-                    padding: 0.2em 0.4em;
-                    color: $text;
-                    border-bottom: 1px solid rgb(190, 99, 65);
+                    margin-right: 0.5em;
+                    align-self: center;
+                    color: $primary;
 
-                    &.active,
                     &:hover {
-                        color: $text-light;
-                        border-bottom: 3px solid rgb(190, 99, 65);
+                        color: $primary-light;
                     }
+                }
 
-                    &.active {
-                        background: $bg-g2;
-                        color: $replay-bg;
+                .tabs-wrap {
+                    display: flex;
+
+                    .tab {
+                        margin-top: 0.3em;
+                        border-left: 1px solid $text;
+                        background: $replay-bg;
+                        user-select: none;
+                        cursor: pointer;
+                        padding: 0.2em 0.4em;
+                        color: $text;
+                        border-bottom: 1px solid rgb(190, 99, 65);
+
+                        &.active,
+                        &:hover {
+                            color: $text-light;
+                            border-bottom: 3px solid rgb(190, 99, 65);
+                        }
+
+                        &.active {
+                            background: $bg-g2;
+                            color: $replay-bg;
+                        }
+
+                        transition: all .1s;
                     }
-
-                    transition: all .1s;
                 }
             }
 

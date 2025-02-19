@@ -14,6 +14,7 @@ import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNo
 import { DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 import { arr_rnd } from "./random"
 import { annotationShapes } from "./annotationShapes"
+import { Properties } from "solid-js/web"
 
 export default () => {
     return (<StockfishProvider>
@@ -21,24 +22,78 @@ export default () => {
     </StockfishProvider>)
 }
 
+function WelcomeInfo() {
+    return (<>
+    <div class='info'>
+        <h2>Repertoire Builder</h2>
+        <p>
+            Play against the engine. Select your difficulty with skill setting.
+            Engine always selects among the top 6 moves.
+        </p>
+        <p>
+            Game ends when the evaluation drops below -2 for the player.
+        </p>
+        <p>
+            You will see the latest evaluation and the accuracy of the moves in the move replay.
+        </p>
+        <p>
+            You can save your played lines for building up your repertoire, and practice against later.
+        </p>
+        <p>
+            You can tell the engine to stick to playing a specific line you have already played.
+        </p>
+        <p>
+            Right click on the moves to open settings for that move. Switch between "Match" and "Repertoire" tabs.
+        </p>
+        <p>
+            The goal is to find the top moves only, and play as long as you can, and repeat as much as possible.
+        </p>
+        <small> We recommend selecting the "Third" skill level for starters. Thus it will make some sub optimal moves, well suited for about 1800 lichess rated player. Later you can select "Top" option for GM level opening preparation.</small>
+        <p class='right'>
+            Have fun!
+        </p>
+    </div>
+    </>)
+}
+
 function LoadingStockfishContext() {
 
     let [ss] = createResource(() => useContext(StockfishContext))
 
     const loading_percent = createMemo(() => {
+        if (ss()?.state === 'idle') {
+            return undefined
+        }
         let nb = ss()?.download_nb
         if (nb) {
             return Math.ceil((nb.bytes / (nb.total === 0 ? 70 * 1024 * 1024 : nb.total)) * 100)
         }
     })
 
+
+    const [default_hide_welcome_page, set_default_hide_welcome_page] = makePersistedNamespaced(false, 'builder.show_welcome_page')
+    const [show_welcome_page, set_show_welcome_page] = createSignal(!default_hide_welcome_page())
+
     return (<>
         <Show when={ss()}>{s =>
-            <Show when={s().state === 'loading'} fallback={
-                <WithStockfishLoaded/>
+            <Show when={s().state === 'loading' || show_welcome_page()} fallback={
+                <WithStockfishLoaded on_welcome_page={() => set_show_welcome_page(true)}/>
             }>
-                <div class='loading'>
-                    <span class='info'>Loading {loading_percent() ?? '--'}%</span>
+                <div class='welcome'>
+                    <WelcomeInfo/>
+                    <Show when={loading_percent()} fallback={
+                        <div class='start info'>
+                            <button onClick={() => set_show_welcome_page(false)} class='button'>New Game</button>
+                            <div class='hide-box'>
+                                <label for='hide'>Don't show this again</label>
+                                <input checked={default_hide_welcome_page()} onChange={e => set_default_hide_welcome_page(e.currentTarget.checked)} id='hide' type='checkbox'></input>
+                            </div>
+                        </div>
+                    }>{percent => 
+                        <p class='loading'>
+                            <span class='info'>Loading Engine {percent()}%</span>
+                        </p>
+                    }</Show>
                 </div>
             </Show>
 
@@ -48,7 +103,7 @@ function LoadingStockfishContext() {
 
 type BuilderResult = 'drop' | 'checkmate' | 'stalemate' | 'threefold' | 'insufficient'
 
-function WithStockfishLoaded() {
+function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
     const Player = usePlayer()
     Player.setVolume(0.2)
@@ -540,10 +595,13 @@ function WithStockfishLoaded() {
             <PlayUciBoard shapes={annotation()} orientation={player_color()} color={player_color()} movable={movable()} play_uci={play_uci} />
         </div>
         <div class='replay-wrap'>
-            <div class='tabs-wrap'>
-                <div onClick={() => set_tab('match')}  class={'tab' + (tab() === 'match' ? ' active' : '')}>Match</div>
-                <div onClick={() => set_tab('repertoire')} class={'tab' + (tab() === 'repertoire' ? ' active' : '')}>Repertoire</div>
-            </div>
+                <div class='header'>
+                    <div class='tabs-wrap'>
+                        <div onClick={() => set_tab('match')} class={'tab' + (tab() === 'match' ? ' active' : '')}>Match</div>
+                        <div onClick={() => set_tab('repertoire')} class={'tab' + (tab() === 'repertoire' ? ' active' : '')}>Repertoire</div>
+                    </div>
+                    <i onClick={props.on_welcome_page} data-icon=''></i>
+                </div>
                 <Show when={tab() === 'match'}>
                     <>
                         <div class='engine-wrap'>
