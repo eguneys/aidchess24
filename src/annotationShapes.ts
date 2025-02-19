@@ -63,7 +63,7 @@ const glyphToSvg: Record<string, string> = {
 
   // Good move
   '!': prependDropShadow(`
-  <circle style="fill:#22ac38;filter:url(#shadow)" cx="50" cy="50" r="50" />
+  <circle style="fill:rgb(145, 197, 89);filter:url(#shadow)" cx="50" cy="50" r="50" />
   <path fill="#fff" d="M54.967 62.349h-9.75l-2.049-39.083h13.847zM43.004 76.032q0-3.77 2.049-5.244 2.048-1.557 4.998-1.557 2.867 0 4.916 1.557 2.048 1.475 2.048 5.244 0 3.605-2.048 5.244-2.049 1.556-4.916 1.556-2.95 0-4.998-1.556-2.049-1.64-2.049-5.244z" vector-effect="non-scaling-stroke"/>
 `),
 

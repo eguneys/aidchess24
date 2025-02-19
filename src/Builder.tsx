@@ -11,7 +11,7 @@ import { usePlayer } from "./sound"
 import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
 import { Path, Ply, SAN, Step } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
-import { StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
+import { DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 import { arr_rnd } from "./random"
 import { annotationShapes } from "./annotationShapes"
 
@@ -46,7 +46,7 @@ function LoadingStockfishContext() {
     </>)
 }
 
-type BuilderResult = 'drop' | 'checkmate' | 'stalemate' | 'threefold'
+type BuilderResult = 'drop' | 'checkmate' | 'stalemate' | 'threefold' | 'insufficient'
 
 function WithStockfishLoaded() {
 
@@ -55,7 +55,7 @@ function WithStockfishLoaded() {
 
     let [sans, set_sans] = makePersistedNamespaced<SAN[]>([], 'builder.current.sans')
 
-    const [search_depth, set_search_depth] = createSignal(8)
+    const [search_depth, set_search_depth] = createSignal(DEPTH8)
 
     let game_id = ''
     const steps_stockfish = StepsWithStockfishComponent()
@@ -73,14 +73,14 @@ function WithStockfishLoaded() {
     })
 
     function pv6_for_depth_option(work: StepLazyQueueWork) {
-        if (search_depth() === 8) {
+        if (search_depth() === DEPTH8) {
             return work.d8pv6
         }
         return work.d20pv6
     }
 
     function pv1_for_depth_option_force(work: StepLazyQueueWork) {
-        if (search_depth() === 8) {
+        if (search_depth() === DEPTH8) {
             return work.d8pv1[0]()
         }
         return work.d20pv1[0]()
@@ -102,6 +102,10 @@ function WithStockfishLoaded() {
         let cooldown = play_cooldown()
 
         if (cooldown !== undefined) {
+            return
+        }
+
+        if (builder_result() !== undefined) {
             return
         }
 
@@ -152,20 +156,27 @@ function WithStockfishLoaded() {
                 function first_non_zero<T>(a: T[][]) {
                     return a.find(_ => _.length > 0)!
                 }
-                //console.log(c, b, a, cc, all)
+                console.log('cbaccall', 
+                    cp, 
+                    c.map(_ => `${_.cp}, ${_.moves[0]}`),
+                    b.map(_ => `${_.cp}, ${_.moves[0]}`),
+                    a.map(_ => `${_.cp}, ${_.moves[0]}`),
+                    cc.map(_ => `${_.cp}, ${_.moves[0]}`),
+                    all.map(_ => `${_.cp}, ${_.moves[0]}`),
+                )
 
                 let pvs
                 let skill = get_skill()
                 switch(skill) {
                     case "A": pvs = first_non_zero([a, ca, all])
                      break
-                    case "B": pvs = first_non_zero([b, a, cb, all])
+                    case "B": pvs = first_non_zero([b, a, ca, cb, all])
                      break
-                    case "C": pvs = first_non_zero([c, b, a, cc, all])
+                    case "C": pvs = first_non_zero([c, b, a, ca, cb, cc, all])
                      break
-                    case "D": pvs = first_non_zero([d, c, b, a, cd, all])
+                    case "D": pvs = first_non_zero([d, c, b, a, ca, cb, cc, cd, all])
                      break
-                    case "E": pvs = first_non_zero([e, d, c, b, a, ce, all])
+                    case "E": pvs = first_non_zero([e, d, c, b, a, ca, cb, cc, cd, ce, all])
                      break
                 }
 
@@ -274,7 +285,7 @@ function WithStockfishLoaded() {
         let is_checkmate = play_replay.is_checkmate
         let is_stalemate = play_replay.is_stalemate
         let is_threefold = play_replay.is_threefold
-
+        let is_insufficient = play_replay.is_insufficient
 
         if (is_checkmate) {
             set_builder_result('checkmate')
@@ -284,6 +295,9 @@ function WithStockfishLoaded() {
         }
         if (is_threefold) {
             set_builder_result('threefold')
+        }
+        if (is_insufficient) {
+            set_builder_result('insufficient')
         }
     })
 
@@ -424,7 +438,7 @@ function WithStockfishLoaded() {
     }
 
     const movable = createMemo(() => {
-        return !play_uci.isEnd && play_replay.is_on_last_ply && builder_result() === undefined
+        return play_replay.is_on_last_ply && builder_result() === undefined
     })
 
     onMount(() => {
@@ -444,9 +458,11 @@ function WithStockfishLoaded() {
 
     type Skill = "A" | "B" | "C" | "D" | "E"
 
-    const [get_skill, set_skill] = createSignal<Skill>("A")
+    const [get_skill, set_skill] = makePersistedNamespaced<Skill>("A", 'builder.skill')
 
-    const [get_stick_line, set_stick_line] = createSignal<Path | undefined>(undefined)
+    const [get_stick_line, set_stick_line] = makePersistedNamespaced<Path | undefined>(undefined, 'builder.stick-line')
+
+    //set_stick_line('g1f3 g8f6 f3g1 f6g8 g1f3 g8f6 f3g1 f6g8 g1f3 g8f6 f3g1 f6g8')
 
     const on_stick_line = (path: Path) => {
         set_stick_line(path)
@@ -533,8 +549,8 @@ function WithStockfishLoaded() {
                             <div class='depth'>
                             <fieldset>
                                 <div class='option'>
-                                    <input checked={true} onChange={(e) => {if (e.target.checked) { on_depth_changed(8) }}} type='radio' name='depth' id='level8' />
-                                    <label for='level8'>Depth 8</label>
+                                    <input checked={true} onChange={(e) => {if (e.target.checked) { on_depth_changed(DEPTH8) }}} type='radio' name='depth' id='level8' />
+                                    <label for='level8'>Depth {DEPTH8}</label>
                                 </div>
                                 <div class='option'>
                                     <input onChange={(e) => {if (e.target.checked) { on_depth_changed(20) }}} type='radio' name='depth' id='level20' />
@@ -566,6 +582,10 @@ function WithStockfishLoaded() {
                                 </Match>
                                 <Match when={builder_result() === 'threefold'}>
                                     <span class='result'>3 Fold Repetition</span>
+                                    <small class='drop'>Game is a draw</small>
+                                </Match>
+                                <Match when={builder_result() === 'insufficient'}>
+                                    <span class='result'>Insufficient Material</span>
                                     <small class='drop'>Game is a draw</small>
                                 </Match>
                             </Switch>

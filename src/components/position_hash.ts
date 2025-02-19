@@ -9,9 +9,11 @@ export function combine_hash(a: PositionHash, b: PositionHash) {
 }
 
 export function is_repetition(p: PositionHash) {
+    /*
     if (p.length <= 2 * 4) {
         return false
     }
+        */
 
     let i = 2
     let count = 0
@@ -23,7 +25,7 @@ export function is_repetition(p: PositionHash) {
         }
         i += 2
     }
-    return count === 3
+    return count === 2
 }
 
 

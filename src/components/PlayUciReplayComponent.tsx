@@ -30,6 +30,7 @@ export type PlayUciSingleReplayComponent = {
     is_threefold: boolean,
     is_stalemate: boolean,
     is_checkmate: boolean
+    is_insufficient: boolean
 }
 
 export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
@@ -80,6 +81,7 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
     const is_threefold = createMemo(() => {
         return is_repetition(steps_hashes())
     })
+
     const is_stalemate = createMemo(() => {
         let last = last_step()
         if (!last) {
@@ -94,6 +96,16 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
         }
         return fen_pos(last.fen).isCheckmate()
     })
+
+    const is_insufficient = createMemo(() => {
+        let last = last_step()
+        if (!last) {
+            return false
+        }
+        return fen_pos(last.fen).isInsufficientMaterial()
+    })
+
+
 
 
 
@@ -182,6 +194,9 @@ export function PlayUciSingleReplayComponent(): PlayUciSingleReplayComponent {
         },
         get is_stalemate() {
             return is_stalemate()
+        },
+        get is_insufficient() {
+            return is_insufficient()
         }
     }
 

@@ -21,7 +21,6 @@ export type PlayUciComponent = {
     last_move: [UCI, SAN] | undefined,
     on_last_move_added: [UCI, SAN] | undefined,
     check: boolean,
-    isEnd: boolean
 }
 
 
@@ -109,9 +108,6 @@ export function PlayUciComponent(): PlayUciComponent {
         },
         get check() {
           return pos().isCheck()
-        },
-        get isEnd() {
-          return pos().isEnd()
         }
     }
 }

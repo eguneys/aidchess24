@@ -39,6 +39,8 @@ export type StepsWithStockfishComponent = {
     steps_with_stockfish: StepLazyQueueWork[]
 }
 
+export const DEPTH8 = 8
+
 export function StepsWithStockfishComponent() {
     let s = useContext(StockfishContext)!
     function calc_fen_ply(fen: string, ply: number, multi_pv: number, depth: number, 
@@ -159,10 +161,12 @@ export function StepsWithStockfishComponent() {
         })
     }
 
+
+
     function step_lazy_queue_work(step: Step): StepLazyQueueWork {
 
-        let [d8pv6, set_d8pv6] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 6)()))
-        let [d8pv1, set_d8pv1] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 1)()))
+        let [d8pv6, set_d8pv6] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, DEPTH8, 6)()))
+        let [d8pv1, set_d8pv1] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, DEPTH8, 1)()))
         let [d20pv6, set_d20pv6] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 6)()))
         let [d20pv1, set_d20pv1] = createSignal(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 1)()))
 
@@ -173,9 +177,9 @@ export function StepsWithStockfishComponent() {
             get d20pv6() { return d20pv6() },
             get d20pv1() { return d20pv1() },
             clear() {
-                set_d8pv6(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 6)()))
+                set_d8pv6(createLazyMemoAndCacheGet(() => queue_calc_step(step, DEPTH8, 6)()))
                 set_d20pv6(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 6)()))
-                set_d8pv1(createLazyMemoAndCacheGet(() => queue_calc_step(step, 8, 1)()))
+                set_d8pv1(createLazyMemoAndCacheGet(() => queue_calc_step(step, DEPTH8, 1)()))
                 set_d20pv1(createLazyMemoAndCacheGet(() => queue_calc_step(step, 20, 1)()))
             }
         }
