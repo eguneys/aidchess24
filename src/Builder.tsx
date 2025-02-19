@@ -11,7 +11,7 @@ import { usePlayer } from "./sound"
 import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
 import { Path, Ply, SAN, Step } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
-import { Judgement, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
+import { StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 import { arr_rnd } from "./random"
 import { annotationShapes } from "./annotationShapes"
 
