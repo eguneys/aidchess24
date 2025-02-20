@@ -322,7 +322,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
             play_replay.set_sans(sans())
             play_uci.set_fen_and_last_move(INITIAL_FEN)
             set_builder_result(undefined)
-            set_play_cooldown()
+            start_play_cooldown()
         })
     }
 
@@ -536,7 +536,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
     type Skill = "A" | "B" | "C" | "D" | "E"
 
-    const [get_skill, set_skill] = makePersistedNamespaced<Skill>("A", 'builder.skill')
+    const [get_skill, set_skill] = makePersistedNamespaced<Skill>("C", 'builder.skill')
 
     const [get_stick_line, set_stick_line] = makePersistedNamespaced<Path | undefined>(undefined, 'builder.stick-line')
 
