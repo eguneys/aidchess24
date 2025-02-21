@@ -11,9 +11,10 @@ import { usePlayer } from "./sound"
 import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
 import { Path, Ply, SAN, Step } from "./components/step_types"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
-import { DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
+import { COOLDOWN_TIME, DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
 import { arr_rnd } from "./random"
 import { annotationShapes } from "./annotationShapes"
+import createRAF from "@solid-primitives/raf"
 
 export default () => {
     return (<StockfishProvider>
@@ -100,7 +101,7 @@ function LoadingStockfishContext() {
     </>)
 }
 
-type BuilderResult = 'highdrop' | 'drop' | 'checkmate' | 'stalemate' | 'threefold' | 'insufficient'
+type BuilderResult = 'flag' | 'highdrop' | 'drop' | 'checkmate' | 'stalemate' | 'threefold' | 'insufficient'
 
 function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
@@ -162,7 +163,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
         set_play_cooldown(setTimeout(() => {
             set_play_cooldown(undefined)
-        }, 710))
+        }, COOLDOWN_TIME))
     }
 
     createEffect(() => {
@@ -323,6 +324,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
             play_uci.set_fen_and_last_move(INITIAL_FEN)
             set_builder_result(undefined)
             start_play_cooldown()
+            stop_clock_with_reset()
         })
     }
 
@@ -610,6 +612,61 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
         }
     })
 
+    const [default_clock_time, _set_default_clock_time] = createSignal(7 * 60 * 1000)
+    const [clock_millis, set_clock_millis] = createSignal(default_clock_time())
+
+    let last_now: number | undefined
+    let [clock_is_running, clock_start, clock_stop] = createRAF(now => {
+        if (!last_now) {
+            last_now = now
+        }
+
+        let dt = (now - last_now)
+        last_now = now
+
+        let millis = Math.max(0, clock_millis() - dt)
+
+        set_clock_millis(millis)
+
+        if (millis === 0) {
+            set_builder_result('flag')
+        }
+    })
+
+    function stop_clock_with_reset() {
+        batch(() => {
+            clock_stop()
+            last_now = undefined
+            set_clock_millis(default_clock_time())
+        })
+    }
+
+    createEffect(() => {
+
+    })
+
+    createEffect(on(builder_result, (r) => {
+        clock_stop()
+        last_now = undefined
+    }))
+
+    createEffect(on(() => play_replay.last_step, (step) => {
+        if (!step) {
+            if (player_color() === 'white') {
+                clock_start()
+            }
+            return
+        }
+
+        if (fen_turn(step.fen) === player_color()) {
+            set_clock_millis(default_clock_time())
+            clock_start()
+        } else {
+            stop_clock_with_reset()
+        }
+    }))
+
+
     return (<>
     <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
@@ -658,6 +715,10 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                         <div class='result-wrap'>
 
                             <Switch>
+                                <Match when={builder_result() === 'flag'}>
+                                    <span class='result'>Game Over</span>
+                                    <small class='drop'>Ran out of time</small>
+                                </Match>
                                 <Match when={builder_result() === 'highdrop'}>
                                     <span class='result'>Game Over</span>
                                     <small class='drop'>Evaluation is High Above 5</small>
@@ -688,6 +749,9 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                             <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
                             <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
                         </div>
+                        <div class='clock-wrap'>
+                            <ClockTime time={clock_millis()} isRunning={clock_is_running()}/>
+                        </div>
                     </>
                 </Show>
 
@@ -715,4 +779,22 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
             }</Show>
     </div>
     </>)
+}
+
+type Millis = number
+
+const pad2 = (num: number): string => (num < 10 ? '0' : '') + num;
+
+function ClockTime(props: { time: Millis, isRunning: boolean }) {
+
+  const date = createMemo(() => new Date(props.time));
+  const millis = createMemo(() => date().getUTCMilliseconds())
+  const minutes = createMemo(() => date().getUTCMinutes())
+  const seconds = createMemo(() => date().getUTCSeconds())
+
+  const low_klass = createMemo(() => props.isRunning && millis() < 500 ? ' low' : '')
+
+  return <div class='clock'>
+      {pad2(minutes())}<span class={'sep' + low_klass()}>:</span>{pad2(seconds())}
+  </div>
 }

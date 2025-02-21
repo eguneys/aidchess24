@@ -138,6 +138,28 @@ $blue-light: rgb(176, 187, 230);
                 color: $bg;
             }
 
+            &.active, &:hover {
+            &.top {
+                background: $top;
+            }
+
+            &.ok {
+                background: $good;
+            }
+
+            &.inaccuracy {
+                background: $inaccuracy;
+            }
+            &.mistake {
+                background: $mistake;
+            }
+            &.blunder {
+                background: $blunder;
+            }
+        }
+
+
+
             &.loading {
                 opacity: 0.6;
             }

@@ -183,6 +183,10 @@ $hover-bg: rgb(113, 99, 67);
                 flex: 2 1 300px;
             }
 
+            .filler {
+                flex: 1;
+            }
+
             .result-wrap {
                 display: flex;
                 flex-flow: column;
@@ -198,6 +202,19 @@ $hover-bg: rgb(113, 99, 67);
                 .drop {
                     color: $error;
                 }
+            }
+
+            .clock-wrap {
+                display: flex;
+                .clock {
+                    font-family: "Roboto", sans-serif;
+                    padding: 0 0.2em;
+                    background: $secondary;
+                    border-top: 1px solid $text-dark;
+                    font-size: 2.1em;
+                    line-height: 1.2;
+                    color: $text-light;
+                    }
             }
 
             .tools-wrap {

@@ -296,6 +296,8 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                 </>
             }</For>
             </div>
+
+            <div class='filler'></div>
             <div class='sharpness'>
                 <span class='label'>Sharpness:</span> <SharpnessComponent sharpness={props.last_step_sharpness}/>
             </div>

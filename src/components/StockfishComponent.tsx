@@ -39,6 +39,7 @@ export type StepsWithStockfishComponent = {
     steps_with_stockfish: StepLazyQueueWork[]
 }
 
+export const COOLDOWN_TIME = 1200
 export const DEPTH8 = 10
 
 export function StepsWithStockfishComponent() {
