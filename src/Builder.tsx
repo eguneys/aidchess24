@@ -641,8 +641,24 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
         })
     }
 
-    createEffect(() => {
+    onMount(() => {
 
+        const on_pause_clock = () => {
+            clock_stop()
+            last_now = undefined
+        }
+
+        const on_resume_clock = () => {
+            clock_start()
+        }
+
+        window.addEventListener('blur', on_pause_clock)
+        window.addEventListener('focus', on_resume_clock)
+
+        onCleanup(() => {
+            window.removeEventListener('blur', on_pause_clock)
+            window.removeEventListener('focus', on_resume_clock)
+        })
     })
 
     createEffect(on(builder_result, (_r) => {
