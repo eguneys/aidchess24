@@ -645,7 +645,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
     })
 
-    createEffect(on(builder_result, (r) => {
+    createEffect(on(builder_result, (_r) => {
         clock_stop()
         last_now = undefined
     }))
