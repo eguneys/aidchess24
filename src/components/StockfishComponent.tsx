@@ -39,7 +39,7 @@ export type StepsWithStockfishComponent = {
     steps_with_stockfish: StepLazyQueueWork[]
 }
 
-export const DEPTH8 = 8
+export const DEPTH8 = 10
 
 export function StepsWithStockfishComponent() {
     let s = useContext(StockfishContext)!
