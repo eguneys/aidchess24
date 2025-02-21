@@ -100,7 +100,7 @@ function LoadingStockfishContext() {
     </>)
 }
 
-type BuilderResult = 'drop' | 'checkmate' | 'stalemate' | 'threefold' | 'insufficient'
+type BuilderResult = 'highdrop' | 'drop' | 'checkmate' | 'stalemate' | 'threefold' | 'insufficient'
 
 function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
@@ -141,11 +141,11 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
         return work.d20pv6
     }
 
-    function pv1_for_depth_option_force(work: StepLazyQueueWork) {
+    function pv6_for_depth_option_force(work: StepLazyQueueWork) {
         if (search_depth() === DEPTH8) {
-            return work.d8pv1[0]()
+            return work.d8pv6[0]()
         }
-        return work.d20pv1[0]()
+        return work.d20pv6[0]()
     }
 
 
@@ -330,7 +330,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
         steps_stockfish.steps_with_stockfish.forEach(_ => {
             batch(() => {
                 _.clear()
-                pv1_for_depth_option_force(_)
+                pv6_for_depth_option_force(_)
             })
         })
         let last = last_stockfish_step()
@@ -344,7 +344,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
             return
         }
 
-        let pdd = pv1_for_depth_option_force(last_step)
+        let pdd = pv6_for_depth_option_force(last_step)
         createEffect(on(() => pdd.search, search => {
             let cp = search?.cp
 
@@ -355,6 +355,11 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
             if ((player_color() === 'white' && cp < -200) 
                 || (player_color() === 'black' && cp > 200)) {
                 set_builder_result('drop')
+            }
+
+            if ((player_color() === 'white' && cp > 500) 
+                || (player_color() === 'black' && cp < -500)) {
+                set_builder_result('highdrop')
             }
         }))
     }))
@@ -590,7 +595,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
         if (turn === engine_color()) {
             let { uci, san } = last.step
 
-            let pdd = pv1_for_depth_option_force(last)
+            let pdd = pv6_for_depth_option(last)[0]()
 
             let mm = createMemo(() => {
                 if (!pdd.judgement) {
@@ -653,6 +658,10 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                         <div class='result-wrap'>
 
                             <Switch>
+                                <Match when={builder_result() === 'highdrop'}>
+                                    <span class='result'>Game Over</span>
+                                    <small class='drop'>Evaluation is High Above 5</small>
+                                </Match>
                                 <Match when={builder_result() === 'drop'}>
                                     <span class='result'>Game Over</span>
                                     <small class='drop'>Evaluation Dropped Below -2</small>
