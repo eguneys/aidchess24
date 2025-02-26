@@ -51,7 +51,7 @@ const Donate = () => {
 
     return (<>
     <div class='donate'>
-      <h1>Free Chess Education Tools for everyone</h1>
+      <h1>Free Chess Educational Tools for Everyone</h1>
 
       <p class='twitch'><a href="https://twitch.tv/gsoutz" target="_blank">Support me on Twitch</a></p>
       <iframe width="520px" height="270px" src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=aidchess.com"></iframe>

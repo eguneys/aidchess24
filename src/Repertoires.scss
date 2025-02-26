@@ -1,11 +1,12 @@
-@use '_variables' as *;
+@use 'theme';
+@use 'media';
 
 .on-repertoires {
     .repertoires {
 
-
         .categories {
 
+            margin-top: 1em;
         display: flex;
         flex-flow: row wrap;
         gap: 2em;
@@ -16,42 +17,41 @@
             text-align: center;
 
 
-            @media (max-width: 499px) {
+            @include media.mq-is-col1 {
                 flex: 1 1 100%;
             }
         }
 
-        h1 {
-            font-family: Kantumruy;
-        }
-
         ul {
            border-radius: 4px;
-           border: 1px solid $accent;
+           border: 1px solid theme.$ac-li-orange;
            color: black;
            height: 200px;
            overflow: auto;
-           cursor: pointer;
-           user-select: none;
 
 
            li {
+
+           cursor: pointer;
+           user-select: none;
             padding: 1em 0;
 
             &.soon {
                 opacity: 0.6;
             }
 
-            a {
-                font-weight: bold;
+            h3 {
+                font-weight: 400;
+            }
 
+            a {
                 &:hover {
-                    color: $dark-text;
+                    color: theme.$text-primary;
                 }
             }
 
             &:hover {
-                background: $accent;
+                background: theme.$ac-li-orange;
             }
            }
         }

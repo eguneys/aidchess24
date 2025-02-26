@@ -104,7 +104,9 @@ function Repertoires() {
         </div>
 
         <CategoryView name="Imported" list={fixture.imported[0]()}/>
+
         <CategoryView name="Auto Generated" list={fixture.openings}/>
+        <CategoryView name="Engine Builder" list={[]}/>
         {/*<CategoryView name="Masters" list={fixture.masters}/>*/}
       </div>
       </div>

@@ -97,6 +97,15 @@ h1 {
   color: theme.$text-title;
 }
 
+h2, h3, h4 {
+  font-family: 'Rubik';
+}
+
+h4 {
+  font-family: 'Rubik';
+  font-weight: 500;
+}
+
 ul {
   list-style: none;
 }

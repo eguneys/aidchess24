@@ -12,6 +12,9 @@ $short: 500px;
 $tall: 600px;
 $x-tall: 700px;
 
+@function at-most($width) {
+    @return $width - 0.71px;
+}
 
 @mixin mq-is-col1 {
     @media (max-width: at-most($small)) and (orientation: portrait) {

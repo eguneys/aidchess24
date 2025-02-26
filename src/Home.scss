@@ -33,19 +33,6 @@
             transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1);
         }
 
-        &.donate {
-           text-shadow: theme.$twitch 2px 2px 2px;
-
-           a {
-            color: theme.$twitch;
-            transition: 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-
-            &:hover {
-                color: theme.$twitch;
-                text-shadow: theme.$text-secondary 1px 1px 0px;
-            }
-           }
-        }
     }
 
 
@@ -128,6 +115,12 @@
                     font-family: Roboto;
                     font-size: 1.3em;
                     font-weight: 400;
+
+                    transition: .1s;
+
+                    &:hover {
+                        color: theme.$text-secondary;
+                    }
             
                     &:active {
                         text-decoration: underline;

@@ -239,6 +239,7 @@ body {
            a {
             padding-left: 1.2em;
             color: theme.$text-primary;
+            transition: .2s;
 
             &.active {
                 color: theme.$ac-li-purple2;
@@ -267,6 +268,17 @@ body {
                 display: none;
             }
 
+
+            a.donate {
+                color: theme.$twitch;
+                transition: 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        
+                &:hover, &.active, &.active:hover {
+                    color: theme.$twitch;
+                }
+            }
+
+
             a {
                 display: block;
                 height: 48px;
@@ -276,6 +288,7 @@ body {
                 font-weight: 400;
                 color: theme.$text-primary;
 
+            transition: .2s;
                 &.active {
                     color: theme.$ac-li-purple2;
                     text-decoration: underline;

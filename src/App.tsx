@@ -93,7 +93,7 @@ const AppInRouter = (props: any) => {
             <section><A href='/widen'>Widen</A></section>
             <section><A href='/repertoires'>Repertoires</A></section>
             <section><A href='/repeat'>Repeat</A></section>
-            <section><A class="site-title-nav__donate" href='/donate' target="_self">Donate</A></section>
+            <section><A class="donate" href='/donate' target="_self">Donate</A></section>
           </nav>
           </div>
 
