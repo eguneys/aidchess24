@@ -1,4 +1,5 @@
-@use '_variables' as *;
+@use 'base_css/media';
+@use 'base_css/theme';
 
 .on-openings {
     .repertoire {
@@ -15,14 +16,8 @@
             ((100vw - 320px) / 880)
         );
 
-        --col2-uniboard-width: calc(
-            min(calc(100vw - 240px - 20px), 
-                calc(100vh - calc(var(--site-header-height)))));
-        
-        --col3-uniboard-width: calc(90vh - var(--site-header-height));
 
-
-        @include mq-at-least-col2 {
+        @include media.mq-at-least-col2 {
             grid-template-areas: 'board gauge replay'
             'sections sections sections'
             '. tools tools';
@@ -36,7 +31,7 @@
             }
         }
 
-        @include mq-is-col2-squeeze {
+        @include media.mq-is-col2-squeeze {
             grid-template-areas: 'board gauge replay'
             'sections sections sections'
             '. tools tools';
@@ -47,7 +42,7 @@
 
 
 
-        @include mq-at-least-col3 {
+        @include media.mq-at-least-col3 {
             grid-template-areas: 'board gauge replay sections'
             '. . . tools';
 
@@ -124,15 +119,15 @@
                     cursor: pointer;
                     border-radius: 2px;
                     padding: 0.6em;
-                    background: linear-gradient(#2c2a25, #37342e);
+                    background: linear-gradient(to bottom, theme.$ac-li-orange3, theme.$ac-li-orange2);
 
                     &:hover {
-                      background: linear-gradient(#434038, #37342e);
+                      background: theme.$ac-li-orange;
                     }
 
                     &.active {
-                      background: linear-gradient(#59554a, #37342e);
-                      color: $text-light;
+                      background: theme.$ac-li-orange-2;
+                      color: theme.$text-primary;
                     }
                 }
 
@@ -148,15 +143,15 @@
                         user-select: none;
                         cursor: pointer;
                         margin: 0 0.4em;
-                        background: $secondary;
-                        color: $text;
+                        background: theme.$ac-li-blue2;
+                        color: theme.$text-primary;
 
                         &:hover {
-                            background: $secondary-light;
+                          background: theme.$ac-li-blue-2;
                         }
 
                         &.active {
-                            background: $primary-light;
+                          background: theme.$ac-li-blue;
                         }
 
                         .title {
@@ -175,13 +170,13 @@
                             .progress {
                              flex: 1;
                             height: 8px;
-                            background: $text;
-                            border: 1px  solid $dark-text;
+                            background: theme.$ac-li-purple-2;
+                            border: 1px  solid theme.$ac-li-purple-2;
                             border-radius: 2px;
                             display: flex;
 
                             .bar {
-                                background: $success;
+                                background: theme.$success;
                             }
                             }
                         }
@@ -209,7 +204,7 @@
             }
 
             a.delete {
-                color: $error;
+                color: theme.$error;
             }
         }
     }

@@ -7,10 +7,9 @@
         .categories {
 
             margin-top: 1em;
-        display: flex;
-        flex-flow: row wrap;
-        gap: 2em;
-
+            display: flex;
+            flex-flow: row wrap;
+            gap: 2em;
 
         .category {
             flex: 1 1 45%;

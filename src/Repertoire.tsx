@@ -363,11 +363,11 @@ const Repertoire = () => {
  
   return (
     <>
-      <div ref={_ => set_el_rep(_)} class='repertoire'>
+      <main ref={_ => set_el_rep(_ as HTMLDivElement)} class='repertoire'>
         <Show when={study()} fallback={"Loading..."}>
           <SectionLoaded el_rep={el_rep()} section_study={study()!} />
         </Show>
-      </div>
+      </main>
     </>)
 }
 
