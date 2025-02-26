@@ -1,7 +1,7 @@
 import { For, Show, createSignal, useContext } from 'solid-js'
 import { useNavigate } from '@solidjs/router'
 import './Repertoires.scss'
-import { RepertoiresDBContext } from './components/idb_repository'
+import { RepertoireDBProvider, RepertoiresDBContext } from './components/idb_repository'
 
 import { RepertoiresFixture, StudyInRepertoireCategory  } from './studyrepo'
 
@@ -114,4 +114,11 @@ function Repertoires() {
   )
 }
 
-export default Repertoires
+export default function () {
+  return (<>
+  <RepertoireDBProvider>
+<Repertoires/>
+
+  </RepertoireDBProvider>
+  </>)
+}

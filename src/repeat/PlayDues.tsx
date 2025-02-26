@@ -8,15 +8,22 @@ import { annotationShapes } from "../annotationShapes"
 import { DrawShape } from "chessground/draw"
 import { fen_turn, INITIAL_FEN, MoveData } from "../chess_pgn_logic"
 import { ChessTreeWithTools } from "../components/ChessTreeWithTools"
-import { EntityPGNChapter, EntityPGNSection, EntityPGNStudy, RepertoiresDBContext, Study } from "../components/idb_repository"
+import { EntityPGNChapter, EntityPGNSection, EntityPGNStudy, RepertoireDBProvider, RepertoiresDBContext, Study } from "../components/idb_repository"
 import { Due_Component, PersistedSelectionComponent } from "./Show2"
 import { createDexieSignalQuery } from "./solid-dexie"
+import '../components/PlayUciComponent'
 
 function arr_rnd<T>(arr: T[]): T | undefined {
     return arr[Math.floor(Math.random() * arr.length)]
 }
 
 export default () => {
+    return <RepertoireDBProvider>
+        <WithDB/>
+    </RepertoireDBProvider>
+}
+
+function WithDB() {
 
     let params = useParams()
     const study_id = parseInt(params.id)

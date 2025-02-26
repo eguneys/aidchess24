@@ -1,5 +1,5 @@
 import { createMemo, For, on, Show, useContext } from "solid-js"
-import { EntityPGNStudy, RepertoiresDBContext } from "../components/idb_repository"
+import { EntityPGNStudy, RepertoireDBProvider, RepertoiresDBContext } from "../components/idb_repository"
 import { createDexieArrayQuery } from "./solid-dexie"
 import { A, useNavigate } from "@solidjs/router"
 import "./Show2.scss"
@@ -8,6 +8,15 @@ import { makePersistedNamespaced } from "../storage"
 import { DueFilterKey } from "./types"
 
 export default () => {
+    return (<>
+        <RepertoireDBProvider>
+            <WithRepDb />
+        </RepertoireDBProvider>
+    </>)
+}
+
+
+const WithRepDb = () => {
 
     const rdb = useContext(RepertoiresDBContext)!
 
@@ -18,7 +27,7 @@ export default () => {
     const selected_study = createMemo(() => studies[i_selected_study()])
 
     return (<>
-    <div class='repeat-show'>
+    <main class='repeat-show'>
         <div class='studies'>
             <h3>Repertoires</h3>
                 <div class='list-wrap'>
@@ -35,7 +44,7 @@ export default () => {
                 <StudySideView study={study()}></StudySideView>
             }</Show>
 
-    </div>
+    </main>
     </>)
 }
 
