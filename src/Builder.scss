@@ -3,14 +3,6 @@
 
 $bg-1: theme.$ac-li-orange-3;
 
-$replay-bg: rgb(52, 50, 46);
-$replay-bg2: rgb(62, 61, 55);
-$replay-bg3: rgb(88, 87, 82);
-
-$tree-bg: rgb(234, 219, 198);
-
-$hover-bg: rgb(113, 99, 67);
-
 .on-builder {
 
     --main-max-width: auto;
@@ -117,7 +109,7 @@ $hover-bg: rgb(113, 99, 67);
             }
 
             .replay-tree {
-                background: $tree-bg;
+                background: $bg-1;
                 border: 1px solid theme.$ac-li-blue;
                 flex: 2 1 300px;
             }
@@ -131,7 +123,7 @@ $hover-bg: rgb(113, 99, 67);
                 flex-flow: column;
                 align-items: center;
 
-                background: $replay-bg;
+                background: $bg-1;
                 color: theme.$text-secondary;
 
                 .result {

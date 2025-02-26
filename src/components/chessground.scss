@@ -1,0 +1,72 @@
+@use '../base_css/theme';
+
+cg-container .cg-custom-svgs {
+    z-index: 4;
+}
+
+cg-container .cg-custom-svgs svg {
+    overflow: visible;
+}
+
+
+.cg-custom-svgs .anim {
+
+    &.blunder {
+        animation: shake .3s ease-in-out 0s 2;
+    }
+
+    &.mistake {
+        animation: pulsate .3s ease-in-out 0s 2;
+    }
+
+    &.top {
+        animation: glow .3s ease-in-out 0s 2;
+    }
+}
+
+
+
+@keyframes glow {
+  0% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(5px);
+  }
+  75% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+
+
+
+@keyframes pulsate {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

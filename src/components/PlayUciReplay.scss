@@ -1,11 +1,14 @@
+@use '../base_css/theme';
 
-$top: rgb(145, 197, 89);
-$good: rgb(105, 196, 95);
-$inaccuracy: rgb(90, 177, 194);
-$mistake: rgb(206, 175, 64);
-$blunder: rgb(196, 87, 75);
+$top: theme.$top;
+$good: theme.$good;
+$inaccuracy: theme.$inaccuracy;
+$mistake: theme.$mistake;
+$blunder: theme.$blunder;
 
-$bg: rgb(63, 61, 56);
+
+
+$bg: rgb(59, 59, 59);
 $bg-hi: rgb(104, 98, 88);
 $color: rgb(232, 232, 232);
 $blue: rgb(159, 172, 225);
@@ -65,7 +68,7 @@ $blue-light: rgb(176, 187, 230);
     }
 
     .moves {
-        font-family: 'Noto Chess', 'Kantumruy';
+        font-family: 'Noto Chess', 'Roboto';
         user-select: none;
         display: flex;
         flex-flow: row wrap;
@@ -111,6 +114,7 @@ $blue-light: rgb(176, 187, 230);
             display: flex;
             justify-content: space-between;
             .eval {
+                opacity: .8;
                 margin-left: -1em;
                 margin-right: 0.5em;
                 font-size: 0.9em;

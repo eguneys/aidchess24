@@ -10,7 +10,7 @@ import { batch, createEffect, createMemo, createSignal, onMount } from "solid-js
 import '../assets/chessground/chessground.css'
 import '../assets/chessground/cburnett.css'
 import '../assets/chessground/theme.css'
-import './chessground.css'
+import './chessground.scss'
 import { SAN, UCI } from "./step_types"
 
 export type PlayUciComponent = {

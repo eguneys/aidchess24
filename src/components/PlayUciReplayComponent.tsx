@@ -279,6 +279,10 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
         }
     })
 
+    const color_klass = (ply: Ply) => {
+        return ply % 2 === 0 ? 'black ': 'white '
+    }
+
     return (<>
         <div class='replay-single'>
             <div ref={_ => $moves_el = _} class='moves'>
@@ -287,7 +291,7 @@ export function PlayUciSingleReplay(props: { play_replay: PlayUciSingleReplayCom
                     <Show when={ply_san.ply % 2 === 1}>
                         <span class='index'>{Math.ceil(ply_san.ply / 2)}</span>
                     </Show>
-                    <span onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, ply_san.ply)}} onClick={() => goto_ply(ply_san.ply)} class={'move ' + (judgement_klass(i())) + (ply_san.ply === i_ply() ? ' active' : '')}>
+                    <span onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, ply_san.ply)}} onClick={() => goto_ply(ply_san.ply)} class={'move ' + color_klass(ply_san.ply) + (judgement_klass(i())) + (ply_san.ply === i_ply() ? ' active' : '')}>
                             <span class='san'>{ply_san.san}</span>
                             <Show when={props.steps_stockfish.steps_with_stockfish[i()]}>{ ss =>
                                 <StepLazyQueueWorkOnSingleReplay ss={ss()} />
