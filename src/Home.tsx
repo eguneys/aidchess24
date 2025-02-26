@@ -59,7 +59,7 @@ const Home = () => {
 
 <section>
       <h1>See your progress, and do challenges</h1>
-      <img src='logo-big.jpg' alt="See your Progress" width="300px" height="300px"></img>
+      <img src='logo-big.webp' alt="See your Progress" width="493px" height="508px"></img>
       <br/>
       <p>Discover more features under development.</p>
       <p>With more to come in the future.</p>

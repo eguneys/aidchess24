@@ -2,8 +2,6 @@ import { Route, A, useLocation, useBeforeLeave, Router } from "@solidjs/router";
 import { ErrorBoundary, Show, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
-import { PlayerProvider } from "./sound";
-import { RepertoireDBProvider } from "./components/idb_repository";
 
 const Home = lazy(() => import('./Home'))
 const Repertoires = lazy(() => import('./Repertoires'))
@@ -32,35 +30,31 @@ export const MyApp = () => {
     return (<>
     
         <MetaProvider>
-        <RepertoireDBProvider>
-        <PlayerProvider>
-            <Router root={AppInRouter}>
-              <Route path='/' component={Home}/>
-              <Route path='/sixth' component={SixthDraw}/>
+          <Router root={AppInRouter}>
+            <Route path='/' component={Home}/>
+            <Route path='/sixth' component={SixthDraw}/>
 
-              <Route path='/builder' component={Builder}/>
+            <Route path='/builder' component={Builder}/>
 
-              <Route path='/repeat' component={RepeatShow}/>
-              <Route path='/repeat/:id' component={RepeatDues}/>
-              <Route path='/widen' component={Widen}/>
-              <Route path='/beta' component={Beta}/>
-              <Route path='/explorer' component={Explorer}/>
-              <Route path='/challenges' component={Challenges}/>
-              <Route path='/repertoires' component={Repertoires}/>
-              <Route path='/openings/:id' component={Repertoire}/>
-              <Route path='/masters/:id' component={Masters}/>
-              <Route path='/tactics/:id' component={Tactics}/>
-              <Route path='/endgames/:id' component={Endgames}/>
-              <Route path='/contact' component={Contact}/>
-              <Route path='/terms' component={Contact}/>
-              <Route path='/privacy' component={Contact}/>
-              <Route path='/about' component={Contact}/>
-              <Route path='/donate' component={Contact}/>
-              <Route path='/thanks' component={Contact}/>
-              <Route path='/dashboard' component={Dashboard}/>
-            </Router>
-        </PlayerProvider>
-        </RepertoireDBProvider>
+            <Route path='/repeat' component={RepeatShow}/>
+            <Route path='/repeat/:id' component={RepeatDues}/>
+            <Route path='/widen' component={Widen}/>
+            <Route path='/beta' component={Beta}/>
+            <Route path='/explorer' component={Explorer}/>
+            <Route path='/challenges' component={Challenges}/>
+            <Route path='/repertoires' component={Repertoires}/>
+            <Route path='/openings/:id' component={Repertoire}/>
+            <Route path='/masters/:id' component={Masters}/>
+            <Route path='/tactics/:id' component={Tactics}/>
+            <Route path='/endgames/:id' component={Endgames}/>
+            <Route path='/contact' component={Contact}/>
+            <Route path='/terms' component={Contact}/>
+            <Route path='/privacy' component={Contact}/>
+            <Route path='/about' component={Contact}/>
+            <Route path='/donate' component={Contact}/>
+            <Route path='/thanks' component={Contact}/>
+            <Route path='/dashboard' component={Dashboard}/>
+          </Router>
         </MetaProvider>
     </>)
 }
