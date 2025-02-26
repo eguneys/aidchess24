@@ -1,7 +1,8 @@
-@use '_variables' as *;
-
+@use 'base_css/theme';
+@use 'base_css/media';
 
 .on-widen {
+
     .widen {
 
 
@@ -10,19 +11,7 @@
                              "replay";
         gap: 0.4em;
 
-        --gauge-gap: calc(
-          8px + 9 *
-            ((100vw - 320px) / 880)
-        );
-
-        --col2-uniboard-width: calc(
-            min(calc(100vw - 240px - 20px), 
-                calc(100vh - calc(var(--site-header-height)))));
-        
-        --col3-uniboard-width: calc(90vh - var(--site-header-height));
-
-
-        @include mq-at-least-col2 {
+        @include media.mq-at-least-col2 {
             grid-template-areas: 'board gauge replay';
 
             grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) auto;
@@ -34,7 +23,7 @@
             }
         }
 
-        @include mq-is-col2-squeeze {
+        @include media.mq-is-col2-squeeze {
             grid-template-areas: 'board gauge replay';
 
             grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) minmax(200px, 300px);
@@ -43,7 +32,7 @@
 
 
 
-        @include mq-at-least-col3 {
+        @include media.mq-at-least-col3 {
             grid-template-areas: 'board gauge replay';
 
             grid-template-columns: minmax(auto, var(--col3-uniboard-width)) var(--gauge-gap) 420px;
@@ -77,7 +66,7 @@
 
         .board-wrap {
             aspect-ratio: 1/1;
-            border: 2px solid $accent;
+            border: 2px solid theme.$ac-li-orange;
             border-radius: 8px;
             min-height: 200px;
             overflow: hidden;
@@ -97,7 +86,7 @@
 
             .replay {
                 display: flex;
-                color: $dark-text;
+                color: theme.$text-primary;
                 padding-top: 1em;
                 background: linear-gradient(hsla(40, 57%, 76%), hsla(40, 57%, 70%));
                 flex: 1;
@@ -190,7 +179,7 @@
                         &.active,
                         &.active:hover {
                             text-decoration: underline;
-                            background: $secondary-light;
+                            background: theme.$ac-li-orange-2;
                         }
 
                         text-align: center;
@@ -198,10 +187,10 @@
                         user-select: none;
                         cursor: pointer;
                         border-radius: 4px;
-                        background: $accent;
+                        background: theme.$ac-li-orange;
 
                         &:hover {
-                            background: $accent-light;
+                            background: theme.$ac-li-orange-2;
                         }
 
                         &:active {

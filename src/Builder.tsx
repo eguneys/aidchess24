@@ -682,6 +682,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
         }
     }))
 
+    const [settings_open, set_settings_open] = createSignal(false)
 
     return (<>
     <main ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
@@ -694,13 +695,18 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                         <div onClick={() => set_tab('match')} class={'tab' + (tab() === 'match' ? ' active' : '')}>Match</div>
                         <div onClick={() => set_tab('repertoire')} class={'tab' + (tab() === 'repertoire' ? ' active' : '')}>Repertoire</div>
                     </div>
-                    <i onClick={props.on_welcome_page} data-icon=''></i>
+                    <div class='icons-wrap'>
+                      <i class={settings_open() ? 'open' : ''} onClick={() => set_settings_open(!settings_open())} data-icon=''></i>
+                      <i onClick={props.on_welcome_page} data-icon=''></i>
+                    </div>
                 </div>
                 <Show when={tab() === 'match'}>
                     <>
+                    <Show when={settings_open()}>
+                        <div class='settings-anchor'>
                         <div class='engine-wrap'>
                             <div class='skill'>
-                            <label for="skill">Skill:</label>
+                            <label for="skill">Difficulty Tier:</label>
                             <select name="skill" id="skill" onChange={e => set_skill(e.currentTarget.value as Skill)}>
                                 <option value="A" selected={get_skill()==="A"}>Top</option>
                                 <option value="B" selected={get_skill()==="B"}>Second</option>
@@ -722,52 +728,54 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                             </fieldset>
                             </div>
                         </div>
-                        <PlayUciSingleReplay 
-                            play_replay={play_replay} 
-                            steps_stockfish={steps_stockfish} 
-                            last_step_sharpness={last_step_sharpness()}
-                            on_context_menu={on_replay_context_menu}
-                        />
-                        <div class='result-wrap'>
+                        </div>
+                    </Show>
+                    <PlayUciSingleReplay 
+                        play_replay={play_replay} 
+                        steps_stockfish={steps_stockfish} 
+                        last_step_sharpness={last_step_sharpness()}
+                        on_context_menu={on_replay_context_menu}
+                    />
+                    <div class='result-wrap'>
 
-                            <Switch>
-                                <Match when={builder_result() === 'flag'}>
-                                    <span class='result'>Game Over</span>
-                                    <small class='drop'>Ran out of time</small>
-                                </Match>
-                                <Match when={builder_result() === 'highdrop'}>
-                                    <span class='result'>Game Over</span>
-                                    <small class='drop'>Evaluation is High Above 5</small>
-                                </Match>
-                                <Match when={builder_result() === 'drop'}>
-                                    <span class='result'>Game Over</span>
-                                    <small class='drop'>Evaluation Dropped Below -2</small>
-                                </Match>
-                                <Match when={builder_result() === 'checkmate'}>
-                                    <span class='result'>Checkmate</span>
-                                    <small class='drop'>Victory is <span class='victory'>{fen_turn(play_replay.last_step!.before_fen)}</span></small>
-                                </Match>
-                                <Match when={builder_result() === 'stalemate'}>
-                                    <span class='result'>Stalemate</span>
-                                    <small class='drop'>Game is a draw</small>
-                                </Match>
-                                <Match when={builder_result() === 'threefold'}>
-                                    <span class='result'>3 Fold Repetition</span>
-                                    <small class='drop'>Game is a draw</small>
-                                </Match>
-                                <Match when={builder_result() === 'insufficient'}>
-                                    <span class='result'>Insufficient Material</span>
-                                    <small class='drop'>Game is a draw</small>
-                                </Match>
-                            </Switch>
-                        </div>
-                        <div class='tools-wrap'>
-                            <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
-                            <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
-                        </div>
-                        <div class='clock-wrap'>
-                            <ClockTime time={clock_millis()} isRunning={clock_is_running()}/>
-                        </div>
+                        <Switch>
+                            <Match when={builder_result() === 'flag'}>
+                                <span class='result'>Game Over</span>
+                                <small class='drop'>Ran out of time</small>
+                            </Match>
+                            <Match when={builder_result() === 'highdrop'}>
+                                <span class='result'>Game Over</span>
+                                <small class='drop'>Evaluation is High Above 5</small>
+                            </Match>
+                            <Match when={builder_result() === 'drop'}>
+                                <span class='result'>Game Over</span>
+                                <small class='drop'>Evaluation Dropped Below -2</small>
+                            </Match>
+                            <Match when={builder_result() === 'checkmate'}>
+                                <span class='result'>Checkmate</span>
+                                <small class='drop'>Victory is <span class='victory'>{fen_turn(play_replay.last_step!.before_fen)}</span></small>
+                            </Match>
+                            <Match when={builder_result() === 'stalemate'}>
+                                <span class='result'>Stalemate</span>
+                                <small class='drop'>Game is a draw</small>
+                            </Match>
+                            <Match when={builder_result() === 'threefold'}>
+                                <span class='result'>3 Fold Repetition</span>
+                                <small class='drop'>Game is a draw</small>
+                            </Match>
+                            <Match when={builder_result() === 'insufficient'}>
+                                <span class='result'>Insufficient Material</span>
+                                <small class='drop'>Game is a draw</small>
+                            </Match>
+                        </Switch>
+                    </div>
+                    <div class='tools-wrap'>
+                        <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
+                        <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
+                    </div>
+                    <div class='clock-wrap'>
+                        <ClockTime time={clock_millis()} isRunning={clock_is_running()}/>
+                    </div>
                     </>
                 </Show>
 

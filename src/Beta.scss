@@ -1,25 +1,23 @@
-@use '_variables' as *;
+@use 'base_css/theme';
 
-.main {
-    .beta {
+main.beta {
+    padding: 1em;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    text-align: center;
+
+    button {
+        user-select: none;
+        cursor: pointer;
+        margin-top: 1em;
         padding: 1em;
-        display: flex;
-        flex-flow: column;
-        align-items: center;
+        background: theme.$error;
+        color: theme.$text-light;
+        border: 1px solid theme.$text-primary;
 
-
-        button {
-            user-select: none;
-            cursor: pointer;
-            margin-top: 1em;
-            padding: 1em;
-            background: $error;
-            color: $text-light;
-            border: 1px solid $dark-text;
-
-            &:active {
-                text-decoration: underline;
-            }
+        &:active {
+            text-decoration: underline;
         }
     }
 }

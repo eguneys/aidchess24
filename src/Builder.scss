@@ -1,21 +1,307 @@
 @use 'base_css/theme';
 @use 'base_css/media';
 
+$bg-1: theme.$ac-li-orange-3;
 
 $replay-bg: rgb(52, 50, 46);
 $replay-bg2: rgb(62, 61, 55);
 $replay-bg3: rgb(88, 87, 82);
 
-$bg-g1: rgb(216, 166, 85);
-$bg-g2: rgb(226, 186, 121);
-
 $tree-bg: rgb(234, 219, 198);
 
 $hover-bg: rgb(113, 99, 67);
 
-$error: red;
-
 .on-builder {
+
+    --main-max-width: auto;
+    
+    .builder {
+
+        position: relative;
+
+
+        display: grid;
+
+        grid-template-areas:
+        'board gauge replay';
+
+        grid-template-columns: var(--col2-uniboard-width) var(--block-gap) minmax(240px, 400px);
+
+        margin-bottom: 3em;
+
+        .board-wrap {
+            grid-area: board;
+        }
+
+        .board-wrap {
+            aspect-ratio: 1;
+        }
+
+        .replay-wrap {
+            grid-area: replay;
+        }
+
+        .replay-wrap {
+            display: flex;
+            flex-flow: column;
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                background: $bg-1;
+                border-radius: 6px 0 0 0;
+                overflow: hidden;
+                border-bottom: 2px solid theme.$ac-li-orange;
+
+                .icons-wrap {
+                    display: flex;
+                    align-items: center;
+
+                    i {
+                        padding: 0.2em 0.4em;
+                        user-select: none;
+                        cursor: pointer;
+                        align-self: center;
+                        color: theme.$text-primary;
+                
+                        &:hover {
+                            color: theme.$text-secondary;
+                        }
+
+                        &.open {
+                            background: theme.$ac-li-orange;
+                        }
+                    }
+                }
+
+                .tabs-wrap {
+                    display: flex;
+
+                    .tab {
+
+                        display:flex;
+                        align-items: flex-end;
+
+                        border-left: 1px solid theme.$text-primary;
+                        background: theme.$ac-li-blue2;
+                        user-select: none;
+                        cursor: pointer;
+                        padding: 0.3em 0.6em;
+                        color: theme.$text-primary;
+                        border-bottom: 1px solid theme.$ac-li-orange;
+
+                        border-radius: 2px 2px 0 0;
+
+                        &:first-child {
+                            border-left: none;
+                        }
+
+                        &.active,
+                        &:hover {
+                            color: theme.$text-secondary;
+                            border-bottom: 3px solid theme.$ac-li-orange;
+                        }
+
+                        &.active {
+                            background: theme.$ac-li-blue;
+                            color: theme.$text-primary;
+                        }
+
+                        transition: all .2s;
+                    }
+                }
+            }
+
+            .replay-single {
+                flex: 1;
+            }
+
+            .replay-tree {
+                background: $tree-bg;
+                border: 1px solid theme.$ac-li-blue;
+                flex: 2 1 300px;
+            }
+
+            .filler {
+                flex: 1;
+            }
+
+            .result-wrap {
+                display: flex;
+                flex-flow: column;
+                align-items: center;
+
+                background: $replay-bg;
+                color: theme.$text-secondary;
+
+                .result {
+                    font-size: 1.4em;
+                }
+
+                .drop {
+                    color: theme.$error;
+                }
+            }
+
+            .clock-wrap {
+                display: flex;
+                .clock {
+                    font-family: "Roboto", sans-serif;
+                    padding: 0 0.2em;
+                    background: theme.$ac-li-orange-2;
+                    border-top: 1px solid theme.$ac-li-orange;
+                    border-radius: 2px 0 4px 4px;
+                    font-size: 2.1em;
+                    line-height: 1.2;
+                    color: theme.$text-secondary;
+
+                        &.low {
+                            color: theme.$text-primary;
+                        }
+                    }
+            }
+
+            .tools-wrap {
+                display: flex;
+
+                    .rematch {
+                        flex: 3;
+                        border-right: 4px solid theme.$ac-li-orange;
+                    }
+
+                    .color {
+                        flex: 1;
+                    }
+
+                button {
+                    font-size: 1.1em;
+                    flex: 1;
+                    border: none;
+                    background: theme.$ac-li-orange-2;
+                    color: theme.$text-primary;
+                    padding: 0.2em;
+                    user-select: none;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                    transition: background .1s;
+
+                &:hover {
+                    background: theme.$ac-li-orange;
+                }
+                &:active {
+                    text-decoration: underline;
+                }
+                &:active i {
+                    border-bottom: 1px solid theme.$text-primary;
+                }
+
+                &.white i {
+                    background-image: url('assets/images/wK.svg');
+                }  
+                &.black i {
+                    background-image: url('assets/images/bK.svg');
+                }  
+
+
+
+                &{
+                        i {
+                            justify-self: center;
+                            display: block;
+                            width: 65px;
+                            height: 65px;
+                            background-size: 65px 65px;
+                        }
+                    }
+                }
+            }
+        }
+
+        .settings-anchor {
+            position: relative;
+            .engine-wrap {
+
+                position: absolute;
+                width: 100%;
+                z-index: 4;
+
+                border-top: 1px solid theme.$ac-li-orange;
+                background: theme.$ac-li-orange-3;
+                padding: 0.5em 1.5em;
+
+                display: flex;
+                justify-content: space-between;
+                .skill {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.2em;
+                }
+
+                .depth {
+                        fieldset {
+                            display: flex;
+                            flex-flow: row;
+                
+                            align-items: center;
+                            border: none;
+                
+                            .option {
+                                user-select: none;
+                                cursor: pointer;
+                                padding: 0.2em;
+                
+                                display: flex;
+                                align-items: center;
+                                gap: 0.1em;
+                
+                                input,
+                                label {
+                                    cursor: pointer;
+                                    display: inline;
+                                    vertical-align: middle;
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+
+        .context-menu {
+            position: absolute;
+            user-select: none;
+            cursor: pointer;
+            border-radius: 3px;
+
+            box-shadow: 0 14px 28px rgba(0,0,0,.25),0 10px 10px rgba(0,0,0,.22);
+
+            .title {
+                color: theme.$text-primary;
+                text-align: center;
+                padding: 0.4em;
+                border-bottom: 1px solid theme.$ac-li-orange-2;
+                border-radius: 2px 2px 0 0;
+                font-size: 1.1em;
+                text-shadow: 0 1px 0 theme.$text-light;
+                background: $bg-1;
+            }
+
+            a {
+                display: flex;
+                padding: 0.2em 0.6em;
+                align-items: center;
+                gap: 0.6em;
+                color: theme.$text-primary;
+
+                &:hover {
+                    background: theme.$ac-li-orange-2;
+                }
+            }
+
+            background: $bg-1;
+
+        }
+    }
+
 
     .welcome {
 
@@ -24,7 +310,7 @@ $error: red;
         align-items: center;
 
         .info {
-            background: theme.$ac-li-orange;
+            background: theme.$ac-li-orange-3;
             color: theme.$text-primary;
             box-shadow: 1px 1px 3px theme.$text-primary;
             padding: 1em;
@@ -71,14 +357,14 @@ $error: red;
                 font-size: 1.1em;
                 border-radius: 2px;
                 border: none;
-                background: theme.$ac-li-orange;
+                background: theme.$ac-li-orange2;
                 color: theme.$text-primary;
                 text-transform: uppercase;
 
                 transition: background .2s;
-                box-shadow: 1px 1px 4px black;
+                box-shadow: 1px 1px 4px theme.$text-primary;
                 &:hover {
-                    background: theme.$ac-li-orange-2;
+                    background: theme.$ac-li-orange;
                 }
 
                 &:active {
@@ -89,252 +375,5 @@ $error: red;
 
     }
 
-    .builder {
 
-        position: relative;
-
-
-        display: grid;
-
-        grid-template-areas:
-        'board gauge replay';
-
-        grid-template-columns: var(--col2-uniboard-width) var(--gauge-gap) minmax(240px, 400px);
-
-        margin-bottom: 3em;
-
-        .board-wrap {
-            grid-area: board;
-        }
-
-        .board-wrap {
-            aspect-ratio: 1;
-        }
-
-        .replay-wrap {
-            grid-area: replay;
-        }
-
-        .replay-wrap {
-            display: flex;
-            flex-flow: column;
-
-            .header {
-                display: flex;
-                justify-content: space-between;
-                background: linear-gradient($bg-g1, $bg-g2);
-
-                i {
-                    user-select: none;
-                    cursor: pointer;
-                    margin-right: 0.5em;
-                    align-self: center;
-                    color: theme.$ac-li-orange;
-
-                    &:hover {
-                        color: theme.$ac-li-orange-2;
-                    }
-                }
-
-                .tabs-wrap {
-                    display: flex;
-
-                    .tab {
-                        margin-top: 0.3em;
-                        border-left: 1px solid theme.$text-primary;
-                        background: $replay-bg;
-                        user-select: none;
-                        cursor: pointer;
-                        padding: 0.2em 0.4em;
-                        color: theme.$text-primary;
-                        border-bottom: 1px solid rgb(190, 99, 65);
-
-                        &.active,
-                        &:hover {
-                            color: theme.$text-secondary;
-                            border-bottom: 3px solid rgb(190, 99, 65);
-                        }
-
-                        &.active {
-                            background: $bg-g2;
-                            color: $replay-bg;
-                        }
-
-                        transition: all .1s;
-                    }
-                }
-            }
-
-            .replay-single {
-                flex: 1;
-            }
-
-            .replay-tree {
-                background: $tree-bg;
-                border: 1px solid $bg-g1;
-                flex: 2 1 300px;
-            }
-
-            .filler {
-                flex: 1;
-            }
-
-            .result-wrap {
-                display: flex;
-                flex-flow: column;
-                align-items: center;
-
-                background: $replay-bg;
-                color: theme.$text-secondary;
-
-                .result {
-                    font-size: 1.4em;
-                }
-
-                .drop {
-                    color: $error;
-                }
-            }
-
-            .clock-wrap {
-                display: flex;
-                .clock {
-                    font-family: "Roboto", sans-serif;
-                    padding: 0 0.2em;
-                    background: theme.$ac-li-orange;
-                    border-top: 1px solid theme.$text-primary;
-                    font-size: 2.1em;
-                    line-height: 1.2;
-                    color: theme.$text-primary;
-                    }
-            }
-
-            .tools-wrap {
-                display: flex;
-
-                    .rematch {
-                        flex: 3;
-                        border-right: 1px solid theme.$text-primary;
-                    }
-
-                    .color {
-                        flex: 1;
-                    }
-
-                button {
-                    font-size: 1.1em;
-                    flex: 1;
-                    border: none;
-                    background: theme.$ac-li-orange;
-                    color: theme.$text-primary;
-                    padding: 0.5em;
-                    user-select: none;
-                    cursor: pointer;
-                    text-transform: uppercase;
-                    transition: background .1s;
-
-                &:hover {
-                    background: theme.$ac-li-orange-2;
-                }
-                &:active {
-                    text-decoration: underline;
-                }
-                &:active i {
-                    border-bottom: 1px solid theme.$text-primary;
-                }
-
-                &.white i {
-                    background-image: url('assets/images/wK.svg');
-                }  
-                &.black i {
-                    background-image: url('assets/images/bK.svg');
-                }  
-
-
-
-                &{
-                        i {
-                            justify-self: center;
-                            display: block;
-                            width: 65px;
-                            height: 65px;
-                            background-size: 65px 65px;
-                        }
-                    }
-                }
-            }
-        }
-
-        .engine-wrap {
-            display: flex;
-            justify-content: space-between;
-            .skill {
-                display: flex;
-                align-items: center;
-                gap: 0.2em;
-            }
-
-            .depth {
-                    fieldset {
-                        display: flex;
-                        flex-flow: row;
-            
-                        align-items: center;
-                        border: none;
-            
-                        .option {
-                            user-select: none;
-                            cursor: pointer;
-                            padding: 0.2em;
-            
-                            display: flex;
-                            align-items: center;
-                            gap: 0.1em;
-            
-                            input,
-                            label {
-                                cursor: pointer;
-                                display: inline;
-                                vertical-align: middle;
-                            }
-                        }
-                    }
-                }
-        }
-
-        .context-menu {
-            position: absolute;
-            user-select: none;
-            cursor: pointer;
-            border-radius: 3px;
-
-            box-shadow: 0 14px 28px rgba(0,0,0,.25),0 10px 10px rgba(0,0,0,.22);
-
-            .title {
-                color: theme.$text-primary;
-                text-align: center;
-                padding: 0.4em;
-                border-bottom: 1px solid $replay-bg3;
-                border-radius: 2px 2px 0 0;
-                font-size: 1.1em;
-                text-shadow: 0 1px 0 $replay-bg;
-                background: linear-gradient(to bottom, $replay-bg, $replay-bg2)
-            }
-
-            a {
-                display: flex;
-                padding: 0.2em 0.6em;
-                align-items: center;
-                gap: 0.6em;
-                color: theme.$text-primary;
-
-                &:hover {
-                    background: $hover-bg;
-                }
-            }
-
-            background: $replay-bg;
-
-        }
-    }
 }
