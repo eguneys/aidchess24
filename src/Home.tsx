@@ -5,14 +5,32 @@ import { A } from '@solidjs/router'
 const Home = () => {
     return (<>
     <div class='home'>
+        <section>
       <h1><A href='repertoires'>Master Chess Through Memorization and Practice.</A></h1>
       <div class='features'>
         <div class='feature'>
-            <h3>Featured Openings</h3>
+            <h2>Build Your Repertoire</h2>
             <ul>
-                <li><h4>Slav Defense</h4></li>
-                <li><h4>Sicilian Defense</h4></li>
-                <li><h4>French Defense</h4></li>
+                <li><p>Play against the engine selecting top 5 moves</p></li>
+                <li><p>Game is over when evaluation drops -2.</p></li>
+                <li><p>Rematch often, and focus on your openings.</p></li>
+                <li><small>See the evaluation and accuracy of the moves instantly.</small></li>
+                <li><p>Save your lines for further study.</p></li>
+            </ul>
+        </div>
+        <div class='feature'>
+            <h2>Featured Openings</h2>
+            <ul>
+                <li><span>Slav Defense</span></li>
+                <li><span>Sicilian Defense</span></li>
+                <li><span>French Defense</span></li>
+                <li><small>(or Import a Lichess Study or PGN)</small></li>
+            </ul>
+        </div>
+        <div class='feature'>
+            <h2>Spaced Repetition Practice</h2>
+            <ul>
+                <li><p>Repeat your lines daily with quizzes using spaced repetition.</p></li>
             </ul>
         </div>
         {
@@ -37,18 +55,31 @@ const Home = () => {
         </div>
     */}
       </div>
+</section>
 
-
+<section>
       <h1>See your progress, and do challenges</h1>
-      <img src='logo-big.jpg' alt="See your Progress" height="400px"></img>
+      <img src='logo-big.jpg' alt="See your Progress" width="300px" height="300px"></img>
+      <br/>
+      <p>Discover more features under development.</p>
+      <p>With more to come in the future.</p>
+</section>
+<section>
+      <h1>Free educational chess tools for everyone, no ads, no paywalls.</h1>
 
-
+      <p>Welcome to our community. It's open source too. For the ❤️ of chess.</p>
+</section>
       <footer>
         <ul>
             <li><A href="/contact">Contact</A></li>
             <li><A href="/terms">Terms of Service</A></li>
             <li><A href="/privacy">Privacy Policy</A></li>
             <li><A href="/about">About</A></li>
+        </ul>
+
+        <ul class='small'>
+            <li><A href="https://github.com/eguneys/aidchess24">Github</A></li>
+            <li><A href="https://www.twitch.tv/gsoutz">Twitch</A></li>
         </ul>
       </footer>
     </div>

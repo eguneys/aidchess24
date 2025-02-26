@@ -1,4 +1,4 @@
-@use '_variables' as *;
+@use 'theme';
 
 body {
     --site-header-height: 40px;
@@ -31,7 +31,9 @@ body {
     margin: 0 auto;
     user-select: none;
 
-    background: linear-gradient(#f8eec9, #ffe3e3);
+    background: theme.$white-bg2;
+
+    box-shadow: 0px 1px 3px theme.$text-primary;
 }
 
 
@@ -84,7 +86,7 @@ body {
 
         .topnav-toggle:checked~& {
             position: fixed;
-            background: #fff;
+            background: theme.$white-bg2;
         }
 
         .topnav-toggle:checked~& .hbg__in::before {
@@ -161,22 +163,25 @@ body {
         margin-top: -1.5px;
         position: absolute;
         border-radius: 3px;
-        background-color: #111111;
+        background-color: theme.$text-primary;
     }
 
 }
 
 
 .site-title {
-    font-size: 25px;
-    line-height: 37px;
-    text-shadow: 0 1px 0 #fff;
+    font-size: 2em;
+    line-height: 1.2em;
     white-space: nowrap;
     margin: 0 0.5rem;
     display: none;
 
     .beta {
-        color: $secondary;
+        color: theme.$ac-li-purple2;
+
+        &:hover {
+          color: theme.$ac-li-purple;
+        }
     }
 
     @media (max-width: 979.3px) {
@@ -184,8 +189,8 @@ body {
     }
 
     @media (min-height: 600px) {
-        font-size: 30px;
-        line-height: 57px;
+        font-size: 2em;
+        line-height: 2em;
     }
 
 
@@ -195,7 +200,7 @@ body {
 
 
     @media (min-width: 979.3px) and (min-height: 600px) {
-        line-height: 55px;
+        line-height: 2em;
         margin: 0 1rem 0 1.5rem;
     }
 }
@@ -210,7 +215,7 @@ body {
         position: fixed;
         top: var(--site-header-height);
         left: 0;
-        background: $text;
+        background: theme.$white-bg2;
         transform: translateX(calc(-100% - 10px));
         transition: transform 200ms;
         overscroll-behavior: contain;
@@ -233,6 +238,16 @@ body {
 
            a {
             padding-left: 1.2em;
+            color: theme.$text-primary;
+
+            &.active {
+                color: theme.$ac-li-purple2;
+                text-decoration: underline;
+            }
+
+            &:hover {
+                color: theme.$text-secondary;
+            }
            }
        }
     }
@@ -253,13 +268,26 @@ body {
             }
 
             a {
-                text-shadow: 0 1px 0 $text;
                 display: block;
                 height: 48px;
                 line-height: var(--site-header-height);
                 padding: 0 0.7rem;
                 border-left: 2px solid rgba(0, 0, 0, 0);
-                font-weight: 700;
+                font-weight: 400;
+                color: theme.$text-primary;
+
+                &.active {
+                    color: theme.$ac-li-purple2;
+                    text-decoration: underline;
+                }
+
+                &:hover {
+                    color: theme.$text-secondary;
+                }
+
+                &.active:hover {
+                    color: theme.$ac-li-purple;
+                }
             }
         }
     }
@@ -291,13 +319,13 @@ body {
     background: none;
     border: none;
     outline: none;
-    color: $dark-text;
+    color: theme.$text-primary;
     user-select: none;
     cursor: pointer;
 
     &:hover:not(.disabled) {
-        background: $success;
-        color: $text;
+        background: theme.$ac-li-purple;
+        color: theme.$text-primary;
     }
 
     &.disabled {

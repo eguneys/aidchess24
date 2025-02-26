@@ -1,33 +1,48 @@
-@use '_variables' as *;
+@use 'theme';
+@use 'media';
+
+
 
 .on-home {
-  .home {
+
+    .home {
+        display: flex;
+
+        flex-flow: column;
+        gap: 4em;
+  section {
     display: flex;
     flex-flow: column;
     justify-content: center;
     align-items: center;
 
+    img {
+        border-radius: 4%;
+    }
+
     h1 {
         padding: 2em 0 1em 0;
-        color: $dark-text;
+        color: theme.$text-title;
         text-align: center;
+        font-size: 2.4em;
 
+        margin-bottom: 1em;
 
         a {
             font-weight: bold;
             transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1);
         }
 
-        &.twitch {
-           text-shadow: $gold 2px 2px 2px;
+        &.donate {
+           text-shadow: theme.$twitch 2px 2px 2px;
 
            a {
-            color: $dark-text;
+            color: theme.$twitch;
             transition: 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 
             &:hover {
-                color: $gold;
-                text-shadow: $dark-text 1px 1px 0px;
+                color: theme.$twitch;
+                text-shadow: theme.$text-secondary 1px 1px 0px;
             }
            }
         }
@@ -38,31 +53,48 @@
 
         display: flex;
         justify-content: space-between;
+        gap: 2em;
+        flex-flow: column;
 
+        @include media.mq-is-col2-squeeze {
+            flex-flow: column;
+        }
+
+
+
+        @include media.mq-at-least-col2 {
+            flex-flow: row;
+        }
 
         .feature {
-            padding: 1em;
+            user-select: none;
+            cursor: pointer;
+            padding: 2em;
             flex: 1;
             display: flex;
             flex-flow: column;
             text-align: center;
+            border-radius: 6px;
 
-            h3 {
-                font-weight: normal;
+            background: theme.$ac-li-blue-2;
+            box-shadow: 0px 0px 2px 2px theme.$ac-li-orange;
+
+            transition: .2s;
+
+            &:hover {
+            box-shadow: 0px 0px 4px 4px theme.$ac-li-orange;
             }
 
-            h4 {
-                font-family: Kantumruy;
-                color: $dark-text;
+            h2 {
+                font-weight: 500;
             }
 
             ul {
                 margin: 0 auto;
-                max-width: 80%;
                 display: flex;
+                max-width: 70%;
                 flex-flow: column;
                 justify-content: center;
-
 
                 li {
                     padding: 0.2em 0;
@@ -70,41 +102,38 @@
             }
         }
     }
+}
 
 
     footer {
         padding-top: 6em;
         padding-bottom: 1em;
 
-        align-self: stretch;
+
+        ul.small {
+            font-size: 0.8em;
+            justify-self: center;
+            gap: 2em;
+        }
 
         ul {
             display: flex;
-            flex-flow: row wrap;
-            justify-content: space-around;
-        }
-
-        a {
-            font-weight: bold;
-            font-family: Kantumruy;
-            font-size: 1.3em;
-
-            &:active {
-                text-decoration: underline;
+                flex-flow: row wrap;
+                justify-content: center;
+                margin-bottom: 1em;
+                gap: 4em;
+            
+                a {
+                    font-weight: bold;
+                    font-family: Roboto;
+                    font-size: 1.3em;
+                    font-weight: 400;
+            
+                    &:active {
+                        text-decoration: underline;
+                    }
+                }
             }
-        }
     }
   }
-
-  iframe {
-    height: 378px;
-    width: 620px;
-
-    @media (max-width: 499px) {
-  
-        height: calc(378px/1.5);
-        width: calc(620px/1.5);
-    }
-  }
-
 }

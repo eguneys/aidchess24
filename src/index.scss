@@ -1,27 +1,25 @@
-@use '_variables' as *;
+@use "theme";
 
 @font-face {
-  font-family: 'Lobster Two';
-  src: url('assets/fonts/LobsterTwo-Regular.ttf');
+  font-family: 'NotoSans';
+  src: url('assets/fonts/NotoSans-VariableFont_wdth,wght.ttf');
 }
 
 @font-face {
-  font-family: 'Lobster Two';
-  src: url('assets/fonts/LobsterTwo-Bold.ttf');
-  font-weight: bold;
+  font-family: 'Rubik';
+  src: url('assets/fonts/Rubik-VariableFont_wght.ttf');
 }
 
-@font-face {
-  font-family: 'Kantumruy';
-  src: url('assets/fonts/KantumruyPro-Regular.ttf');
-}
 
 @font-face {
   font-family: 'Roboto';
-  src: url('assets/fonts/RobotoMono-VariableFont_wght.ttf');
+  src: url('assets/fonts/Roboto-VariableFont_wdth,wght.ttf');
 }
 
-
+@font-face {
+  font-family: 'RobotoMono';
+  src: url('assets/fonts/RobotoMono-VariableFont_wght.ttf');
+}
 
 @font-face {
   font-family: 'Noto Chess';
@@ -61,12 +59,12 @@ body {
   display: flex;
 
   color-scheme: light dark;
-  color: $secondary;
-  background: linear-gradient(#f8eec9, #ffe3e3);
+  color: theme.$text-primary;
+  background: theme.$white-bg;
 }
 
 #root {
-  font-family: 'Kantumruy';
+  font-family: 'Roboto';
   line-height: 1.5;
   font-weight: 400;
 
@@ -78,20 +76,25 @@ body {
 }
 
 a {
-  font-weight: 500;
-  color: $dark-text; 
+  font-family: 'Rubik';
+  color: theme.$text-title;
   text-decoration: inherit;
 }
 
 a:hover {
-  color: $gold;
+  color: theme.$ac-li-orange3;
 }
 
+a:active {
+  text-decoration: underline;
+}
 
 h1 {
-  font-family: 'Lobster Two';
+  font-family: 'Rubik';
   font-size: 2.1em;
   line-height: 1.1;
+  font-variation-settings: "wght" 300;
+  color: theme.$text-title;
 }
 
 ul {
@@ -109,6 +112,6 @@ ul {
 
 
 ::-webkit-scrollbar-thumb {
-  background: $accent-lighter;
   border-radius: 4px;
+  color: theme.$ac-li-purple-2;
 }
