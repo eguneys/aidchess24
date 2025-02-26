@@ -67,7 +67,11 @@ const AppInRouter = (props: any) => {
 
   const path_klass = () => {
     let p = pathname()
-    return `on-${p === '' ? 'home' : p}`
+    return p === '' ? 'home' : p
+  }
+
+  const on_path_klass = () => {
+    return `on-${path_klass()}`
   }
 
   const [is_checked, set_checked] = createSignal(false, { equals: false })
@@ -103,8 +107,7 @@ const AppInRouter = (props: any) => {
             </div>
           </div>
       </header>
-      <div class={'main-wrap ' + path_klass()}>
-        <div class='main'>
+      <div class={'main-wrap ' + on_path_klass()}>
           <Show when={import.meta.env.DEV} fallback= {
             <ErrorBoundary fallback={_ => Beta()}>
               {props.children}
@@ -112,7 +115,6 @@ const AppInRouter = (props: any) => {
           }>
             {props.children}
           </Show>
-        </div>
       </div>
     </>)
 }

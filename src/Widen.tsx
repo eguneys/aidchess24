@@ -230,7 +230,7 @@ const Widen = () => {
     }
 
     return (<>
-    <div class='widen'>
+    <main class='widen'>
       <div class='board-wrap'>
         <Chessboard
           orientation={orientation()}
@@ -331,7 +331,7 @@ const Widen = () => {
 
         </div>
       </div>
-    </div>
+    </main>
     </>)
 }
 

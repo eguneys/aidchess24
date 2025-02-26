@@ -1,6 +1,22 @@
-@use '_variables' as *;
+@use 'base_css/theme';
+@use 'base_css/media';
+
+
+$replay-bg: rgb(52, 50, 46);
+$replay-bg2: rgb(62, 61, 55);
+$replay-bg3: rgb(88, 87, 82);
+
+$bg-g1: rgb(216, 166, 85);
+$bg-g2: rgb(226, 186, 121);
+
+$tree-bg: rgb(234, 219, 198);
+
+$hover-bg: rgb(113, 99, 67);
+
+$error: red;
 
 .on-builder {
+
     .welcome {
 
         display: flex;
@@ -8,9 +24,9 @@
         align-items: center;
 
         .info {
-            background: $secondary;
-            color: $text;
-            box-shadow: 1px 1px 3px $text-dark;
+            background: theme.$ac-li-orange;
+            color: theme.$text-primary;
+            box-shadow: 1px 1px 3px theme.$text-primary;
             padding: 1em;
             margin: 1em;
 
@@ -55,14 +71,14 @@
                 font-size: 1.1em;
                 border-radius: 2px;
                 border: none;
-                background: $primary;
-                color: $text-light;
+                background: theme.$ac-li-orange;
+                color: theme.$text-primary;
                 text-transform: uppercase;
 
                 transition: background .2s;
                 box-shadow: 1px 1px 4px black;
                 &:hover {
-                    background: $primary-light;
+                    background: theme.$ac-li-orange-2;
                 }
 
                 &:active {
@@ -76,17 +92,6 @@
     .builder {
 
         position: relative;
-
-        --gauge-gap: calc(
-          8px + 9 *
-            ((100vw - 320px) / 880)
-        );
-
-        --col2-uniboard-width: calc(
-            min(calc(100vw - 240px - 20px), 
-                calc(100vh - calc(var(--site-header-height)))));
-        
-        --col3-uniboard-width: calc(90vh - var(--site-header-height));
 
 
         display: grid;
@@ -110,19 +115,6 @@
             grid-area: replay;
         }
 
-
-$replay-bg: rgb(52, 50, 46);
-$replay-bg2: rgb(62, 61, 55);
-$replay-bg3: rgb(88, 87, 82);
-
-$bg-g1: rgb(216, 166, 85);
-$bg-g2: rgb(226, 186, 121);
-
-$tree-bg: rgb(234, 219, 198);
-
-$hover-bg: rgb(113, 99, 67);
-
-
         .replay-wrap {
             display: flex;
             flex-flow: column;
@@ -137,10 +129,10 @@ $hover-bg: rgb(113, 99, 67);
                     cursor: pointer;
                     margin-right: 0.5em;
                     align-self: center;
-                    color: $primary;
+                    color: theme.$ac-li-orange;
 
                     &:hover {
-                        color: $primary-light;
+                        color: theme.$ac-li-orange-2;
                     }
                 }
 
@@ -149,17 +141,17 @@ $hover-bg: rgb(113, 99, 67);
 
                     .tab {
                         margin-top: 0.3em;
-                        border-left: 1px solid $text;
+                        border-left: 1px solid theme.$text-primary;
                         background: $replay-bg;
                         user-select: none;
                         cursor: pointer;
                         padding: 0.2em 0.4em;
-                        color: $text;
+                        color: theme.$text-primary;
                         border-bottom: 1px solid rgb(190, 99, 65);
 
                         &.active,
                         &:hover {
-                            color: $text-light;
+                            color: theme.$text-secondary;
                             border-bottom: 3px solid rgb(190, 99, 65);
                         }
 
@@ -193,7 +185,7 @@ $hover-bg: rgb(113, 99, 67);
                 align-items: center;
 
                 background: $replay-bg;
-                color: $text-light;
+                color: theme.$text-secondary;
 
                 .result {
                     font-size: 1.4em;
@@ -209,11 +201,11 @@ $hover-bg: rgb(113, 99, 67);
                 .clock {
                     font-family: "Roboto", sans-serif;
                     padding: 0 0.2em;
-                    background: $secondary;
-                    border-top: 1px solid $text-dark;
+                    background: theme.$ac-li-orange;
+                    border-top: 1px solid theme.$text-primary;
                     font-size: 2.1em;
                     line-height: 1.2;
-                    color: $text-light;
+                    color: theme.$text-primary;
                     }
             }
 
@@ -222,7 +214,7 @@ $hover-bg: rgb(113, 99, 67);
 
                     .rematch {
                         flex: 3;
-                        border-right: 1px solid $text-dark;
+                        border-right: 1px solid theme.$text-primary;
                     }
 
                     .color {
@@ -233,8 +225,8 @@ $hover-bg: rgb(113, 99, 67);
                     font-size: 1.1em;
                     flex: 1;
                     border: none;
-                    background: $secondary;
-                    color: $text-light;
+                    background: theme.$ac-li-orange;
+                    color: theme.$text-primary;
                     padding: 0.5em;
                     user-select: none;
                     cursor: pointer;
@@ -242,13 +234,13 @@ $hover-bg: rgb(113, 99, 67);
                     transition: background .1s;
 
                 &:hover {
-                    background: $secondary-light;
+                    background: theme.$ac-li-orange-2;
                 }
                 &:active {
                     text-decoration: underline;
                 }
                 &:active i {
-                    border-bottom: 1px solid $text-dark;
+                    border-bottom: 1px solid theme.$text-primary;
                 }
 
                 &.white i {
@@ -319,7 +311,7 @@ $hover-bg: rgb(113, 99, 67);
             box-shadow: 0 14px 28px rgba(0,0,0,.25),0 10px 10px rgba(0,0,0,.22);
 
             .title {
-                color: $text;
+                color: theme.$text-primary;
                 text-align: center;
                 padding: 0.4em;
                 border-bottom: 1px solid $replay-bg3;
@@ -334,7 +326,7 @@ $hover-bg: rgb(113, 99, 67);
                 padding: 0.2em 0.6em;
                 align-items: center;
                 gap: 0.6em;
-                color: $text;
+                color: theme.$text-primary;
 
                 &:hover {
                     background: $hover-bg;

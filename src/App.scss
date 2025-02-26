@@ -1,21 +1,41 @@
-@use 'theme';
+@use 'base_css/variables';
+@use 'base_css/media';
+@use 'base_css/theme';
+@use 'base_css/uniboard';
 
 body {
-    --site-header-height: 40px;
+    --site-header-height: #{variables.$site-header-short-height};
+    --site-header-margin: 0px;
 
-    @media (min-height: 600px) {
-        --site-header-height: 60px;
+    --main-margin: 0px;
+    --block-gap: 10px;
+
+    @include media.mq-site-header-tall {
+        --site-header-height: #{variables.$site-header-tall-height};
     }
+
+    @media(min-width: media.at-least(variables.$small)) {
+        --main-margin: 1vw;
+        --block-gap: 15px;
+        margin-bottom: variables.$block-gap;
+    }
+
+
+    --board-scale: 1;
+
+    --col2-uniboard-width: #{uniboard.$col2-uniboard-width};
+    --col3-uniboard-width: #{uniboard.$col3-uniboard-width};
 }
 
 .main-wrap {
-    --main-max-width: 1300px;
     display: grid;
     grid-template-areas: '. . main . .';
-    grid-template-columns: 1vw 1fr minmax(auto, var(--main-max-width)) 1fr 1vw;
-
+    grid-template-columns: variables.$main-margin 1fr minmax(auto, var(--main-max-width)) 1fr variables.$main-margin;
+    
+    --main-max-width: #{variables.$main-max-width};
+    margin-top: variables.$site-header-margin;
    
-   .main {
+   main {
      grid-area: main;
    }
 

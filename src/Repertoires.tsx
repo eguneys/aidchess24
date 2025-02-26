@@ -82,7 +82,7 @@ function Repertoires() {
 
   return (
     <>
-      <div class='repertoires'>
+      <main class='repertoires'>
 
         <div class='categories'>
         <div class='category'>
@@ -109,7 +109,7 @@ function Repertoires() {
         <CategoryView name="Engine Builder" list={[]}/>
         {/*<CategoryView name="Masters" list={fixture.masters}/>*/}
       </div>
-      </div>
+      </main>
     </>
   )
 }

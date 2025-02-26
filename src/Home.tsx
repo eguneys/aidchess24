@@ -4,7 +4,7 @@ import { A } from '@solidjs/router'
 
 const Home = () => {
     return (<>
-    <div class='home'>
+    <main class='home'>
         <section>
       <h1><A href='repertoires'>Master Chess Through Memorization and Practice.</A></h1>
       <div class='features'>
@@ -59,7 +59,7 @@ const Home = () => {
 
 <section>
       <h1>See your progress, and do challenges</h1>
-      <img src='logo-big.webp' alt="See your Progress" width="493px" height="508px"></img>
+      <img src='logo-big.webp' alt="See your Progress" style={"max-width:300px; width: 100%;"}></img>
       <br/>
       <p>Discover more features under development.</p>
       <p>With more to come in the future.</p>
@@ -82,7 +82,7 @@ const Home = () => {
             <li><A href="https://www.twitch.tv/gsoutz">Twitch</A></li>
         </ul>
       </footer>
-    </div>
+    </main>
     </>)
 }
 

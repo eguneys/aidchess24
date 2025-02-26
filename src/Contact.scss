@@ -1,125 +1,135 @@
-@use 'theme';
-@use 'media';
+@use 'base_css/theme';
+@use 'base_css/media';
 
-.contact {
-    display: grid;
-       grid-template-areas: 
-       'tabs'
-       'content';
-       grid-template-rows: fit-content(0) auto;
- 
+.on-donate,
+.on-privacy,
+.on-terms,
+.on-contact,
+.on-thanks,
+.on-about {
 
-    @include media.mq-at-least-col2 {
+    --main-max-width: 1400px;
 
-    grid-template-areas: 'tabs content';
-    grid-template-columns: max-content auto;
-    grid-template-rows: min-content; 
-   }
-    @include media.mq-is-col2-squeeze {
-
-    grid-template-areas: 'tabs content';
-    grid-template-columns: max-content auto;
-    grid-template-rows: min-content; 
-   }
-
-    .tabs {
-        grid-area: tabs;
-    }
-
-    .content {
-        grid-area: content;
-    }
-
-    .content {
-        display: flex;
-        flex-flow: column;
-        padding: 1em;
-        min-height: 100%;
-
-        h1 {
-            padding-bottom: 0.5em;
+    .contact {
+        display: grid;
+           grid-template-areas: 
+           'tabs'
+           'content';
+           grid-template-rows: fit-content(0) auto;
+     
+    
+        @include media.mq-at-least-col2 {
+    
+        grid-template-areas: 'tabs content';
+        grid-template-columns: max-content auto;
+        grid-template-rows: min-content; 
+       }
+        @include media.mq-is-col2-squeeze {
+    
+        grid-template-areas: 'tabs content';
+        grid-template-columns: max-content auto;
+        grid-template-rows: min-content; 
+       }
+    
+        .tabs {
+            grid-area: tabs;
         }
-
-        p {
-            padding: 0.5em;
+    
+        .content {
+            grid-area: content;
         }
-
-
-        .donate {
+    
+        .content {
             display: flex;
             flex-flow: column;
-            justify-content: center;
-            align-items: center;
-
-            h1 {
-                align-self: stretch;
             padding: 1em;
-            background: theme.$twitch;
-            color: theme.$text-light;
-            margin-bottom: 1em;
-            text-align: center;
+            min-height: 100%;
+    
+            h1 {
+                padding-bottom: 0.5em;
             }
-
-            a {
-                transition: .6s;
-                &:hover {
-                    color: theme.$twitch;
+    
+            p {
+                padding: 0.5em;
+            }
+    
+    
+            .donate {
+                display: flex;
+                flex-flow: column;
+                justify-content: center;
+                align-items: center;
+    
+                h1 {
+                    align-self: stretch;
+                padding: 1em;
+                background: theme.$twitch;
+                color: theme.$text-light;
+                margin-bottom: 1em;
+                text-align: center;
                 }
+    
+                a {
+                    transition: .6s;
+                    &:hover {
+                        color: theme.$twitch;
+                    }
+                }
+    
             }
-
         }
-    }
-
-
-    .tabs {
-
-        display: flex;
-
-        flex-flow: row wrap;
-        justify-content: space-around;
-        border-bottom: 2px solid theme.$ac-li-orange;
-
-        @include media.mq-at-least-col2 {
-            display: block;
-          border-right: 2px solid theme.$ac-li-orange;
-          border-bottom: none;
-          justify-content: flex-start;
-        }
-
-        li {
-            flex: 1 0 0;
+    
+    
+        .tabs {
+    
             display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-            cursor: pointer;
-            padding: 1em 0.5em;
-            transition: .6s;
-
-            &.twitch {
-                color: theme.$twitch;
+    
+            flex-flow: row wrap;
+            justify-content: space-around;
+            border-bottom: 2px solid theme.$ac-li-orange;
+    
+            @include media.mq-at-least-col2 {
+                display: block;
+              border-right: 2px solid theme.$ac-li-orange;
+              border-bottom: none;
+              justify-content: flex-start;
+            }
+    
+            li {
+                flex: 1 0 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                user-select: none;
+                cursor: pointer;
+                padding: 1em 0.5em;
+                transition: .6s;
+    
+                &.twitch {
+                    color: theme.$twitch;
+        
+                    &.active,
+                    &:hover {
+        
+                       box-shadow: inset 0px -4px 0 theme.$twitch;
+                       @include media.mq-at-least-col2 {
+                          box-shadow: inset -4px 0px 0 theme.$twitch;
+                       }
+        
+                    }
+        
+    
+                }
     
                 &.active,
                 &:hover {
+                   box-shadow: inset 0px -4px 0 theme.$ac-li-orange;
     
-                   box-shadow: inset 0px -4px 0 theme.$twitch;
                    @include media.mq-at-least-col2 {
-                      box-shadow: inset -4px 0px 0 theme.$twitch;
+                      box-shadow: inset -4px 0px 0 theme.$ac-li-orange;
                    }
     
                 }
-    
-
-            }
-
-            &.active,
-            &:hover {
-               box-shadow: inset 0px -4px 0 theme.$ac-li-orange;
-
-               @include media.mq-at-least-col2 {
-                  box-shadow: inset -4px 0px 0 theme.$ac-li-orange;
-               }
-
             }
         }
     }

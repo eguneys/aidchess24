@@ -79,7 +79,7 @@ function LoadingStockfishContext() {
             <Show when={s().state === 'loading' || show_welcome_page()} fallback={
                 <WithStockfishLoaded on_welcome_page={() => set_show_welcome_page(true)}/>
             }>
-                <div class='welcome'>
+                <main class='welcome'>
                     <WelcomeInfo/>
                     <Show when={loading_percent()} fallback={
                         <div class='start info'>
@@ -94,7 +94,7 @@ function LoadingStockfishContext() {
                             <span class='info'>Loading Engine {percent()}%</span>
                         </p>
                     }</Show>
-                </div>
+                </main>
             </Show>
 
         }</Show>
@@ -684,7 +684,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
 
     return (<>
-    <div ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
+    <main ref={_ => $el_builder_ref = _} onWheel={onWheel} class='builder'>
         <div class='board-wrap'>
             <PlayUciBoard shapes={annotation()} orientation={player_color()} color={player_color()} movable={movable()} play_uci={play_uci} />
         </div>
@@ -793,7 +793,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                     <a onClick={() => on_analyze_lichess(step())} class='analyze' data-icon=''>Analyze on lichess</a>
                 </div>
             }</Show>
-    </div>
+    </main>
     </>)
 }
 

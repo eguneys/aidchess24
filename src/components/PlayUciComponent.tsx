@@ -7,6 +7,9 @@ import { chessgroundDests } from "chessops/compat"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { makeSan } from "chessops/san"
 import { batch, createEffect, createMemo, createSignal, onMount } from "solid-js"
+import '../assets/chessground/chessground.css'
+import '../assets/chessground/cburnett.css'
+import '../assets/chessground/theme.css'
 import './chessground.css'
 import { SAN, UCI } from "./step_types"
 

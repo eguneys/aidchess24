@@ -1,96 +1,107 @@
-@use 'theme';
-@use 'media';
+@use 'base_css/theme';
+@use 'base_css/media';
+@use 'base_css/variables';
 
 
 
 .on-home {
 
+    --main-max-width: 1400px;
+
     .home {
         display: flex;
-
         flex-flow: column;
-        gap: 4em;
-  section {
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    align-items: center;
-
-    img {
-        border-radius: 4%;
-    }
-
-    h1 {
-        padding: 2em 0 1em 0;
-        color: theme.$text-title;
-        text-align: center;
-        font-size: 2.4em;
-
-        margin-bottom: 1em;
-
-        a {
-            font-weight: bold;
-            transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1);
-        }
-
-    }
-
-
-    .features {
-
-        display: flex;
-        justify-content: space-between;
         gap: 2em;
-        flex-flow: column;
+      
+        section {
+          flex-shrink: 0;
+          min-height: 0;
+          display: flex;
+          flex-flow: column;
+          justify-content: center;
+          align-items: center;
+      
+          img {
+              border-radius: 4%;
+          }
+      
+          h1 {
+              padding: 2em 0 1em 0;
+              color: theme.$text-title;
+              text-align: center;
+              font-size: 2.4em;
+      
+              margin-bottom: 1em;
+      
+              a {
+                  font-weight: bold;
+                  transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1);
+              }
+      
+          }
+      
+      
+          .features {
+      
+              display: flex;
+              justify-content: space-around;
+              gap: 2em;
+              flex-flow: column;
+      
+              @include media.mq-is-col2-squeeze {
+                  flex-flow: column;
+              }
+      
+      
+      
+              @include media.mq-at-least-col2 {
+                  flex-flow: row wrap;
+              }
+      
+              .feature {
+                  user-select: none;
+                  cursor: pointer;
+                  padding: 1em;
+                  flex: 45% 0 0;
+                  display: flex;
+                  flex-flow: column;
+                  text-align: center;
+                  border-radius: 6px;
+                  min-height: 200px;
 
-        @include media.mq-is-col2-squeeze {
-            flex-flow: column;
-        }
-
-
-
-        @include media.mq-at-least-col2 {
-            flex-flow: row;
-        }
-
-        .feature {
-            user-select: none;
-            cursor: pointer;
-            padding: 2em;
-            flex: 1;
-            display: flex;
-            flex-flow: column;
-            text-align: center;
-            border-radius: 6px;
-
-            background: theme.$ac-li-blue-2;
-            box-shadow: 0px 0px 2px 2px theme.$ac-li-orange;
-
-            transition: .2s;
-
-            &:hover {
-            box-shadow: 0px 0px 4px 4px theme.$ac-li-orange;
-            }
-
-            h2 {
-                font-weight: 500;
-            }
-
-            ul {
-                margin: 0 auto;
-                display: flex;
-                max-width: 70%;
-                flex-flow: column;
-                justify-content: center;
-
-                li {
-                    padding: 0.2em 0;
-                }
-            }
-        }
-    }
-}
-
+                  @include media.mq-is-col1 {
+                    flex: 1;
+                  }
+      
+      
+                  background: theme.$ac-li-blue-2;
+                  box-shadow: 0px 0px 2px 2px theme.$ac-li-orange;
+      
+                  transition: .2s;
+      
+                  &:hover {
+                  box-shadow: 0px 0px 4px 4px theme.$ac-li-orange;
+                  }
+      
+                  h2 {
+                      font-weight: 500;
+                      margin-bottom: 0.5em;
+                  }
+      
+                  ul {
+                      margin: 0 auto;
+                      display: flex;
+                      flex-flow: column;
+                      justify-content: center;
+      
+                      li {
+                          padding: 0.16em 0;
+                      }
+                  }
+              }
+          }
+      }
+      
 
     footer {
         padding-top: 6em;

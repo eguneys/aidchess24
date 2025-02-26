@@ -1,0 +1,45 @@
+@use 'variables';
+
+@function at-most($width) {
+    @return $width - 0.71px;
+}
+
+@function at-least($width) {
+  @return $width - 0.7px;
+}
+
+
+@mixin mq-site-header-tall {
+    @media (min-height: at-least(variables.$tall)) {
+        @content;
+    }
+}
+
+@mixin mq-is-col1 {
+    @media (max-width: at-most(variables.$small)) and (orientation: portrait) {
+        @content;
+    }
+}
+
+
+@mixin mq-at-least-col2 {
+    @media (min-width: variables.$small), (orientation: landscape) {
+        @content;
+    }
+}
+
+
+@mixin mq-is-col2-squeeze {
+    @media (max-width: variables.$small) and (orientation: landscape) {
+        @content;
+    }
+}
+
+
+@mixin mq-at-least-col3 {
+    @media (min-width: variables.$x-large) {
+        @content;
+    }
+}
+
+

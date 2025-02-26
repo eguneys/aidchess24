@@ -1,6 +1,9 @@
 @use '_variables' as *;
 
 .on-dashboard {
+
+    --main-max-width: 1400px;
+
     .dashboard {
 
         min-height: 100vh;

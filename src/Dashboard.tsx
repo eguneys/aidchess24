@@ -62,7 +62,7 @@ const Dashboard = () => {
     }
 
     return (<>
-    <div class='dashboard'>
+    <main class='dashboard'>
         <h1> Dashboard </h1>
         <h2> Activities </h2>
         <div class='activities'>
@@ -76,7 +76,7 @@ const Dashboard = () => {
             }</For>
         </div>
 
-    </div>
+    </main>
     </>)
 }
 

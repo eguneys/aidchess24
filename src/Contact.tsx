@@ -11,7 +11,7 @@ const ContactView = () => {
     const navigate = useNavigate()
 
     return (<>
-    <div class='contact'>
+    <main class='contact'>
       <ul class='tabs'>
         <li onClick={() => navigate('/about', { replace: true })} class={pathname()==='/about'?'active':''}><h4>About</h4></li>
         <li onClick={() => navigate('/terms', { replace: true })} class={pathname()==='/terms'?'active':''}><h4>Terms of Service</h4></li>
@@ -30,7 +30,7 @@ const ContactView = () => {
             <Match when={pathname()==='/thanks'}><Thanks/></Match>
         </Switch>
       </div>
-    </div>
+    </main>
     </>)
 }
 

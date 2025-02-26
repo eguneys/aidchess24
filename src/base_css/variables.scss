@@ -1,0 +1,28 @@
+$block-gap: var(--block-gap);
+
+$site-header-tall-height: 60px;
+$site-header-short-height: 40px;
+$site-header-height: var(--site-header-height);
+$site-header-margin: var(--site-header-margin);
+$site-header-outer-height: calc($site-header-height + $site-header-margin);
+
+
+$main-margin: var(--main-margin);
+$main-max-width: 1300px !default;
+
+$topnav-visible: 1020px;
+
+$xxx-small: 400px;
+$xx-small: 500px;
+$x-small: 650px;
+$small: 800px;
+$medium: 980px;
+$large: 1120px;
+$x-large: 1260px;
+$xx-large: 1500px;
+
+$x-short: 400px;
+$short: 500px;
+$tall: 600px;
+$x-tall: 700px;
+
