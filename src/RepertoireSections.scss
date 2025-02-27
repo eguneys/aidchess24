@@ -119,14 +119,14 @@
                     cursor: pointer;
                     border-radius: 2px;
                     padding: 0.6em;
-                    background: linear-gradient(to bottom, theme.$ac-li-orange3, theme.$ac-li-orange2);
+                    background: theme.$ac-li-orange2;
 
                     &:hover {
                       background: theme.$ac-li-orange;
                     }
 
                     &.active {
-                      background: theme.$ac-li-orange-2;
+                    background: theme.$ac-li-orange-2;
                       color: theme.$text-primary;
                     }
                 }

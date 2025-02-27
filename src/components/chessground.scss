@@ -12,15 +12,17 @@ cg-container .cg-custom-svgs svg {
 .cg-custom-svgs .anim {
 
     &.blunder {
-        animation: shake .3s ease-in-out 0s 2;
+        animation: shake .3s ease-in-out 0s 1;
     }
 
-    &.mistake {
-        animation: pulsate .3s ease-in-out 0s 2;
+    &.mistake,
+    &.inaccuracy {
+        animation: pulsate .3s ease-in-out 0s 1;
     }
 
-    &.top {
-        animation: glow .3s ease-in-out 0s 2;
+    &.top,
+    &.good {
+        animation: glow .3s ease-in-out 0s 1;
     }
 }
 
