@@ -15,11 +15,11 @@ export type Chapter = {
     black?: string,
     set_name(name: string): void,
     set_tree(tree: StepsTree): void,
-    set_orientation(orientation: Color): void,
-    set_event(event: string): void,
-    set_site(site: string): void,
-    set_white(white: string): void,
-    set_black(black: string): void,
+    set_orientation(orientation: Color | undefined): void,
+    set_event(event: string | undefined): void,
+    set_site(site: string | undefined): void,
+    set_white(white: string | undefined): void,
+    set_black(black: string | undefined): void,
 }
 
 export type Section = {
@@ -140,6 +140,77 @@ export function Study(): Study {
 
 
 export function StudyDetailsComponent(props: { study: Study, section?: Section, chapter?: Chapter }) {
+
+    const on_new_tag_changed = (value: string) => {
+        if (value === 'Orientation') {
+            set_editable_new_tag(value)
+        } else if (value === 'Site') {
+            set_editable_new_tag(value)
+        } else if (value === 'Event') {
+            set_editable_new_tag(value)
+        } else if (value === 'White') {
+            set_editable_new_tag(value)
+        } else if (value === 'Black') {
+            set_editable_new_tag(value)
+        } else {
+            set_editable_new_tag(undefined)
+        }
+    }
+
+    const [editable_new_tag, set_editable_new_tag] = createSignal<string | undefined>(undefined)
+
+    const on_new_tag_edited = (value: string) => {
+
+        let tag = editable_new_tag()
+
+        if (tag === 'Orientation') {
+            if (value === '') {
+                props.chapter!.set_orientation(undefined)
+            }
+            if (value.toLowerCase() === 'white') {
+                props.chapter!.set_orientation('white')
+            }
+            if (value.toLowerCase() === 'black') {
+                props.chapter!.set_orientation('black')
+            }
+        }
+        if (tag === 'Event') {
+            if (value === '') {
+                props.chapter!.set_event(undefined)
+            } else {
+                props.chapter!.set_event(value)
+            }
+        }
+        if (tag === 'Site') {
+            if (value === '') {
+                props.chapter!.set_site(undefined)
+            } else {
+                props.chapter!.set_site(value)
+            }
+        }
+        if (tag === 'White') {
+            if (value === '') {
+                props.chapter!.set_white(undefined)
+            } else {
+                props.chapter!.set_white(value)
+            }
+        }
+        if (tag === 'Black') {
+            if (value === '') {
+                props.chapter!.set_black(undefined)
+            } else {
+                props.chapter!.set_black(value)
+            }
+        }
+    }
+
+    const on_new_tag_key_press = (key: string, value: string) => {
+        console.log(key)
+        if (key === 'Enter') {
+            on_new_tag_edited(value)
+        }
+    }
+
     return (<>
         <div class='study-details'>
             <div class='title'>
@@ -156,12 +227,43 @@ export function StudyDetailsComponent(props: { study: Study, section?: Section, 
                 }</Show>
             </div>
             <div class='tags'>
-
+                {/*
+                <Show when={props.chapter}>{ chapter => 
+                    <>
+                        <Show when={chapter().orientation}>{orientation => <Tag tag="Orientation" value={orientation()} />}</Show>
+                        <Show when={chapter().site}>{site => <Tag tag="Site" value={site()} />}</Show>
+                        <Show when={chapter().event}>{event => <Tag tag="Event" value={event()} />}</Show>
+                        <Show when={chapter().white}>{white => <Tag tag="White" value={white()} />}</Show>
+                        <Show when={chapter().black}>{black => <Tag tag="Black" value={black()} />}</Show>
+                        <select onChange={e => on_new_tag_changed(e.currentTarget.value)}>
+                            <option value="New">New Tag</option>
+                            <TagOption tag="Orientation"/>
+                            <TagOption tag="Site"/>
+                            <TagOption tag="Event"/>
+                            <TagOption tag="White"/>
+                            <TagOption tag="Black"/>
+                        </select>
+                        <Show when={editable_new_tag()}>
+                            <input onKeyDown={e => on_new_tag_key_press(e.key, e.currentTarget.value)} onChange={(e) => on_new_tag_edited(e.currentTarget.value)} type='text' placeholder={editable_new_tag()} value=""></input>
+                        </Show>
+                    </>
+                }</Show>
+                */}
             </div>
         </div>
     </>)
 }
 
+function Tag(props: { tag: string, value: string }) {
+    return (<div class='tag'>
+        <span class='name'>{props.tag}:</span>
+        <span class='value'>{props.value}</span>
+    </div>)
+}
+
+function TagOption(props: { tag: string }) {
+    return (<option value={props.tag}>{props.tag}</option>)
+}
 
 export function SectionsListComponent(props: { study: Study, on_selected_chapter: (section: Section, chapter: Chapter) => void, on_edit_study?: () => void, on_edit_section?: (section: Section) => void, on_edit_chapter?: (section: Section, chapter: Chapter) => void, on_chapter_order_changed?: number, on_section_order_changed?: number }) {
 
