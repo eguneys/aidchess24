@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js"
+import { batch, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js"
 import { FEN, make_step_and_play, NAG, Path, Ply, SAN, Step } from "./step_types"
 import { Chess, Color, makeUci, Position } from "chessops"
 import { INITIAL_FEN, parseFen } from "chessops/fen"
@@ -207,7 +207,7 @@ export function StepsTree(): StepsTree {
                 }
 
                 let pos = Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap()
-                let child = TreeStepNode(0, pos, san, '')
+                let child = TreeStepNode(1, pos, san, '')
                 set_root([...rr, child])
                 return child
             }
@@ -418,14 +418,16 @@ export type PlayUciTreeReplayComponent = {
     get_up_path(): Path | undefined
     goto_up_if_can(): void
     previous_branch_points_at_cursor_path: TreeStepNode[]
+    add_child_san_to_current_path(san: SAN): TreeStepNode | undefined
+    set_steps(steps: StepsTree): void
 }
 
 export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayComponent {
 
-    let steps = StepsTree()
+    let [steps, set_steps] = createSignal(StepsTree())
 
     if (pgn) {
-        steps = parse_PGNS(pgn)[0].tree
+        set_steps(parse_PGNS(pgn)[0].tree)
     }
 
     let [cursor_path, set_cursor_path] = createSignal<Path>('')
@@ -433,9 +435,10 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
     let sticky_paths: Path[] = []
 
     createEffect(on(cursor_path, (path: Path) => {
-        steps.previous_branch_points(path)?.map(branch => {
+        let ss = steps()
+        ss.previous_branch_points(path)?.map(branch => {
             if (!sticky_paths.includes(branch.path)) {
-                steps.siblings_of(branch.path)?.forEach(sibling => {
+                ss.siblings_of(branch.path)?.forEach(sibling => {
                     sticky_paths = sticky_paths
                     .filter(_ => _ !== sibling.path)
                 })
@@ -460,9 +463,10 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
     }
 
     const get_next_path = () => {
+        let ss = steps()
         let c = cursor_path()
 
-        let children = steps.find_at_path(c)?.children ?? steps.root
+        let children = ss.find_at_path(c)?.children ?? ss.root
 
         if (children.length === 1) {
             return children[0].path
@@ -472,7 +476,9 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
     }
 
     const get_first_path = () => {
-        let pc = steps.find_parent_and_child_at_path(cursor_path())
+        let ss = steps()
+
+        let pc = ss.find_parent_and_child_at_path(cursor_path())
 
         if (!pc) {
             return undefined
@@ -496,7 +502,7 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
                 break
             }
 
-            let _i = steps.find_parent_and_child_at_path(i[0].path)
+            let _i = ss.find_parent_and_child_at_path(i[0].path)
 
             if (!_i) {
                 break
@@ -507,10 +513,12 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
     }
 
     const get_last_path = () => {
-        let step = steps.find_at_path(cursor_path())
+        let ss = steps()
+
+        let step = ss.find_at_path(cursor_path())
 
         if (!step) {
-            return steps.root.find(_ => sticky_paths.includes(_.path))?.path ?? steps.root[0]?.path
+            return ss.root.find(_ => sticky_paths.includes(_.path))?.path ?? ss.root[0]?.path
         }
 
         let i = step
@@ -526,7 +534,9 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
     }
 
     const get_up_path = () => {
-        let pc = steps.find_parent_and_child_at_path(cursor_path())
+        let ss = steps()
+
+        let pc = ss.find_parent_and_child_at_path(cursor_path())
 
         if (!pc) {
             return undefined
@@ -535,16 +545,16 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
         let cc: TreeStepNode[] = pc[0]?.children ?? []
 
         if (!pc[0]) {
-            cc = steps.root
+            cc = ss.root
         } else if (pc[0].children.length === 1) {
             while (true) {
-                pc = steps.find_parent_and_child_at_path(pc[0].path)
+                pc = ss.find_parent_and_child_at_path(pc[0].path)
                 if (!pc) {
                     return undefined
                 }
 
                 if (!pc[0]) {
-                    cc = steps.root
+                    cc = ss.root
                     break
                 }
 
@@ -567,7 +577,8 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
     }
 
     const get_down_path = () => {
-        let pc = steps.find_parent_and_child_at_path(cursor_path())
+        let ss = steps()
+        let pc = ss.find_parent_and_child_at_path(cursor_path())
 
         if (!pc) {
             return undefined
@@ -576,16 +587,16 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
         let cc: TreeStepNode[] = pc[0]?.children ?? []
 
         if (!pc[0]) {
-            cc = steps.root
+            cc = ss.root
         } else if (pc[0].children.length === 1) {
             while (true) {
-                pc = steps.find_parent_and_child_at_path(pc[0].path)
+                pc = ss.find_parent_and_child_at_path(pc[0].path)
                 if (!pc) {
                     return undefined
                 }
 
                 if (!pc[0]) {
-                    cc = steps.root
+                    cc = ss.root
                     break
                 }
 
@@ -611,7 +622,7 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
 
 
     return {
-        steps,
+        get steps() { return steps() },
         get cursor_path() {
             return cursor_path()
         },
@@ -619,7 +630,7 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
             set_cursor_path(path)
         },
         get cursor_path_step() {
-            return steps.find_at_path(cursor_path())?.step
+            return steps().find_at_path(cursor_path())?.step
         },
         goto_path,
         get_prev_path,
@@ -665,7 +676,26 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
             }
         },
         get previous_branch_points_at_cursor_path() {
-            return steps.previous_branch_points(cursor_path()) ?? []
+            return steps().previous_branch_points(cursor_path()) ?? []
+        },
+        add_child_san_to_current_path(san: SAN) {
+            return batch(() => {
+                let res = steps().add_child_san(cursor_path(), san)
+                if (!res) {
+                    return undefined
+                }
+                set_cursor_path(res.path)
+                return res
+            })
+        },
+        set_steps(steps: StepsTree) {
+            set_steps(steps)
+            let root = steps.root[0]
+            if (root) {
+                set_cursor_path(root.path)
+            } else {
+                set_cursor_path('')
+            }
         }
     }
 }
@@ -673,7 +703,7 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
 
 export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayComponent, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
 
-    const steps = props.play_replay.steps
+    const steps = createMemo(() => props.play_replay.steps)
 
     let $moves_el: HTMLElement
     createEffect(() => {
@@ -731,7 +761,7 @@ export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayCompone
         <div class='replay-tree'>
             <div class='moves-wrap'>
                 <div ref={_ => $moves_el = _} class='moves'>
-                    <NodesShorten nodes={steps.root}
+                    <NodesShorten nodes={steps().root}
                         cursor_path={props.play_replay.cursor_path}
                         on_set_cursor={(path: Path) => props.play_replay.cursor_path = path}
                         on_context_menu={(e: MouseEvent, path: Path) => props.on_context_menu?.(e, path)}
@@ -809,8 +839,8 @@ function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_c
 
 function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
 
-    let show_index = createMemo(() => props.node.ply % 2 === 0 || props.show_index)
-    let dots = createMemo(() => props.node.ply % 2 === 0 ? '.' : '...')
+    let show_index = createMemo(() => props.node.ply % 2 === 1 || props.show_index)
+    let dots = createMemo(() => props.node.ply % 2 === 1 ? '.' : '...')
 
     const path = createMemo(() => props.node.path)
 

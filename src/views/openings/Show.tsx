@@ -1,12 +1,13 @@
-import { batch, createMemo, createResource, createSignal, ErrorBoundary, Show, Suspense, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, on, Show, Suspense, useContext } from "solid-js"
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import { useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
-import { PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
-import { Color } from "chessops"
+import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
 import { PlayUciTreeReplay, PlayUciTreeReplayComponent } from "../../components/ReplayTreeComponent"
 import { DialogComponent } from "../../components/DialogComponent"
+import { INITIAL_FEN } from "chessops/fen"
+import { usePlayer } from "../../sound"
 
 export default () => {
     return (<>
@@ -39,11 +40,9 @@ function ShowComponent() {
 function StudyShow(props: { study: Study }) {
 
     const play_uci = PlayUciComponent()
-    const play_replay = PlayUciTreeReplayComponent()
 
-    const [color, _set_color] = createSignal<Color>('white')
-
-    const movable = createMemo(() => false)
+    const color = createMemo(() => play_uci.turn)
+    const movable = createMemo(() => true)
 
     const [selected_section, set_selected_section] = createSignal<Section | undefined>(undefined)
     const [selected_chapter, set_selected_chapter] = createSignal<Chapter | undefined>(undefined)
@@ -82,16 +81,67 @@ function StudyShow(props: { study: Study }) {
 
     const [edit_study_dialog, set_edit_study_dialog] = createSignal(false)
 
+    const play_replay = createMemo(() => {
+        let s = selected_chapter()
+        if (!s) {
+            return PlayUciTreeReplayComponent()
+        }
+        return s.play_replay
+    })
+
+    createEffect(on(() => play_uci.on_last_move_added, (us) => {
+        if (!us) {
+            return
+        }
+
+        let san = us[1]
+
+        play_replay().add_child_san_to_current_path(san)
+    }))
+
+    const initial_fen = createMemo(() => INITIAL_FEN)
+
+    createEffect(on(() => play_replay().cursor_path_step, (step) => {
+        if (!step) {
+            play_uci.set_fen_and_last_move(initial_fen())
+            return
+        }
+        play_uci.set_fen_and_last_move(step.fen, step.uci)
+    }))
+
+
+    const Player = usePlayer()
+    Player.setVolume(0.2)
+    createEffect(on(() => play_replay().cursor_path_step, (current, prev) => {
+        if (current) {
+            if (!prev || prev.ply === current.ply - 1) {
+                Player.move(current)
+            }
+        }
+    }))
+
+
+    const set_on_wheel = (i: number) => {
+        if (i > 0) {
+            play_replay().goto_next_if_can()
+        } else {
+            play_replay().goto_prev_if_can()
+        }
+    }
+
     return (<>
         <div class='study'>
             <div class='details-wrap'>
                 <StudyDetailsComponent study={props.study} section={selected_section()} chapter={selected_chapter()} />
             </div>
-            <div class='board-wrap'>
+            <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
                 <PlayUciBoard color={color()} movable={movable()} play_uci={play_uci}/>
             </div>
             <div class='replay-wrap'>
-                <PlayUciTreeReplay play_replay={play_replay}/>
+                <div class='header'>
+                    Replay Tree
+                </div>
+                <PlayUciTreeReplay play_replay={play_replay()}/>
             </div>
             <div class='sections-wrap'>
                 <SectionsListComponent study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>

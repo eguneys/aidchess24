@@ -20,7 +20,7 @@ class Player {
     resolvePath(name: Name): string | undefined {
         if (!this.enabled()) return;
         let dir = this.theme
-        return `sound/${dir}/${name[0].toUpperCase() + name.slice(1)}`
+        return `/sound/${dir}/${name[0].toUpperCase() + name.slice(1)}`
     }
 
     getVolume = (): number => {

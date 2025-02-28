@@ -12,6 +12,7 @@ import '../assets/chessground/cburnett.css'
 import '../assets/chessground/theme.css'
 import './chessground.scss'
 import { SAN, UCI } from "./step_types"
+import { stepwiseScroll } from "../common/scroll"
 
 export type PlayUciComponent = {
     play_orig_key: (orig: Key, dest: Key) => void,
@@ -24,6 +25,7 @@ export type PlayUciComponent = {
     last_move: [UCI, SAN] | undefined,
     on_last_move_added: [UCI, SAN] | undefined,
     check: boolean,
+    turn: Color,
 }
 
 
@@ -111,6 +113,9 @@ export function PlayUciComponent(): PlayUciComponent {
         },
         get check() {
           return pos().isCheck()
+        },
+        get turn() {
+          return pos().turn
         }
     }
 }
@@ -193,3 +198,19 @@ export function PlayUciBoard(props: { shapes?: DrawShape[], color: Color, orient
 
 }
 
+export const non_passive_on_wheel = (set_on_wheel: (delta: number) => void) => ({
+  handleEvent: make_onWheel(set_on_wheel),
+  passive: false
+})
+
+export const make_onWheel = (set_on_wheel: (delta: number) => void) => stepwiseScroll((e: WheelEvent) => {
+  const target = e.target as HTMLElement;
+  if (
+    target.tagName !== 'PIECE' &&
+    target.tagName !== 'SQUARE' &&
+    target.tagName !== 'CG-BOARD'
+  )
+    return;
+  e.preventDefault()
+  set_on_wheel(Math.sign(e.deltaY))
+})

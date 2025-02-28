@@ -1,5 +1,5 @@
 import { Color } from "chessops"
-import { StepsTree } from "./ReplayTreeComponent"
+import { PlayUciTreeReplayComponent } from "./ReplayTreeComponent"
 import { batch, createEffect, createMemo, createSignal, For, Show } from "solid-js"
 import './StudyComponent.scss'
 
@@ -7,14 +7,14 @@ const SECTION_LETTERS = 'ABCDEFGHIJKLMNOP'.split('')
 
 export type Chapter = {
     name: string,
-    tree: StepsTree,
+    play_replay: PlayUciTreeReplayComponent,
     orientation?: Color,
     event?: string,
     site?: string,
     white?: string,
     black?: string,
     set_name(name: string): void,
-    set_tree(tree: StepsTree): void,
+    set_play_replay(play_replay: PlayUciTreeReplayComponent): void,
     set_orientation(orientation: Color | undefined): void,
     set_event(event: string | undefined): void,
     set_site(site: string | undefined): void,
@@ -42,7 +42,7 @@ export type Study = {
 
 export function Chapter(): Chapter {
     let [name, set_name] = createSignal('New Chapter')
-    let [tree, set_tree] = createSignal(StepsTree())
+    let [play_replay, set_play_replay] = createSignal(PlayUciTreeReplayComponent())
 
     let [orientation, set_orientation] = createSignal<Color | undefined>(undefined)
     let [event, set_event] = createSignal<string | undefined>(undefined)
@@ -52,19 +52,19 @@ export function Chapter(): Chapter {
 
     return {
         get name() { return name() },
-        get tree() { return tree() },
+        get play_replay() { return play_replay() },
         get orientation() { return orientation() },
         get event() { return event() },
         get site() { return site() },
         get white() { return white() },
         get black() { return black() },
         set_name(name: string) { set_name(name) },
-        set_tree(tree: StepsTree) { set_tree(tree) },
         set_orientation(orientation: Color) { set_orientation(orientation) },
         set_event(event: string) { set_event(event) },
         set_site(site: string) { set_site(site) },
         set_white(white: string) { set_white(white) },
         set_black(black: string) { set_black(black) },
+        set_play_replay(play_replay: PlayUciTreeReplayComponent) { set_play_replay(play_replay) }
     }
 }
 
@@ -141,6 +141,7 @@ export function Study(): Study {
 
 export function StudyDetailsComponent(props: { study: Study, section?: Section, chapter?: Chapter }) {
 
+    /*
     const on_new_tag_changed = (value: string) => {
         if (value === 'Orientation') {
             set_editable_new_tag(value)
@@ -157,7 +158,7 @@ export function StudyDetailsComponent(props: { study: Study, section?: Section, 
         }
     }
 
-    const [editable_new_tag, set_editable_new_tag] = createSignal<string | undefined>(undefined)
+    const [editable_new_tag, _set_editable_new_tag] = createSignal<string | undefined>(undefined)
 
     const on_new_tag_edited = (value: string) => {
 
@@ -203,13 +204,13 @@ export function StudyDetailsComponent(props: { study: Study, section?: Section, 
             }
         }
     }
-
     const on_new_tag_key_press = (key: string, value: string) => {
         console.log(key)
         if (key === 'Enter') {
             on_new_tag_edited(value)
         }
     }
+        */
 
     return (<>
         <div class='study-details'>
@@ -254,6 +255,7 @@ export function StudyDetailsComponent(props: { study: Study, section?: Section, 
     </>)
 }
 
+/*
 function Tag(props: { tag: string, value: string }) {
     return (<div class='tag'>
         <span class='name'>{props.tag}:</span>
@@ -264,6 +266,7 @@ function Tag(props: { tag: string, value: string }) {
 function TagOption(props: { tag: string }) {
     return (<option value={props.tag}>{props.tag}</option>)
 }
+    */
 
 export function SectionsListComponent(props: { study: Study, on_selected_chapter: (section: Section, chapter: Chapter) => void, on_edit_study?: () => void, on_edit_section?: (section: Section) => void, on_edit_chapter?: (section: Section, chapter: Chapter) => void, on_chapter_order_changed?: number, on_section_order_changed?: number }) {
 
@@ -344,6 +347,7 @@ function SectionComponent(props: { section: Section, nth: string, on_selected_ch
     const on_new_chapter = () => {
         let new_chapter = Chapter()
         props.section.add_chapter(new_chapter)
+        set_selected_chapter(new_chapter)
     }
 
     const [i_chapter, set_i_chapter] = createSignal(0)
