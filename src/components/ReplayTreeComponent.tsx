@@ -7,9 +7,6 @@ import { parseSan } from "chessops/san"
 import { Key } from "@solid-primitives/keyed"
 import './ReplayTreeComponent.scss'
 
-
-
-
 export type PGN = {
     orientation?: Color,
     chapter?: string,

@@ -7,6 +7,11 @@ $mistake: theme.$mistake;
 $blunder: theme.$blunder;
 
 
+$safe: #8C2D04;
+$playable: #8C2D04;
+$sharp: #8C2D04;
+$critical: #8C2D04;
+
 
 $bg: rgb(59, 59, 59);
 $bg-hi: rgb(104, 98, 88);
@@ -50,19 +55,19 @@ $blue-light: rgb(176, 187, 230);
 
 
             &.safe:before {
-                background: green;
+                background: $safe;
             }
 
             &.playable:before {
-                background: yellow;
+                background: $playable;
             }
 
             &.sharp:before {
-                background: orange;
+                background: $sharp;
             }
 
             &.critical:before {
-                background: red;
+                background: $critical;
             }
         }
     }

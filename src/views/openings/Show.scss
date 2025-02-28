@@ -1,0 +1,73 @@
+@use '../../base_css/theme';
+@use '../../base_css/media';
+
+.on-openings {
+    .openings-show {
+
+        .study {
+
+            margin-bottom: 3em;
+
+        
+            display: grid;
+
+
+            @include media.mq-is-col1 {
+                grid-template-areas: 'board'
+                                     'replay'
+                                     'sections'
+                                     'details'
+                                     'tools';
+            }
+        
+            @include media.mq-at-least-col2 {
+                grid-template-areas: 'board replay'
+                                     'details details'
+                                     'sections sections'
+                                     'tools tools';
+                grid-template-columns: var(--col2-uniboard-width) minmax(240px, 400px);
+
+                justify-self: center;
+            }
+
+            @include media.mq-at-least-col3 {
+                    grid-template-areas: 'board replay sections'
+                        'details details tools';
+                    grid-template-columns: var(--col3-uniboard-width) minmax(240px, 400px) minmax(240px, 400px);
+
+
+                    .sections-wrap {
+                        max-height: calc(var(--col3-uniboard-width) * 0.9);
+                    }
+            }
+
+            row-gap: 1em;
+
+            justify-self: stretch;
+        
+            .board-wrap {
+                grid-area: board;
+            }
+
+            .replay-wrap {
+                grid-area: replay;
+            }
+        
+            .details-wrap {
+                grid-area: details;
+            }
+        
+            .sections-wrap {
+                grid-area: sections;
+            }
+        
+            .tools-wrap {
+                grid-area: tools;
+            }
+        
+            .board-wrap {
+                aspect-ratio: 1;
+            }
+        }
+    }
+}

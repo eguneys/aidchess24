@@ -1,0 +1,52 @@
+@use '../../base_css/theme';
+
+.on-openings {
+
+    .openings-list {
+        display: flex;
+
+        flex-flow: column;
+
+        background: theme.$ac-li-orange;
+
+        .tools {
+            display: flex;
+            padding: 1em;
+
+            justify-content: flex-end;
+
+
+            button.new {
+                display: flex;
+                align-items: center;
+                padding: 0.5em;
+                gap: 0.5em;
+                text-transform: uppercase;
+
+                border: none;
+                background: theme.$ac-li-purple2;
+                color: theme.$text-primary;
+                border-radius: 8px;
+                border: 2px solid theme.$ac-li-purple;
+
+                user-select: none;
+                cursor: pointer;
+
+                transition: .2s;
+
+                &:hover {
+                    background: theme.$ac-li-purple-2;
+                }
+
+                &:active {
+                    text-decoration: underline;
+                }
+
+                i {
+                    font-size: 2em;
+                }
+            }
+        }
+
+    }
+}

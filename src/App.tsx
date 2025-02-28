@@ -4,26 +4,13 @@ import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
 
 const Home = lazy(() => import('./Home'))
-const Repertoires = lazy(() => import('./Repertoires'))
 const Contact = lazy(() => import('./Contact'))
-
-const Repertoire = lazy(() => import('./Repertoire'))
-const Masters = lazy(() => import('./Masters'))
-const Tactics = lazy(() => import('./Tactics'))
-const Endgames = lazy(() => import('./Endgames'))
 const Dashboard = lazy(() => import('./Dashboard'))
-const Explorer = lazy(() => import('./Explorer'))
-const Challenges = lazy(() => import('./Challenges'))
-
-
-const Widen = lazy(() => import('./Widen'))
-
-const SixthDraw = lazy(() => import('./SixthDraw'))
 const Builder = lazy(() => import('./Builder'))
-
 const Beta = lazy(() => import('./Beta'))
-const RepeatShow = lazy(() => import('./repeat/Show2'))
-const RepeatDues = lazy(() => import('./repeat/PlayDues'))
+
+const OpeningsList = lazy(() => import('./views/openings/List'))
+const OpeningsShow = lazy(() => import('./views/openings/Show'))
 
 
 export const MyApp = () => {
@@ -32,21 +19,14 @@ export const MyApp = () => {
         <MetaProvider>
           <Router root={AppInRouter}>
             <Route path='/' component={Home}/>
-            <Route path='/sixth' component={SixthDraw}/>
-
             <Route path='/builder' component={Builder}/>
-
-            <Route path='/repeat' component={RepeatShow}/>
-            <Route path='/repeat/:id' component={RepeatDues}/>
-            <Route path='/widen' component={Widen}/>
+            {/*
+            <Route path='/repetition' component={RepetitionList}/>
+            <Route path='/repetition/:id' component={RepeatitionShow}/>
+            */ }
             <Route path='/beta' component={Beta}/>
-            <Route path='/explorer' component={Explorer}/>
-            <Route path='/challenges' component={Challenges}/>
-            <Route path='/repertoires' component={Repertoires}/>
-            <Route path='/openings/:id' component={Repertoire}/>
-            <Route path='/masters/:id' component={Masters}/>
-            <Route path='/tactics/:id' component={Tactics}/>
-            <Route path='/endgames/:id' component={Endgames}/>
+            <Route path='/openings' component={OpeningsList}/>
+            <Route path='/openings/:id' component={OpeningsShow}/>
             <Route path='/contact' component={Contact}/>
             <Route path='/terms' component={Contact}/>
             <Route path='/privacy' component={Contact}/>
@@ -95,8 +75,8 @@ const AppInRouter = (props: any) => {
             <section><A class='home' href='/'>aidchess.com</A></section>
             <section><A href='/builder' target="_self">Builder</A></section>
             {/*<section><A href='/widen'>Widen</A></section>*/}
-            <section><A href='/repertoires'>Repertoires</A></section>
-            <section><A href='/repeat'>Repeat</A></section>
+            <section><A href='/openings'>Openings</A></section>
+            <section><A href='/repetition'>Repetition</A></section>
             <section><A class="donate" href='/donate' target="_self">Donate</A></section>
           </nav>
           </div>

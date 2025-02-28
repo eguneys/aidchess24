@@ -1,15 +1,11 @@
 import Dexie, { Entity, EntityTable } from "dexie";
 import { Card, FSRS, Grade, Rating } from "ts-fsrs";
-import { MoveData, Pgn } from "../chess_pgn_logic";
-import { PGNSection } from "../studyrepo";
 import { createEmptyCard } from "ts-fsrs";
 import { createContext, JSX } from "solid-js";
 import { FSRSRating } from "../repeat/types";
+import { Path } from "./step_types";
 
-export type Study = {
-    name: string,
-    sections: PGNSection[]
-}
+
 
 export function import_pgn_study(pgn: string): Study {
     let study_name: string = ''
@@ -136,7 +132,6 @@ class RepertoiresDB extends Dexie {
             let study_id = await this.studies.add({
                 name: study.name,
                 import_lichess_id: id,
-                imported_as_pgn_text: false,
                 pgn_text: pgn,
             })
 
@@ -144,7 +139,7 @@ class RepertoiresDB extends Dexie {
         })
     }
 
-    async import_study_from_pgn_text(text: string) {
+    async import_study_auto_generated(text: string) {
         let pgn = text
 
         let study = import_pgn_study(pgn)
@@ -152,7 +147,6 @@ class RepertoiresDB extends Dexie {
         await this.transaction('rw', this.all_tables, async () => {
             let study_id = await this.studies.add({
                 name: study.name,
-                imported_as_pgn_text: true,
                 pgn_text: pgn
             })
 
@@ -237,34 +231,32 @@ class RepertoiresDB extends Dexie {
 }
 
 
-export class EntityPGNStudy extends Entity<RepertoiresDB> {
+export class EntityStudy extends Entity<RepertoiresDB> {
     id!: number
     name!: string
     import_lichess_id?: string
-    imported_as_pgn_text?: boolean
-    pgn_text!: string
 }
 
 
-export class EntityPGNSection extends Entity<RepertoiresDB> {
+export class EntitySection extends Entity<RepertoiresDB> {
     id!: number
     study_id!: number
     name!: string
 }
 
 
-export class EntityPGNChapter extends Entity<RepertoiresDB> {
+export class EntityChapter extends Entity<RepertoiresDB> {
     id!: number
     section_id!: number
     name!: string
 }
 
 
-export class EntityPGNMove extends Entity<RepertoiresDB> {
+export class EntityStep extends Entity<RepertoiresDB> {
     id!: number
     chapter_id!: number
     before_fen!: string
-    path!: string
+    path!: Path
     data!: MoveData
 }
 
