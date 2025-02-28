@@ -11,6 +11,10 @@
         
             display: grid;
 
+            row-gap: 1em;
+
+            justify-self: stretch;
+        
 
             @include media.mq-is-col1 {
                 grid-template-areas: 'board'
@@ -41,10 +45,6 @@
                     }
             }
 
-            row-gap: 1em;
-
-            justify-self: stretch;
-        
             .board-wrap {
                 grid-area: board;
             }
@@ -67,6 +67,63 @@
         
             .board-wrap {
                 aspect-ratio: 1;
+            }
+
+            .dialog-content.edit-section {
+                background: theme.$ac-li-blue2;
+            }
+            .dialog-content.edit-chapter {
+                background: theme.$ac-li-blue-2;
+            }
+            .dialog-content.edit-study {
+                background: theme.$ac-li-purple;
+            }
+            
+
+            .dialog-content.edit-section,
+            .dialog-content.edit-chapter,
+            .dialog-content.edit-study {
+                padding: 1.5em 1em;
+                display: flex;
+                flex-flow: column;
+                min-width: 500px;
+                gap: 1em;
+                border-radius: 6px;
+                color: theme.$text-primary;
+
+                .group {
+                    display: flex;
+                    flex-flow: column;
+                }
+
+
+                h2 {
+                    font-weight: 450;
+                    text-align: center;
+                }
+
+                label {
+                    font-weight: 400;
+                }
+
+                input {
+                    padding: 0.5em;
+                    border: 2px solid theme.$text-secondary;
+                    border-radius: 4px;
+                    color: theme.$text-primary;
+
+                    &:focus {
+                        border: 2px solid theme.$ac-li-blue-2;
+                    }
+                }
+
+
+                select#order {
+                    width: 20%;
+                    background: theme.$text-light2;
+                    border: 1px solid theme.$text-secondary;
+                    padding: .6em 1em;
+                }
             }
         }
     }

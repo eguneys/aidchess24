@@ -1,12 +1,12 @@
 @use '../base_css/theme';
 
 .study-details {
-    background: theme.$ac-deep-blue2;
+    background: theme.$he2;
     border-radius: 4px;
 
     .title {
         padding: 0.5em;
-        border-bottom: 2px solid theme.$ac-deep-blue;
+        border-bottom: 2px solid theme.$ac-li-purple2;
         color: theme.$text-light2;
         display: flex;
         gap: 0.2em;
@@ -27,8 +27,8 @@
 }
 
 .sections-list {
-    background: theme.$ac-deep-blue2;
-    color: theme.$text-light;
+    background: theme.$he2;
+    color: theme.$text-light2;
     display: flex;
     flex-flow: column;
     max-height: 100%;
@@ -43,8 +43,8 @@
         justify-content: space-between;
         align-items: center;
         gap: 1em;
-        border-bottom: 2px solid theme.$ac-deep-blue;
-
+        border-bottom: 2px solid theme.$bu-neutral2;
+        
         .tools i {
             user-select: none;
             cursor: pointer;
@@ -58,8 +58,9 @@
     /* https://stackoverflow.com/questions/14962468/how-can-i-combine-flexbox-and-vertical-scroll-in-a-full-height-app */
     & > .list {
         flex: 1 1 auto;
+        overflow: hidden;
         overflow-y: auto;
-        min-height: 100;
+        min-height: 0px;
     }
 
 
@@ -76,7 +77,7 @@
             display: flex;
             flex-flow: column;
             justify-items: center;
-            border-top: 2px solid theme.$ac-li-purple2;
+            border-top: 2px solid theme.$bu-mu-blue;
 
             button {
                 display: flex;
@@ -105,25 +106,55 @@
         }
 
         .section {
+
+            background: theme.$ac-deep-blue;
+
+            &.active, &.active:hover {
+              background: theme.$ac-deep-blue2;
+            }
+
+            &:hover {
+              background: theme.$ac-deep-blue2;
+            }
+
+
+
             .header {
                 display: flex;
                 padding: 0.2em;
 
-                background: theme.$ac-deep-blue;
 
                 user-select: none;
                 cursor: pointer;
-                border-bottom: 2px solid theme.$ac-li-purple;
-                &:hover {
-                  background: theme.$ac-deep-blue2;
+                border-bottom: 2px solid theme.$ac-li-blue2;
+
+                i {
+                    padding: 0.4em;
+                    border-radius: 50%;
+                    color: theme.$text-light;
+                    text-align: center;
+                    height: 100%;
+                    aspect-ratio: 1;
+                    align-self: center;
+                    display: flex;
+                    align-items: center;
+
+                    transition: .2s;
+                    &:hover {
+                        background: theme.$ac-li-blue;
+                        color: theme.$text-primary;
+                        transform: rotate(80deg);
+                    }
                 }
 
-
                 .title {
+                    flex: 1;
+
                     display: flex;
                     gap: 0.3em;
                     padding: 0.2em 0.3em;
                     color: theme.$text-light;
+
                     span {
                         font-weight: 500;
                     }
@@ -141,26 +172,52 @@
                     text-align: center;
                 }
 
+                color: theme.$text-primary;
+
                 .chapter {
 
-                    background: theme.$bu-mu-blue;
+                    background: theme.$ac-li-blue;
 
                     &.active, &.active:hover {
-                        background: theme.$ac-li-blue2;
+                        color: theme.$ac-deep-blue2;
+                        background: theme.$bu-mu-blue2;
                     }
 
                     &:hover {
                         background: theme.$ac-li-blue-2;
                     }
 
+                display: flex;
+                padding: 0.2em;
+
+                user-select: none;
+                cursor: pointer;
+
+                i {
+                    padding: 0.4em;
+                    border-radius: 50%;
+                    color: theme.$text-primary;
+                    text-align: center;
+                    height: 100%;
+                    aspect-ratio: 1;
+                    align-self: center;
+                    display: flex;
+                    align-items: center;
+
+                    transition: .2s;
+                    &:hover {
+                        background: theme.$ac-deep-blue;
+                        color: theme.$text-light;
+                        transform: rotate(80deg);
+                    }
+                }
+
+
                     .title {
+                        flex: 1;
                         display: flex;
                         gap: 0.3em;
                         padding: 0.2em 0.3em;
-                        color: theme.$text-primary;
-
-                        user-select: none;
-                        cursor: pointer;
 
                         span {
                             font-weight: 500;

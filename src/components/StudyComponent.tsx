@@ -28,6 +28,7 @@ export type Section = {
     set_name(name: string): void,
     add_chapter(chapter: Chapter): void,
     delete_chapter(chapter: Chapter): void
+    change_chapter_order(chapter: Chapter, order: number): void
 }
 
 export type Study = {
@@ -36,6 +37,7 @@ export type Study = {
     set_name(name: string): void,
     add_section(section: Section): void,
     delete_section(section: Section): void
+    change_section_order(section: Section, order: number): void
 }
 
 export function Chapter(): Chapter {
@@ -87,6 +89,17 @@ export function Section(): Section {
             }
             ss.splice(i, 1)
             set_chapters([...ss])
+        },
+        change_chapter_order(chapter: Chapter, new_i: number) {
+            let ss = chapters()
+            let old_i = ss.indexOf(chapter)
+
+            ss.splice(old_i, 1)
+            ss.splice(new_i, 0, chapter)
+
+            console.log(old_i, new_i, chapter === ss[new_i])
+
+            set_chapters([...ss])
         }
     }
 }
@@ -110,6 +123,16 @@ export function Study(): Study {
                 return
             }
             ss.splice(i, 1)
+            set_sections([...ss])
+        },
+        change_section_order(section: Section, new_i: number) {
+            let ss = sections()
+            let old_i = ss.indexOf(section)
+
+
+            ss.splice(old_i, 1)
+            ss.splice(new_i, 0, section)
+
             set_sections([...ss])
         }
     }
@@ -140,7 +163,7 @@ export function StudyDetailsComponent(props: { study: Study, section?: Section, 
 }
 
 
-export function SectionsListComponent(props: { study: Study, on_selected_chapter: (section: Section, chapter: Chapter) => void }) {
+export function SectionsListComponent(props: { study: Study, on_selected_chapter: (section: Section, chapter: Chapter) => void, on_edit_study?: () => void, on_edit_section?: (section: Section) => void, on_edit_chapter?: (section: Section, chapter: Chapter) => void, on_chapter_order_changed?: number, on_section_order_changed?: number }) {
 
     const on_new_section = () => {
         let new_section = Section()
@@ -168,12 +191,21 @@ export function SectionsListComponent(props: { study: Study, on_selected_chapter
         props.on_selected_chapter(section, chapter)
     }
 
+    createEffect(() => {
+        let order = props.on_section_order_changed
+        if (order !== undefined) {
+            set_i_section(order)
+        }
+    })
+
+
+
     return (<>
     <div class='sections-list'>
         <div class='header'>
             <span class='title'>{props.study.name}</span>
             <div class='tools'>
-                    <i onClick={() => on_new_section()} data-icon=""></i>
+                    <i onClick={() => props.on_edit_study?.()} data-icon=""></i>
             </div>
         </div>
         <div class='list'>
@@ -181,9 +213,9 @@ export function SectionsListComponent(props: { study: Study, on_selected_chapter
                 <NoSections />
             }>{(section, i) =>
                 <Show when={section === selected_section()} fallback={
-                    <SectionCollapsedComponent section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section)}/>
+                    <SectionCollapsedComponent section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section)} on_edit={() => props.on_edit_section?.(section)}/>
                 }>
-                    <SectionComponent nth={get_letter_nth(i())} section={section} on_selected_chapter={_ => on_selected_chapter(section, _)}/>
+                    <SectionComponent nth={get_letter_nth(i())} section={section} on_selected_chapter={_ => on_selected_chapter(section, _)} on_edit={() => props.on_edit_section?.(section)} on_edit_chapter={chapter => props.on_edit_chapter?.(section, chapter)} on_chapter_order_changed={props.on_chapter_order_changed}/>
                 </Show>
                 }</For>
             <div class='tools'>
@@ -194,17 +226,18 @@ export function SectionsListComponent(props: { study: Study, on_selected_chapter
     </>)
 }
 
-function SectionCollapsedComponent(props: { section: Section, nth: string, on_selected: () => void }) {
+function SectionCollapsedComponent(props: { section: Section, nth: string, on_selected: () => void, on_edit: () => void }) {
     return (<>
         <div class='section'>
             <div onClick={() => props.on_selected()} class='header'>
-                <div class='title'><span class='nth'>{props.nth}</span>{props.section.name}</div>
+                <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis'>{props.section.name}</span></div>
+                <i onClick={() => props.on_edit()} data-icon=""></i>
             </div>
         </div>
     </>)
 }
 
-function SectionComponent(props: { section: Section, nth: string, on_selected_chapter: (chapter: Chapter) => void }) {
+function SectionComponent(props: { section: Section, nth: string, on_selected_chapter: (chapter: Chapter) => void, on_edit: () => void, on_edit_chapter: (chapter: Chapter) => void, on_chapter_order_changed?: number }) {
 
     const on_new_chapter = () => {
         let new_chapter = Chapter()
@@ -222,11 +255,18 @@ function SectionComponent(props: { section: Section, nth: string, on_selected_ch
         props.on_selected_chapter(selected_chapter())
     })
 
+    createEffect(() => {
+        let order = props.on_chapter_order_changed
+        if (order !== undefined) {
+            set_i_chapter(order)
+        }
+    })
 
     return (<>
-        <div class='section'>
+        <div class='section active'>
             <div class='header'>
-                <div class='title'><span class='nth'>{props.nth}</span>{props.section.name}</div>
+                <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis' title={props.section.name}>{props.section.name}</span></div>
+                <i onClick={() => props.on_edit()} data-icon=""></i>
             </div>
             <div class='chapters-list'>
 
@@ -234,7 +274,7 @@ function SectionComponent(props: { section: Section, nth: string, on_selected_ch
                     <For each={props.section.chapters} fallback={
                         <NoChapters />
                     }>{(chapter, i) =>
-                        <ChapterComponent chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={selected_chapter()===chapter} on_selected={() => set_selected_chapter(chapter)}/>
+                        <ChapterComponent chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={selected_chapter()===chapter} on_selected={() => set_selected_chapter(chapter)}  on_edit={() => props.on_edit_chapter(chapter)}/>
                     }</For>
                 </div>
                 <div class='tools'>
@@ -257,13 +297,128 @@ export function NoChapters() {
     </>)
 }
 
-export function ChapterComponent(props: { chapter: Chapter, nth: string, selected: boolean, on_selected: () => void }) {
+export function ChapterComponent(props: { chapter: Chapter, nth: string, selected: boolean, on_selected: () => void, on_edit: () => void }) {
 
     const klass = createMemo(() => props.selected ? ' active' : '')
 
     return (<>
         <div onClick={() => props.on_selected()} class={'chapter' + klass()}>
             <div class='title'><span class='nth'>{props.nth}.</span>{props.chapter.name}</div>
+            <i onClick={() => props.on_edit()} data-icon=""></i>
+        </div>
+    </>)
+}
+
+
+export function EditStudyComponent(props: { study: Study }) {
+
+    const on_name_key_down = (key: string, e: HTMLInputElement) => {
+        if (key === 'Escape') {
+            e.value = props.study.name
+        }
+    }
+
+
+
+    const on_name_changed = (e: HTMLInputElement) => {
+        let name = e.value
+        if (name.length < 3) {
+            name = "New Chapter"
+            e.value = name
+        }
+        props.study.set_name(name)
+    }
+
+    return (<>
+        <h2>Edit Opening</h2>
+
+        <div class='group'>
+        <label for='name'>Name</label>
+        <input name="name" id="name" onKeyDown={e => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Opening Name" minLength={3} value={props.study.name}></input>
+        </div>
+    </>)
+}
+
+export function EditChapterComponent(props: { chapter: Chapter, section: Section, i_chapter: number, on_order_changed: (order: number) => void }) {
+
+    const on_name_key_down = (key: string, e: HTMLInputElement) => {
+        if (key === 'Escape') {
+            e.value = props.section.name
+        }
+    }
+
+
+
+    const on_name_changed = (e: HTMLInputElement) => {
+        let name = e.value
+        if (name.length < 3) {
+            name = "New Chapter"
+            e.value = name
+        }
+        props.chapter.set_name(name)
+    }
+
+    const on_order_changed = (value: string) => {
+        props.on_order_changed(parseInt(value))
+    }
+
+    return (<>
+        <h2>Edit Chapter</h2>
+
+        <div class='group'>
+        <label for='name'>Name</label>
+        <input name="name" id="name" onKeyDown={e => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.chapter.name}></input>
+        </div>
+
+        
+        <div class='group'>
+        <label for='order'>Set Order</label>
+        <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+            <For each={props.section.chapters}>{(_, i) => 
+                <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
+            }</For>
+        </select>
+        </div>
+    </>)
+}
+
+export function EditSectionComponent(props: { section: Section, i_section: number, nb_sections: number, on_order_changed: (order: number) => void }) {
+
+    const on_name_key_down = (key: string, e: HTMLInputElement) => {
+        if (key === 'Escape') {
+            e.value = props.section.name
+        }
+    }
+
+    const on_name_changed = (e: HTMLInputElement) => {
+        let name = e.value
+        if (name.length < 3) {
+            name = "New Section"
+            e.value = name
+        }
+        props.section.set_name(name)
+    }
+
+    const on_order_changed = (value: string) => {
+        props.on_order_changed(SECTION_LETTERS.indexOf(value))
+    }
+
+    return (<>
+        <h2>Edit Section</h2>
+
+        <div class='group'>
+        <label for='name'>Name</label>
+        <input name="name" id="name" onKeyDown={(e) => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.section.name}></input>
+        </div>
+
+        
+        <div class='group'>
+        <label for='order'>Set Order</label>
+        <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+            <For each={SECTION_LETTERS.slice(0, props.nb_sections)}>{(letter, i) => 
+                <option value={letter} selected={props.i_section === i()}>{letter}</option>
+            }</For>
+        </select>
         </div>
     </>)
 }
