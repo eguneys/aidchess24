@@ -1,8 +1,10 @@
 @use "base_css/theme";
 
 @font-face {
-  font-family: 'NotoSans';
-  src: url('assets/fonts/NotoSans-VariableFont_wdth,wght.ttf');
+  font-family: 'Noto Sans';
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(assets/fonts/noto-sans-latin.woff2) format('woff2');
 }
 
 @font-face {
@@ -24,7 +26,7 @@
 @font-face {
   font-family: 'Noto Chess';
   font-display: block;
-  src: url('assets/fonts/lichess.chess.woff') format('woff');
+  src: url('assets/fonts/lichess-chess.woff2') format('woff2');
 }
 
 @font-face {
@@ -71,7 +73,7 @@ body {
   font-weight: 400;
 
 
-  font-synthesis: none;
+  /*font-synthesis: none;*/
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

@@ -52,7 +52,6 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
     const [selected_chapter, set_selected_chapter] = createSignal<Chapter | undefined>(undefined)
 
     const on_selected_chapter = (section: Section, chapter: Chapter) => {
-        console.trace(section?.name, chapter?.name)
         batch(() => {
             set_selected_section(section)
             set_selected_chapter(chapter)
@@ -325,7 +324,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
 
     const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
 
-        let study_name
+        let study_name = props.study.name
         let sections: Record<string, [string, PGN][]> = {}
 
         for (let pgn of pgns) {
@@ -346,6 +345,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
             study_name = default_study_name
         }
 
+        props.study.set_name(study_name)
 
         let section_name = Object.keys(sections)[0]
         let section = edit_section_dialog()

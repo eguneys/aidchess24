@@ -5,9 +5,12 @@ import { NAG, Path, Step } from "./step_types";
 import { PGN, PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
 
 
-async function db_new_play_uci_tree_replay(db: StudiesDB) {
-    let tree = StepsTree(gen_id8())
+async function db_new_play_uci_tree_replay(db: StudiesDB, tree?: StepsTree) {
+    if (!tree) {
+        tree = StepsTree(gen_id8())
+    }
     await db.steps_trees.add(tree.entity)
+
 
     let new_replay = PlayUciTreeReplay(gen_id8(), tree)
     await db.play_uci_tree_replays.add(new_replay.entity)
@@ -162,7 +165,7 @@ async function db_new_chapter_from_pgn(db: StudiesDB, section_id: EntitySectionI
 
 
 async function db_new_play_uci_tree_replay_from_pgn(db: StudiesDB, pgn: PGN): Promise<PlayUciTreeReplay> {
-    let play_replay = await db_new_play_uci_tree_replay(db)
+    let play_replay = await db_new_play_uci_tree_replay(db, pgn.tree)
 
     let nodes = pgn.tree.root.flatMap(_ => [_, ..._.all_sub_children])
 
