@@ -309,6 +309,10 @@ function StudyShow(props: { study: Study }) {
 
         return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
     })
+
+    const chapter_title_or_detached = createMemo(() => {
+        return selected_chapter()?.name ?? '[detached]'
+    })
                                                       
     return (<>
         <div ref={$el_ref!} class='study'>
@@ -320,7 +324,7 @@ function StudyShow(props: { study: Study }) {
             </div>
             <div class='replay-wrap'>
                 <div class='header'>
-                    Replay Tree
+                    {chapter_title_or_detached()}
                 </div>
                 <PlayUciTreeReplayComponent db={db} play_replay={play_replay()} on_context_menu={on_tree_context_menu}/>
             </div>
