@@ -65,14 +65,15 @@
             padding: 0.2em;
             display: inline-flex;
             line-height: 1.3em;
-            font-weight: 400;
+            font-weight: 700;
             font-family: 'Noto Chess', 'Roboto';
-            border-radius: 2px;
+            border-radius: 4px 4px 0 0;
+            color: theme.$text-primary;
 
 
             .index {
                 margin-right: 0.2em;
-                color: $text-gray;
+                color: theme.$text-secondary;
             }
 
             &.on-path {
@@ -81,22 +82,88 @@
 
 
 
+            &:hover {
+                color: $text-light;
+                background: $blue-hover;
+                .index {
+                    color: $text-light;
+                }
+            }
+
+            &.top {
+                color: theme.$top;
+                &:hover {
+                    background: theme.$top;
+                    color: $text-light;
+                }
+            }
+            &.good {
+                color: theme.$good;
+                &:hover {
+                    background: theme.$good;
+                    color: $text-light;
+                }
+            }
+            &.interesting {
+                color: theme.$interesting;
+                &:hover {
+                    background: theme.$interesting;
+                    color: $text-light;
+                }
+            }
+            &.inaccuracy {
+                color: theme.$inaccuracy;
+                &:hover {
+                    background: theme.$inaccuracy;
+                    color: $text-light;
+                }
+            }
+            &.mistake {
+                color: theme.$mistake;
+                &:hover {
+                    background: theme.$mistake;
+                    color: $text-light;
+                }
+            }
+            &.blunder {
+                color: theme.$blunder;
+                &:hover {
+                    background: theme.$blunder;
+                    color: $text-light;
+                }
+            }
+
+
             &.on-path-end {
                 background: $blue-bg;
-                color: $text-light;
+                color: theme.$text-light2;
 
                 .index {
                     color: $text-light;
                 }
             }
 
-            &:hover {
-                color: $text-light;
-                background: $blue-hover;
-                .index {
-                    color: $text-light;
-                    background: $blue-hover;
+            &.on-path-end {
+                &.top {
+                    background: theme.$top;
                 }
+                &.good {
+                    background: theme.$good;
+                }
+                &.interesting {
+                    background: theme.$interesting;
+                }
+                &.inaccuracy {
+                    background: theme.$inaccuracy;
+                }
+                &.mistake {
+                    background: theme.$mistake;
+                }
+                &.blunder {
+                    background: theme.$blunder;
+                }
+    
+
             }
 
         }

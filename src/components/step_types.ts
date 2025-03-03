@@ -64,3 +64,33 @@ export function build_steps(sans: SAN[], fen: FEN = INITIAL_FEN): StepsSingle {
     return res
 }
 
+
+export const GLYPHS = ['!!', '!', '!?', '?!', '?', '??']
+export const GLYPH_NAMES = ['brilliant', 'good', 'interesting', 'inaccuracy', 'mistake', 'blunder']
+
+export type GLYPH = typeof GLYPHS[number]
+
+export function glyph_to_nag(glyph: GLYPH) {
+    switch (glyph) {
+        case "!": return 1
+        case "?": return 2
+        case "!!": return 3
+        case "??": return 4
+        case "!?": return 5
+        case "?!": return 6
+    }
+    return 0
+}
+
+export function nag_to_glyph(nag: NAG) {
+
+    switch (nag) {
+        case 1: return '!'
+        case 2: return '?'
+        case 3: return '!!'
+        case 4: return '??'
+        case 5: return '!?'
+        case 6: return '?!'
+    }
+    return ''
+}

@@ -4,11 +4,12 @@ import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
-import { MoveContextMenuComponent, PlayUciTreeReplay, PlayUciTreeReplayComponent, StepsTree } from "../../components/ReplayTreeComponent"
+import { MoveContextMenuComponent, PlayUciTreeReplay, PlayUciTreeReplayComponent, StepsTree, TreeStepNode } from "../../components/ReplayTreeComponent"
 import { DialogComponent } from "../../components/DialogComponent"
 import { INITIAL_FEN } from "chessops/fen"
 import { usePlayer } from "../../sound"
-import { Path, Step } from "../../components/step_types"
+import { GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../components/step_types"
+import { annotationShapes } from "../../annotationShapes"
 
 export default () => {
     return (<>
@@ -261,6 +262,13 @@ function StudyShow(props: { study: Study }) {
 
     }
 
+    const on_annotate_click = (step: TreeStepNode, glyph: string) => {
+        step.set_nags([glyph_to_nag(glyph)])
+
+        clearTimeout(i_delay_sub_menu_open)
+        set_annotate_sub_menu_open(false)
+    }
+
     let $el_sub_menu_anchor: HTMLAnchorElement
     let [get_$el_context_sub_menu, set_$el_context_sub_menu] = createSignal<HTMLDivElement | undefined>(undefined)
 
@@ -286,8 +294,21 @@ function StudyShow(props: { study: Study }) {
         return `top: ${y}px; left: ${x}px;`
     })                                                
 
-    const GLYPHS = ['!!', '!', '!?', '?!', '?', '??']
-    const GLYPH_NAMES = ['brilliant', 'good', 'interesting', 'inaccuracy', 'mistake', 'blunder']
+    let annotation = createMemo(() => {
+        let step = play_replay().cursor_path_step
+
+        if (!step) {
+            return []
+        }
+
+        let nag = step.nags[0]
+
+        if (!nag) {
+            return []
+        }
+
+        return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
+    })
                                                       
     return (<>
         <div ref={$el_ref!} class='study'>
@@ -295,7 +316,7 @@ function StudyShow(props: { study: Study }) {
                 <StudyDetailsComponent study={props.study} section={selected_section()} chapter={selected_chapter()} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard color={color()} movable={movable()} play_uci={play_uci}/>
+                <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
             </div>
             <div class='replay-wrap'>
                 <div class='header'>
@@ -333,7 +354,7 @@ function StudyShow(props: { study: Study }) {
                 <Show when={annotate_sub_menu_open()}>
                     <div   onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} ref={_ => setTimeout(() => set_$el_context_sub_menu(_))} style={sub_menu_klass()} class='context-sub-menu'>
                         <For each={GLYPHS}>{ (g, i) =>
-                            <a class={'annotate glyph ' + GLYPH_NAMES[i()] }><i class={`glyph-icon ${GLYPH_NAMES[i()]}`}></i>{GLYPH_NAMES[i()]}</a>
+                            <a onClick={() => on_annotate_click(step(), g)} class={'annotate glyph ' + GLYPH_NAMES[i()] }><i class={`glyph-icon ${GLYPH_NAMES[i()]}`}></i>{GLYPH_NAMES[i()]}</a>
                         }</For>
                     </div>
                 </Show>

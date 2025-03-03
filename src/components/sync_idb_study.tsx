@@ -121,6 +121,7 @@ async function db_load_play_replay(db: StudiesDB, id: EntityPlayUciTreeReplayId)
     })
     nodes.forEach(e_node => {
         let node = TreeStepNode(e_node.id, e_node.tree_id, e_node.step, e_node.order)
+        node.set_entity(e_node)
         steps.add_load_node(node)
     })
 

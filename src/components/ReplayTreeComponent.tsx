@@ -1,5 +1,5 @@
 import { batch, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js"
-import { FEN, make_step_and_play, NAG, Path, Ply, SAN, Step } from "./step_types"
+import { FEN, make_step_and_play, NAG, Path, Ply, SAN, Step, UCI } from "./step_types"
 import { Chess, Color, makeUci, Position } from "chessops"
 import { INITIAL_FEN, parseFen } from "chessops/fen"
 import { parsePgn, ChildNode, PgnNodeData } from "chessops/pgn"
@@ -87,6 +87,8 @@ export type TreeStepNode = {
     tree_id: EntityStepsTreeId,
     ply: Ply,
     san: SAN,
+    uci: UCI,
+    fen: FEN,
     path: Path,
     step: Step,
     children: TreeStepNode[],
@@ -390,6 +392,12 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
         get san() {
             return step.san
         },
+        get uci() {
+            return step.uci
+        },
+        get fen() {
+            return step.fen
+        },
         step,
         get children() {
             return children()
@@ -503,7 +511,7 @@ export type PlayUciTreeReplay = {
     set_entity(entity: EntityPlayUciTreeReplayInsert): void,
     steps: StepsTree,
     cursor_path: Path,
-    cursor_path_step: Step | undefined,
+    cursor_path_step: TreeStepNode | undefined,
     goto_path: (path: Path) => void,
     get_prev_path: () => Path | undefined,
     get_next_path: () => Path | undefined,
@@ -729,7 +737,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
             set_cursor_path(path)
         },
         get cursor_path_step() {
-            return steps.find_at_path(cursor_path())?.step
+            return steps.find_at_path(cursor_path())
         },
         goto_path,
         get_prev_path,
@@ -999,6 +1007,11 @@ function StepNode(props: { db: StudiesDBReturn, node: TreeStepNode, show_index?:
             res.push('on-path-end')
         }
 
+
+        if (props.node.nags[0]) {
+            res.push(nag_klass[props.node.nags[0]])
+        }
+
         return res.join(' ')
     })
 
@@ -1009,9 +1022,21 @@ function StepNode(props: { db: StudiesDBReturn, node: TreeStepNode, show_index?:
     <div onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, props.node.path) }} onClick={() => { props.on_set_cursor(props.node.path) } } class={klass()}>
         <Show when={show_index()}><span class='index'>{ply_to_index(props.node.ply)}</span></Show>
         {props.node.san}
+        <Nags nags={props.node.nags}/>
     </div>
     </>)
 }
+
+export let text = ['', '!', '?', '!!', '??', '!?', '?!']
+text[22] = '⨀'
+
+let nag_klass = ['', 'good', 'mistake', 'top', 'blunder', 'interesting', 'inaccuracy']
+
+const Nags = (props: { nags: number[] }) => {
+  return (<> <span class='nag'>{text[props.nags[0]]}</span> </>)
+}
+
+
 
 export const ply_to_index = (ply: number) => {
     let res = Math.ceil(ply / 2)
