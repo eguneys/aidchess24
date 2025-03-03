@@ -1,8 +1,32 @@
 import Dexie, { Entity, EntityTable, InsertType } from "dexie";
 import { Chapter, Section, Study } from "./StudyComponent";
 import { createContext, JSX } from "solid-js";
+import { NAG, Path, Ply, SAN, Step } from "./step_types";
+import { PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
+import { Position } from "chessops";
 
-function gen_id8() {
+
+async function db_new_play_uci_tree_replay(db: StudiesDB) {
+    let new_replay = PlayUciTreeReplay(gen_id8())
+    await db.play_uci_tree_replays.add(new_replay.entity)
+    return new_replay
+}
+async function db_new_steps_tree(db: StudiesDB) {
+    let new_tree = StepsTree(gen_id8())
+    await db.steps_trees.add(new_tree.entity)
+    return new_tree
+}
+async function db_new_tree_step_node(db: StudiesDB, tree_id: EntityStepsTreeId, ply: Ply, pos: Position, san: SAN, base_path: Path) {
+    let new_node = TreeStepNode(gen_id8(), tree_id, ply, pos, san, base_path)
+    await db.tree_step_nodes.add(new_node.entity)
+    return new_node
+}
+
+
+
+
+
+export function gen_id8() {
     return Math.random().toString(16).slice(2, 8)
 }
 
@@ -58,9 +82,7 @@ async function db_new_chapter(db: StudiesDB, section_id: EntitySectionId) {
 
 
 
-async function db_study_by_id(db_return: StudiesDBReturn, id: EntityStudyId): Promise<Study> {
-    let { db } = db_return
-
+async function db_study_by_id(db: StudiesDB, id: EntityStudyId): Promise<Study> {
     let e_study = await db.studies.get(id)
 
     if (!e_study) {
@@ -102,6 +124,10 @@ class StudiesDB extends Dexie {
     sections!: EntityTable<EntitySection, "id">
     chapters!: EntityTable<EntityChapter, "id">
 
+    play_uci_tree_replays!: EntityTable<EntityPlayUciTreeReplay, "id">
+    steps_trees!: EntityTable<EntityStepsTree, "id">
+    tree_step_nodes!: EntityTable<EntityTreeStepNode, "id">
+
 
     remove_database() {
         this.delete()
@@ -115,13 +141,20 @@ class StudiesDB extends Dexie {
         this.version(1).stores({
             studies: 'id',
             sections: 'id, study_id',
-            chapters: 'id, section_id'
+            chapters: 'id, section_id',
+            play_uci_tree_replays: 'id, steps_tree_id',
+            steps_trees: 'id',
+            tree_step_nodes: 'id, tree_id',
         })
 
 
         this.studies.mapToClass(EntityStudy)
         this.sections.mapToClass(EntitySection)
         this.chapters.mapToClass(EntityChapter)
+
+        this.play_uci_tree_replays.mapToClass(EntityPlayUciTreeReplay)
+        this.steps_trees.mapToClass(EntityStepsTree)
+        this.tree_step_nodes.mapToClass(EntityTreeStepNode)
     }
 }
 
@@ -152,7 +185,32 @@ class EntityChapter extends Entity<StudiesDB> {
     order!: number
 }
 
+export type EntityStepsTreeId = string
+export type EntityTreeStepNodeId = string
+export type EntityPlayUciTreeReplayId = string
 
+export type EntityStepsTreeInsert = InsertType<EntityStepsTree, "id">
+export type EntityTreeStepNodeInsert = InsertType<EntityTreeStepNode, "id">
+export type EntityPlayUciTreeReplayInsert = InsertType<EntityPlayUciTreeReplay, "id">
+
+
+class EntityPlayUciTreeReplay extends Entity<StudiesDB> {
+    id!: EntityPlayUciTreeReplayId
+    steps_tree_id!: EntityStepsTreeId
+    cursor_path!: Path
+}
+
+
+class EntityStepsTree extends Entity<StudiesDB> {
+    id!: EntityStepsTreeId
+}
+
+class EntityTreeStepNode extends Entity<StudiesDB> {
+    id!: EntityTreeStepNodeId
+    tree_id!: EntityStepsTreeId
+    step!: Step
+    nags!: NAG[]
+}
 
 export const StudiesDBContext = createContext<StudiesDBReturn>()
 
@@ -169,6 +227,10 @@ export type StudiesDBReturn = {
     delete_section(section: EntitySectionInsert): Promise<void>
     delete_chapter(chapter: EntityChapterInsert): Promise<void>
 
+    new_play_uci_tree_replay(): Promise<PlayUciTreeReplay>
+    new_steps_tree(): Promise<StepsTree>
+    new_tree_step_node(tree_id: EntityStepsTreeId, ply: Ply, pos: Position, san: SAN, path: Path): Promise<TreeStepNode>
+
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -176,13 +238,13 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
     let db = new StudiesDB()
 
 
-    let res = {
+    let res: StudiesDBReturn = {
         db,
         new_study() { return db_new_study(db) },
         new_section(study_id: EntityStudyId) { return db_new_section(db, study_id) },
         new_chapter(section_id: EntitySectionId) { return db_new_chapter(db, section_id) },
         study_by_id(id: EntityStudyId) {
-            return db_study_by_id(this, id)
+            return db_study_by_id(db, id)
         },
         update_study(study: EntityStudyInsert) {
             return db_update_study(db, study)
@@ -201,7 +263,13 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         delete_study(study: Study) {
             return db_delete_study(db, study)
-        }
+        },
+
+        new_play_uci_tree_replay() { return db_new_play_uci_tree_replay(db) },
+        new_steps_tree() { return db_new_steps_tree(db) },
+        new_tree_step_node(tree_id: EntityStepsTreeId, ply: Ply, pos: Position, san: SAN, base_path: Path) { 
+            return db_new_tree_step_node(db, tree_id, ply, pos, san, base_path) 
+        },
     }
 
     return (<>

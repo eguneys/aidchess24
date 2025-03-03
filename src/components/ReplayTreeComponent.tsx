@@ -6,6 +6,7 @@ import { parsePgn, ChildNode, PgnNodeData } from "chessops/pgn"
 import { parseSan } from "chessops/san"
 import { Key } from "@solid-primitives/keyed"
 import './ReplayTreeComponent.scss'
+import { EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityStepsTreeId, EntityStepsTreeInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, gen_id8 } from "./sync_idb_study"
 
 export type PGN = {
     orientation?: Color,
@@ -34,7 +35,7 @@ export function parse_PGNS(pgn: string): PGN[] {
         let before_fen = fen ?? INITIAL_FEN
         let i_pos = Chess.fromSetup(parseFen(before_fen).unwrap()).unwrap()
 
-        let tree = StepsTree()
+        let tree = StepsTree(gen_id8())
 
         g.moves.children.forEach(child => {
             append_children(child, i_pos, '')
@@ -75,6 +76,10 @@ export function parse_PGNS(pgn: string): PGN[] {
 
 
 export type TreeStepNode = {
+    entity: EntityTreeStepNodeInsert,
+    set_entity(entity: EntityTreeStepNodeInsert): void
+    id: EntityTreeStepNodeId,
+    tree_id: EntityStepsTreeId,
     ply: Ply,
     san: SAN,
     path: Path,
@@ -91,9 +96,12 @@ export type TreeStepNode = {
 }
 
 export type StepsTree = {
+    entity: EntityStepsTreeInsert,
+    set_entity(entity: EntityStepsTreeInsert): void
+    id: EntityStepsTreeId,
     initial_fen: FEN | undefined,
+    root: TreeStepNode[],
     as_pgn: string,
-    root: TreeStepNode[]
     add_sans_at_root(san: SAN[]): TreeStepNode[]
     add_child_san(path: Path, san: SAN): TreeStepNode | undefined
     remove_child_at_path(path: Path): TreeStepNode | undefined
@@ -103,7 +111,7 @@ export type StepsTree = {
     previous_branch_points(path: string): TreeStepNode[] | undefined
 }
 
-export function StepsTree(): StepsTree {
+export function StepsTree(id: EntityStepsTreeId): StepsTree {
     let [root, set_root] = createSignal<TreeStepNode[]>([])
 
     const find_at_path = (path: Path) => {
@@ -167,7 +175,17 @@ export function StepsTree(): StepsTree {
         return res
     }
 
+    const entity = () => {
+        return {
+
+        }
+    }
+
     return {
+        get entity() { return entity() },
+        set_entity(_entity: EntityStepsTreeInsert) {
+        },
+        id,
         get as_pgn() {
             return render_lines(root(), true)
         },
@@ -207,7 +225,7 @@ export function StepsTree(): StepsTree {
                 }
 
                 let pos = Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap()
-                let child = TreeStepNode(1, pos, san, '')
+                let child = TreeStepNode(gen_id8(), id, 1, pos, san, '')
                 set_root([...rr, child])
                 return child
             }
@@ -276,7 +294,7 @@ export function StepsTree(): StepsTree {
 
 
 
-export function TreeStepNode(ply: Ply, pos: Position, san: SAN, base_path: Path): TreeStepNode {
+export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNodeId, ply: Ply, pos: Position, san: SAN, base_path: Path): TreeStepNode {
 
     let [children, set_children] = createSignal<TreeStepNode[]>([])
     let [nags, set_nags] = createSignal<NAG[]>([])
@@ -302,7 +320,21 @@ export function TreeStepNode(ply: Ply, pos: Position, san: SAN, base_path: Path)
         }
     }
 
+    const entity = () => {
+        return {
+            step,
+            tree_id,
+            nags: nags()
+        }
+    }
+
     let self = {
+        get entity() { return entity() },
+        set_entity(entity: EntityTreeStepNodeInsert) {
+            set_nags(entity.nags)
+        },
+        id,
+        tree_id,
         get nags() {
             return nags()
         },
@@ -342,7 +374,7 @@ export function TreeStepNode(ply: Ply, pos: Position, san: SAN, base_path: Path)
                 return exists
             }
 
-            let child = TreeStepNode(ply + 1, pos, san, step.path)
+            let child = TreeStepNode(gen_id8(), tree_id, ply + 1, pos, san, step.path)
             set_children([...cc, child])
             return child
         },
@@ -401,6 +433,10 @@ const alekhine = `
 
 
 export type PlayUciTreeReplay = {
+    id: EntityPlayUciTreeReplayId,
+    steps_tree_id: EntityStepsTreeId,
+    entity: EntityPlayUciTreeReplayInsert,
+    set_entity(entity: EntityPlayUciTreeReplayInsert): void,
     steps: StepsTree,
     cursor_path: Path,
     cursor_path_step: Step | undefined,
@@ -423,9 +459,9 @@ export type PlayUciTreeReplay = {
     create_effects(): void
 }
 
-export function PlayUciTreeReplay(pgn?: string): PlayUciTreeReplay {
+export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): PlayUciTreeReplay {
 
-    let [steps, set_steps] = createSignal(StepsTree())
+    let [steps, set_steps] = createSignal(StepsTree(gen_id8()))
 
     if (pgn) {
         set_steps(parse_PGNS(pgn)[0].tree)
@@ -607,9 +643,23 @@ export function PlayUciTreeReplay(pgn?: string): PlayUciTreeReplay {
     }
 
 
+    const entity = () => {
+        return {
+            steps_tree_id: steps().id,
+            cursor_path: cursor_path()
+        }
+    }
 
 
     return {
+        get entity() {
+            return entity()
+        },
+        set_entity(entity: EntityPlayUciTreeReplayInsert) {
+            set_cursor_path(entity.cursor_path)
+        },
+        id,
+        get steps_tree_id() { return steps().id },
         get steps() { return steps() },
         get cursor_path() {
             return cursor_path()

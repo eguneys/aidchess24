@@ -2,7 +2,7 @@ import { Color } from "chessops"
 import { PlayUciTreeReplay } from "./ReplayTreeComponent"
 import { batch, createEffect, createMemo, createSignal, For, Show } from "solid-js"
 import './StudyComponent.scss'
-import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, StudiesDBReturn } from "./sync_idb_study"
+import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, gen_id8, StudiesDBReturn } from "./sync_idb_study"
 
 const SECTION_LETTERS = 'ABCDEFGHIJKLMNOP'.split('')
 
@@ -71,7 +71,7 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapt
     let [order, set_order] = createSignal(0)
     let [name, set_name] = createSignal('New Chapter')
 
-    let [play_replay, set_play_replay] = createSignal(PlayUciTreeReplay())
+    let [play_replay, set_play_replay] = createSignal(PlayUciTreeReplay(gen_id8()))
 
     let [orientation, set_orientation] = createSignal<Color | undefined>(undefined)
     let [event, set_event] = createSignal<string | undefined>(undefined)

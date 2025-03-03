@@ -1,5 +1,5 @@
 import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, on, Show, Suspense, useContext } from "solid-js"
-import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
+import { gen_id8, StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
@@ -86,7 +86,7 @@ function StudyShow(props: { study: Study }) {
     const play_replay = createMemo(() => {
         let s = selected_chapter()
         if (!s) {
-            return PlayUciTreeReplay()
+            return PlayUciTreeReplay(gen_id8())
         }
         return s.play_replay
     })
