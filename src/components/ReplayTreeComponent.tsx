@@ -92,6 +92,8 @@ export type TreeStepNode = {
     children: TreeStepNode[],
     nags: NAG[],
     all_sub_children: TreeStepNode[],
+    order: number,
+    set_order(order: number): void,
     set_nags(nags: NAG[]): void,
     add_load_node(node: TreeStepNode): void,
     add_child_san(san: SAN): TreeStepNode
@@ -100,6 +102,7 @@ export type TreeStepNode = {
     nb_first_variations: number
     first_node_with_variations: TreeStepNode | undefined
     length: number
+    create_effects_listen_and_save_db(db: StudiesDBReturn): void
 }
 
 export type StepsTree = {
@@ -376,6 +379,7 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
             return nags()
         },
         set_nags,
+        get order() { return order() },
         set_order(order: number) { set_order(order) },
         get path() {
             return step.path
@@ -465,6 +469,11 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
                 i = i.children[0]
             }
             return res
+        },
+        create_effects_listen_and_save_db(db: StudiesDBReturn): void {
+            createEffect(() => {
+                db.update_tree_step_node(entity())
+            })
         }
     }
     return self
@@ -783,6 +792,8 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         },
         delete_at_and_after_path(path: Path) {
             return batch(() => {
+
+                let pc = steps.find_parent_and_child_at_path(path)
                 let r = steps.remove_child_at_path(path)
                 if (!r) {
                     return undefined
@@ -791,6 +802,11 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
                 if (c_path.startsWith(path)) {
                     let n_path = r.path.split(' ').slice(0, -1).join(' ')
                     set_cursor_path(n_path)
+                }
+                if (pc![0]) {
+                    pc![0].children.forEach((_, i) => _.set_order(i))
+                } else {
+                    steps.root.forEach((_, i) => _.set_order(i))
                 }
                 return r
             })
@@ -819,7 +835,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
 }
 
 
-export function PlayUciTreeReplayComponent(props: { play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
+export function PlayUciTreeReplayComponent(props: { db: StudiesDBReturn, play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
 
     createEffect(on(() => props.play_replay, (replay) => {
         replay.create_effects()
@@ -883,7 +899,7 @@ export function PlayUciTreeReplayComponent(props: { play_replay: PlayUciTreeRepl
         <div class='replay-tree'>
             <div class='moves-wrap'>
                 <div ref={_ => $moves_el = _} class='moves'>
-                    <NodesShorten nodes={steps().root}
+                    <NodesShorten db={props.db} nodes={steps().root}
                         cursor_path={props.play_replay.cursor_path}
                         on_set_cursor={(path: Path) => props.play_replay.cursor_path = path}
                         on_context_menu={(e: MouseEvent, path: Path) => props.on_context_menu?.(e, path)}
@@ -931,7 +947,7 @@ export function PlayUciTreeReplayComponent(props: { play_replay: PlayUciTreeRepl
 }
 
 
-function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function NodesShorten(props: { db: StudiesDBReturn, nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
     return (<>
     <Show when={props.nodes.length === 1}>
         <StepNode {...props} node={props.nodes[0]} />
@@ -959,7 +975,7 @@ function NodesShorten(props: {nodes: TreeStepNode[], cursor_path: Path, on_set_c
     </>)
 }
 
-function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function StepNode(props: { db: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
 
     let show_index = createMemo(() => props.node.ply % 2 === 1 || props.show_index)
     let dots = createMemo(() => props.node.ply % 2 === 1 ? '.' : '...')
@@ -986,6 +1002,9 @@ function StepNode(props: { node: TreeStepNode, show_index?: boolean, collapsed?:
 
         return res.join(' ')
     })
+
+
+    props.node.create_effects_listen_and_save_db(props.db)
 
     return (<>
     <div onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, props.node.path) }} onClick={() => { props.on_set_cursor(props.node.path) } } class={klass()}>

@@ -242,9 +242,6 @@ function StudyShow(props: { study: Study }) {
         set_context_menu_open(undefined)
     }
 
-
-
-
     return (<>
         <div ref={$el_ref!} class='study'>
             <div class='details-wrap'>
@@ -257,7 +254,7 @@ function StudyShow(props: { study: Study }) {
                 <div class='header'>
                     Replay Tree
                 </div>
-                <PlayUciTreeReplayComponent play_replay={play_replay()} on_context_menu={on_tree_context_menu}/>
+                <PlayUciTreeReplayComponent db={db} play_replay={play_replay()} on_context_menu={on_tree_context_menu}/>
             </div>
             <div class='sections-wrap'>
                 <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>

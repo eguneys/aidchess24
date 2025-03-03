@@ -136,6 +136,10 @@ async function db_delete_tree_nodes(db: StudiesDB, nodes: TreeStepNode[]) {
 async function db_update_tree_replay(db: StudiesDB, entity: EntityPlayUciTreeReplayInsert) {
     await db.play_uci_tree_replays.update(entity.id!, entity)
 }
+async function db_update_tree_step_node(db: StudiesDB, entity: EntityTreeStepNodeInsert) {
+    await db.tree_step_nodes.update(entity.id!, entity)
+}
+
 
 
 
@@ -293,6 +297,7 @@ export type StudiesDBReturn = {
     new_tree_step_node(node: TreeStepNode): Promise<void>
 
     update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert): Promise<void>
+    update_tree_step_node(entity: EntityTreeStepNodeInsert): Promise<void>
     delete_tree_nodes(nodes: TreeStepNode[]): Promise<void>;
 }
 
@@ -335,6 +340,9 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
+        },
+        update_tree_step_node(entity: EntityTreeStepNode) {
+            return db_update_tree_step_node(db, entity)
         },
         delete_tree_nodes(nodes: TreeStepNode[]) {
             return db_delete_tree_nodes(db, nodes)
