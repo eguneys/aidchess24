@@ -124,6 +124,30 @@
                     border: 1px solid theme.$text-secondary;
                     padding: .6em 1em;
                 }
+
+
+                .group.buttons {
+                    display: flex;
+                    flex-flow: row;
+
+                    .split {
+                       flex: 1;
+                    }
+
+
+                    button {
+                        display: flex;
+                        padding: 0.8em;
+                        align-items: center;
+                        gap: 1em;
+
+                        &.delete {
+                            background: theme.$error;
+                            border: none;
+                            color: theme.$text-light2;
+                        }
+                    }
+                }
             }
         }
     }

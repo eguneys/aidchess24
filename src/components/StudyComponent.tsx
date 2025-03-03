@@ -576,7 +576,7 @@ export function ChapterComponent(props: { chapter: Chapter, nth: string, selecte
 }
 
 
-export function EditStudyComponent(props: { db: StudiesDBReturn, study: Study }) {
+export function EditStudyComponent(props: { db: StudiesDBReturn, study: Study, on_delete_study: () => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -595,6 +595,10 @@ export function EditStudyComponent(props: { db: StudiesDBReturn, study: Study })
         props.study.set_name(name)
     }
 
+    const on_delete_study = () => {
+        props.on_delete_study()
+    }
+
     return (<>
         <h2>Edit Opening</h2>
 
@@ -602,10 +606,15 @@ export function EditStudyComponent(props: { db: StudiesDBReturn, study: Study })
         <label for='name'>Name</label>
         <input name="name" id="name" onKeyDown={e => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Opening Name" minLength={3} value={props.study.name}></input>
         </div>
+
+        <div class='group buttons'>
+            <span class='split'></span>
+            <button onClick={on_delete_study} class='delete'>Delete <i data-icon=''></i></button>
+        </div>
     </>)
 }
 
-export function EditChapterComponent(props: { db: StudiesDBReturn, chapter: Chapter, section: Section, i_chapter: number, on_order_changed: (order: number) => void }) {
+export function EditChapterComponent(props: { db: StudiesDBReturn, chapter: Chapter, section: Section, i_chapter: number, on_delete_chapter: () => void, on_order_changed: (order: number) => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -626,6 +635,10 @@ export function EditChapterComponent(props: { db: StudiesDBReturn, chapter: Chap
         props.on_order_changed(parseInt(value))
     }
 
+    const on_delete_chapter = () => {
+        props.on_delete_chapter()
+    }
+
     return (<>
         <h2>Edit Chapter</h2>
 
@@ -642,11 +655,16 @@ export function EditChapterComponent(props: { db: StudiesDBReturn, chapter: Chap
                 <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
             }</For>
         </select>
+
+        <div class='group buttons'>
+            <span class='split'></span>
+            <button onClick={on_delete_chapter} class='delete'>Delete <i data-icon=''></i></button>
+        </div>
         </div>
     </>)
 }
 
-export function EditSectionComponent(props: { db: StudiesDBReturn, section: Section, i_section: number, nb_sections: number, on_order_changed: (order: number) => void }) {
+export function EditSectionComponent(props: { db: StudiesDBReturn, section: Section, i_section: number, nb_sections: number, on_delete_section: () => void, on_order_changed: (order: number) => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -667,6 +685,10 @@ export function EditSectionComponent(props: { db: StudiesDBReturn, section: Sect
         props.on_order_changed(SECTION_LETTERS.indexOf(value))
     }
 
+    const on_delete_section = () => {
+        props.on_delete_section()
+    }
+
     return (<>
         <h2>Edit Section</h2>
 
@@ -683,6 +705,12 @@ export function EditSectionComponent(props: { db: StudiesDBReturn, section: Sect
                 <option value={letter} selected={props.i_section === i()}>{letter}</option>
             }</For>
         </select>
+        </div>
+
+
+        <div class='group buttons'>
+            <span class='split'></span>
+            <button onClick={on_delete_section} class='delete'>Delete <i data-icon=''></i></button>
         </div>
     </>)
 }

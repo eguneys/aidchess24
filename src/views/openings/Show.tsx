@@ -1,6 +1,6 @@
 import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, on, Show, Suspense, useContext } from "solid-js"
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
-import { useParams } from "@solidjs/router"
+import { Navigate, useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
@@ -146,6 +146,27 @@ function StudyShow(props: { study: Study }) {
     }))
 
 
+    const on_delete_chapter = (section: Section, chapter: Chapter) => {
+        section.delete_chapter(chapter)
+        set_edit_chapter_dialog(undefined)
+
+        db.delete_chapter(chapter)
+    }
+
+    const on_delete_section = (section: Section) => {
+        props.study.delete_section(section)
+        set_edit_section_dialog(undefined)
+
+        db.delete_section(section)
+    }
+
+    const navigate = useNavigate()
+    const on_delete_study = () => {
+        set_edit_study_dialog(false)
+        db.delete_study(props.study)
+        navigate('/openings')
+    }
+
     return (<>
         <div class='study'>
             <div class='details-wrap'>
@@ -167,17 +188,17 @@ function StudyShow(props: { study: Study }) {
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
-                    <EditSectionComponent db={db} on_order_changed={order => on_order_changed(section(), order)} section={section()} i_section={get_i_section(section())} nb_sections={nb_sections()}/>
+                    <EditSectionComponent db={db} on_delete_section={() => on_delete_section(section())} on_order_changed={order => on_order_changed(section(), order)} section={section()} i_section={get_i_section(section())} nb_sections={nb_sections()}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_chapter_dialog()}>{ (sc) => 
                 <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(undefined)}>
-                    <EditChapterComponent db={db} on_order_changed={order => on_chapter_order_changed(...sc(), order)} section={sc()[0]} chapter={sc()[1]} i_chapter={get_i_chapter(...sc())}/>
+                    <EditChapterComponent db={db} on_delete_chapter={() => on_delete_chapter(...sc())} on_order_changed={order => on_chapter_order_changed(...sc(), order)} section={sc()[0]} chapter={sc()[1]} i_chapter={get_i_chapter(...sc())}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_study_dialog()}>
                 <DialogComponent klass='edit-study' on_close={() => set_edit_study_dialog(false)}>
-                    <EditStudyComponent db={db} study={props.study}/>
+                    <EditStudyComponent db={db} study={props.study} on_delete_study={on_delete_study} />
                 </DialogComponent>
             </Show>
         </div>

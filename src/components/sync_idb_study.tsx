@@ -19,6 +19,22 @@ async function db_update_chapter(db: StudiesDB, entity: EntityChapterInsert) {
 
 
 
+async function db_delete_study(db: StudiesDB, study: Study) {
+    await db.studies.delete(study.id)
+
+    db.sections.bulkDelete(study.sections.map(_ => _.id))
+    db.chapters.bulkDelete(study.sections.flatMap(_ => _.chapters.map(_ => _.id)))
+}
+async function db_delete_section(db: StudiesDB, section: Section) {
+    await db.sections.delete(section.id)
+    db.chapters.bulkDelete(section.chapters.map(_ => _.id))
+}
+async function db_delete_chapter(db: StudiesDB, chapter: Chapter) {
+    await db.chapters.delete(chapter.id)
+}
+
+
+
 
 
 async function db_new_study(db: StudiesDB) {
@@ -149,6 +165,10 @@ export type StudiesDBReturn = {
     update_study(study: EntityStudyInsert): Promise<void>
     update_section(section: EntitySectionInsert): Promise<void>
     update_chapter(chapter: EntityChapterInsert): Promise<void>
+    delete_study(study: EntityStudyInsert): Promise<void>
+    delete_section(section: EntitySectionInsert): Promise<void>
+    delete_chapter(chapter: EntityChapterInsert): Promise<void>
+
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -172,6 +192,15 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         update_chapter(chapter: EntityChapterInsert) {
             return db_update_chapter(db, chapter)
+        },
+        delete_chapter(chapter: Chapter) {
+            return db_delete_chapter(db, chapter)
+        },
+        delete_section(section: Section) {
+            return db_delete_section(db, section)
+        },
+        delete_study(study: Study) {
+            return db_delete_study(db, study)
         }
     }
 
