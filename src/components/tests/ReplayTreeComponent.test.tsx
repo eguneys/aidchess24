@@ -32,7 +32,7 @@ test('pgn', () => {
 
 test('remove children', () => {
 
-    let tree = StepsTree()
+    let tree = StepsTree('')
 
     let e4 = tree.add_child_san('', 'e4')!
     tree.add_child_san('', 'd4')!
@@ -57,7 +57,7 @@ test('remove children', () => {
 
 test('add branches', () => {
 
-    let tree = StepsTree()
+    let tree = StepsTree('')
 
     let e4 = tree.add_child_san('', 'e4')
     tree.add_child_san('e2e4', 'e5')
@@ -72,7 +72,7 @@ test('add branches', () => {
 
 test('add child', () => {
 
-    let tree = StepsTree()
+    let tree = StepsTree('')
 
     expect(tree.initial_fen).toBeUndefined()
 

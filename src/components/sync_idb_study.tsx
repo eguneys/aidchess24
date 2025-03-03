@@ -2,7 +2,7 @@ import Dexie, { Entity, EntityTable, InsertType } from "dexie";
 import { Chapter, Section, Study } from "./StudyComponent";
 import { createContext, JSX } from "solid-js";
 import { NAG, Path, Step } from "./step_types";
-import { PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
+import { PGN, PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
 
 
 async function db_new_play_uci_tree_replay(db: StudiesDB) {
@@ -141,7 +141,35 @@ async function db_update_tree_step_node(db: StudiesDB, entity: EntityTreeStepNod
     await db.tree_step_nodes.update(entity.id!, entity)
 }
 
+async function db_new_section_with_name(db: StudiesDB, id: EntityStudyId, name: string, order: number): Promise<Section> {
+    let new_section = Section(gen_id8(), id)
+    new_section.set_name(name)
+    new_section.set_order(order)
 
+    await db.sections.add(new_section.entity)
+    return new_section
+}
+
+async function db_new_chapter_from_pgn(db: StudiesDB, section_id: EntitySectionId, chapter_name: string, pgn: PGN, order: number): Promise<Chapter> {
+    let play_replay = await db_new_play_uci_tree_replay_from_pgn(db, pgn)
+    let new_chapter = Chapter(gen_id8(), section_id, play_replay)
+    new_chapter.set_name(chapter_name)
+    new_chapter.set_order(order)
+    await db.chapters.add(new_chapter.entity)
+    return new_chapter
+}
+
+
+
+async function db_new_play_uci_tree_replay_from_pgn(db: StudiesDB, pgn: PGN): Promise<PlayUciTreeReplay> {
+    let play_replay = await db_new_play_uci_tree_replay(db)
+
+    let nodes = pgn.tree.root.flatMap(_ => [_, ..._.all_sub_children])
+
+    await db.tree_step_nodes.bulkAdd(nodes.map(_ => _.entity))
+
+    return play_replay
+}
 
 
 async function db_study_by_id(db: StudiesDB, id: EntityStudyId): Promise<Study> {
@@ -300,6 +328,11 @@ export type StudiesDBReturn = {
     update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert): Promise<void>
     update_tree_step_node(entity: EntityTreeStepNodeInsert): Promise<void>
     delete_tree_nodes(nodes: TreeStepNode[]): Promise<void>;
+
+
+
+    new_section_with_name(id: EntityStudyId, section_name: string, order: number): Promise<Section>;
+    new_chapter_from_pgn(id: EntitySectionId, chapter_name: string, pgn: PGN, order: number): Promise<Chapter>;
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -349,6 +382,12 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
             return db_delete_tree_nodes(db, nodes)
         },
 
+        new_section_with_name(id: EntityStudyId, section_name: string, order: number): Promise<Section> {
+            return db_new_section_with_name(db, id, section_name, order)
+        },
+        new_chapter_from_pgn(id: EntitySectionId, chapter_name: string, pgn: PGN, order: number): Promise<Chapter> {
+            return db_new_chapter_from_pgn(db, id, chapter_name, pgn, order)
+        }
 
     }
 

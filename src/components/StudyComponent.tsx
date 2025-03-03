@@ -436,7 +436,7 @@ export function SectionsListComponent(props: { db: StudiesDBReturn, study: Study
 
 
     const i_section = createMemo(() => props.study.i_section)
-    const set_i_section = props.study.set_i_section
+    const set_i_section = (i: number) => props.study.set_i_section(i)
 
     const selected_section = createMemo(() => props.study.sections[i_section()])
     const set_selected_section = (section: Section) => {
@@ -507,7 +507,7 @@ function SectionComponent(props: { db: StudiesDBReturn, section: Section, nth: s
     }
 
     const i_chapter = createMemo(() => props.section.i_chapter)
-    const set_i_chapter = props.section.set_i_chapter
+    const set_i_chapter = (i: number) => props.section.set_i_chapter(i)
 
     const selected_chapter = createMemo(() => props.section.chapters[i_chapter()])
     const set_selected_chapter = (chapter: Chapter) => {
@@ -661,7 +661,7 @@ export function EditChapterComponent(props: { db: StudiesDBReturn, chapter: Chap
     </>)
 }
 
-export function EditSectionComponent(props: { db: StudiesDBReturn, section: Section, i_section: number, nb_sections: number, on_delete_section: () => void, on_order_changed: (order: number) => void, on_import_pgns: (pgns: PGN[]) => void }) {
+export function EditSectionComponent(props: { db: StudiesDBReturn, section: Section, i_section: number, nb_sections: number, on_delete_section: () => void, on_order_changed: (order: number) => void, on_import_pgns: (pgns: PGN[], section_name: string) => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -717,7 +717,7 @@ export function EditSectionComponent(props: { db: StudiesDBReturn, section: Sect
         if (!pgns) {
             return
         }
-        props.on_import_pgns(pgns)
+        props.on_import_pgns(pgns, props.section.name)
     }
 
    const import_lichess_disabled = createMemo(() => {
@@ -726,6 +726,12 @@ export function EditSectionComponent(props: { db: StudiesDBReturn, section: Sect
 
     return (<>
         <h2>Edit Section</h2>
+        <div class='group'>
+            <label for='name'>Name</label>
+            <input name="name" id="name" onKeyDown={(e) => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.section.name}></input>
+        </div>
+
+
 
         <div class='tabs'>
             <div class={'tab ' + (tab() === 'empty' ? 'active' : '')} onClick={() => set_tab('empty')}>Empty</div>
@@ -739,11 +745,6 @@ export function EditSectionComponent(props: { db: StudiesDBReturn, section: Sect
                 </div>
             </Show>
             <Show when={tab() === 'empty'}>
-                <div class='group'>
-                <label for='name'>Name</label>
-                <input name="name" id="name" onKeyDown={(e) => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.section.name}></input>
-                </div>
-
         
                 <div class='group'>
                 <label for='order'>Set Order</label>

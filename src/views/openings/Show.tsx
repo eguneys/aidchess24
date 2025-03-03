@@ -24,14 +24,14 @@ function ShowComponent() {
 
     let params = useParams()
 
-    let [study] = createResource(() => db.study_by_id(params.id))
+    let [study, {refetch}] = createResource(() => db.study_by_id(params.id))
 
     return (<>
         <main class='openings-show'>
             <ErrorBoundary fallback={<StudyNotFound />}>
                 <Suspense fallback={<StudyLoading />}>
                     <Show when={study()}>{study =>
-                        <StudyShow study={study()} />
+                        <StudyShow study={study()} on_refetch={() => refetch()} />
                     }</Show>
                 </Suspense>
             </ErrorBoundary>
@@ -39,7 +39,7 @@ function ShowComponent() {
     </>)
 }
 
-function StudyShow(props: { study: Study }) {
+function StudyShow(props: { study: Study, on_refetch: () => void }) {
 
     const db = useContext(StudiesDBContext)!
 
@@ -52,6 +52,7 @@ function StudyShow(props: { study: Study }) {
     const [selected_chapter, set_selected_chapter] = createSignal<Chapter | undefined>(undefined)
 
     const on_selected_chapter = (section: Section, chapter: Chapter) => {
+        console.trace(section?.name, chapter?.name)
         batch(() => {
             set_selected_section(section)
             set_selected_chapter(chapter)
@@ -60,7 +61,7 @@ function StudyShow(props: { study: Study }) {
 
     const [edit_section_dialog, set_edit_section_dialog] = createSignal<Section | undefined>(undefined)
 
-    const nb_sections = () => props.study.sections.length
+    const nb_sections = createMemo(() => props.study.sections.length)
     const get_i_section = (section: Section) => props.study.sections.indexOf(section)
     const get_i_chapter = (section: Section, chapter: Chapter) => section.chapters.indexOf(chapter)
 
@@ -322,11 +323,63 @@ function StudyShow(props: { study: Study }) {
     })
 
 
-    const on_import_pgns = (pgns: PGN[]) => {
+    const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
 
-        console.log(pgns)
+        let study_name
+        let sections: Record<string, [string, PGN][]> = {}
+
+        for (let pgn of pgns) {
+            let event = pgn.event!
+            let [default_study_name, section_name, chapter_name] = event.split(':')
+
+            if (!chapter_name) {
+                chapter_name = section_name
+                section_name = default_section_name
+            }
+
+
+            if (sections[section_name] === undefined) {
+                sections[section_name] = []
+            }
+
+            sections[section_name].push([chapter_name, pgn])
+            study_name = default_study_name
+        }
+
+
+        let section_name = Object.keys(sections)[0]
+        let section = edit_section_dialog()
+        if (section) {
+            section.set_name(section_name)
+        }
+
+        let s_chapter: Chapter | undefined = undefined
+        let s_section: Section | undefined = section
+
+        let i_order = props.study.sections.length
+        for (section_name of Object.keys(sections)) {
+
+            if (!section) {
+                section = await db.new_section_with_name(props.study.id, section_name, i_order++)
+                props.study.add_new_section(section)
+            }
+
+            let i_chapter = 0
+            let chapters = sections[section_name]
+            for (let [chapter_name, pgn] of chapters) {
+                s_chapter = await db.new_chapter_from_pgn(section.id, chapter_name, pgn, i_chapter++)
+                section.add_new_chapter(s_chapter)
+            }
+            s_section = section
+            section = undefined
+        }
+
+        if (s_section && s_chapter) {
+            on_selected_chapter(s_section, s_chapter)
+        }
+        set_edit_section_dialog(undefined)
     }
-                                                      
+
     return (<>
         <div ref={$el_ref!} class='study'>
             <div class='details-wrap'>
