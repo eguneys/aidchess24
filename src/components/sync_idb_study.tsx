@@ -1,13 +1,15 @@
 import Dexie, { Entity, EntityTable, InsertType } from "dexie";
 import { Chapter, Section, Study } from "./StudyComponent";
 import { createContext, JSX } from "solid-js";
-import { NAG, Path, Ply, SAN, Step } from "./step_types";
+import { NAG, Path, Step } from "./step_types";
 import { PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
-import { Position } from "chessops";
 
 
 async function db_new_play_uci_tree_replay(db: StudiesDB) {
-    let new_replay = PlayUciTreeReplay(gen_id8())
+    let tree = StepsTree(gen_id8())
+    await db.steps_trees.add(tree.entity)
+
+    let new_replay = PlayUciTreeReplay(gen_id8(), tree)
     await db.play_uci_tree_replays.add(new_replay.entity)
     return new_replay
 }
@@ -16,10 +18,8 @@ async function db_new_steps_tree(db: StudiesDB) {
     await db.steps_trees.add(new_tree.entity)
     return new_tree
 }
-async function db_new_tree_step_node(db: StudiesDB, tree_id: EntityStepsTreeId, ply: Ply, pos: Position, san: SAN, base_path: Path) {
-    let new_node = TreeStepNode(gen_id8(), tree_id, ply, pos, san, base_path)
-    await db.tree_step_nodes.add(new_node.entity)
-    return new_node
+async function db_new_tree_step_node(db: StudiesDB, node: TreeStepNode) {
+    await db.tree_step_nodes.add(node.entity)
 }
 
 
@@ -75,9 +75,56 @@ async function db_new_section(db: StudiesDB, study_id: EntityStudyId) {
 
 
 async function db_new_chapter(db: StudiesDB, section_id: EntitySectionId) {
-    let new_chapter = Chapter(gen_id8(), section_id)
+    let play_replay = await db_new_play_uci_tree_replay(db)
+    let new_chapter = Chapter(gen_id8(), section_id, play_replay)
     await db.chapters.add(new_chapter.entity)
     return new_chapter
+}
+
+async function db_load_chapter(db: StudiesDB, e_chapter: EntityChapterInsert) {
+    let play_replay = await db_load_play_replay(db, e_chapter.tree_replay_id)
+
+    if (!play_replay) {
+        return undefined
+    }
+
+    let res = Chapter(e_chapter.id!, e_chapter.section_id, play_replay)
+    res.set_entity(e_chapter)
+    return res
+}
+
+async function db_load_play_replay(db: StudiesDB, id: EntityPlayUciTreeReplayId) {
+    let e_replay = await db.play_uci_tree_replays.where('id').equals(id).first()
+
+    if (!e_replay) {
+        return undefined
+    }
+
+    let e_steps = await db.steps_trees.where('id').equals(e_replay.steps_tree_id).first()
+
+    if (!e_steps) {
+        return undefined
+    }
+
+
+    let steps = StepsTree(e_steps.id)
+
+
+    let nodes = await db.tree_step_nodes.where('tree_id').equals(e_steps.id).toArray()
+
+    nodes.sort((a, b) => a.step.path.length - b.step.path.length)
+    nodes.forEach(e_node => {
+        let node = TreeStepNode(e_node.id, e_node.tree_id, e_node.step)
+        steps.add_load_node(node)
+    })
+
+    let res = PlayUciTreeReplay(e_replay.id!, steps)
+    res.set_entity(e_replay)
+    return res
+}
+
+async function db_update_tree_replay(db: StudiesDB, entity: EntityPlayUciTreeReplayInsert) {
+    await db.play_uci_tree_replays.update(entity.id!, entity)
 }
 
 
@@ -105,12 +152,14 @@ async function db_study_by_id(db: StudiesDB, id: EntityStudyId): Promise<Study> 
     study.sort_sections()
 
     sections.map(async section => {
-        (await db.chapters.where('section_id').equals(section.id).toArray()).forEach(e_chapter => {
-            let res = Chapter(e_chapter.id, section.id)
-            res.set_entity(e_chapter)
-
+        await Promise.all((await db.chapters.where('section_id').equals(section.id).toArray()).map(async e_chapter => {
+            let res = await db_load_chapter(db, e_chapter)
+            if (!res) {
+                // TODO handle
+                return
+            }
             section.add_chapter(res)
-        })
+        }))
         section.sort_chapters()
     })
 
@@ -141,7 +190,7 @@ class StudiesDB extends Dexie {
         this.version(1).stores({
             studies: 'id',
             sections: 'id, study_id',
-            chapters: 'id, section_id',
+            chapters: 'id, section_id, tree_replay_id',
             play_uci_tree_replays: 'id, steps_tree_id',
             steps_trees: 'id',
             tree_step_nodes: 'id, tree_id',
@@ -181,6 +230,7 @@ class EntitySection extends Entity<StudiesDB> {
 class EntityChapter extends Entity<StudiesDB> {
     id!: EntityChapterId
     section_id!: EntitySectionId
+    tree_replay_id!: EntityPlayUciTreeReplayId
     name!: string
     order!: number
 }
@@ -223,14 +273,15 @@ export type StudiesDBReturn = {
     update_study(study: EntityStudyInsert): Promise<void>
     update_section(section: EntitySectionInsert): Promise<void>
     update_chapter(chapter: EntityChapterInsert): Promise<void>
-    delete_study(study: EntityStudyInsert): Promise<void>
-    delete_section(section: EntitySectionInsert): Promise<void>
-    delete_chapter(chapter: EntityChapterInsert): Promise<void>
+    delete_study(study: Study): Promise<void>
+    delete_section(section: Section): Promise<void>
+    delete_chapter(chapter: Chapter): Promise<void>
 
     new_play_uci_tree_replay(): Promise<PlayUciTreeReplay>
     new_steps_tree(): Promise<StepsTree>
-    new_tree_step_node(tree_id: EntityStepsTreeId, ply: Ply, pos: Position, san: SAN, path: Path): Promise<TreeStepNode>
+    new_tree_step_node(node: TreeStepNode): Promise<void>
 
+    update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert): Promise<void>
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -267,8 +318,11 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
 
         new_play_uci_tree_replay() { return db_new_play_uci_tree_replay(db) },
         new_steps_tree() { return db_new_steps_tree(db) },
-        new_tree_step_node(tree_id: EntityStepsTreeId, ply: Ply, pos: Position, san: SAN, base_path: Path) { 
-            return db_new_tree_step_node(db, tree_id, ply, pos, san, base_path) 
+        new_tree_step_node(node: TreeStepNode) { 
+            return db_new_tree_step_node(db, node) 
+        },
+        update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
+            return db_update_tree_replay(db, entity)
         },
     }
 

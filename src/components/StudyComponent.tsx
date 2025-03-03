@@ -2,7 +2,7 @@ import { Color } from "chessops"
 import { PlayUciTreeReplay } from "./ReplayTreeComponent"
 import { batch, createEffect, createMemo, createSignal, For, Show } from "solid-js"
 import './StudyComponent.scss'
-import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, gen_id8, StudiesDBReturn } from "./sync_idb_study"
+import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, StudiesDBReturn } from "./sync_idb_study"
 
 const SECTION_LETTERS = 'ABCDEFGHIJKLMNOP'.split('')
 
@@ -10,6 +10,7 @@ export type Chapter = {
     entity: EntityChapterInsert,
     id: EntityChapterId,
     section_id: EntityStudyId,
+    tree_replay_id: EntityPlayUciTreeReplayId,
     name: string,
     play_replay: PlayUciTreeReplay,
     orientation?: Color,
@@ -21,7 +22,6 @@ export type Chapter = {
     set_order(order: number): void,
     set_entity(entity: EntityChapterInsert): void,
     set_name(name: string): void,
-    set_play_replay(play_replay: PlayUciTreeReplay): void,
     set_orientation(orientation: Color | undefined): void,
     set_event(event: string | undefined): void,
     set_site(site: string | undefined): void,
@@ -67,11 +67,9 @@ export type Study = {
     create_effects_listen_and_save_db(db: StudiesDBReturn): void
 }
 
-export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapter {
+export function Chapter(id: EntityChapterId, section_id: EntitySectionId, play_replay: PlayUciTreeReplay): Chapter {
     let [order, set_order] = createSignal(0)
     let [name, set_name] = createSignal('New Chapter')
-
-    let [play_replay, set_play_replay] = createSignal(PlayUciTreeReplay(gen_id8()))
 
     let [orientation, set_orientation] = createSignal<Color | undefined>(undefined)
     let [event, set_event] = createSignal<string | undefined>(undefined)
@@ -83,12 +81,12 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapt
         set_entity(entity: EntityChapterInsert) {
             set_name(entity.name)
             set_order(entity.order)
-            console.log(entity)
         },
         get entity() {
             return {
                 id,
                 section_id,
+                tree_replay_id: play_replay.id,
                 name: name(),
                 order: order()
             }
@@ -97,8 +95,9 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapt
         set_order(order: number) { set_order(order) },
         id,
         section_id,
+        tree_replay_id: play_replay.id,
         get name() { return name() },
-        get play_replay() { return play_replay() },
+        play_replay,
         get orientation() { return orientation() },
         get event() { return event() },
         get site() { return site() },
@@ -110,7 +109,6 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapt
         set_site(site: string) { set_site(site) },
         set_white(white: string) { set_white(white) },
         set_black(black: string) { set_black(black) },
-        set_play_replay(play_replay: PlayUciTreeReplay) { set_play_replay(play_replay) },
         create_effects_listen_and_save_db(db: StudiesDBReturn) {
             createEffect(() => {
                 db.update_chapter(this.entity)
@@ -200,7 +198,6 @@ export function Section(id: EntitySectionId, study_id: EntityStudyId): Section {
                 cc.forEach((c, i) => {
                     c.set_order(i)
                 })
-                console.log(cc)
                 set_chapters([...cc])
             })
 

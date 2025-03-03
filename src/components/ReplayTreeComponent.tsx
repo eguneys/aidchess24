@@ -6,7 +6,11 @@ import { parsePgn, ChildNode, PgnNodeData } from "chessops/pgn"
 import { parseSan } from "chessops/san"
 import { Key } from "@solid-primitives/keyed"
 import './ReplayTreeComponent.scss'
-import { EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityStepsTreeId, EntityStepsTreeInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, gen_id8 } from "./sync_idb_study"
+import { EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityStepsTreeId, EntityStepsTreeInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, gen_id8, StudiesDBReturn } from "./sync_idb_study"
+
+function fen_pos(fen: FEN) {
+    return Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
+}
 
 export type PGN = {
     orientation?: Color,
@@ -87,6 +91,7 @@ export type TreeStepNode = {
     children: TreeStepNode[],
     nags: NAG[],
     set_nags(nags: NAG[]): void,
+    add_load_node(node: TreeStepNode): void,
     add_child_san(san: SAN): TreeStepNode
     remove_child_san(san: SAN): TreeStepNode | undefined
     remove_child(child: TreeStepNode): TreeStepNode | undefined
@@ -102,6 +107,7 @@ export type StepsTree = {
     initial_fen: FEN | undefined,
     root: TreeStepNode[],
     as_pgn: string,
+    add_load_node(node: TreeStepNode): void,
     add_sans_at_root(san: SAN[]): TreeStepNode[]
     add_child_san(path: Path, san: SAN): TreeStepNode | undefined
     remove_child_at_path(path: Path): TreeStepNode | undefined
@@ -148,8 +154,13 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
             i = sub.children
 
         }
+    }
 
-        
+    const find_parent_at_path = (path: Path): TreeStepNode | undefined => {
+        if (path === '') {
+            return undefined
+        }
+        return find_parent_and_child_at_path(path.split(' ').slice(0, -1).join(' '))?.[1]
     }
 
 
@@ -177,7 +188,7 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
 
     const entity = () => {
         return {
-
+            id
         }
     }
 
@@ -197,6 +208,27 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
         },
         get root() {
             return root()
+        },
+        add_load_node(node: TreeStepNode) {
+            let path = node.path.split(' ')
+
+            let rr = root()
+            if (path.length === 1) {
+
+                let exists = rr.find(_ => _.path === path[0])
+                if (exists) {
+                    return exists
+                }
+
+                set_root([...rr, node])
+                return node
+            } else {
+                let parent = find_parent_at_path(node.path)
+                if (parent) {
+                    return parent.add_load_node(node)
+                }
+                return undefined
+            }
         },
         add_sans_at_root(sans: SAN[]) {
             if (sans.length === 0) {
@@ -225,7 +257,8 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
                 }
 
                 let pos = Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap()
-                let child = TreeStepNode(gen_id8(), id, 1, pos, san, '')
+                let step = make_step_and_play(1, pos, san, '')
+                let child = TreeStepNode(gen_id8(), id, step)
                 set_root([...rr, child])
                 return child
             }
@@ -294,13 +327,10 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
 
 
 
-export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNodeId, ply: Ply, pos: Position, san: SAN, base_path: Path): TreeStepNode {
+export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNodeId, step: Step): TreeStepNode {
 
     let [children, set_children] = createSignal<TreeStepNode[]>([])
     let [nags, set_nags] = createSignal<NAG[]>([])
-
-    pos = pos.clone()
-    let step = make_step_and_play(ply, pos, san, base_path)
 
     let nb_first_variations = () => {
         return children_first_variations()?.length ?? 0
@@ -320,8 +350,11 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
         }
     }
 
+    const step_pos = () => fen_pos(step.fen)
+
     const entity = () => {
         return {
+            id,
             step,
             tree_id,
             nags: nags()
@@ -364,6 +397,19 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
             set_children([...cc])
             return child
         },
+        add_load_node(node: TreeStepNode) {
+
+            let cc = children()
+
+            let exists = cc.find(_ => _.path === node.path)
+
+            if (exists) {
+                return exists
+            }
+
+            set_children([...cc, node])
+            return node
+        },
         add_child_san(san: SAN) {
 
             let cc = children()
@@ -374,7 +420,8 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
                 return exists
             }
 
-            let child = TreeStepNode(gen_id8(), tree_id, ply + 1, pos, san, step.path)
+            let c_step = make_step_and_play(step.ply + 1, step_pos(), san, step.path)
+            let child = TreeStepNode(gen_id8(), tree_id, c_step)
             set_children([...cc, child])
             return child
         },
@@ -455,17 +502,11 @@ export type PlayUciTreeReplay = {
     goto_up_if_can(): void
     previous_branch_points_at_cursor_path: TreeStepNode[]
     add_child_san_to_current_path(san: SAN): TreeStepNode | undefined
-    set_steps(steps: StepsTree): void
     create_effects(): void
+    create_effects_listen_and_save_db(db: StudiesDBReturn): void
 }
 
-export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): PlayUciTreeReplay {
-
-    let [steps, set_steps] = createSignal(StepsTree(gen_id8()))
-
-    if (pgn) {
-        set_steps(parse_PGNS(pgn)[0].tree)
-    }
+export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTree): PlayUciTreeReplay {
 
     let [cursor_path, set_cursor_path] = createSignal<Path>('')
 
@@ -487,7 +528,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
     }
 
     const get_next_path = () => {
-        let ss = steps()
+        let ss = steps
         let c = cursor_path()
 
         let children = ss.find_at_path(c)?.children ?? ss.root
@@ -500,7 +541,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
     }
 
     const get_first_path = () => {
-        let ss = steps()
+        let ss = steps
 
         let pc = ss.find_parent_and_child_at_path(cursor_path())
 
@@ -537,7 +578,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
     }
 
     const get_last_path = () => {
-        let ss = steps()
+        let ss = steps
 
         let step = ss.find_at_path(cursor_path())
 
@@ -558,7 +599,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
     }
 
     const get_up_path = () => {
-        let ss = steps()
+        let ss = steps
 
         let pc = ss.find_parent_and_child_at_path(cursor_path())
 
@@ -601,7 +642,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
     }
 
     const get_down_path = () => {
-        let ss = steps()
+        let ss = steps
         let pc = ss.find_parent_and_child_at_path(cursor_path())
 
         if (!pc) {
@@ -645,7 +686,8 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
 
     const entity = () => {
         return {
-            steps_tree_id: steps().id,
+            id,
+            steps_tree_id: steps.id,
             cursor_path: cursor_path()
         }
     }
@@ -659,8 +701,8 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
             set_cursor_path(entity.cursor_path)
         },
         id,
-        get steps_tree_id() { return steps().id },
-        get steps() { return steps() },
+        get steps_tree_id() { return steps.id },
+        steps,
         get cursor_path() {
             return cursor_path()
         },
@@ -668,7 +710,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
             set_cursor_path(path)
         },
         get cursor_path_step() {
-            return steps().find_at_path(cursor_path())?.step
+            return steps.find_at_path(cursor_path())?.step
         },
         goto_path,
         get_prev_path,
@@ -714,11 +756,11 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
             }
         },
         get previous_branch_points_at_cursor_path() {
-            return steps().previous_branch_points(cursor_path()) ?? []
+            return steps.previous_branch_points(cursor_path()) ?? []
         },
         add_child_san_to_current_path(san: SAN) {
             return batch(() => {
-                let res = steps().add_child_san(cursor_path(), san)
+                let res = steps.add_child_san(cursor_path(), san)
                 if (!res) {
                     return undefined
                 }
@@ -726,18 +768,14 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, pgn?: string): 
                 return res
             })
         },
-        set_steps(steps: StepsTree) {
-            set_steps(steps)
-            let root = steps.root[0]
-            if (root) {
-                set_cursor_path(root.path)
-            } else {
-                set_cursor_path('')
-            }
+        create_effects_listen_and_save_db(db: StudiesDBReturn) {
+            createEffect(() => {
+                db.update_play_uci_tree_replay(entity())
+            })
         },
         create_effects() {
             createEffect(on(cursor_path, (path: Path) => {
-                let ss = steps()
+                let ss = steps
                 ss.previous_branch_points(path)?.map(branch => {
                     if (!sticky_paths.includes(branch.path)) {
                         ss.siblings_of(branch.path)?.forEach(sibling => {

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
-import { PlayUciTreeReplay, PlayUciTreeReplayComponent } from "../../components/ReplayTreeComponent"
+import { PlayUciTreeReplay, PlayUciTreeReplayComponent, StepsTree } from "../../components/ReplayTreeComponent"
 import { DialogComponent } from "../../components/DialogComponent"
 import { INITIAL_FEN } from "chessops/fen"
 import { usePlayer } from "../../sound"
@@ -86,7 +86,7 @@ function StudyShow(props: { study: Study }) {
     const play_replay = createMemo(() => {
         let s = selected_chapter()
         if (!s) {
-            return PlayUciTreeReplay(gen_id8())
+            return PlayUciTreeReplay(gen_id8(), StepsTree(gen_id8()))
         }
         return s.play_replay
     })
@@ -98,7 +98,13 @@ function StudyShow(props: { study: Study }) {
 
         let san = us[1]
 
-        play_replay().add_child_san_to_current_path(san)
+        let new_node = play_replay().add_child_san_to_current_path(san)
+
+        if (!new_node) {
+            return
+        }
+
+        db.new_tree_step_node(new_node)
     }))
 
     const initial_fen = createMemo(() => INITIAL_FEN)
@@ -143,6 +149,10 @@ function StudyShow(props: { study: Study }) {
                 })
             }))
         })
+    }))
+
+    createEffect(on(play_replay, (replay) => {
+        replay.create_effects_listen_and_save_db(db)
     }))
 
 
