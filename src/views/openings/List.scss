@@ -7,14 +7,14 @@
 
         flex-flow: column;
 
-        background: theme.$ac-li-orange;
+        background: theme.$bu-mu-blue2;
 
         .tools {
             display: flex;
             padding: 1em;
 
             justify-content: flex-end;
-
+            border-bottom: 2px solid theme.$ac-li-blue-2;
 
             button.new {
                 display: flex;
@@ -24,10 +24,10 @@
                 text-transform: uppercase;
 
                 border: none;
-                background: theme.$ac-li-purple2;
-                color: theme.$text-primary;
+                background: theme.$he2;
+                color: theme.$text-light2;
                 border-radius: 8px;
-                border: 2px solid theme.$ac-li-purple;
+                border: 2px solid theme.$ac-li-purple-2;
 
                 user-select: none;
                 cursor: pointer;
@@ -35,7 +35,7 @@
                 transition: .2s;
 
                 &:hover {
-                    background: theme.$ac-li-purple-2;
+                    background: theme.$ac-li-purple4;
                 }
 
                 &:active {
@@ -48,5 +48,56 @@
             }
         }
 
+        .list {
+            padding: 0.2em;
+            display: flex;
+            flex-flow: row wrap;
+            gap: 0.1em;
+            justify-content: center;
+
+            .loading, .no-studies {
+                align-self: center;
+
+                a:hover {
+
+                    color: theme.$text-secondary;
+                }
+            }
+
+
+            .study {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(45ch, 1fr));
+
+                padding: 1em;
+                user-select: none;
+                cursor: pointer;
+                transition: .25s;
+                border: 2px solid theme.$ac-li-purple-2;
+
+                h3.title {
+                    color: theme.$deep-blue;
+                    font-weight: 400;
+                }
+
+
+                &:hover {
+                    background: theme.$ac-li-purple-2;
+                }
+
+                .section {
+                    .chapters {
+                        display: flex;
+                        flex-flow: column;
+                        .chapter {
+
+                            display: flex;
+                            gap: 0.2em;
+
+                        }
+                        }
+                    }
+            }
+        }
     }
 }

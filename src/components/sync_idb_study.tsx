@@ -30,7 +30,7 @@ async function db_new_tree_step_node(db: StudiesDB, node: TreeStepNode) {
 
 
 export function gen_id8() {
-    return Math.random().toString(16).slice(2, 8)
+    return Math.random().toString(16).slice(2, 12)
 }
 
 
@@ -213,6 +213,65 @@ async function db_study_by_id(db: StudiesDB, id: EntityStudyId): Promise<Study> 
     return study
 }
 
+async function db_list_studies(db: StudiesDB): Promise<Study[]> {
+    let e_res = await db.studies.toArray()
+
+    return e_res.map(e_study => {
+        let res = Study(e_study.id)
+        res.set_entity(e_study)
+        return res
+    })
+}
+
+
+async function db_light_list_studies(db: StudiesDB): Promise<Study[]> {
+    let e_res = await db.studies.toArray()
+
+    return Promise.all(e_res.map(async e_study => {
+        let res = Study(e_study.id)
+        res.set_entity(e_study)
+
+
+        let sections = await db.sections.where('study_id')
+        .equals(res.id)
+        .limit(5)
+        .toArray()
+
+        if (sections.length === 1) {
+            let e_section = sections[0]
+            let section = Section(e_section.id, res.id)
+            section.set_entity(e_section)
+
+            let chapters = await db.chapters.where('section_id')
+            .equals(section.id)
+            .limit(5)
+            .toArray()
+
+
+            chapters.forEach(e_chapter => {
+                let chapter = Chapter(e_chapter.id, section.id, PlayUciTreeReplay('', StepsTree('')))
+                chapter.set_entity(e_chapter)
+                section.add_chapter(chapter)
+            })
+            section.sort_chapters()
+
+            res.add_section(section)
+        } else {
+            for (let e_section of sections) {
+                let section = Section(e_section.id, res.id)
+                section.set_entity(e_section)
+
+                res.add_section(section)
+            }
+
+        }
+
+        res.sort_sections()
+        return res
+    }))
+}
+
+
 
 class StudiesDB extends Dexie {
     studies!: EntityTable<EntityStudy, "id">
@@ -336,6 +395,11 @@ export type StudiesDBReturn = {
 
     new_section_with_name(id: EntityStudyId, section_name: string, order: number): Promise<Section>;
     new_chapter_from_pgn(id: EntitySectionId, chapter_name: string, pgn: PGN, order: number): Promise<Chapter>;
+
+
+
+    list_studies(): Promise<Study[]>;
+    light_list_studies(): Promise<Study[]>;
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -390,8 +454,15 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         new_chapter_from_pgn(id: EntitySectionId, chapter_name: string, pgn: PGN, order: number): Promise<Chapter> {
             return db_new_chapter_from_pgn(db, id, chapter_name, pgn, order)
-        }
+        },
 
+        list_studies() {
+            return db_list_studies(db)
+        },
+
+        light_list_studies() {
+            return db_light_list_studies(db)
+        }
     }
 
     return (<>

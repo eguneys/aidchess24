@@ -39,7 +39,7 @@
             @include media.mq-at-least-col3 {
                     grid-template-areas: 'board replay sections'
                         'details details tools';
-                    grid-template-columns: var(--col3-uniboard-width) minmax(240px, 400px) minmax(240px, 400px);
+                    grid-template-columns: var(--col3-uniboard-width) minmax(240px, 400px) minmax(400px, 600px);
 
 
                     .replay-wrap,
@@ -210,7 +210,6 @@
                     flex: 1;
                     background: theme.$ac-li-orange-3;
                     max-height: 100%;
-                    min-height: 100%;
                 }
             }
 
