@@ -39,6 +39,8 @@ function ShowComponent() {
 
 function StudyShow(props: { study: Study }) {
 
+    const db = useContext(StudiesDBContext)!
+
     const play_uci = PlayUciComponent()
 
     const color = createMemo(() => play_uci.turn)
@@ -120,7 +122,6 @@ function StudyShow(props: { study: Study }) {
         }
     }))
 
-
     const set_on_wheel = (i: number) => {
         if (i > 0) {
             play_replay().goto_next_if_can()
@@ -128,6 +129,22 @@ function StudyShow(props: { study: Study }) {
             play_replay().goto_prev_if_can()
         }
     }
+
+
+    props.study.create_effects_listen_and_save_db(db)
+
+    createEffect(on(() => props.study.sections, (ss) => {
+        ss.forEach(s => {
+            s.create_effects_listen_and_save_db(db)
+
+            createEffect(on(() => s.chapters, (cc) => {
+                cc.forEach(c => {
+                    c.create_effects_listen_and_save_db(db)
+                })
+            }))
+        })
+    }))
+
 
     return (<>
         <div class='study'>
@@ -144,23 +161,23 @@ function StudyShow(props: { study: Study }) {
                 <PlayUciTreeReplay play_replay={play_replay()}/>
             </div>
             <div class='sections-wrap'>
-                <SectionsListComponent study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>
+                <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>
             </div>
             <div class='tools-wrap'>
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
-                    <EditSectionComponent on_order_changed={order => on_order_changed(section(), order)} section={section()} i_section={get_i_section(section())} nb_sections={nb_sections()}/>
+                    <EditSectionComponent db={db} on_order_changed={order => on_order_changed(section(), order)} section={section()} i_section={get_i_section(section())} nb_sections={nb_sections()}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_chapter_dialog()}>{ (sc) => 
                 <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(undefined)}>
-                    <EditChapterComponent on_order_changed={order => on_chapter_order_changed(...sc(), order)} section={sc()[0]} chapter={sc()[1]} i_chapter={get_i_chapter(...sc())}/>
+                    <EditChapterComponent db={db} on_order_changed={order => on_chapter_order_changed(...sc(), order)} section={sc()[0]} chapter={sc()[1]} i_chapter={get_i_chapter(...sc())}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_study_dialog()}>
                 <DialogComponent klass='edit-study' on_close={() => set_edit_study_dialog(false)}>
-                    <EditStudyComponent study={props.study}/>
+                    <EditStudyComponent db={db} study={props.study}/>
                 </DialogComponent>
             </Show>
         </div>

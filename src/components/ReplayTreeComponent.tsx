@@ -420,6 +420,7 @@ export type PlayUciTreeReplayComponent = {
     previous_branch_points_at_cursor_path: TreeStepNode[]
     add_child_san_to_current_path(san: SAN): TreeStepNode | undefined
     set_steps(steps: StepsTree): void
+    create_effects(): void
 }
 
 export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayComponent {
@@ -434,19 +435,6 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
 
     let sticky_paths: Path[] = []
 
-    createEffect(on(cursor_path, (path: Path) => {
-        let ss = steps()
-        ss.previous_branch_points(path)?.map(branch => {
-            if (!sticky_paths.includes(branch.path)) {
-                ss.siblings_of(branch.path)?.forEach(sibling => {
-                    sticky_paths = sticky_paths
-                    .filter(_ => _ !== sibling.path)
-                })
-
-                sticky_paths.push(branch.path)
-            }
-        })
-    }))
 
     const goto_path = (path: Path) => {
         set_cursor_path(path)
@@ -696,12 +684,31 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
             } else {
                 set_cursor_path('')
             }
+        },
+        create_effects() {
+            createEffect(on(cursor_path, (path: Path) => {
+                let ss = steps()
+                ss.previous_branch_points(path)?.map(branch => {
+                    if (!sticky_paths.includes(branch.path)) {
+                        ss.siblings_of(branch.path)?.forEach(sibling => {
+                            sticky_paths = sticky_paths
+                                .filter(_ => _ !== sibling.path)
+                        })
+
+                        sticky_paths.push(branch.path)
+                    }
+                })
+            }))
         }
     }
 }
 
 
 export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayComponent, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
+
+    createEffect(on(() => props.play_replay, (replay) => {
+        replay.create_effects()
+    }))
 
     const steps = createMemo(() => props.play_replay.steps)
 

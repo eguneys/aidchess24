@@ -10,6 +10,12 @@ body {
     --main-margin: 0px;
     --block-gap: 10px;
 
+
+    --board-scale: 1;
+
+    --col2-uniboard-width: #{uniboard.$col2-uniboard-width};
+    --col3-uniboard-width: #{uniboard.$col3-uniboard-width};
+
     @include media.mq-site-header-tall {
         --site-header-height: #{variables.$site-header-tall-height};
     }
@@ -20,11 +26,6 @@ body {
         margin-bottom: variables.$block-gap;
     }
 
-
-    --board-scale: 1;
-
-    --col2-uniboard-width: #{uniboard.$col2-uniboard-width};
-    --col3-uniboard-width: #{uniboard.$col3-uniboard-width};
 }
 
 .main-wrap {

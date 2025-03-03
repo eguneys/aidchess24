@@ -19,9 +19,9 @@ const ListComponent = () => {
     let navigate = useNavigate()
 
     const on_new_opening = async () => {
-        let study_id = await db.new_study()
+        let study = await db.new_study()
 
-        navigate('/openings/' + study_id)
+        navigate('/openings/' + study.id)
     }
 
     return (<>

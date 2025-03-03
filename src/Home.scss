@@ -69,16 +69,18 @@
                   border-radius: 6px;
                   min-height: 200px;
 
-                  @include media.mq-is-col1 {
-                    flex: 1;
-                  }
-      
-      
+ 
                   background: theme.$ac-li-blue-2;
                   box-shadow: 0px 0px 2px 2px theme.$ac-li-orange;
       
                   transition: .2s;
       
+
+                  @include media.mq-is-col1 {
+                    flex: 1;
+                  }
+      
+     
                   &:hover {
                   box-shadow: 0px 0px 4px 4px theme.$ac-li-orange;
                   }

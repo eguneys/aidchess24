@@ -2,10 +2,14 @@ import { Color } from "chessops"
 import { PlayUciTreeReplayComponent } from "./ReplayTreeComponent"
 import { batch, createEffect, createMemo, createSignal, For, Show } from "solid-js"
 import './StudyComponent.scss'
+import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, StudiesDBReturn } from "./sync_idb_study"
 
 const SECTION_LETTERS = 'ABCDEFGHIJKLMNOP'.split('')
 
 export type Chapter = {
+    entity: EntityChapterInsert,
+    id: EntityChapterId,
+    section_id: EntityStudyId,
     name: string,
     play_replay: PlayUciTreeReplayComponent,
     orientation?: Color,
@@ -13,6 +17,9 @@ export type Chapter = {
     site?: string,
     white?: string,
     black?: string,
+    order: number,
+    set_order(order: number): void,
+    set_entity(entity: EntityChapterInsert): void,
     set_name(name: string): void,
     set_play_replay(play_replay: PlayUciTreeReplayComponent): void,
     set_orientation(orientation: Color | undefined): void,
@@ -20,28 +27,50 @@ export type Chapter = {
     set_site(site: string | undefined): void,
     set_white(white: string | undefined): void,
     set_black(black: string | undefined): void,
+    create_effects_listen_and_save_db(db: StudiesDBReturn): void
 }
 
 export type Section = {
+    entity: EntitySectionInsert,
+    id: EntitySectionId,
+    study_id: EntityStudyId,
     name: string,
     chapters: Chapter[],
+    order: number,
+    i_chapter: number,
+    set_i_chapter(i: number): void,
+    sort_chapters(): void,
+    set_order(order: number): void,
+    set_entity(entity: EntitySectionInsert): void,
     set_name(name: string): void,
     add_chapter(chapter: Chapter): void,
+    add_new_chapter(chapter: Chapter): void,
     delete_chapter(chapter: Chapter): void
     change_chapter_order(chapter: Chapter, order: number): void
+    create_effects_listen_and_save_db(db: StudiesDBReturn): void
 }
 
 export type Study = {
+    entity: EntityStudyInsert,
+    id: EntityStudyId,
     name: string,
     sections: Section[],
+    i_section: number,
+    set_i_section(i: number): void,
+    sort_sections(): void,
+    set_entity(entity: EntityStudyInsert): void,
     set_name(name: string): void,
     add_section(section: Section): void,
+    add_new_section(section: Section): void,
     delete_section(section: Section): void
     change_section_order(section: Section, order: number): void
+    create_effects_listen_and_save_db(db: StudiesDBReturn): void
 }
 
-export function Chapter(): Chapter {
+export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapter {
+    let [order, set_order] = createSignal(0)
     let [name, set_name] = createSignal('New Chapter')
+
     let [play_replay, set_play_replay] = createSignal(PlayUciTreeReplayComponent())
 
     let [orientation, set_orientation] = createSignal<Color | undefined>(undefined)
@@ -51,6 +80,23 @@ export function Chapter(): Chapter {
     let [black, set_black] = createSignal<string | undefined>(undefined)
 
     return {
+        set_entity(entity: EntityChapterInsert) {
+            set_name(entity.name)
+            set_order(entity.order)
+            console.log(entity)
+        },
+        get entity() {
+            return {
+                id,
+                section_id,
+                name: name(),
+                order: order()
+            }
+        },
+        get order() { return order() },
+        set_order(order: number) { set_order(order) },
+        id,
+        section_id,
         get name() { return name() },
         get play_replay() { return play_replay() },
         get orientation() { return orientation() },
@@ -64,76 +110,191 @@ export function Chapter(): Chapter {
         set_site(site: string) { set_site(site) },
         set_white(white: string) { set_white(white) },
         set_black(black: string) { set_black(black) },
-        set_play_replay(play_replay: PlayUciTreeReplayComponent) { set_play_replay(play_replay) }
+        set_play_replay(play_replay: PlayUciTreeReplayComponent) { set_play_replay(play_replay) },
+        create_effects_listen_and_save_db(db: StudiesDBReturn) {
+            createEffect(() => {
+                db.update_chapter(this.entity)
+            })
+        }
     }
 }
 
-export function Section(): Section {
+export function Section(id: EntitySectionId, study_id: EntityStudyId): Section {
+    let [i_chapter, set_i_chapter] = createSignal(0)
+    let [order, set_order] = createSignal(0)
     let [name, set_name] = createSignal('New Section')
 
 
     let [chapters, set_chapters] = createSignal<Chapter[]>([])
 
     return {
+        set_entity(entity: EntitySectionInsert) {
+            set_name(entity.name)
+            set_order(entity.order)
+            set_i_chapter(entity.i_chapter)
+        },
+        get entity() {
+            return {
+                id,
+                study_id,
+                name: name(),
+                order: order(),
+                i_chapter: i_chapter()
+            }
+        },
+        get i_chapter() { return i_chapter() },
+        set_i_chapter(i: number) { set_i_chapter(i) },
+        set_order(order: number) { set_order(order) },
+        get order() { return order() },
+        sort_chapters() { 
+            let cc = chapters()
+            cc.sort((a, b) => a.order - b.order)
+            set_chapters([...cc]) 
+        },
+        id,
+        study_id,
         get name() { return name() },
         get chapters() { return chapters() },
         set_name(name: string) { set_name(name) },
-        add_chapter(c: Chapter) {
-            set_chapters([...chapters(), c])
+        add_new_chapter(chapter: Chapter) {
+            batch(() => {
+                set_chapters([...chapters(), chapter])
+                let i_chapter = chapters().length - 1
+                chapter.set_order(i_chapter)
+                set_i_chapter(i_chapter)
+            })
+        },
+        add_chapter(chapter: Chapter) {
+            set_chapters([...chapters(), chapter])
         },
         delete_chapter(chapter: Chapter) {
             let ss = chapters()
+
+            let s_chapter = ss[i_chapter()]
             let i = ss.indexOf(chapter)
             if (i === -1) {
                 return
             }
             ss.splice(i, 1)
-            set_chapters([...ss])
+            batch(() => {
+                set_chapters([...ss])
+
+
+                let i_chapter =  ss.indexOf(s_chapter)
+
+                if (i_chapter === -1) {
+                    set_i_chapter(0)
+                } else {
+                    set_i_chapter(i_chapter)
+                }
+
+            })
         },
-        change_chapter_order(chapter: Chapter, new_i: number) {
-            let ss = chapters()
-            let old_i = ss.indexOf(chapter)
+        change_chapter_order(chapter: Chapter, order: number) {
+            let cc = chapters()
 
-            ss.splice(old_i, 1)
-            ss.splice(new_i, 0, chapter)
+            cc.splice(chapter.order, 1)
+            cc.splice(order, 0, chapter)
 
-            console.log(old_i, new_i, chapter === ss[new_i])
+            batch(() => {
+                cc.forEach((c, i) => {
+                    c.set_order(i)
+                })
+                console.log(cc)
+                set_chapters([...cc])
+            })
 
-            set_chapters([...ss])
+        },
+        create_effects_listen_and_save_db(db: StudiesDBReturn) {
+            createEffect(() => {
+                db.update_section(this.entity)
+            })
         }
     }
 }
 
-export function Study(): Study {
+export function Study(id: EntityStudyId): Study {
+    let [i_section, set_i_section] = createSignal(0)
+
     let [name, set_name] = createSignal('New Opening')
 
     let [sections, set_sections] = createSignal<Section[]>([])
 
+    let entity = () => ({
+        id,
+        name: name(),
+        i_section: i_section()
+    })
+
     return {
+        set_entity(entity: EntityStudyInsert) {
+            set_name(entity.name)
+            set_i_section(entity.i_section)
+        },
+        get i_section() { return i_section() },
+        set_i_section(i: number) { set_i_section(i) },
+        get entity() { return entity() },
+        id,
         get name() { return name() },
         get sections() { return sections() },
         set_name(name: string) { set_name(name) },
-        add_section(s: Section) {
-            set_sections([...sections(), s])
+        add_new_section(section: Section) {
+            batch(() => {
+                set_sections([...sections(), section])
+                let i_section = sections().length - 1
+                section.set_order(i_section)
+                set_i_section(i_section)
+            })
+        },
+        add_section(section: Section) {
+            set_sections([...sections(), section])
         },
         delete_section(section: Section) {
             let ss = sections()
+
+            let s_section = ss[i_section()]
             let i = ss.indexOf(section)
             if (i === -1) {
                 return
             }
             ss.splice(i, 1)
-            set_sections([...ss])
+
+            batch(() => {
+                set_sections([...ss])
+
+                let i_section =  ss.indexOf(s_section)
+
+                if (i_section === -1) {
+                    set_i_section(0)
+                } else {
+                    set_i_section(i_section)
+                }
+            })
+
         },
-        change_section_order(section: Section, new_i: number) {
-            let ss = sections()
-            let old_i = ss.indexOf(section)
+        change_section_order(section: Section, order: number) {
+            let cc = sections()
 
+            cc.splice(section.order, 1)
+            cc.splice(order, 0, section)
 
-            ss.splice(old_i, 1)
-            ss.splice(new_i, 0, section)
+            batch(() => {
+                cc.forEach((c, i) => {
+                    c.set_order(i)
+                })
+                set_sections([...cc])
+            })
 
-            set_sections([...ss])
+        },
+        sort_sections() { 
+            let cc = sections()
+            cc.sort((a, b) => a.order - b.order)
+            set_sections([...cc]) 
+        },
+        create_effects_listen_and_save_db(db: StudiesDBReturn) {
+            createEffect(() => {
+                db.update_study(this.entity)
+            })
         }
     }
 }
@@ -205,7 +366,6 @@ export function StudyDetailsComponent(props: { study: Study, section?: Section, 
         }
     }
     const on_new_tag_key_press = (key: string, value: string) => {
-        console.log(key)
         if (key === 'Enter') {
             on_new_tag_edited(value)
         }
@@ -268,20 +428,18 @@ function TagOption(props: { tag: string }) {
 }
     */
 
-export function SectionsListComponent(props: { study: Study, on_selected_chapter: (section: Section, chapter: Chapter) => void, on_edit_study?: () => void, on_edit_section?: (section: Section) => void, on_edit_chapter?: (section: Section, chapter: Chapter) => void, on_chapter_order_changed?: number, on_section_order_changed?: number }) {
+export function SectionsListComponent(props: { db: StudiesDBReturn, study: Study, on_selected_chapter: (section: Section, chapter: Chapter) => void, on_edit_study?: () => void, on_edit_section?: (section: Section) => void, on_edit_chapter?: (section: Section, chapter: Chapter) => void, on_chapter_order_changed?: number, on_section_order_changed?: number }) {
 
-    const on_new_section = () => {
-        let new_section = Section()
-
-        batch(() => {
-            props.study.add_section(new_section)
-            set_selected_section(new_section)
-        })
+    const on_new_section = async () => {
+        let new_section = await props.db.new_section(props.study.id)
+        props.study.add_new_section(new_section)
+        set_selected_section(new_section)
+        props.on_edit_section?.(new_section)
     }
 
 
-
-    const [i_section, set_i_section] = createSignal(0)
+    const i_section = createMemo(() => props.study.i_section)
+    const set_i_section = props.study.set_i_section
 
     const selected_section = createMemo(() => props.study.sections[i_section()])
     const set_selected_section = (section: Section) => {
@@ -320,7 +478,7 @@ export function SectionsListComponent(props: { study: Study, on_selected_chapter
                 <Show when={section === selected_section()} fallback={
                     <SectionCollapsedComponent section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section)} on_edit={() => props.on_edit_section?.(section)}/>
                 }>
-                    <SectionComponent nth={get_letter_nth(i())} section={section} on_selected_chapter={_ => on_selected_chapter(section, _)} on_edit={() => props.on_edit_section?.(section)} on_edit_chapter={chapter => props.on_edit_chapter?.(section, chapter)} on_chapter_order_changed={props.on_chapter_order_changed}/>
+                    <SectionComponent db={props.db} nth={get_letter_nth(i())} section={section} on_selected_chapter={_ => on_selected_chapter(section, _)} on_edit={() => props.on_edit_section?.(section)} on_edit_chapter={chapter => props.on_edit_chapter?.(section, chapter)} on_chapter_order_changed={props.on_chapter_order_changed}/>
                 </Show>
                 }</For>
             <div class='tools'>
@@ -342,15 +500,17 @@ function SectionCollapsedComponent(props: { section: Section, nth: string, on_se
     </>)
 }
 
-function SectionComponent(props: { section: Section, nth: string, on_selected_chapter: (chapter: Chapter) => void, on_edit: () => void, on_edit_chapter: (chapter: Chapter) => void, on_chapter_order_changed?: number }) {
+function SectionComponent(props: { db: StudiesDBReturn, section: Section, nth: string, on_selected_chapter: (chapter: Chapter) => void, on_edit: () => void, on_edit_chapter: (chapter: Chapter) => void, on_chapter_order_changed?: number }) {
 
-    const on_new_chapter = () => {
-        let new_chapter = Chapter()
-        props.section.add_chapter(new_chapter)
+    const on_new_chapter = async () => {
+        let new_chapter = await props.db.new_chapter(props.section.id)
+        props.section.add_new_chapter(new_chapter)
         set_selected_chapter(new_chapter)
+        props.on_edit_chapter(new_chapter)
     }
 
-    const [i_chapter, set_i_chapter] = createSignal(0)
+    const i_chapter = createMemo(() => props.section.i_chapter)
+    const set_i_chapter = props.section.set_i_chapter
 
     const selected_chapter = createMemo(() => props.section.chapters[i_chapter()])
     const set_selected_chapter = (chapter: Chapter) => {
@@ -416,7 +576,7 @@ export function ChapterComponent(props: { chapter: Chapter, nth: string, selecte
 }
 
 
-export function EditStudyComponent(props: { study: Study }) {
+export function EditStudyComponent(props: { db: StudiesDBReturn, study: Study }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -445,15 +605,13 @@ export function EditStudyComponent(props: { study: Study }) {
     </>)
 }
 
-export function EditChapterComponent(props: { chapter: Chapter, section: Section, i_chapter: number, on_order_changed: (order: number) => void }) {
+export function EditChapterComponent(props: { db: StudiesDBReturn, chapter: Chapter, section: Section, i_chapter: number, on_order_changed: (order: number) => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
             e.value = props.section.name
         }
     }
-
-
 
     const on_name_changed = (e: HTMLInputElement) => {
         let name = e.value
@@ -488,7 +646,7 @@ export function EditChapterComponent(props: { chapter: Chapter, section: Section
     </>)
 }
 
-export function EditSectionComponent(props: { section: Section, i_section: number, nb_sections: number, on_order_changed: (order: number) => void }) {
+export function EditSectionComponent(props: { db: StudiesDBReturn, section: Section, i_section: number, nb_sections: number, on_order_changed: (order: number) => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
