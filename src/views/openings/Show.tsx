@@ -1,13 +1,14 @@
-import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, on, Show, Suspense, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, on, onCleanup, onMount, Show, Suspense, useContext } from "solid-js"
 import { gen_id8, StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
-import { PlayUciTreeReplay, PlayUciTreeReplayComponent, StepsTree } from "../../components/ReplayTreeComponent"
+import { MoveContextMenuComponent, PlayUciTreeReplay, PlayUciTreeReplayComponent, StepsTree } from "../../components/ReplayTreeComponent"
 import { DialogComponent } from "../../components/DialogComponent"
 import { INITIAL_FEN } from "chessops/fen"
 import { usePlayer } from "../../sound"
+import { Path, Step } from "../../components/step_types"
 
 export default () => {
     return (<>
@@ -177,8 +178,75 @@ function StudyShow(props: { study: Study }) {
         navigate('/openings')
     }
 
+    const [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>(undefined)
+
+    const context_menu_step = createMemo(() => {
+        let c_path = context_menu_open()
+        if (c_path) {
+            return play_replay().get_at_path(c_path)
+        }
+        return undefined
+    })
+
+
+    onMount(() => {
+        const on_click = () => {
+            set_context_menu_open(undefined)
+        }
+        document.addEventListener('click', on_click)
+        onCleanup(() => {
+            document.removeEventListener('click', on_click)
+        })
+    })
+
+    let $el_ref: HTMLDivElement
+    let $el_context_menu: HTMLDivElement
+
+    const on_tree_context_menu = (e: MouseEvent, path: Path) => {
+        play_replay().cursor_path = path
+        set_context_menu_open(path)
+
+        let x = e.clientX
+        let y = e.clientY
+
+        let context_bounds = $el_context_menu!.getBoundingClientRect()
+        let bounds = $el_ref!.getBoundingClientRect()
+        x -= bounds.left
+        y -= bounds.top
+
+
+        x = Math.min(x, document.body.clientWidth - context_bounds.width - bounds.left - 20)
+
+        let top = `${y}px`
+        let left = `${x}px`
+
+        $el_context_menu!.style.top = top
+        $el_context_menu!.style.left = left
+    }
+
+    const on_analyze_lichess = (step: Step) => {
+        let fen = step.fen
+        window.open(`https://lichess.org/analysis?fen=${fen}`, '_blank')
+        set_context_menu_open(undefined)
+    }
+
+    const on_delete_move = async (path: Path) => {
+        let child = play_replay().delete_at_and_after_path(path)
+
+        if (!child) {
+            return
+        }
+
+        await db.delete_tree_nodes([child, ...child.all_sub_children])
+
+        set_context_menu_open(undefined)
+    }
+
+
+
+
     return (<>
-        <div class='study'>
+        <div ref={$el_ref!} class='study'>
             <div class='details-wrap'>
                 <StudyDetailsComponent study={props.study} section={selected_section()} chapter={selected_chapter()} />
             </div>
@@ -189,7 +257,7 @@ function StudyShow(props: { study: Study }) {
                 <div class='header'>
                     Replay Tree
                 </div>
-                <PlayUciTreeReplayComponent play_replay={play_replay()}/>
+                <PlayUciTreeReplayComponent play_replay={play_replay()} on_context_menu={on_tree_context_menu}/>
             </div>
             <div class='sections-wrap'>
                 <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>
@@ -211,6 +279,12 @@ function StudyShow(props: { study: Study }) {
                     <EditStudyComponent db={db} study={props.study} on_delete_study={on_delete_study} />
                 </DialogComponent>
             </Show>
+            <Show when={context_menu_step()}>{ step => 
+                <MoveContextMenuComponent step={step()} ref={$el_context_menu!}>
+                    <a onClick={() => on_analyze_lichess(step().step)} class='analyze' data-icon=''>Analyze on lichess</a>
+                    <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete after this move</a>
+                </MoveContextMenuComponent>
+            }</Show>
         </div>
     </>)
 }

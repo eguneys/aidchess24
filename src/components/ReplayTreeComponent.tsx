@@ -7,6 +7,7 @@ import { parseSan } from "chessops/san"
 import { Key } from "@solid-primitives/keyed"
 import './ReplayTreeComponent.scss'
 import { EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityStepsTreeId, EntityStepsTreeInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, gen_id8, StudiesDBReturn } from "./sync_idb_study"
+import { JSX } from "solid-js"
 
 function fen_pos(fen: FEN) {
     return Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
@@ -90,6 +91,7 @@ export type TreeStepNode = {
     step: Step,
     children: TreeStepNode[],
     nags: NAG[],
+    all_sub_children: TreeStepNode[],
     set_nags(nags: NAG[]): void,
     add_load_node(node: TreeStepNode): void,
     add_child_san(san: SAN): TreeStepNode
@@ -258,7 +260,7 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
 
                 let pos = Chess.fromSetup(parseFen(INITIAL_FEN).unwrap()).unwrap()
                 let step = make_step_and_play(1, pos, san, '')
-                let child = TreeStepNode(gen_id8(), id, step)
+                let child = TreeStepNode(gen_id8(), id, step, rr.length)
                 set_root([...rr, child])
                 return child
             }
@@ -327,8 +329,9 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
 
 
 
-export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNodeId, step: Step): TreeStepNode {
+export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNodeId, step: Step, i_order: number): TreeStepNode {
 
+    let [order, set_order] = createSignal(i_order)
     let [children, set_children] = createSignal<TreeStepNode[]>([])
     let [nags, set_nags] = createSignal<NAG[]>([])
 
@@ -357,7 +360,8 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
             id,
             step,
             tree_id,
-            nags: nags()
+            nags: nags(),
+            order: order()
         }
     }
 
@@ -372,6 +376,7 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
             return nags()
         },
         set_nags,
+        set_order(order: number) { set_order(order) },
         get path() {
             return step.path
         },
@@ -384,6 +389,9 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
         step,
         get children() {
             return children()
+        },
+        get all_sub_children() {
+            return children().flatMap(c => [c, ...c.all_sub_children])
         },
         remove_child(child: TreeStepNode) {
             let cc = children()
@@ -421,7 +429,7 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
             }
 
             let c_step = make_step_and_play(step.ply + 1, step_pos(), san, step.path)
-            let child = TreeStepNode(gen_id8(), tree_id, c_step)
+            let child = TreeStepNode(gen_id8(), tree_id, c_step, cc.length)
             set_children([...cc, child])
             return child
         },
@@ -502,6 +510,8 @@ export type PlayUciTreeReplay = {
     goto_up_if_can(): void
     previous_branch_points_at_cursor_path: TreeStepNode[]
     add_child_san_to_current_path(san: SAN): TreeStepNode | undefined
+    get_at_path(path: Path): TreeStepNode | undefined
+    delete_at_and_after_path(path: Path): TreeStepNode | undefined
     create_effects(): void
     create_effects_listen_and_save_db(db: StudiesDBReturn): void
 }
@@ -758,6 +768,9 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         get previous_branch_points_at_cursor_path() {
             return steps.previous_branch_points(cursor_path()) ?? []
         },
+        get_at_path(path: Path) {
+            return steps.find_at_path(path)
+        },
         add_child_san_to_current_path(san: SAN) {
             return batch(() => {
                 let res = steps.add_child_san(cursor_path(), san)
@@ -766,6 +779,20 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
                 }
                 set_cursor_path(res.path)
                 return res
+            })
+        },
+        delete_at_and_after_path(path: Path) {
+            return batch(() => {
+                let r = steps.remove_child_at_path(path)
+                if (!r) {
+                    return undefined
+                }
+                let c_path = cursor_path()
+                if (c_path.startsWith(path)) {
+                    let n_path = r.path.split(' ').slice(0, -1).join(' ')
+                    set_cursor_path(n_path)
+                }
+                return r
             })
         },
         create_effects_listen_and_save_db(db: StudiesDBReturn) {
@@ -972,4 +999,16 @@ export const ply_to_index = (ply: number) => {
     let res = Math.floor(ply / 2) + 1
     return `${res}.` + (ply % 2 === 1 ? '..' : '')
 }
+
+export function MoveContextMenuComponent(props: { step: TreeStepNode, children: JSX.Element, ref: HTMLDivElement }) {
+
+    return (<>
+    <div onClick={e => { e.preventDefault(); e.stopImmediatePropagation(); }} ref={props.ref} class='context-menu'>
+        <div class='title'>{ply_to_index(props.step.ply)}{props.step.san}</div>
+        <div class='list'>{props.children}</div>
+    </div>
+    </>)
+}
+
+
 

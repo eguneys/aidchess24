@@ -112,15 +112,25 @@ async function db_load_play_replay(db: StudiesDB, id: EntityPlayUciTreeReplayId)
 
     let nodes = await db.tree_step_nodes.where('tree_id').equals(e_steps.id).toArray()
 
-    nodes.sort((a, b) => a.step.path.length - b.step.path.length)
+    nodes.sort((a, b) => {
+        let res = a.step.path.length - b.step.path.length
+        if (res === 0) {
+            res = a.order - b.order
+        }
+        return res
+    })
     nodes.forEach(e_node => {
-        let node = TreeStepNode(e_node.id, e_node.tree_id, e_node.step)
+        let node = TreeStepNode(e_node.id, e_node.tree_id, e_node.step, e_node.order)
         steps.add_load_node(node)
     })
 
     let res = PlayUciTreeReplay(e_replay.id!, steps)
     res.set_entity(e_replay)
     return res
+}
+
+async function db_delete_tree_nodes(db: StudiesDB, nodes: TreeStepNode[]) {
+    await db.tree_step_nodes.bulkDelete(nodes.map(_ => _.id))
 }
 
 async function db_update_tree_replay(db: StudiesDB, entity: EntityPlayUciTreeReplayInsert) {
@@ -260,6 +270,7 @@ class EntityTreeStepNode extends Entity<StudiesDB> {
     tree_id!: EntityStepsTreeId
     step!: Step
     nags!: NAG[]
+    order!: number
 }
 
 export const StudiesDBContext = createContext<StudiesDBReturn>()
@@ -282,6 +293,7 @@ export type StudiesDBReturn = {
     new_tree_step_node(node: TreeStepNode): Promise<void>
 
     update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert): Promise<void>
+    delete_tree_nodes(nodes: TreeStepNode[]): Promise<void>;
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -324,6 +336,11 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
         },
+        delete_tree_nodes(nodes: TreeStepNode[]) {
+            return db_delete_tree_nodes(db, nodes)
+        },
+
+
     }
 
     return (<>
