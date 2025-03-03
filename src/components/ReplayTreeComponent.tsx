@@ -400,7 +400,7 @@ const alekhine = `
 */
 
 
-export type PlayUciTreeReplayComponent = {
+export type PlayUciTreeReplay = {
     steps: StepsTree,
     cursor_path: Path,
     cursor_path_step: Step | undefined,
@@ -423,7 +423,7 @@ export type PlayUciTreeReplayComponent = {
     create_effects(): void
 }
 
-export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayComponent {
+export function PlayUciTreeReplay(pgn?: string): PlayUciTreeReplay {
 
     let [steps, set_steps] = createSignal(StepsTree())
 
@@ -704,7 +704,7 @@ export function PlayUciTreeReplayComponent(pgn?: string): PlayUciTreeReplayCompo
 }
 
 
-export function PlayUciTreeReplay(props: { play_replay: PlayUciTreeReplayComponent, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
+export function PlayUciTreeReplayComponent(props: { play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
 
     createEffect(on(() => props.play_replay, (replay) => {
         replay.create_effects()

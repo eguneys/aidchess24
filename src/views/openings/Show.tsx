@@ -1,6 +1,6 @@
 import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, on, Show, Suspense, useContext } from "solid-js"
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
-import { Navigate, useNavigate, useParams } from "@solidjs/router"
+import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
@@ -86,7 +86,7 @@ function StudyShow(props: { study: Study }) {
     const play_replay = createMemo(() => {
         let s = selected_chapter()
         if (!s) {
-            return PlayUciTreeReplayComponent()
+            return PlayUciTreeReplay()
         }
         return s.play_replay
     })
@@ -179,7 +179,7 @@ function StudyShow(props: { study: Study }) {
                 <div class='header'>
                     Replay Tree
                 </div>
-                <PlayUciTreeReplay play_replay={play_replay()}/>
+                <PlayUciTreeReplayComponent play_replay={play_replay()}/>
             </div>
             <div class='sections-wrap'>
                 <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>

@@ -1,5 +1,5 @@
 import { Color } from "chessops"
-import { PlayUciTreeReplayComponent } from "./ReplayTreeComponent"
+import { PlayUciTreeReplay } from "./ReplayTreeComponent"
 import { batch, createEffect, createMemo, createSignal, For, Show } from "solid-js"
 import './StudyComponent.scss'
 import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, StudiesDBReturn } from "./sync_idb_study"
@@ -11,7 +11,7 @@ export type Chapter = {
     id: EntityChapterId,
     section_id: EntityStudyId,
     name: string,
-    play_replay: PlayUciTreeReplayComponent,
+    play_replay: PlayUciTreeReplay,
     orientation?: Color,
     event?: string,
     site?: string,
@@ -21,7 +21,7 @@ export type Chapter = {
     set_order(order: number): void,
     set_entity(entity: EntityChapterInsert): void,
     set_name(name: string): void,
-    set_play_replay(play_replay: PlayUciTreeReplayComponent): void,
+    set_play_replay(play_replay: PlayUciTreeReplay): void,
     set_orientation(orientation: Color | undefined): void,
     set_event(event: string | undefined): void,
     set_site(site: string | undefined): void,
@@ -71,7 +71,7 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapt
     let [order, set_order] = createSignal(0)
     let [name, set_name] = createSignal('New Chapter')
 
-    let [play_replay, set_play_replay] = createSignal(PlayUciTreeReplayComponent())
+    let [play_replay, set_play_replay] = createSignal(PlayUciTreeReplay())
 
     let [orientation, set_orientation] = createSignal<Color | undefined>(undefined)
     let [event, set_event] = createSignal<string | undefined>(undefined)
@@ -110,7 +110,7 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId): Chapt
         set_site(site: string) { set_site(site) },
         set_white(white: string) { set_white(white) },
         set_black(black: string) { set_black(black) },
-        set_play_replay(play_replay: PlayUciTreeReplayComponent) { set_play_replay(play_replay) },
+        set_play_replay(play_replay: PlayUciTreeReplay) { set_play_replay(play_replay) },
         create_effects_listen_and_save_db(db: StudiesDBReturn) {
             createEffect(() => {
                 db.update_chapter(this.entity)
