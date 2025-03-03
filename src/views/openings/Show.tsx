@@ -1,4 +1,4 @@
-import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, on, onCleanup, onMount, Show, Suspense, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, For, on, onCleanup, onMount, Show, Suspense, useContext } from "solid-js"
 import { gen_id8, StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
@@ -242,6 +242,53 @@ function StudyShow(props: { study: Study }) {
         set_context_menu_open(undefined)
     }
 
+    const [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)
+
+    let i_delay_sub_menu_open: number | undefined
+    const delay_set_annotate_sub_menu_open = (value: boolean) => {
+        clearTimeout(i_delay_sub_menu_open)
+        i_delay_sub_menu_open = undefined
+
+        if (value === false) {
+            i_delay_sub_menu_open = setTimeout(() => {
+                set_annotate_sub_menu_open(false)
+            }, 150)
+        } else {
+            i_delay_sub_menu_open = setTimeout(() => {
+                set_annotate_sub_menu_open(true)
+            }, 100)
+        }
+
+    }
+
+    let $el_sub_menu_anchor: HTMLAnchorElement
+    let [get_$el_context_sub_menu, set_$el_context_sub_menu] = createSignal<HTMLDivElement | undefined>(undefined)
+
+    const sub_menu_klass = createMemo(() => {
+        let $el_context_sub_menu = get_$el_context_sub_menu()
+
+        if ($el_context_menu! === undefined || $el_context_sub_menu === undefined) {
+            return ''
+        }
+
+        let anchor_bounds = $el_sub_menu_anchor!.getBoundingClientRect()
+        let sub_bounds = $el_context_sub_menu.getBoundingClientRect()
+        let menu_bounds = $el_context_menu.getBoundingClientRect()
+        let y = anchor_bounds.top
+        let x = menu_bounds.left - sub_bounds.width
+
+        let bounds = $el_ref!.getBoundingClientRect()
+        x -= bounds.left
+        y -= bounds.top
+
+
+
+        return `top: ${y}px; left: ${x}px;`
+    })                                                
+
+    const GLYPHS = ['!!', '!', '!?', '?!', '?', '??']
+    const GLYPH_NAMES = ['brilliant', 'good', 'interesting', 'inaccuracy', 'mistake', 'blunder']
+                                                      
     return (<>
         <div ref={$el_ref!} class='study'>
             <div class='details-wrap'>
@@ -277,10 +324,20 @@ function StudyShow(props: { study: Study }) {
                 </DialogComponent>
             </Show>
             <Show when={context_menu_step()}>{ step => 
+            <>
                 <MoveContextMenuComponent step={step()} ref={$el_context_menu!}>
                     <a onClick={() => on_analyze_lichess(step().step)} class='analyze' data-icon=''>Analyze on lichess</a>
+                    <a ref={$el_sub_menu_anchor!} onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} class='annotate has-sub-menu' data-icon=""><i class='glyph-icon'></i>Annotate Glyph</a>
                     <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete after this move</a>
                 </MoveContextMenuComponent>
+                <Show when={annotate_sub_menu_open()}>
+                    <div   onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} ref={_ => setTimeout(() => set_$el_context_sub_menu(_))} style={sub_menu_klass()} class='context-sub-menu'>
+                        <For each={GLYPHS}>{ (g, i) =>
+                            <a class={'annotate glyph ' + GLYPH_NAMES[i()] }><i class={`glyph-icon ${GLYPH_NAMES[i()]}`}></i>{GLYPH_NAMES[i()]}</a>
+                        }</For>
+                    </div>
+                </Show>
+                </>
             }</Show>
         </div>
     </>)

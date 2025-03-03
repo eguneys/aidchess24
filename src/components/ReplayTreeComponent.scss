@@ -170,6 +170,12 @@
         &:hover {
             background: theme.$ac-li-orange-2;
         }
+
+        &.has-sub-menu {
+            padding: 0.2em 0.2em;
+            padding-right: 0;
+            gap: 0.3em;
+        }
     }
 
     background: theme.$he2;
