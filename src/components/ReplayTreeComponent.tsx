@@ -920,7 +920,7 @@ export function PlayUciTreeReplayComponent(props: { db: StudiesDBReturn, play_re
 
                 <For each={props.play_replay.previous_branch_points_at_cursor_path}>{branch =>
                     <div class='fbt' onClick={() => props.play_replay.cursor_path = branch.path}>
-                        <Show when={branch.ply & 1}>
+                        <Show when={branch.ply}>
                             <span class='index'>{ply_to_index(branch.ply)}</span>
                         </Show>
                         {branch.san}
@@ -978,7 +978,6 @@ function NodesShorten(props: { db: StudiesDBReturn, nodes: TreeStepNode[], curso
 function StepNode(props: { db: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
 
     let show_index = createMemo(() => props.node.ply % 2 === 1 || props.show_index)
-    let dots = createMemo(() => props.node.ply % 2 === 1 ? '.' : '...')
 
     const path = createMemo(() => props.node.path)
 
@@ -1008,15 +1007,15 @@ function StepNode(props: { db: StudiesDBReturn, node: TreeStepNode, show_index?:
 
     return (<>
     <div onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, props.node.path) }} onClick={() => { props.on_set_cursor(props.node.path) } } class={klass()}>
-        <Show when={show_index()}><span class='index'>{Math.floor(props.node.ply / 2) + 1}{dots()}</span></Show>
+        <Show when={show_index()}><span class='index'>{ply_to_index(props.node.ply)}</span></Show>
         {props.node.san}
     </div>
     </>)
 }
 
 export const ply_to_index = (ply: number) => {
-    let res = Math.floor(ply / 2) + 1
-    return `${res}.` + (ply % 2 === 1 ? '..' : '')
+    let res = Math.ceil(ply / 2)
+    return `${res}.` + (ply % 2 === 0 ? '..' : '')
 }
 
 export function MoveContextMenuComponent(props: { step: TreeStepNode, children: JSX.Element, ref: HTMLDivElement }) {

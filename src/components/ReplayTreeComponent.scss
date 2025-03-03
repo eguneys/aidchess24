@@ -9,10 +9,12 @@
     .branch-sums {
         font-family: 'Noto Chess', 'Roboto';
         display: flex;
-        gap: 0.5em;
         padding-left: 0.5em;
         border-bottom: 1px solid #0c0c0c;
 
+        button {
+            padding: 0.5em;
+        }
 
         div {
             text-transform: none;
@@ -23,16 +25,21 @@
         display: flex;
         flex-flow: row;
         align-items: stretch;
-        font-size: 1.2rem;
 
         .fbt {
             flex: 1 1 30%;
             border-radius: 0 0 3px 3px;
+            padding: 0.5em;
 
             &:last-child,
             &:first-child {
                 font-size: .7em;
                 flex: 1 1 20%;
+            }
+
+            &.prev,
+            &.next {
+                font-size: 1em;
             }
         }
     }
@@ -103,13 +110,14 @@
             margin-left: 12px;
             padding-left: 12px; 
 
-            border-left: 2px solid $text-gray;
+            $li-border: hsla(0, 0%, 25%, 0.7);
+            border-left: 2px solid $li-border;
 
             &:before {
                 position: absolute;
                 content: '';
                 width: 12px;
-                border-top: 2px solid $text-gray;
+                border-left: 2px solid $li-border;
                 margin-left: -24px;
             }
 
