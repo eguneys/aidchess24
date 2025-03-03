@@ -1,6 +1,6 @@
 import { Color } from "chessops"
-import { PlayUciTreeReplay } from "./ReplayTreeComponent"
-import { batch, createEffect, createMemo, createSignal, For, Show } from "solid-js"
+import { parse_PGNS, PGN, PlayUciTreeReplay } from "./ReplayTreeComponent"
+import { batch, createEffect, createMemo, createResource, createSignal, For, Show, Suspense } from "solid-js"
 import './StudyComponent.scss'
 import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, StudiesDBReturn } from "./sync_idb_study"
 
@@ -661,7 +661,7 @@ export function EditChapterComponent(props: { db: StudiesDBReturn, chapter: Chap
     </>)
 }
 
-export function EditSectionComponent(props: { db: StudiesDBReturn, section: Section, i_section: number, nb_sections: number, on_delete_section: () => void, on_order_changed: (order: number) => void }) {
+export function EditSectionComponent(props: { db: StudiesDBReturn, section: Section, i_section: number, nb_sections: number, on_delete_section: () => void, on_order_changed: (order: number) => void, on_import_pgns: (pgns: PGN[]) => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -686,27 +686,88 @@ export function EditSectionComponent(props: { db: StudiesDBReturn, section: Sect
         props.on_delete_section()
     }
 
+    const [tab, set_tab] = createSignal('lichess')
+
+
+    const [import_study_text, set_import_study_text] = createSignal('')
+
+    const import_lichess_link = createMemo(() => {
+
+        let m = import_study_text().match(/\/study\/([a-zA-Z0-9]{8})\/?$/)
+
+        if (!m) {
+            return undefined
+        }
+
+        let id = m[1]
+
+        return `https://lichess.org/api/study/${id}.pgn`
+    })
+
+    const fetch_lichess_link = async (link: string) => {
+        return await fetch(link)
+        .then(_ => _.text())
+        .then(_ => parse_PGNS(_))
+    }
+
+    const [lichess_pgns] = createResource(import_lichess_link, fetch_lichess_link)
+
+    const on_import_lichess = async () => {
+        let pgns = lichess_pgns()
+        if (!pgns) {
+            return
+        }
+        props.on_import_pgns(pgns)
+    }
+
+   const import_lichess_disabled = createMemo(() => {
+        return import_lichess_link() === undefined
+    })
+
     return (<>
         <h2>Edit Section</h2>
 
-        <div class='group'>
-        <label for='name'>Name</label>
-        <input name="name" id="name" onKeyDown={(e) => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.section.name}></input>
+        <div class='tabs'>
+            <div class={'tab ' + (tab() === 'empty' ? 'active' : '')} onClick={() => set_tab('empty')}>Empty</div>
+            <div class={'tab ' + (tab() === 'lichess' ? 'active' : '')} onClick={() => set_tab('lichess')}>Import Lichess Study</div>
         </div>
+        <div class='content'>
+            <Show when={tab() === 'lichess'}>
+                <div class='group'>
+                <label for='name'>Import a Study from Lichess</label>
+                <input class={import_lichess_disabled() ? 'error': 'success'} onKeyUp={(e) => set_import_study_text(e.currentTarget.value)} onChange={(e) => set_import_study_text(e.target.value)} name="name" id="name" type="text" placeholder="Study URL"></input>
+                </div>
+            </Show>
+            <Show when={tab() === 'empty'}>
+                <div class='group'>
+                <label for='name'>Name</label>
+                <input name="name" id="name" onKeyDown={(e) => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.section.name}></input>
+                </div>
 
         
-        <div class='group'>
-        <label for='order'>Set Order</label>
-        <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
-            <For each={SECTION_LETTERS.slice(0, props.nb_sections)}>{(letter, i) => 
-                <option value={letter} selected={props.i_section === i()}>{letter}</option>
-            }</For>
-        </select>
+                <div class='group'>
+                <label for='order'>Set Order</label>
+                <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+                    <For each={SECTION_LETTERS.slice(0, props.nb_sections)}>{(letter, i) => 
+                        <option value={letter} selected={props.i_section === i()}>{letter}</option>
+                    }</For>
+                </select>
+                </div>
+            </Show>
         </div>
 
+        <div class='filler'></div>
 
         <div class='group buttons'>
             <span class='split'></span>
+
+            <Show when={tab() === 'lichess'}>
+                <Suspense fallback={
+                    <button class='loading' disabled={true}>Loading ...</button>
+                }>
+                <button onClick={on_import_lichess} class='import' disabled={lichess_pgns() === undefined}>Import<i data-icon=''></i></button>
+                </Suspense>
+            </Show>
             <button onClick={on_delete_section} class='delete'>Delete <i data-icon=''></i></button>
         </div>
     </>)

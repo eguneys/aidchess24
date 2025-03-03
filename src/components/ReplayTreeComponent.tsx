@@ -843,7 +843,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
 }
 
 
-export function PlayUciTreeReplayComponent(props: { db: StudiesDBReturn, play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void }) {
+export function PlayUciTreeReplayComponent(props: { db: StudiesDBReturn, play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void, lose_focus?: boolean }) {
 
     createEffect(on(() => props.play_replay, (replay) => {
         replay.create_effects()
@@ -871,6 +871,9 @@ export function PlayUciTreeReplayComponent(props: { db: StudiesDBReturn, play_re
     })
 
     const on_key_down = (e: KeyboardEvent) => {
+        if (props.lose_focus) {
+            return
+        }
         let catched = false
         if (e.key === 'ArrowLeft') {
             props.play_replay.goto_prev_if_can()

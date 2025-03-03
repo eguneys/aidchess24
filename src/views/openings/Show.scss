@@ -118,6 +118,12 @@
                     &:focus {
                         border: 2px solid theme.$ac-li-blue-2;
                     }
+
+                                        &.success:focus-visible,
+                                        &.success:focus,
+                                        &.success {
+                        border: 2px solid theme.$success !important;
+                    }
                 }
 
 
@@ -128,10 +134,14 @@
                     padding: .6em 1em;
                 }
 
+                .filler {
+                    flex: 1;
+                }
 
                 .group.buttons {
                     display: flex;
                     flex-flow: row;
+                    gap: 1em;
 
                     .split {
                        flex: 1;
@@ -143,16 +153,47 @@
                         padding: 0.8em;
                         align-items: center;
                         gap: 1em;
+                        border: none;
+                        color: theme.$text-light2;
+                        user-select: none;
+                        cursor: pointer;
 
                         &.delete {
                             background: theme.$error;
-                            border: none;
-                            color: theme.$text-light2;
+                        }
+
+                        &.import {
+                            background: theme.$success;
+                        }
+
+                        &:disabled,
+                        &[disabled] {
+                            color: theme.$text-light-2;
+                            background: theme.$text-secondary;
+                            opacity: .6;
                         }
                     }
                 }
             }
 
+            .dialog-content.edit-section {
+                min-height: 350px;
+                .tabs {
+                    display: flex;
+                    .tab {
+                        padding: 0.5em;
+                        color: theme.$text-primary;
+
+                        user-select: none;
+                        cursor: pointer;
+
+                        &.active, &.hover {
+                            color: theme.$text-secondary;
+                            border-bottom: 2px solid theme.$ac-li-orange;
+                        }
+                    }
+                }
+            }
 
             .replay-wrap {
                 display: flex;

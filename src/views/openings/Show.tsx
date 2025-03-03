@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
 import './Show.scss'
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
-import { MoveContextMenuComponent, PlayUciTreeReplay, PlayUciTreeReplayComponent, StepsTree, TreeStepNode } from "../../components/ReplayTreeComponent"
+import { MoveContextMenuComponent, PGN, PlayUciTreeReplay, PlayUciTreeReplayComponent, StepsTree, TreeStepNode } from "../../components/ReplayTreeComponent"
 import { DialogComponent } from "../../components/DialogComponent"
 import { INITIAL_FEN } from "chessops/fen"
 import { usePlayer } from "../../sound"
@@ -313,6 +313,19 @@ function StudyShow(props: { study: Study }) {
     const chapter_title_or_detached = createMemo(() => {
         return selected_chapter()?.name ?? '[detached]'
     })
+
+    const lose_focus = createMemo(() => {
+        return context_menu_open() !== undefined ||
+         edit_study_dialog() !== undefined || 
+         edit_section_dialog() !== undefined || 
+         edit_chapter_dialog() !== undefined
+    })
+
+
+    const on_import_pgns = (pgns: PGN[]) => {
+
+        console.log(pgns)
+    }
                                                       
     return (<>
         <div ref={$el_ref!} class='study'>
@@ -326,7 +339,7 @@ function StudyShow(props: { study: Study }) {
                 <div class='header'>
                     {chapter_title_or_detached()}
                 </div>
-                <PlayUciTreeReplayComponent db={db} play_replay={play_replay()} on_context_menu={on_tree_context_menu}/>
+                <PlayUciTreeReplayComponent db={db} play_replay={play_replay()} on_context_menu={on_tree_context_menu} lose_focus={lose_focus()}/>
             </div>
             <div class='sections-wrap'>
                 <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>
@@ -335,7 +348,7 @@ function StudyShow(props: { study: Study }) {
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
-                    <EditSectionComponent db={db} on_delete_section={() => on_delete_section(section())} on_order_changed={order => on_order_changed(section(), order)} section={section()} i_section={get_i_section(section())} nb_sections={nb_sections()}/>
+                    <EditSectionComponent db={db} on_delete_section={() => on_delete_section(section())} on_order_changed={order => on_order_changed(section(), order)} section={section()} i_section={get_i_section(section())} nb_sections={nb_sections()} on_import_pgns={on_import_pgns}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_chapter_dialog()}>{ (sc) => 
@@ -356,7 +369,7 @@ function StudyShow(props: { study: Study }) {
                     <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete after this move</a>
                 </MoveContextMenuComponent>
                 <Show when={annotate_sub_menu_open()}>
-                    <div   onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} ref={_ => setTimeout(() => set_$el_context_sub_menu(_))} style={sub_menu_klass()} class='context-sub-menu'>
+                    <div onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} ref={_ => setTimeout(() => set_$el_context_sub_menu(_))} style={sub_menu_klass()} class='context-sub-menu'>
                         <For each={GLYPHS}>{ (g, i) =>
                             <a onClick={() => on_annotate_click(step(), g)} class={'annotate glyph ' + GLYPH_NAMES[i()] }><i class={`glyph-icon ${GLYPH_NAMES[i()]}`}></i>{GLYPH_NAMES[i()]}</a>
                         }</For>
