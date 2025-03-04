@@ -5,6 +5,8 @@ import { createResource, createSignal, For, Show, Suspense, useContext } from 's
 import { Study } from '../../components/StudyComponent'
 import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
+import sections_png from '../../assets/images/sections.png'
+import import_lichess_png from '../../assets/images/importlichess.png'
 
 export default () => {
     return (<>
@@ -68,8 +70,8 @@ const ListComponent = () => {
                                 <A href='/builder'>Builder</A> feature</p>
                         </div>
                     }>{study => 
-                        <div class='study'>
-                      <h3 onClick={() => on_click_study(study)} class='title'><i data-icon=""></i>{study.name}</h3>
+                        <div onClick={() => on_click_study(study)} class='study'>
+                      <h3 class='title'><i data-icon=""></i>{study.name}</h3>
                       <div class='sections'>
                         <Show when={study.sections.length === 1} fallback={
                             <For each={study.sections}>{ section => 
@@ -103,19 +105,39 @@ function Help() {
         <p>
             A learning tool to save your opening lines. Similar to, but a little more flexible than, lichess studies.
         </p>
+        <h3> Import a Lichess Study </h3>
+        <p>
+            <img alt="import lichess study" src={import_lichess_png}></img>
+        </p>
         <h3> Annotate Positions </h3>
         <p>
             <img alt="annotate positions" src={annotate_png}></img>
         </p>
-        <h3> Compact View of variations </h3>
+        <h3> Compact View of variations with ease of navigation </h3>
         <p>
             <img alt="compact variations" src={compact_png}></img>
         </p>
+        <h3> Chapters are further grouped into Sections </h3>
+        <p>
+            <img alt="chapters into sections" src={sections_png}></img>
+        </p>
         <h3> Local First </h3>
         <p>
-            Everything is saved on your computer locally, no cloud involved. Also no collaboration features.
-        </p>
 
+            Everything is saved on your computer locally, no cloud involved. Oh, also no collaboration features.
+            <br/>
+           <small>Warning: Your data may be volatile and susceptiple to loss by clearing your browser data. We still recommend using lichess studies as backup. </small>
+         </p>
+         <h3>
+            Export to Lichess Studies
+         </h3>
+         <p>
+            You can export your completed study as a Lichess study with one click. We recommend using this feature only once when you have completed editing your study.
+            <br/>
+            <small>Please note that this action requires you to authenticate your Lichess account to this website.</small>
+            <br/>
+            <small>If your study contains more than 64 chapters they will be departed into multiple studies.</small>
+         </p>
     </div>
     </>)
 }

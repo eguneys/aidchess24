@@ -741,7 +741,7 @@ export function EditSectionComponent(props: { db: StudiesDBReturn, section: Sect
             <Show when={tab() === 'lichess'}>
                 <div class='group'>
                 <label for='name'>Import a Study from Lichess</label>
-                <input class={import_lichess_disabled() ? 'error': 'success'} onKeyUp={(e) => set_import_study_text(e.currentTarget.value)} onChange={(e) => set_import_study_text(e.target.value)} name="name" id="name" type="text" placeholder="Study URL"></input>
+                <input class={import_lichess_disabled() ? 'error': 'success'} onKeyUp={(e) => set_import_study_text(e.currentTarget.value)} onChange={(e) => set_import_study_text(e.target.value)} name="name" id="name" type="text" placeholder="Lichess Study URL"></input>
                 </div>
             </Show>
             <Show when={tab() === 'empty'}>
