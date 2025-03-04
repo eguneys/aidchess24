@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createResource, For, on, Suspense, useContext } from "solid-js"
+import { createEffect, createMemo, createResource, For, on, Show, Suspense, useContext } from "solid-js"
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import './List.scss'
 import { A } from "@solidjs/router"
@@ -84,8 +84,25 @@ function ListComponent() {
         <div class='repeat-info'>
             <Suspense fallback={<div class='loading'>Loading...</div>}>
             <div class='header'>
-                <span>Selected {repeat_study()?.sections.length} sections</span>
-                <span>Total {repeat_study()?.all_chapters.length} chapters </span>
+                <h4>Selected <span class='number'>{repeat_study()?.sections.length}</span> sections</h4>
+                <h4>Total <span class='number'>{repeat_study()?.all_chapters.length}</span>  chapters </h4>
+            </div>
+            <div class='content'>
+                <Show when={repeat_study()?.sections.length === 0} fallback={
+                    <>
+                        <h4> Memorize due moves through Spaced Repetition </h4>
+                        <div class='filler'></div>
+                        <div class='dues'>
+                            <button><span>First 10 moves</span><span class='due'>Due: {repeat_study()?.due_first_ten.length}</span></button>
+                            <button><span>10-20 moves</span><span class='due'>Due: {repeat_study()?.due_ten_twenty.length}</span></button>
+                            <button><span>20+ moves</span><span class='due'>Due: {repeat_study()?.due_twenty_plus.length}</span></button>
+                            <button><span>White moves</span><span class='due'>Due: {repeat_study()?.due_white.length}</span></button>
+                            <button><span>Black moves</span><span class='due'>Due: {repeat_study()?.due_black.length}</span></button>
+                        </div>
+                    </>
+                }>
+                    <div class='no-selected-sections'>Please select some sections.</div>
+                </Show>
             </div>
             </Suspense>
         </div>

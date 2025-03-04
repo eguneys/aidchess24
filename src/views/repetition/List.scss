@@ -23,6 +23,80 @@
             grid-area: info;
         }
 
+        .repeat-info {
+            display: flex;
+            flex-flow: column;
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+
+                h4 {
+                    padding: 0.5em;
+
+                    .number {
+                        color: theme.$deep-blue;
+                    }
+                }
+
+                border-bottom: 2px solid theme.$ac-li-blue;
+
+            }
+
+            .no-selected-sections {
+                padding: 1em;
+            }
+
+            .content {
+                flex: 1;
+                display: flex;
+                flex-flow: column;
+
+                h4 {
+                    padding: 0.5em;
+                    align-self: center;
+                    font-weight: 400;
+                }
+
+                .filler {
+                    flex: 1;
+                }
+
+                .dues {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+
+                    button:first-child {
+                        grid-column: 1/3;
+                    }
+
+                    button {
+                        display: flex;
+                        padding: 1em;
+                        border: none;
+                        color: theme.$text-light2;
+                        background: theme.$he2;
+                        user-select: none;
+                        cursor: pointer;
+
+                        border: 1px solid theme.$ac-li-blue-2;
+                        transition: .1s;
+
+                        &:hover {
+                            background: theme.$ac-li-purple2;
+                            color: theme.$text-primary;
+                        }
+
+                        justify-content: space-between;
+
+                        .due {
+                            border-bottom: 2px solid theme.$text-light;
+                        }
+                    }
+                }
+            }
+        }
+
         .studies-list,
         .sections-list-multiple {
             display: flex;
