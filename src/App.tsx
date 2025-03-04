@@ -12,6 +12,8 @@ const Beta = lazy(() => import('./Beta'))
 const OpeningsList = lazy(() => import('./views/openings/List'))
 const OpeningsShow = lazy(() => import('./views/openings/Show'))
 
+const RepetitionList = lazy(() => import('./views/repetition/List'))
+const RepetitionShow = lazy(() => import('./views/repetition/Show'))
 
 export const MyApp = () => {
     return (<>
@@ -27,6 +29,8 @@ export const MyApp = () => {
             <Route path='/beta' component={Beta}/>
             <Route path='/openings' component={OpeningsList}/>
             <Route path='/openings/:id' component={OpeningsShow}/>
+            <Route path='/repetition' component={RepetitionList}/>
+            <Route path='/repetition/show' component={RepetitionShow}/>
             <Route path='/contact' component={Contact}/>
             <Route path='/terms' component={Contact}/>
             <Route path='/privacy' component={Contact}/>

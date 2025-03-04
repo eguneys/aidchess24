@@ -1,0 +1,63 @@
+@use '../../base_css/theme';
+@use '../../base_css/media';
+
+
+.on-repetition {
+    .repetition {
+
+        display: grid;
+        grid-template-areas: 'studies sections info';
+        grid-template-columns: 2fr 2fr 3fr;
+        grid-template-rows: 66vh;
+
+        background: theme.$ac-li-blue2;
+        border-radius: 6px;
+
+        .studies-list {
+            grid-area: studies;
+        }
+        .sections-list-multiple {
+            grid-area: sections;
+        }
+        .repeat-info {
+            grid-area: info;
+        }
+
+        .studies-list,
+        .sections-list-multiple {
+            display: flex;
+            flex-flow: column;
+            border-right: 2px solid theme.$ac-li-blue;
+
+            .header {
+                display: flex;
+                border-bottom: 2px solid theme.$ac-li-blue;
+                    h3 {
+                        align-self: center;
+                        padding: 0.5em;
+                        font-weight: 500;
+                    }
+                }
+
+            .list {
+                overflow-y: auto;
+                
+                .section,
+                .study {
+                    user-select: none;
+                    cursor: pointer;
+                    padding: 0.5em;
+                    border-radius: 2px;
+
+                    &:hover {
+                       background: theme.$ac-li-blue-2;
+                    }
+                    
+                    &.active,&.selected {
+                        background: theme.$bu-mu-blue;
+                    }
+                }
+            }
+        }
+    }
+}

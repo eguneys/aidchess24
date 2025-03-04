@@ -8,7 +8,7 @@ import { MoveContextMenuComponent, PGN, PlayUciTreeReplay, PlayUciTreeReplayComp
 import { DialogComponent } from "../../components/DialogComponent"
 import { INITIAL_FEN } from "chessops/fen"
 import { usePlayer } from "../../sound"
-import { GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../components/step_types"
+import { FEN, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../components/step_types"
 import { annotationShapes } from "../../annotationShapes"
 
 export default () => {
@@ -92,6 +92,8 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
         }
         return s.play_replay
     })
+
+    const fen = createMemo(() => play_replay().cursor_path_step?.fen ?? INITIAL_FEN)
 
     createEffect(on(() => play_uci.on_last_move_added, (us) => {
         if (!us) {
@@ -380,6 +382,22 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
         set_edit_section_dialog(undefined)
     }
 
+
+    const on_export_lichess = () => {
+        //let _res = props.study.as_export_lichess
+    }
+
+    const on_export_pgn = () => {
+        let res = props.study.as_export_pgn
+        downloadBlob(res, `${props.study.name}.pgn`)
+    }
+    const on_copy_pgn = () => {
+        let res = props.study.as_export_pgn
+        navigator.clipboard.writeText(res)
+    }
+
+
+
     return (<>
         <div ref={$el_ref!} class='study'>
             <div class='details-wrap'>
@@ -398,6 +416,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
                 <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>
             </div>
             <div class='tools-wrap'>
+                <ToolbarComponent fen={fen()} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
@@ -434,6 +453,69 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
     </>)
 }
 
+function ToolbarComponent(props: { fen: FEN, on_export_lichess: () => void, on_export_pgn: () => void, on_copy_pgn: () => void }) {
+
+    const [tab, set_tab] = createSignal('share')
+
+    const [on_copied_pgn, set_on_copied_pgn] = createSignal(true, { equals: false })
+    const on_copy_pgn = () => {
+        set_on_copied_pgn(true)
+        props.on_copy_pgn()
+    }
+
+
+
+    return (<>
+        <div class='tabs'>
+            <div onClick={() => set_tab('settings')} class={'tab' + (tab() === 'settings' ? ' active': '')}><i data-icon=""></i></div>
+            <div onClick={() => set_tab('share')} class={'tab' + (tab() === 'share' ? ' active': '')}><i data-icon=""></i></div>
+        </div>
+        <div class='content'>
+            <Show when={tab() === 'share'}>
+                <div class='export'>
+                    <button onClick={on_copy_pgn}><CopiedI on_copy={on_copied_pgn()}/>Copy PGN</button>
+                    <button onClick={props.on_export_pgn}>Export as PGN</button>
+                    <button onClick={props.on_export_lichess}>Export to Lichess Study</button>
+                </div>
+                <div class='fen'>
+                <h4>FEN</h4>
+                <CopyInputText value={props.fen}/>
+                </div>
+            </Show>
+        </div>
+    </>)
+}
+
+function CopyInputText(props: { value: string }) {
+
+    const [on_copy, set_on_copy] = createSignal(true, { equals: false })
+    const copy_value = () => {
+        navigator.clipboard.writeText(props.value)
+        set_on_copy(true)
+    }
+
+    return (<div onClick={copy_value} class='copy-input-text'>
+        <input type='text' value={props.value} spellcheck={false} readonly={true}></input>
+        <CopiedI on_copy={on_copy()}/>
+
+    </div>)
+}
+
+function CopiedI(props: { on_copy: boolean }) {
+    createEffect(on(() => props.on_copy, () => {
+        set_copied(true)
+        setTimeout(() => set_copied(false), 1000)
+    }, { defer: true }))
+
+    const [copied, set_copied] = createSignal(false)
+    return (<>
+        <Show when={copied()} fallback={
+            <span><i data-icon=""></i></span>
+        }>
+            <span class='copied'><i data-icon=""></i></span>
+        </Show>
+    </>)
+}
 
 function StudyNotFound() {
 
@@ -446,4 +528,18 @@ function StudyLoading() {
     return (<>
         <div class="loading">Loading</div>
     </>)
+}
+
+/* chat gpt */
+function downloadBlob(text: string, filename: string) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const element = document.createElement('a');
+  element.setAttribute('href', url);
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+  URL.revokeObjectURL(url); // Clean up the URL object
 }

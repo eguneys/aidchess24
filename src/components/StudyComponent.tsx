@@ -28,6 +28,7 @@ export type Chapter = {
     set_white(white: string | undefined): void,
     set_black(black: string | undefined): void,
     create_effects_listen_and_save_db(db: StudiesDBReturn): void
+    as_pgn(study_name: string, section_name: string): string
 }
 
 export type Section = {
@@ -65,6 +66,8 @@ export type Study = {
     delete_section(section: Section): void
     change_section_order(section: Section, order: number): void
     create_effects_listen_and_save_db(db: StudiesDBReturn): void
+    as_export_pgn: string
+    as_export_lichess: string[]
 }
 
 export function Chapter(id: EntityChapterId, section_id: EntitySectionId, play_replay: PlayUciTreeReplay): Chapter {
@@ -113,6 +116,17 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId, play_r
             createEffect(() => {
                 db.update_chapter(this.entity)
             })
+        },
+        as_pgn(study_name: string, section_name: string) {
+            let res = ''
+
+            res += `[Event] ${study_name}: ${section_name}: ${name()}\n`
+            res += `[StudyName] ${study_name}\n`
+            res += `[ChapterName] ${name()}\n`
+            res += '\n'
+            res += play_replay.steps.as_pgn
+
+            return res
         }
     }
 }
@@ -292,6 +306,35 @@ export function Study(id: EntityStudyId): Study {
             createEffect(() => {
                 db.update_study(this.entity)
             })
+        },
+        get as_export_pgn() {
+            return sections().map(section =>
+                section.chapters.map(chapter =>
+                    chapter.as_pgn(name(), section.name)
+                ).join('\n\n')
+            ).join('\n\n\n')
+        },
+        get as_export_lichess() {
+            let res: string[] = []
+            let parted = sections().flatMap(_ => _.chapters).length > 64
+
+            let a: string[] = []
+            for (let section of sections()) {
+                if (a.length > 0 && a.length + section.chapters.length > 64) {
+                    res.push(a.join('\n\n'))
+                    a = []
+                }
+                for (let chapter of section.chapters) {
+                    a.push(
+                        chapter.as_pgn(name() + parted ? ` Part ${res.length + 1}` : '', 
+                        section.name)
+                    )
+                }
+            }
+            if (a.length > 0) {
+                res.push(a.join('\n\n'))
+            }
+            return res
         }
     }
 }

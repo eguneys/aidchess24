@@ -6,6 +6,7 @@ main.beta {
     flex-flow: column;
     align-items: center;
     text-align: center;
+    background: theme.$ac-li-blue2;
 
     button {
         user-select: none;
@@ -15,7 +16,11 @@ main.beta {
         background: theme.$error;
         color: theme.$text-light;
         border: 1px solid theme.$text-primary;
+        border-radius: 2px;
 
+        &:hover {
+            color: theme.$text-light2;
+        }
         &:active {
             text-decoration: underline;
         }
