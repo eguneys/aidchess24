@@ -3,101 +3,174 @@
 .on-openings {
 
     .openings-list {
-        display: flex;
+        display: grid;
 
-        flex-flow: column;
 
-        background: theme.$bu-mu-blue2;
+        grid-template-areas: 'aside content';
 
-        .tools {
-            display: flex;
-            padding: 1em;
+        grid-template-columns: max-content auto;
+        grid-template-rows: min-content;
 
-            justify-content: flex-end;
-            border-bottom: 2px solid theme.$ac-li-blue-2;
+        .subnav {
+            grid-area: aside;
+        }
 
-            button.new {
-                display: flex;
-                align-items: center;
-                padding: 0.5em;
-                gap: 0.5em;
-                text-transform: uppercase;
+        .content {
+            grid-area: content;
+        }
 
-                border: none;
-                background: theme.$he2;
-                color: theme.$text-light2;
-                border-radius: 8px;
-                border: 2px solid theme.$ac-li-purple-2;
+        .subnav {
 
-                user-select: none;
-                cursor: pointer;
+            color: theme.$text-primary;
 
-                transition: .2s;
+            nav {
+               display: flex;
+               flex-flow: column;
 
-                &:hover {
-                    background: theme.$ac-li-purple4;
-                }
+               a {
+                   position: relative;
+                   user-select: none;
+                   cursor: pointer;
+                   padding: 1em 0.5em;
 
-                &:active {
-                    text-decoration: underline;
-                }
+                   display: flex;
+                   gap: 0.3em;
 
-                i {
-                    font-size: 2em;
-                }
+
+                   &.active::after,
+                   &:hover::after {
+                    transform: scale(1);
+                   }
+
+                   &:after {
+                    right: -1px;
+                    content: '';
+                    background: theme.$ac-li-orange;
+                    width: 3px;
+                    position: absolute;
+                    height: 98%;
+                    top: 1%;
+                    transition: .25s;
+                    transform: scale(0);
+                   }
+               }
             }
         }
 
-        .list {
-            padding: 0.2em;
-            display: flex;
-            flex-flow: row wrap;
-            gap: 0.1em;
-            justify-content: center;
+        .content {
 
-            .loading, .no-studies {
-                align-self: center;
+            background: theme.$bu-mu-blue2;
 
-                a:hover {
+            .tools {
+                display: flex;
+                padding: 1em;
 
-                    color: theme.$text-secondary;
+                justify-content: flex-end;
+                border-bottom: 2px solid theme.$ac-li-blue-2;
+
+                button.new {
+                    display: flex;
+                    align-items: center;
+                    padding: 0.5em;
+                    gap: 0.5em;
+                    text-transform: uppercase;
+
+                    border: none;
+                    background: theme.$he2;
+                    color: theme.$text-light2;
+                    border-radius: 8px;
+
+                    user-select: none;
+                    cursor: pointer;
+
+                    transition: .2s;
+
+                    &:hover {
+                        background: theme.$ac-li-purple4;
+                    }
+
+                    &:active {
+                        text-decoration: underline;
+                    }
+
+                    i {
+                        font-size: 2em;
+                    }
                 }
             }
 
+            .list {
 
-            .study {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(45ch, 1fr));
 
-                padding: 1em;
-                user-select: none;
-                cursor: pointer;
-                transition: .25s;
-                border: 2px solid theme.$ac-li-purple-2;
+                .loading, .no-studies {
+                    align-self: center;
 
-                h3.title {
-                    color: theme.$deep-blue;
-                    font-weight: 400;
+                    a:hover {
+
+                        color: theme.$text-secondary;
+                    }
                 }
 
 
-                &:hover {
-                    background: theme.$ac-li-purple-2;
-                }
+                .study {
 
-                .section {
-                    .chapters {
+                    padding: 1em;
+                    user-select: none;
+                    cursor: pointer;
+                    transition: .25s;
+                    border: 1px solid theme.$ac-li-purple-2;
+                    border-width: 0 1px 1px 0;
+
+                    h3.title {
                         display: flex;
-                        flex-flow: column;
-                        .chapter {
+                        color: theme.$deep-blue;
+                        font-weight: 400;
+                        align-items: center;
 
-                            display: flex;
-                            gap: 0.2em;
-
-                        }
+                        i {
+                            padding: 0 0.5em 0 0;
+                            font-size: 2em;
                         }
                     }
+
+
+                    &:hover {
+                        background: theme.$ac-li-purple-2;
+                    }
+
+                    .section {
+                        .chapters {
+                            display: flex;
+                            flex-flow: column;
+                            .chapter {
+
+                                display: flex;
+                                gap: 0.2em;
+
+                            }
+                            }
+                        }
+                }
             }
+
+           .featured {
+               padding: 1em;
+           }
+
+           .help {
+               h2, h3 {
+                   font-weight: 400;
+                   padding: 0.8em 1em;
+               }
+               p {
+                   padding: 1em;
+               }
+
+               padding-bottom: 5em;
+           }
         }
     }
+
 }
