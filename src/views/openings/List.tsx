@@ -29,6 +29,9 @@ const ListComponent = () => {
         navigate('/openings/' + study.id)
     }
 
+    let auto_studies = () => []
+    let featured_studies = () => []
+
     let [studies] = createResource(() => db.light_list_studies())
 
     const on_click_study = (study: Study) => {
@@ -43,6 +46,7 @@ const ListComponent = () => {
             <nav>
                 <a onClick={() => set_tab('mine')} class={'mine' + (tab() === 'mine' ? ' active': '')}>My Openings</a>
                 <a onClick={() => set_tab('featured')} class={'featured' + (tab() === 'featured' ? ' active': '')}>Featured</a>
+                <a onClick={() => set_tab('auto')} class={'auto' + (tab() === 'auto' ? ' active': '')}>Auto Generated</a>
                 <a onClick={() => set_tab('help')} class={'help' + (tab() === 'help' ? ' active': '')}><i data-icon=""></i>Help</a>
             </nav>
         </aside>
@@ -52,7 +56,39 @@ const ListComponent = () => {
             </Show>
             <Show when={tab()==='featured'}>
                 <h3 class='featured'> Featured Openings </h3>
-                <p class='featured'>If you want to feature your openings here, please <A href='/contact'>contact me</A>.</p>
+                <small class='featured'>If you want to feature your openings here, please <A href='/contact'>contact here</A>.</small>
+                <div class='list'>
+                    <Suspense fallback={
+                        <div class='loading'>Loading featured openings..</div>}
+                        >
+                    <For each={featured_studies()} fallback={
+                        <div class='no-studies'>
+                            <p>No Openings listed here yet. Likely to be coming soon.</p>
+                            <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
+                        </div>
+                    }>{study => 
+                        <StudyListItem study={study} on_click_study={() => on_click_study(study)}/>
+                    }</For>
+                    </Suspense>
+                </div>
+            </Show>
+            <Show when={tab()==='auto'}>
+                <h3 class='auto'> Auto Generated Openings </h3>
+                <small class='auto'>Openings listed below are compiled via programmatically selecting moves from Master's Games.</small>
+                <div class='list'>
+                    <Suspense fallback={
+                        <div class='loading'>Loading auto generated openings..</div>}
+                        >
+                    <For each={auto_studies()} fallback={
+                        <div class='no-studies'>
+                            <p>No Openings listed here yet. Likely to be coming soon.</p>
+                            <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
+                        </div>
+                    }>{study => 
+                        <StudyListItem study={study} on_click_study={() => on_click_study(study)}/>
+                    }</For>
+                    </Suspense>
+                </div>
             </Show>
             <Show when={tab()==='mine'}>
                 <div class='tools'>
@@ -64,30 +100,13 @@ const ListComponent = () => {
                         >
                     <For each={studies()} fallback={
                         <div class='no-studies'>
-                            <h4>No Openings here yet.</h4>
+                            <p>No Openings here yet.</p>
                             <p>Try importing a lichess study.</p>
                             <p>Or build an opening repertoire using 
                                 <A href='/builder'>Builder</A> feature</p>
                         </div>
                     }>{study => 
-                        <div onClick={() => on_click_study(study)} class='study'>
-                      <h3 class='title'><i data-icon=""></i>{study.name}</h3>
-                      <div class='sections'>
-                        <Show when={study.sections.length === 1} fallback={
-                            <For each={study.sections}>{ section => 
-                                <div class='section'><i data-icon=""></i><span class='title'>{section.name}</span></div>
-                            }</For>
-                        }>
-                            <div class='section'>
-                              <div class='chapters'>
-                                <For each={study.sections[0].chapters}>{ chapter => 
-                                    <div class='chapter'><i data-icon=""></i>{chapter.name}</div>
-                                }</For>
-                              </div>
-                            </div>
-                        </Show>
-                      </div>
-                      </div>
+                        <StudyListItem study={study} on_click_study={() => on_click_study(study)}/>
                     }</For>
                     </Suspense>
                 </div>
@@ -95,6 +114,30 @@ const ListComponent = () => {
         </div>
     </main>
     </>)
+}
+
+function StudyListItem(props: { study: Study, on_click_study: () => void }) {
+
+    return (
+        <div onClick={() => props.on_click_study()} class='study'>
+            <h3 class='title'><i data-icon=""></i>{props.study.name}</h3>
+            <div class='sections'>
+                <Show when={props.study.sections.length === 1} fallback={
+                    <For each={props.study.sections}>{section =>
+                        <div class='section'><i data-icon=""></i><span class='title'>{section.name}</span></div>
+                    }</For>
+                }>
+                    <div class='section'>
+                        <div class='chapters'>
+                            <For each={props.study.sections[0].chapters}>{chapter =>
+                                <div class='chapter'><i data-icon=""></i>{chapter.name}</div>
+                            }</For>
+                        </div>
+                    </div>
+                </Show>
+            </div>
+        </div>
+    )
 }
 
 

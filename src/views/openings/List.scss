@@ -155,9 +155,19 @@
                 }
             }
 
-           .featured {
+           .featured, .auto {
                padding: 1em;
+
            }
+
+            .no-studies {
+                padding: 1em;
+
+                a {
+                    user-select: none;
+                    cursor: pointer;
+                }
+            }
 
            .help {
                h2, h3 {
