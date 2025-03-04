@@ -86,11 +86,20 @@
                             background: theme.$ac-li-purple2;
                             color: theme.$text-primary;
                         }
+                        
+                        &:active span:first-child {
+                            text-decoration: underline;
+                        }
 
                         justify-content: space-between;
 
                         .due {
+                            transition: inherit;
                             border-bottom: 2px solid theme.$text-light;
+                        }
+
+                        &:hover .due {
+                            border-bottom: 2px solid theme.$text-primary;
                         }
                     }
                 }
