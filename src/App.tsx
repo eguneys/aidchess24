@@ -30,7 +30,7 @@ export const MyApp = () => {
             <Route path='/openings' component={OpeningsList}/>
             <Route path='/openings/:id' component={OpeningsShow}/>
             <Route path='/repetition' component={RepetitionList}/>
-            <Route path='/repetition/show' component={RepetitionShow}/>
+            <Route path='/repetition/:id' component={RepetitionShow}/>
             <Route path='/contact' component={Contact}/>
             <Route path='/terms' component={Contact}/>
             <Route path='/privacy' component={Contact}/>

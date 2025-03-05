@@ -1,9 +1,11 @@
 import { createEffect, createMemo, createResource, For, on, Show, Suspense, useContext } from "solid-js"
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import './List.scss'
-import { A } from "@solidjs/router"
+import { A, useNavigate } from "@solidjs/router"
 import { Section } from "../../components/StudyComponent"
 import { makePersistedNamespaced } from "../../storage"
+
+export type RepeatShowType = 'first-ten' | 'ten-twenty' | 'twenty-plus' | 'white' | 'black'
 
 export default () => {
     return (<>
@@ -48,8 +50,15 @@ function ListComponent() {
             return
         }
         r.create_effects_listen_and_save_db(db)
+        r.create_effects_listen_load_db(db)
     }))
 
+
+
+    let navigate = useNavigate()
+    const navigate_show = (type: RepeatShowType) => {
+        navigate('/repetition/' + repeat_study()!.study_id + '?filter=' + type)
+    }
 
     return (<>
     <main class='repetition'>
@@ -93,11 +102,11 @@ function ListComponent() {
                         <h4> Memorize due moves through Spaced Repetition </h4>
                         <div class='filler'></div>
                         <div class='dues'>
-                            <button><span>First 10 moves</span><span class='due'>Due: {repeat_study()?.due_first_ten.length}</span></button>
-                            <button><span>10-20 moves</span><span class='due'>Due: {repeat_study()?.due_ten_twenty.length}</span></button>
-                            <button><span>20+ moves</span><span class='due'>Due: {repeat_study()?.due_twenty_plus.length}</span></button>
-                            <button><span>White moves</span><span class='due'>Due: {repeat_study()?.due_white.length}</span></button>
-                            <button><span>Black moves</span><span class='due'>Due: {repeat_study()?.due_black.length}</span></button>
+                            <button onClick={() => navigate_show('first-ten')}><span>First 10 moves</span><span class='due'>Due: {repeat_study()?.due_first_ten.length}</span></button>
+                            <button onClick={() => navigate_show('ten-twenty')}><span>10-20 moves</span><span class='due'>Due: {repeat_study()?.due_ten_twenty.length}</span></button>
+                            <button onClick={() => navigate_show('twenty-plus')}><span>20+ moves</span><span class='due'>Due: {repeat_study()?.due_twenty_plus.length}</span></button>
+                            <button onClick={() => navigate_show('white')}><span>White moves</span><span class='due'>Due: {repeat_study()?.due_white.length}</span></button>
+                            <button onClick={() => navigate_show('black')}><span>Black moves</span><span class='due'>Due: {repeat_study()?.due_black.length}</span></button>
                         </div>
                     </>
                 }>

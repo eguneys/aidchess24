@@ -843,7 +843,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
 }
 
 
-export function PlayUciTreeReplayComponent(props: { db: StudiesDBReturn, play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void, lose_focus?: boolean }) {
+export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void, lose_focus?: boolean }) {
 
     createEffect(on(() => props.play_replay, (replay) => {
         replay.create_effects()
@@ -958,7 +958,7 @@ export function PlayUciTreeReplayComponent(props: { db: StudiesDBReturn, play_re
 }
 
 
-function NodesShorten(props: { db: StudiesDBReturn, nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function NodesShorten(props: { db?: StudiesDBReturn, nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
     return (<>
     <Show when={props.nodes.length === 1}>
         <StepNode {...props} node={props.nodes[0]} />
@@ -986,7 +986,7 @@ function NodesShorten(props: { db: StudiesDBReturn, nodes: TreeStepNode[], curso
     </>)
 }
 
-function StepNode(props: { db: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
 
     let show_index = createMemo(() => props.node.ply % 2 === 1 || props.show_index)
 
@@ -1019,7 +1019,9 @@ function StepNode(props: { db: StudiesDBReturn, node: TreeStepNode, show_index?:
     })
 
 
-    props.node.create_effects_listen_and_save_db(props.db)
+    if (props.db) {
+        props.node.create_effects_listen_and_save_db(props.db)
+    }
 
     return (<>
     <div onContextMenu={(e) => { e.preventDefault(); props.on_context_menu(e, props.node.path) }} onClick={() => { props.on_set_cursor(props.node.path) } } class={klass()}>

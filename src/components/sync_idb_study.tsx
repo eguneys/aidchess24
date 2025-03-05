@@ -3,7 +3,7 @@ import { Chapter, Section, Study } from "./StudyComponent";
 import { createContext, JSX } from "solid-js";
 import { NAG, Path, Step } from "./step_types";
 import { PGN, PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
-import { RepeatStudy } from "../views/repetition/types";
+import { RepeatDueMove, RepeatStudy } from "../views/repetition/types";
 
 
 async function db_new_play_uci_tree_replay(db: StudiesDB, tree?: StepsTree) {
@@ -333,8 +333,74 @@ async function db_get_or_new_repeat_study(db: StudiesDB, study_id: EntityStudyId
         return section
     }))
 
+
     let res = RepeatStudy(e_res.id, e_res.study_id)
     res.set_sections(sections)
+
+    return res
+}
+
+async function db_load_repeat_due_moves(db: StudiesDB, repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]): Promise<RepeatDueMove[]> {
+
+    let chapters = await db.chapters.where('section_id')
+    .anyOf(sections)
+    .toArray()
+
+    let tree_replays = await db.play_uci_tree_replays.where('id')
+    .anyOf(chapters.map(_ => _.tree_replay_id))
+    .toArray()
+
+
+    let step_trees = await db.steps_trees.where('id')
+    .anyOf(tree_replays.map(_ => _.steps_tree_id))
+    .toArray()
+
+    let e_step_tree_nodes = await db.tree_step_nodes.where('tree_id')
+    .anyOf(step_trees.map(_ => _.id))
+    .toArray()
+
+    let e_existing_due_moves = await db.repeat_due_moves.where('repeat_study_id')
+    .equals(repeat_study_id)
+    .toArray()
+
+
+    let res: RepeatDueMove[] = []
+
+    for (let e_step_tree_node of e_step_tree_nodes) {
+        let e_existing_due_move = e_existing_due_moves.find(_ => _.tree_step_node_id === e_step_tree_node.id)
+
+        let node = e_load_tree_step_node_from_entity(e_step_tree_node)
+
+        if (e_existing_due_move) {
+            res.push(RepeatDueMove(e_existing_due_move.id, e_existing_due_move.repeat_study_id, node, false))
+        } else {
+            res.push(RepeatDueMove(gen_id8(), repeat_study_id, node, true))
+        }
+    }
+
+    return res
+}
+
+
+function e_load_tree_step_node_from_entity(entity: EntityTreeStepNode) {
+    let res = TreeStepNode(entity.id, entity.tree_id, entity.step, entity.order)
+    res.set_entity(entity)
+    return res
+}
+
+
+async function db_play_replay_by_steps_tree_id(db: StudiesDB, steps_tree_id: EntityStepsTreeId) {
+    let e_replay = await db.play_uci_tree_replays.where('steps_tree_id').equals(steps_tree_id).first()
+
+    if (!e_replay) {
+        throw new Error("No Steps by given id" + steps_tree_id)
+    }
+
+    let res = await db_load_play_replay(db, e_replay.id)
+
+    if (!res) {
+        throw new Error("No Replay by given id" + e_replay.id)
+    }
 
     return res
 }
@@ -349,6 +415,7 @@ class StudiesDB extends Dexie {
     tree_step_nodes!: EntityTable<EntityTreeStepNode, "id">
 
     repeat_studies!: EntityTable<EntityRepeatStudy, "id">
+    repeat_due_moves!: EntityTable<EntityRepeatDueMove, "id">
 
     remove_database() {
         this.delete()
@@ -366,7 +433,8 @@ class StudiesDB extends Dexie {
             play_uci_tree_replays: 'id, steps_tree_id',
             steps_trees: 'id',
             tree_step_nodes: 'id, tree_id',
-            repeat_studies: 'id, study_id'
+            repeat_studies: 'id, study_id',
+            repeat_due_moves: 'id, repeat_study_id, tree_step_node_id'
         })
 
 
@@ -379,6 +447,7 @@ class StudiesDB extends Dexie {
         this.tree_step_nodes.mapToClass(EntityTreeStepNode)
 
         this.repeat_studies.mapToClass(EntityRepeatStudy)
+        this.repeat_due_moves.mapToClass(EntityRepeatDueMove)
     }
 }
 
@@ -441,10 +510,20 @@ class EntityTreeStepNode extends Entity<StudiesDB> {
 export type EntityRepeatStudyId = string
 export type EntityRepeatStudyInsert = InsertType<EntityRepeatStudy, "id">
 
+
+export type EntityRepeatDueMoveId = string
+export type EntityRepeatDueMoveInsert = InsertType<EntityRepeatDueMove, "id">
+
 class EntityRepeatStudy extends Entity<StudiesDB> {
     id!: EntityRepeatStudyId
     study_id!: EntityStudyId
     sections!: EntitySectionId[]
+}
+
+class EntityRepeatDueMove extends Entity<StudiesDB> {
+    id!: EntityRepeatDueMoveId
+    repeat_study_id!: EntityRepeatStudyId
+    tree_step_node_id!: EntityTreeStepNodeId
 }
 
 export const StudiesDBContext = createContext<StudiesDBReturn>()
@@ -484,6 +563,9 @@ export type StudiesDBReturn = {
 
     put_repeat_study_sections(entity: EntityRepeatStudyInsert): Promise<void>;
     get_or_new_repeat_study(study_id: EntityStudyId): Promise<RepeatStudy>;
+    load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]): Promise<RepeatDueMove[]>
+
+    play_replay_by_steps_tree_id(steps_tree_id: EntityStepsTreeId): Promise<PlayUciTreeReplay>
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -549,6 +631,12 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         get_or_new_repeat_study(study_id: EntityStudyId) {
             return db_get_or_new_repeat_study(db, study_id)
+        },
+        load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]) {
+            return db_load_repeat_due_moves(db, repeat_study_id, sections)
+        },
+        play_replay_by_steps_tree_id(steps_tree_id: EntityStepsTreeId) {
+            return db_play_replay_by_steps_tree_id(db, steps_tree_id)
         }
     }
 

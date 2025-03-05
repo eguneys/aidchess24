@@ -19,7 +19,10 @@ export type Step = {
     comments?: string
 }
 
-export const fen_is_end = (fen: FEN) => Chess.fromSetup(parseFen(fen).unwrap()).unwrap().isEnd()
+export const fen_pos = (fen: FEN) => Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
+export const fen_is_end = (fen: FEN) => fen_pos(fen).isEnd()
+export const fen_turn = (fen: FEN) => fen_pos(fen).turn
+
 
 export function make_step_and_play(ply: Ply, pos: Position, san: SAN, base_path: Path): Step {
     let move = parseSan(pos, san)!
