@@ -6,7 +6,7 @@ import './App.scss'
 const Home = lazy(() => import('./Home'))
 const Contact = lazy(() => import('./Contact'))
 const Dashboard = lazy(() => import('./Dashboard'))
-const Builder = lazy(() => import('./Builder'))
+const Builder = lazy(() => import('./views/builder/Builder'))
 const Beta = lazy(() => import('./Beta'))
 
 const OpeningsList = lazy(() => import('./views/openings/List'))

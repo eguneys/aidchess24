@@ -1,14 +1,17 @@
 import './Home.scss'
-import { A } from '@solidjs/router'
+import { A, useNavigate } from '@solidjs/router'
 
 
 const Home = () => {
+
+    const navigate = useNavigate()
+
     return (<>
     <main class='home'>
         <section>
       <h1><A href='repertoires'>Master Chess Through Memorization and Practice.</A></h1>
       <div class='features'>
-        <div class='feature'>
+        <div onClick={() => navigate('/builder')} class='feature'>
             <h2>Build Your Repertoire</h2>
             <ul>
                 <li><p>Play against the engine selecting top 5 moves</p></li>
@@ -18,7 +21,7 @@ const Home = () => {
                 <li><p>Save your lines for further study.</p></li>
             </ul>
         </div>
-        <div class='feature'>
+        <div  onClick={() => navigate('/openings')}class='feature'>
             <h2>Featured Openings</h2>
             <ul>
                 <li><span>Slav Defense</span></li>
@@ -27,7 +30,7 @@ const Home = () => {
                 <li><small>(or Import a Lichess Study or PGN)</small></li>
             </ul>
         </div>
-        <div class='feature'>
+        <div onClick={() => navigate('repetition')} class='feature'>
             <h2>Spaced Repetition Practice</h2>
             <ul>
                 <li><p>Repeat your lines daily with quizzes using spaced repetition.</p></li>

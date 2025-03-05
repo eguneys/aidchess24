@@ -52,7 +52,7 @@ body {
     margin: 0 auto;
     user-select: none;
 
-    background: theme.$white-bg2;
+    background: theme.$nav;
 
     box-shadow: 0px 1px 3px theme.$text-primary;
     margin-bottom: 10px;
@@ -199,7 +199,7 @@ body {
     display: none;
 
     .beta {
-        color: theme.$ac-li-purple2;
+        color: theme.$dark-brown;
 
         &:hover {
           color: theme.$ac-li-purple;
@@ -225,11 +225,14 @@ body {
         line-height: 2em;
         margin: 0 1rem 0 1.5rem;
     }
+
+    a:hover {
+        color: theme.$bu-sa-green;
+    }
 }
 
 
 #topnav {
-
 
     @media(max-width: 979.3px) {
         display: flex;
@@ -282,6 +285,7 @@ body {
 
     @media (min-width: 979.3px) {
         display: flex;
+        align-items: center;
 
         section {
             position: relative;
@@ -312,7 +316,7 @@ body {
 
             transition: .2s;
                 &.active {
-                    color: theme.$ac-li-purple2;
+                    color: theme.$bu-sa-green;
                     text-decoration: underline;
                 }
 
@@ -321,7 +325,7 @@ body {
                 }
 
                 &.active:hover {
-                    color: theme.$ac-li-purple;
+                    color: theme.$bu-sa-green;
                 }
             }
         }

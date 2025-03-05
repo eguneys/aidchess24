@@ -27,15 +27,13 @@ function ShowComponent() {
     let [study, {refetch}] = createResource(() => db.study_by_id(params.id))
 
     return (<>
-        <main class='openings-show'>
-            <ErrorBoundary fallback={<StudyNotFound />}>
-                <Suspense fallback={<StudyLoading />}>
-                    <Show when={study()}>{study =>
-                        <StudyShow study={study()} on_refetch={() => refetch()} />
-                    }</Show>
-                </Suspense>
-            </ErrorBoundary>
-        </main>
+        <ErrorBoundary fallback={<StudyNotFound />}>
+            <Suspense fallback={<StudyLoading />}>
+                <Show when={study()}>{study =>
+                    <StudyShow study={study()} on_refetch={() => refetch()} />
+                }</Show>
+            </Suspense>
+        </ErrorBoundary>
     </>)
 }
 
@@ -399,7 +397,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
 
 
     return (<>
-        <div ref={$el_ref!} class='study'>
+        <main ref={$el_ref!} class='openings-show study'>
             <div class='details-wrap'>
                 <StudyDetailsComponent study={props.study} section={selected_section()} chapter={selected_chapter()} />
             </div>
@@ -449,7 +447,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
                 </Show>
                 </>
             }</Show>
-        </div>
+        </main>
     </>)
 }
 

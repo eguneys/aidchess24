@@ -1,20 +1,21 @@
 import { batch, createEffect, createMemo, createResource, createSignal, Match, on, onCleanup, onMount, Show, Switch, useContext } from "solid-js"
-import { StockfishContext, StockfishProvider } from "./ceval2/StockfishContext"
+import { StockfishContext, StockfishProvider } from "../../ceval2/StockfishContext"
 import { Color, opposite } from "chessops"
-import { PlayUciBoard, PlayUciComponent } from "./components/PlayUciComponent"
+import { PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
 import './Builder.scss'
 
-import { judgement_to_glyph, PlayUciSingleReplay, PlayUciSingleReplayComponent } from "./components/PlayUciReplayComponent"
-import { makePersistedNamespaced } from "./storage"
-import { stepwiseScroll } from "./common/scroll"
-import { usePlayer } from "./sound"
-import { fen_turn, INITIAL_FEN } from "./chess_pgn_logic"
-import { Path, Ply, SAN, Step } from "./components/step_types"
-import { PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, TreeStepNode } from "./components/ReplayTreeComponent"
-import { COOLDOWN_TIME, DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "./components/StockfishComponent"
-import { arr_rnd } from "./random"
-import { annotationShapes } from "./annotationShapes"
+import { judgement_to_glyph, PlayUciSingleReplay, PlayUciSingleReplayComponent } from "../../components/PlayUciReplayComponent"
+import { makePersistedNamespaced } from "../../storage"
+import { stepwiseScroll } from "../../common/scroll"
+import { usePlayer } from "../../sound"
+import { fen_turn, INITIAL_FEN } from "../../chess_pgn_logic"
+import { Path, Ply, SAN, Step } from "../../components/step_types"
+import { parse_PGNS, PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, StepsTree, TreeStepNode } from "../../components/ReplayTreeComponent"
+import { COOLDOWN_TIME, DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "../../components/StockfishComponent"
+import { arr_rnd } from "../../random"
+import { annotationShapes } from "../../annotationShapes"
 import createRAF from "@solid-primitives/raf"
+import { gen_id8 } from "../../components/sync_idb_study"
 
 export default () => {
     return (<StockfishProvider>
@@ -302,14 +303,14 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
                 play_replay.goto_next_ply_if_can()
             }
             if (tab() === 'repertoire') {
-                play_replay_tree.goto_next_if_can()
+                play_replay_tree().goto_next_if_can()
             }
         } else {
             if (tab() === 'match') {
                 play_replay.goto_prev_ply_if_can()
             }
             if (tab() === 'repertoire') {
-                play_replay_tree.goto_prev_if_can()
+                play_replay_tree().goto_prev_if_can()
             }
         }
     }
@@ -391,14 +392,24 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
     let [first_pgn, set_first_pgn] = makePersistedNamespaced<string | undefined>(undefined, 'builder.current.pgn')
     const [builder_result, set_builder_result] = createSignal<BuilderResult | undefined>(undefined)
 
-    const play_replay_tree = PlayUciTreeReplayComponent(first_pgn())
-    play_replay_tree.cursor_path = first_cursor_path()
+    let steps = createMemo(on(first_pgn, (pgn) => {
+        if (!pgn) {
+            return undefined
+        } 
+        return parse_PGNS(pgn)[0].tree
+    }))
 
-    createEffect(on(() => play_replay_tree.cursor_path, path => {
+    const play_replay_tree = createMemo(() => PlayUciTreeReplay(gen_id8(), steps() ?? StepsTree(gen_id8())))
+
+    createEffect(on(play_replay_tree, (tree) => {
+        tree.goto_path(first_cursor_path())
+    }))
+
+    createEffect(on(() => play_replay_tree().cursor_path, path => {
         set_first_cursor_path(path)
     }))
 
-    createEffect(on(() => play_replay_tree.cursor_path_step, (ps) => {
+    createEffect(on(() => play_replay_tree().cursor_path_step, (ps) => {
         if (ps) {
             play_uci.set_fen_and_last_move(ps.fen, ps.uci)
         } else {
@@ -417,7 +428,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
             let sans = steps.map(_ => _.san)
 
-            let res = play_replay_tree.steps.add_sans_at_root(sans)
+            let res = play_replay_tree().steps.add_sans_at_root(sans)
             let final_path = res[res.length - 1]?.path
 
             if (!final_path) {
@@ -425,9 +436,9 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
             }
 
             set_tab('repertoire')
-            play_replay_tree.cursor_path = final_path
+            play_replay_tree().goto_path(final_path)
 
-            set_first_pgn(play_replay_tree.steps.as_pgn)
+            set_first_pgn(play_replay_tree().steps.as_pgn)
         })
     }
 
@@ -437,7 +448,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
 
     createEffect(on(tab, (t) => {
-        let ps = t === 'repertoire' ? play_replay_tree.cursor_path_step : play_replay.ply_step
+        let ps = t === 'repertoire' ? play_replay_tree().cursor_path_step : play_replay.ply_step
         if (ps) {
             play_uci.set_fen_and_last_move(ps.fen, ps.uci)
         } else {
@@ -449,8 +460,8 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
     let $el_context_menu: HTMLElement
 
     const on_tree_context_menu = (e: MouseEvent, path: Path) => {
-        play_replay_tree.cursor_path = path
-        set_context_menu_step(play_replay_tree.steps.find_at_path(path))
+        play_replay_tree().goto_path(path)
+        set_context_menu_step(play_replay_tree().steps.find_at_path(path))
 
         let x = e.clientX
         let y = e.clientY
@@ -513,7 +524,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
     const [context_menu_step_single, set_context_menu_step_single] = createSignal<Step | undefined>(undefined)
 
     const on_delete_move = (path: Path) => {
-        play_replay_tree.steps.remove_child_at_path(path)
+        play_replay_tree().steps.remove_child_at_path(path)
         set_context_menu_step(undefined)
     }
 
@@ -781,7 +792,7 @@ function WithStockfishLoaded(props: { on_welcome_page: () => void }) {
 
                 <Show when={tab() === 'repertoire'}>
                     <>
-                    <PlayUciTreeReplay play_replay={play_replay_tree} on_context_menu={on_tree_context_menu}/>
+                    <PlayUciTreeReplayComponent play_replay={play_replay_tree()} on_context_menu={on_tree_context_menu}/>
                     </>
                 </Show>
             </div>

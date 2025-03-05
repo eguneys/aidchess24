@@ -2,305 +2,312 @@
 @use '../../base_css/media';
 
 .on-openings {
+
+    @include media.mq-at-least-col2 {
+        --main-max-width: auto;
+    }
+
     .openings-show {
 
-        .study {
-            position: relative;
+        position: relative;
 
-            margin-bottom: 3em;
-            padding-bottom: 10em;
+        margin-bottom: 3em;
+        padding-bottom: 10em;
 
-        
-            display: grid;
+    
+        display: grid;
 
-            row-gap: 0.2em;
-            column-gap: 0.5em;
+        row-gap: 0.2em;
+        column-gap: 0.5em;
 
-            justify-self: stretch;
-        
+        justify-self: stretch;
+    
 
-            @include media.mq-is-col1 {
-                grid-template-areas: 'board'
-                                     'replay'
-                                     'sections'
-                                     'details'
-                                     'tools';
-            }
-        
-            @include media.mq-at-least-col2 {
-                grid-template-areas: 'board replay'
-                                     'details details'
-                                     'sections sections'
-                                     'tools tools';
-                grid-template-columns: var(--col2-uniboard-width) minmax(300px, 400px);
-
-                justify-self: center;
-            }
-
-            @include media.mq-at-least-col3 {
-                    grid-template-areas: 'sections board replay'
-                        'details details tools';
-                    grid-template-columns: minmax(400px, 600px) var(--col3-uniboard-width) minmax(300px, 400px);
-
-
-                    .replay-wrap,
-                    .sections-wrap {
-                        max-height: calc(var(--col3-uniboard-width) * 0.9);
-                    }
-            }
-
-            .board-wrap {
-                grid-area: board;
-            }
-
-            .replay-wrap {
-                grid-area: replay;
-            }
-        
-            .details-wrap {
-                grid-area: details;
-            }
-        
+        @include media.mq-is-col1 {
+            grid-template-areas: 'board'
+                                 'replay'
+                                 'sections'
+                                 'details'
+                                 'tools';
+            .replay-wrap,
             .sections-wrap {
-                grid-area: sections;
+                min-height: 200px;
             }
-        
-            .tools-wrap {
-                grid-area: tools;
-            }
-        
-            .board-wrap {
-                aspect-ratio: 1;
-            }
+        }
+    
+        @include media.mq-at-least-col2 {
+            grid-template-areas: 'board replay'
+                                 'details details'
+                                 'sections sections'
+                                 'tools tools';
+            grid-template-columns: var(--col2-uniboard-width) minmax(300px, 400px);
 
-            .dialog-content.edit-section {
-                background: theme.$ac-li-blue2;
-            }
-            .dialog-content.edit-chapter {
-                background: theme.$ac-li-blue-2;
-            }
-            .dialog-content.edit-study {
-                background: theme.$ac-li-purple;
-            }
-            
+            justify-self: center;
+        }
 
-            .dialog-content.edit-section,
-            .dialog-content.edit-chapter,
-            .dialog-content.edit-study {
-                padding: 1.5em 1em;
+        @include media.mq-at-least-col3 {
+                grid-template-areas: 'sections board replay'
+                    'details details tools';
+                grid-template-columns: minmax(300px, 400px) var(--col3-uniboard-width) minmax(300px, 400px);
+
+
+                .replay-wrap,
+                .sections-wrap {
+                    max-height: calc(var(--col3-uniboard-width) * 0.9);
+                }
+        }
+
+        .board-wrap {
+            grid-area: board;
+        }
+
+        .replay-wrap {
+            grid-area: replay;
+        }
+    
+        .details-wrap {
+            grid-area: details;
+        }
+    
+        .sections-wrap {
+            grid-area: sections;
+        }
+    
+        .tools-wrap {
+            grid-area: tools;
+        }
+    
+        .board-wrap {
+            aspect-ratio: 1;
+        }
+
+        .dialog-content.edit-section {
+            background: theme.$ac-li-blue2;
+        }
+        .dialog-content.edit-chapter {
+            background: theme.$ac-li-blue-2;
+        }
+        .dialog-content.edit-study {
+            background: theme.$ac-li-purple;
+        }
+        
+
+        .dialog-content.edit-section,
+        .dialog-content.edit-chapter,
+        .dialog-content.edit-study {
+            padding: 1.5em 1em;
+            display: flex;
+            flex-flow: column;
+            min-width: 500px;
+            gap: 1em;
+            border-radius: 6px;
+            color: theme.$text-primary;
+
+            .group {
                 display: flex;
                 flex-flow: column;
-                min-width: 500px;
-                gap: 1em;
-                border-radius: 6px;
+            }
+
+
+            h2 {
+                font-weight: 450;
+                text-align: center;
+            }
+
+            label {
+                font-weight: 400;
+            }
+
+            input {
+                padding: 0.5em;
+                border: 2px solid theme.$text-secondary;
+                border-radius: 4px;
                 color: theme.$text-primary;
 
-                .group {
+                &:focus {
+                    border: 2px solid theme.$ac-li-blue-2;
+                }
+
+                                    &.success:focus-visible,
+                                    &.success:focus,
+                                    &.success {
+                    border: 2px solid theme.$success !important;
+                }
+            }
+
+
+            select#order {
+                width: 20%;
+                background: theme.$text-light2;
+                border: 1px solid theme.$text-secondary;
+                padding: .6em 1em;
+            }
+
+            .filler {
+                flex: 1;
+            }
+
+            .group.buttons {
+                display: flex;
+                flex-flow: row;
+                gap: 1em;
+
+                .split {
+                   flex: 1;
+                }
+
+
+                button {
                     display: flex;
-                    flex-flow: column;
-                }
-
-
-                h2 {
-                    font-weight: 450;
-                    text-align: center;
-                }
-
-                label {
-                    font-weight: 400;
-                }
-
-                input {
-                    padding: 0.5em;
-                    border: 2px solid theme.$text-secondary;
-                    border-radius: 4px;
-                    color: theme.$text-primary;
-
-                    &:focus {
-                        border: 2px solid theme.$ac-li-blue-2;
-                    }
-
-                                        &.success:focus-visible,
-                                        &.success:focus,
-                                        &.success {
-                        border: 2px solid theme.$success !important;
-                    }
-                }
-
-
-                select#order {
-                    width: 20%;
-                    background: theme.$text-light2;
-                    border: 1px solid theme.$text-secondary;
-                    padding: .6em 1em;
-                }
-
-                .filler {
-                    flex: 1;
-                }
-
-                .group.buttons {
-                    display: flex;
-                    flex-flow: row;
+                    padding: 0.8em;
+                    align-items: center;
                     gap: 1em;
-
-                    .split {
-                       flex: 1;
-                    }
-
-
-                    button {
-                        display: flex;
-                        padding: 0.8em;
-                        align-items: center;
-                        gap: 1em;
-                        border: none;
-                        color: theme.$text-light2;
-                        user-select: none;
-                        cursor: pointer;
-
-                        &.delete {
-                            background: theme.$error;
-                        }
-
-                        &.import {
-                            background: theme.$success;
-                        }
-
-                        &:disabled,
-                        &[disabled] {
-                            color: theme.$text-light-2;
-                            background: theme.$text-secondary;
-                            opacity: .6;
-                        }
-                    }
-                }
-            }
-
-            .dialog-content.edit-section {
-                min-height: 350px;
-                .tabs {
-                    display: flex;
-                    .tab {
-                        padding: 0.5em;
-                        color: theme.$text-primary;
-
-                        user-select: none;
-                        cursor: pointer;
-
-                        &.active, &.hover {
-                            color: theme.$text-secondary;
-                            border-bottom: 2px solid theme.$ac-li-orange;
-                        }
-                    }
-                }
-            }
-
-            .replay-wrap {
-                display: flex;
-                flex-flow: column;
-                border-radius: 6px;
-                overflow: hidden;
-
-                .header {
-                    padding: 0.5em;
-                    border-radius: 6px 6px 0 0;
-                    background: theme.$he;
+                    border: none;
                     color: theme.$text-light2;
-                }
-
-                .replay-tree {
-                    flex: 1;
-                    background: theme.$ac-li-orange-3;
-                    max-height: 100%;
-                }
-            }
-
-
-            .context-sub-menu {
-                position: absolute;
-                background: theme.$ac-li-purple;
-                display: flex;
-                flex-flow: column;
-                border-radius: 8px;
-                overflow: hidden;
-                    
-                a {
-                    padding: 0.4em 1em 0.4em 0.8em;
                     user-select: none;
                     cursor: pointer;
-                    display: flex;
-                    gap: 0.5em;
-                    align-items: center;
 
-                    &:hover {
-                        background: theme.$ac-li-orange;
-                        color: theme.$text-primary;
+                    &.delete {
+                        background: theme.$error;
+                    }
+
+                    &.import {
+                        background: theme.$success;
+                    }
+
+                    &:disabled,
+                    &[disabled] {
+                        color: theme.$text-light-2;
+                        background: theme.$text-secondary;
+                        opacity: .6;
                     }
                 }
-                z-index: 100;
+            }
+        }
+
+        .dialog-content.edit-section {
+            min-height: 350px;
+            .tabs {
+                display: flex;
+                .tab {
+                    padding: 0.5em;
+                    color: theme.$text-primary;
+
+                    user-select: none;
+                    cursor: pointer;
+
+                    &.active, &.hover {
+                        color: theme.$text-secondary;
+                        border-bottom: 2px solid theme.$ac-li-orange;
+                    }
+                }
+            }
+        }
+
+        .replay-wrap {
+            display: flex;
+            flex-flow: column;
+            border-radius: 6px;
+            overflow: hidden;
+
+            .header {
+                padding: 0.5em;
+                border-radius: 6px 6px 0 0;
+                background: theme.$he;
+                color: theme.$text-light2;
             }
 
+            .replay-tree {
+                flex: 1;
+                background: theme.$ac-li-orange-3;
+                max-height: 100%;
+            }
+        }
 
-            .tools-wrap {
-                .tabs {
+
+        .context-sub-menu {
+            position: absolute;
+            background: theme.$ac-li-purple;
+            display: flex;
+            flex-flow: column;
+            border-radius: 8px;
+            overflow: hidden;
+                
+            a {
+                padding: 0.4em 1em 0.4em 0.8em;
+                user-select: none;
+                cursor: pointer;
+                display: flex;
+                gap: 0.5em;
+                align-items: center;
+
+                &:hover {
+                    background: theme.$ac-li-orange;
+                    color: theme.$text-primary;
+                }
+            }
+            z-index: 100;
+        }
+
+
+        .tools-wrap {
+            .tabs {
+                display: flex;
+                justify-content: flex-end;
+
+                .tab {
+                    padding: 0.5em;
+
+                    transition: .1s;
+
+                    &.active, &:hover {
+                        color: theme.$ac-li-orange3;
+                        border-bottom: 3px solid theme.$ac-li-orange3;
+                    }
+                }
+            }
+
+            .content {
+                display: flex;
+                flex-flow: column;
+
+                background: theme.$ac-li-blue2;
+                border-radius: 0 0 4px 4px;
+                overflow: hidden;
+                min-height: 10em;
+
+                .export {
                     display: flex;
                     justify-content: flex-end;
+                    flex-flow: row wrap;
 
-                    .tab {
-                        padding: 0.5em;
+                    gap: 0.5em;
+                    padding: 1em;
+                    button {
+                        padding: 0.6em;
+                        border: none;
+                        background: theme.$ac-li-orange;
+                        color: theme.$text-primary;
+                        border-radius: 4px;
+                        user-select: none;
+                        cursor: pointer;
+                        display: flex;
+                        gap: 0.4em;
 
-                        transition: .1s;
-
-                        &.active, &:hover {
-                            color: theme.$ac-li-orange3;
-                            border-bottom: 3px solid theme.$ac-li-orange3;
+                        &:hover {
+                            background: theme.$ac-li-orange-2;
+                        color: theme.$text-secondary;
                         }
                     }
                 }
 
-                .content {
+                .fen {
                     display: flex;
                     flex-flow: column;
+                    padding: 1em;
 
-                    background: theme.$ac-li-blue2;
-                    border-radius: 0 0 4px 4px;
-                    overflow: hidden;
-                    min-height: 10em;
-
-                    .export {
-                        display: flex;
-                        justify-content: flex-end;
-                        flex-flow: row wrap;
-
-                        gap: 0.5em;
-                        padding: 1em;
-                        button {
-                            padding: 0.6em;
-                            border: none;
-                            background: theme.$ac-li-orange;
-                            color: theme.$text-primary;
-                            border-radius: 4px;
-                            user-select: none;
-                            cursor: pointer;
-                            display: flex;
-                            gap: 0.4em;
-
-                            &:hover {
-                                background: theme.$ac-li-orange-2;
-                            color: theme.$text-secondary;
-                            }
-                        }
-                    }
-
-                    .fen {
-                        display: flex;
-                        flex-flow: column;
-                        padding: 1em;
-
-                        input {
-                            width: 100%;
-                        }
+                    input {
+                        width: 100%;
                     }
                 }
             }
