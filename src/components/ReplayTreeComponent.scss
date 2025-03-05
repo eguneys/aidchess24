@@ -91,6 +91,14 @@
                 }
             }
 
+            transition: .3s;
+
+            &.hidden {
+                background: $text-gray !important;
+                color: $text-gray !important;
+                transition: 0s;
+            }
+
             &.top {
                 color: theme.$top;
                 &:hover {
@@ -133,6 +141,22 @@
                     color: $text-light;
                 }
             }
+            &.success {
+                color: theme.$success;
+                &:hover {
+                   background: theme.$success;
+                   color: $text-light;
+                }
+            }
+    
+            &.failed {
+                color: theme.$error;
+                &:hover {
+                   background: theme.$error;
+                   color: $text-light;
+                }
+            }
+
 
 
             &.on-path-end {
@@ -164,6 +188,14 @@
                     background: theme.$blunder;
                 }
     
+                &.success {
+                    background: theme.$success;
+                }
+                &.failed {
+                    background: theme.$error;
+                }
+
+
 
             }
 

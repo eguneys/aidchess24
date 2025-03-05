@@ -1,9 +1,8 @@
-import { createEffect, createMemo, createResource, on, Show, Suspense, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, on, Show, Suspense, untrack, useContext } from "solid-js"
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import { useParams, useSearchParams } from "@solidjs/router"
 import { RepeatShowType } from "./List"
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
-import { Color } from "chessops"
 import { PlayUciTreeReplayComponent } from "../../components/ReplayTreeComponent"
 import { arr_rnd } from "../../random"
 import './Show.scss'
@@ -69,7 +68,10 @@ function ShowComponent() {
         }
     }
 
+    const [trigger_next_due_move, set_trigger_next_due_move] = createSignal(undefined, { equals: false })
+
     const one_random_due = createMemo(() => {
+        trigger_next_due_move()
         let res = filtered_dues()
 
         if (res === undefined) {
@@ -80,8 +82,34 @@ function ShowComponent() {
 
     const [play_replay] = createResource(() => one_random_due()?.node.tree_id, db.play_replay_by_steps_tree_id)
 
+    const [show_previous_moves, set_show_previous_moves] = createSignal(false)
+
+    const show_at_path = createMemo(() =>
+        one_random_due()?.node.path.split(' ').slice(0, -1).join(' ')
+    )
+    const solution_uci = createMemo(() => one_random_due()?.node.uci)
+
+    createEffect(() => {
+        let r = play_replay()
+        if (!r) {
+            return
+        }
+        let path = show_at_path()!
+
+        let show_previous = show_previous_moves()
+
+        untrack(() => {
+            batch(() => {
+                r.goto_path(path)
+                r.hide_after_path = show_previous ? path : ''
+            })
+        })
+    })
+
+    const [is_solved, set_is_solved] = createSignal<boolean | undefined>(undefined)
+
     const color = () => fen_turn(one_random_due()?.node.before_fen ?? INITIAL_FEN)
-    const movable = () => true
+    const movable = () => play_replay()?.cursor_path === show_at_path()
 
     createEffect(on(() => play_replay()?.cursor_path_step, (step) => {
         if (!step) {
@@ -90,6 +118,48 @@ function ShowComponent() {
         }
 
         play_uci.set_fen_and_last_move(step.fen, step.uci)
+    }))
+
+
+    createEffect(on(() => play_uci.on_last_move_added, (lm) => {
+        if (!lm) {
+            return
+        }
+
+        let [uci, san] = lm
+
+        let r = play_replay()!
+
+        let node = r.add_child_san_to_current_path(san)!
+
+        if (uci === solution_uci()) {
+            set_is_solved(true)
+            r.success_path = node.path
+
+        } else {
+            set_is_solved(false)
+            r.failed_path = node.path
+        }
+    }))
+
+    const on_show_answer = () => {
+        set_is_solved(false)
+        let path = one_random_due()!.node.path
+        play_replay()!.failed_path = path
+        play_replay()!.goto_path(path)
+    }
+
+
+
+    createEffect(on(is_solved, (i) => {
+        if (i === true) {
+            play_replay()!.hide_after_path = undefined
+        }
+
+        if (i === false) {
+            play_replay()!.hide_after_path = undefined
+
+        }
     }))
 
     const set_on_wheel = (i: number) => {
@@ -114,6 +184,13 @@ function ShowComponent() {
             return []
         }
 
+        if (play_replay()!.failed_path === step.path) {
+            return annotationShapes(step.uci, step.san, '✗')
+        }
+        if (play_replay()!.success_path === step.path) {
+            return annotationShapes(step.uci, step.san, '✓')
+        }
+
         let nag = step.nags[0]
 
         if (!nag) {
@@ -123,6 +200,13 @@ function ShowComponent() {
         return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
     })
 
+    const on_next_due_move = () => {
+        batch(() => {
+            set_trigger_next_due_move()
+            set_is_solved(undefined)
+            set_show_previous_moves(false)
+        })
+    }
 
 
     return (<>
@@ -141,7 +225,7 @@ function ShowComponent() {
             </div>
         </div>
         <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-            <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
+            <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} play_uci={play_uci}/>
         </div>
         <div class='replay-wrap'>
             <Show when={play_replay()} fallback={
@@ -150,8 +234,14 @@ function ShowComponent() {
             <>
                 <PlayUciTreeReplayComponent play_replay={play_replay()} />
                 <div class="controls">
-                    <button>Hint: Show Previous Moves</button>
-                    <button>Show Answer</button>
+                    <Show when={is_solved() === undefined && !show_previous_moves()}>
+                        <button onClick={() => set_show_previous_moves(true)}>Hint: Show Previous Moves</button>
+                    </Show>
+                    <Show when={is_solved() === undefined} fallback={
+                        <button onClick={on_next_due_move}>Goto Next Due Move</button>
+                    }>
+                        <button onClick={on_show_answer}>Show Answer</button>
+                    </Show>
                 </div>
             </>
             }</Show>

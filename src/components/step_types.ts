@@ -14,6 +14,7 @@ export type Step = {
     ply: Ply,
     before_fen: FEN,
     fen: FEN,
+    before_uci?: UCI,
     uci: UCI,
     san: SAN,
     comments?: string
@@ -24,7 +25,7 @@ export const fen_is_end = (fen: FEN) => fen_pos(fen).isEnd()
 export const fen_turn = (fen: FEN) => fen_pos(fen).turn
 
 
-export function make_step_and_play(ply: Ply, pos: Position, san: SAN, base_path: Path): Step {
+export function make_step_and_play(ply: Ply, pos: Position, san: SAN, base_path: Path, before_uci?: UCI): Step {
     let move = parseSan(pos, san)!
     let uci = makeUci(move)
 
@@ -41,6 +42,7 @@ export function make_step_and_play(ply: Ply, pos: Position, san: SAN, base_path:
         ply,
         before_fen,
         fen,
+        before_uci,
         uci,
         san
     }
@@ -53,7 +55,7 @@ export function push_san(san: SAN, res: StepsSingle, pos?: Position) {
     if (!pos) {
         pos = Chess.fromSetup(parseFen(last?.fen ?? INITIAL_FEN).unwrap()).unwrap()
     }
-    return [...res, make_step_and_play((last?.ply ?? 0) + 1, pos, san, last?.path ?? '')]
+    return [...res, make_step_and_play((last?.ply ?? 0) + 1, pos, san, last?.path ?? '', last?.uci)]
 }
 
 export function build_steps(sans: SAN[], fen: FEN = INITIAL_FEN): StepsSingle {

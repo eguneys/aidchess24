@@ -90,6 +90,7 @@ export type TreeStepNode = {
     uci: UCI,
     fen: FEN,
     before_fen: FEN,
+    before_uci?: UCI,
     path: Path,
     step: Step,
     children: TreeStepNode[],
@@ -99,7 +100,7 @@ export type TreeStepNode = {
     set_order(order: number): void,
     set_nags(nags: NAG[]): void,
     add_load_node(node: TreeStepNode): void,
-    add_child_san(san: SAN): TreeStepNode
+    add_child_san(san: SAN, before_uci?: UCI): TreeStepNode
     remove_child_san(san: SAN): TreeStepNode | undefined
     remove_child(child: TreeStepNode): TreeStepNode | undefined
     nb_first_variations: number
@@ -270,10 +271,10 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
                 set_root([...rr, child])
                 return child
             }
-
-            let node = find_at_path(path)
-            if (node) {
-                return node.add_child_san(san)
+ 
+            let pn = find_parent_and_child_at_path(path)
+            if (pn) {
+                return pn[1].add_child_san(san, pn[0]?.uci)
             }
             return undefined
         },
@@ -402,6 +403,9 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
         get before_fen() {
             return step.before_fen
         },
+        get before_uci() {
+            return step.before_uci
+        },
         step,
         get children() {
             return children()
@@ -434,7 +438,7 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
             set_children([...cc, node])
             return node
         },
-        add_child_san(san: SAN) {
+        add_child_san(san: SAN, before_uci?: UCI) {
 
             let cc = children()
 
@@ -444,7 +448,7 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
                 return exists
             }
 
-            let c_step = make_step_and_play(step.ply + 1, step_pos(), san, step.path)
+            let c_step = make_step_and_play(step.ply + 1, step_pos(), san, step.path, before_uci)
             let child = TreeStepNode(gen_id8(), tree_id, c_step, cc.length)
             set_children([...cc, child])
             return child
@@ -516,6 +520,9 @@ export type PlayUciTreeReplay = {
     steps: StepsTree,
     cursor_path: Path,
     cursor_path_step: TreeStepNode | undefined,
+    hide_after_path: Path | undefined,
+    failed_path: Path | undefined,
+    success_path: Path | undefined,
     goto_path: (path: Path) => void,
     get_prev_path: () => Path | undefined,
     get_next_path: () => Path | undefined,
@@ -539,13 +546,16 @@ export type PlayUciTreeReplay = {
 
 export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTree): PlayUciTreeReplay {
 
+    let [success_path, set_success_path] = createSignal<Path | undefined>(undefined)
+    let [failed_path, set_failed_path] = createSignal<Path | undefined>(undefined)
+    let [hide_after_path, set_hide_after_path] = createSignal<Path | undefined>(undefined)
     let [cursor_path, set_cursor_path] = createSignal<Path>('')
 
     let sticky_paths: Path[] = []
 
 
     const goto_path = (path: Path) => {
-        set_cursor_path(path)
+        try_set_cursor_path(path)
     }
 
     const get_prev_path = () => {
@@ -723,6 +733,14 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         }
     }
 
+    const try_set_cursor_path = (path: Path) => {
+        if (hide_after_path() !== undefined && 
+        path !== hide_after_path() &&
+        path.startsWith(hide_after_path()!)) {
+            return
+        }
+        set_cursor_path(path)
+    }
 
     return {
         get entity() {
@@ -734,11 +752,26 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         id,
         get steps_tree_id() { return steps.id },
         steps,
+        get success_path() {
+            return success_path()
+        },
+        set success_path(path: Path | undefined) {
+            set_success_path(path)
+        },
+        get failed_path() {
+            return failed_path()
+        },
+        set failed_path(path: Path | undefined) {
+            set_failed_path(path)
+        },
+        get hide_after_path() {
+            return hide_after_path()
+        },
+        set hide_after_path(path: Path | undefined) {
+            set_hide_after_path(path)
+        },
         get cursor_path() {
             return cursor_path()
-        },
-        set cursor_path(path: Path) {
-            set_cursor_path(path)
         },
         get cursor_path_step() {
             return steps.find_at_path(cursor_path())
@@ -909,14 +942,16 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
         })
     })
 
-
     return (<>
         <div class='replay-tree'>
             <div class='moves-wrap'>
                 <div ref={_ => $moves_el = _} class='moves'>
                     <NodesShorten db={props.db} nodes={steps().root}
+                        success_path={props.play_replay.success_path}
+                        failed_path={props.play_replay.failed_path}
+                        hide_after_path={props.play_replay.hide_after_path}
                         cursor_path={props.play_replay.cursor_path}
-                        on_set_cursor={(path: Path) => props.play_replay.cursor_path = path}
+                        on_set_cursor={(path: Path) => props.play_replay.goto_path(path)}
                         on_context_menu={(e: MouseEvent, path: Path) => props.on_context_menu?.(e, path)}
                          />
                 </div>
@@ -962,7 +997,7 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
 }
 
 
-function NodesShorten(props: { db?: StudiesDBReturn, nodes: TreeStepNode[], cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function NodesShorten(props: { db?: StudiesDBReturn, nodes: TreeStepNode[], success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
     return (<>
     <Show when={props.nodes.length === 1}>
         <StepNode {...props} node={props.nodes[0]} />
@@ -990,7 +1025,7 @@ function NodesShorten(props: { db?: StudiesDBReturn, nodes: TreeStepNode[], curs
     </>)
 }
 
-function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
 
     let show_index = createMemo(() => props.node.ply % 2 === 1 || props.show_index)
 
@@ -998,6 +1033,15 @@ function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?
 
     const on_path = createMemo(() => props.cursor_path.startsWith(path()))
     const on_path_end = createMemo(() => path() === props.cursor_path)
+
+    const is_hidden = createMemo(() => props.hide_after_path !== undefined && 
+    path() !== props.hide_after_path &&
+    path().startsWith(props.hide_after_path)
+    )
+    const is_failed = createMemo(() => props.failed_path === path())
+    const is_success = createMemo(() => props.success_path === path())
+
+
 
     const klass = createMemo(() => {
         let res = ['move']
@@ -1013,6 +1057,20 @@ function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?
         if (on_path_end()) {
             res.push('on-path-end')
         }
+
+        if (is_hidden()) {
+            res.push('hidden')
+        }
+
+        if (is_failed()) {
+            res.push('failed')
+        }
+
+        if (is_success()) {
+            res.push('success')
+        }
+
+
 
 
         if (props.node.nags[0]) {
