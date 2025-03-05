@@ -124,6 +124,7 @@
                 flex: 1;
                 background: theme.$ac-li-orange-3;
                 max-height: 100%;
+                min-height: 260px;
             }
 
             .controls {
@@ -166,15 +167,16 @@
 
             .move-history {
                 flex: 1 0 0;
+                min-height: 100px;
             }
 
             .session-history {
                 flex: 2 0 0;
+                min-height: 200px;
             }
 
             .move-history,
             .session-history {
-                min-height: 0;
 
                 h4 {
                     text-align: center;
