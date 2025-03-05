@@ -89,6 +89,7 @@ export type TreeStepNode = {
     san: SAN,
     uci: UCI,
     fen: FEN,
+    before_fen: FEN,
     path: Path,
     step: Step,
     children: TreeStepNode[],
@@ -397,6 +398,9 @@ export function TreeStepNode(id: EntityTreeStepNodeId, tree_id: EntityTreeStepNo
         },
         get fen() {
             return step.fen
+        },
+        get before_fen() {
+            return step.before_fen
         },
         step,
         get children() {

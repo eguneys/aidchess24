@@ -2,11 +2,14 @@ import { createEffect, createMemo, createResource, on, Show, Suspense, useContex
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import { useParams, useSearchParams } from "@solidjs/router"
 import { RepeatShowType } from "./List"
-import { PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
+import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
 import { Color } from "chessops"
 import { PlayUciTreeReplayComponent } from "../../components/ReplayTreeComponent"
 import { arr_rnd } from "../../random"
 import './Show.scss'
+import { fen_turn, nag_to_glyph } from "../../components/step_types"
+import { INITIAL_FEN } from "chessops/fen"
+import { annotationShapes } from "../../annotationShapes"
 
 export default () => {
     return (<>
@@ -77,8 +80,49 @@ function ShowComponent() {
 
     const [play_replay] = createResource(() => one_random_due()?.node.tree_id, db.play_replay_by_steps_tree_id)
 
-    const color = () => 'white' as Color
+    const color = () => fen_turn(one_random_due()?.node.before_fen ?? INITIAL_FEN)
     const movable = () => true
+
+    createEffect(on(() => play_replay()?.cursor_path_step, (step) => {
+        if (!step) {
+            play_uci.set_fen_and_last_move(INITIAL_FEN)
+            return
+        }
+
+        play_uci.set_fen_and_last_move(step.fen, step.uci)
+    }))
+
+    const set_on_wheel = (i: number) => {
+        if (!play_replay()) {
+            return
+        }
+        if (i > 0) {
+            play_replay()!.goto_next_if_can()
+        } else {
+            play_replay()!.goto_prev_if_can()
+        }
+    }
+
+    let annotation = createMemo(() => {
+        if (!play_replay()) {
+            return []
+        }
+
+        let step = play_replay()!.cursor_path_step
+
+        if (!step) {
+            return []
+        }
+
+        let nag = step.nags[0]
+
+        if (!nag) {
+            return []
+        }
+
+        return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
+    })
+
 
 
     return (<>
@@ -96,8 +140,8 @@ function ShowComponent() {
                 <span class='value'>{filtered_dues()?.length}</span> moves left
             </div>
         </div>
-        <div class='board-wrap'>
-            <PlayUciBoard color={color()} movable={movable()} play_uci={play_uci}/>
+        <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
+            <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
         </div>
         <div class='replay-wrap'>
             <Show when={play_replay()} fallback={
