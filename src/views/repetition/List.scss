@@ -6,12 +6,32 @@
     .repetition {
 
         display: grid;
-        grid-template-areas: 'studies sections info';
-        grid-template-columns: 2fr 2fr 3fr;
+
         grid-template-rows: 66vh;
 
-        background: theme.$ac-li-blue2;
+        @include media.mq-is-col1 {
+            grid-template-areas: 'studies'
+                                 'sections'
+                                 'info';
+            grid-template-columns: 1fr;
+
+            row-gap: 1em;
+        }
+
+        @include media.mq-at-least-col2 {
+            grid-template-areas: 'studies sections'
+            'info info';
+            grid-template-columns: minmax(300px, 400px) minmax(300px, 400px);
+        }
+
+
+        @include media.mq-at-least-col3 {
+            grid-template-areas: 'studies sections info';
+            grid-template-columns: minmax(200px, 300px) minmax(300px, 520px) minmax(300px, 360px);
+        }
+
         border-radius: 6px;
+        justify-content: center;
 
         .studies-list {
             grid-area: studies;
@@ -21,6 +41,13 @@
         }
         .repeat-info {
             grid-area: info;
+        }
+
+        .repeat-info,
+        .sections-list-multiple,
+        .studies-list
+        {
+           background: theme.$ac-li-blue2;
         }
 
         .repeat-info {

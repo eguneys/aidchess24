@@ -135,6 +135,10 @@
                     background: theme.$he2;
                     color: theme.$text-light2;
 
+                    &:active {
+                        text-decoration: underline;
+                    }
+
                     &:first-child {
                         border-bottom: 1px solid theme.$ac-li-purple-2;
                         border-top: 1px solid theme.$ac-li-blue-2;
@@ -147,6 +151,80 @@
                     }
 
                 }
+            }
+        }
+
+
+        .underboard {
+            display: flex;
+            flex-flow: column;
+
+            .move-history {
+                flex: 1;
+            }
+
+            .session-history {
+                flex: 2;
+            }
+
+            .move-history,
+            .session-history {
+                h4 {
+                    text-align: center;
+                    padding: 0.3em;
+                    font-weight: 400;
+                    color: theme.$ac-li-blue-2;
+                }
+
+                .attempts {
+
+                    display: flex;
+                    flex-flow: row wrap;
+                    padding: 0.2em;
+                    gap: 0.33em;
+
+                    .attempt {
+                        .time-ago {
+                            font-size: 0.88em;
+                        }
+
+                        padding: 0.2em 0.4em;
+                        border-radius: 6px;
+
+                        &.latest {
+                            box-shadow: 0 0 0 2px theme.$text-primary;
+                        }
+
+                        &.selectable {
+                            user-select: none;
+                            cursor: pointer;
+                        }
+
+                        &.failed-with-skip {
+                            background: theme.$mistake;
+                        }
+
+                        &.failed-with-hint {
+                            background: theme.$blunder;
+                        }
+
+                        &.failed {
+                            background: theme.$blunder;
+                        }
+
+                        &.solved-with-hint {
+                            background: theme.$top;
+                        }
+
+                        &.solved {
+                            background: theme.$good;
+                        }
+                    }
+                }
+            }
+
+            .move-history {
+                border-bottom: 1px solid theme.$ac-li-blue-2;
             }
         }
 

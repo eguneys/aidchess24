@@ -1,14 +1,17 @@
-import { batch, createEffect, createMemo, createResource, createSignal, on, Show, Suspense, untrack, useContext } from "solid-js"
+import { batch, createContext, createEffect, createMemo, createResource, createSignal, For, on, Show, Suspense, untrack, useContext } from "solid-js"
 import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
-import { useParams, useSearchParams } from "@solidjs/router"
+import { A, useParams, useSearchParams } from "@solidjs/router"
 import { RepeatShowType } from "./List"
 import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
 import { PlayUciTreeReplayComponent } from "../../components/ReplayTreeComponent"
 import { arr_rnd } from "../../random"
 import './Show.scss'
-import { fen_turn, nag_to_glyph } from "../../components/step_types"
+import { fen_turn, nag_to_glyph, Ply } from "../../components/step_types"
 import { INITIAL_FEN } from "chessops/fen"
 import { annotationShapes } from "../../annotationShapes"
+import { RepeatAttemptResult, RepeatDueMove, RepeatMoveAttempt } from "./types"
+import TimeAgo from "../../components/TimeAgo"
+import { FSRS } from "ts-fsrs"
 
 export default () => {
     return (<>
@@ -18,7 +21,11 @@ export default () => {
     </>)
 }
 
+const FSRSContext = createContext(new FSRS({enable_fuzz: true}))
+
 function ShowComponent() {
+
+    let fs = useContext(FSRSContext)
     let db = useContext(StudiesDBContext)!
 
     let [searchParams] = useSearchParams()
@@ -43,7 +50,7 @@ function ShowComponent() {
 
     const play_uci = PlayUciComponent()
 
-    const filtered_dues = createMemo(() => {
+    const filtered_all = createMemo(() => {
         let r = repeat_study()
         if (!r) {
             return undefined
@@ -58,6 +65,8 @@ function ShowComponent() {
         }
     })
 
+    const filtered_dues = createMemo(() => filtered_all()?.filter(_ => _.is_due))
+
     const filter_title = () => {
         switch (repeat_type) {
             case 'first-ten': return 'First Ten'
@@ -68,26 +77,55 @@ function ShowComponent() {
         }
     }
 
-    const [trigger_next_due_move, set_trigger_next_due_move] = createSignal(undefined, { equals: false })
+    const [trigger_next_due_move, set_trigger_next_due_move] = createSignal<boolean>(true, { equals: false })
 
-    const one_random_due = createMemo(() => {
-        trigger_next_due_move()
+    const one_random_due = createMemo<RepeatDueMove | undefined>((prev) => {
         let res = filtered_dues()
-
         if (res === undefined) {
             return undefined
         }
+
+        if (!trigger_next_due_move()) {
+            return prev
+        }
+
         return arr_rnd(res)
     })
 
-    const [play_replay] = createResource(() => one_random_due()?.node.tree_id, db.play_replay_by_steps_tree_id)
+    const [one_selected_due, set_one_selected_due] = createSignal<RepeatDueMove | undefined>(undefined)
+
+    const select_one_attempt_result = (attempt_result?: RepeatMoveAttempt) => {
+
+        if (!attempt_result) {
+            set_one_selected_due(undefined)
+            return
+        }
+
+
+        let due_move = filtered_all()?.find(_ => _.id === attempt_result.repeat_due_move_id)
+
+        if (!due_move) {
+            return
+        }
+
+        batch(() => {
+            set_repeat_attempt_result(undefined)
+            set_show_previous_moves(false)
+            set_one_selected_due(due_move)
+        })
+    }
+
+    const one_particular_due = createMemo(() => one_selected_due() ?? one_random_due())
+
+    const [play_replay] = createResource(() => [one_particular_due()?.node.tree_id],
+        ([u_id]) => u_id ? db.play_replay_by_steps_tree_id(u_id) : undefined)
 
     const [show_previous_moves, set_show_previous_moves] = createSignal(false)
 
     const show_at_path = createMemo(() =>
-        one_random_due()?.node.path.split(' ').slice(0, -1).join(' ')
+        one_particular_due()?.node.path.split(' ').slice(0, -1).join(' ')
     )
-    const solution_uci = createMemo(() => one_random_due()?.node.uci)
+    const solution_uci = createMemo(() => one_particular_due()?.node.uci)
 
     createEffect(() => {
         let r = play_replay()
@@ -106,10 +144,10 @@ function ShowComponent() {
         })
     })
 
-    const [is_solved, set_is_solved] = createSignal<boolean | undefined>(undefined)
+    const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
 
-    const color = () => fen_turn(one_random_due()?.node.before_fen ?? INITIAL_FEN)
-    const movable = () => play_replay()?.cursor_path === show_at_path()
+    const color = () => fen_turn(one_particular_due()?.node.before_fen ?? INITIAL_FEN)
+    const movable = () => play_replay() && play_replay()!.cursor_path === show_at_path()
 
     createEffect(on(() => play_replay()?.cursor_path_step, (step) => {
         if (!step) {
@@ -133,31 +171,46 @@ function ShowComponent() {
         let node = r.add_child_san_to_current_path(san)!
 
         if (uci === solution_uci()) {
-            set_is_solved(true)
+            if (show_previous_moves()) {
+                set_repeat_attempt_result('solved-with-hint')
+            } else {
+                if (one_selected_due()) {
+                    set_repeat_attempt_result('solved-with-hint')
+                } else {
+                    set_repeat_attempt_result('solved')
+                }
+            }
             r.success_path = node.path
 
         } else {
-            set_is_solved(false)
+            if (show_previous_moves()) {
+                set_repeat_attempt_result('failed-with-hint')
+            } else {
+                set_repeat_attempt_result('failed')
+            }
             r.failed_path = node.path
         }
     }))
 
     const on_show_answer = () => {
-        set_is_solved(false)
-        let path = one_random_due()!.node.path
+        set_repeat_attempt_result('failed-with-skip')
+        let path = one_particular_due()!.node.path
         play_replay()!.failed_path = path
         play_replay()!.goto_path(path)
     }
 
 
 
-    createEffect(on(is_solved, (i) => {
-        if (i === true) {
+    createEffect(on(repeat_attempt_result, (attempt_result) => {
+        if (attempt_result !== undefined) {
             play_replay()!.hide_after_path = undefined
-        }
 
-        if (i === false) {
-            play_replay()!.hide_after_path = undefined
+            let repeat_move_attempt = one_particular_due()!.add_attempt_with_spaced_repetition(fs, attempt_result)
+
+            batch(() => {
+                set_trigger_next_due_move(false)
+                db.add_repeat_move_attempt(repeat_move_attempt.entity)
+            })
 
         }
     }))
@@ -188,7 +241,11 @@ function ShowComponent() {
             return annotationShapes(step.uci, step.san, '✗')
         }
         if (play_replay()!.success_path === step.path) {
-            return annotationShapes(step.uci, step.san, '✓')
+            if (repeat_attempt_result()?.includes('hint')) {
+                return annotationShapes(step.uci, step.san, '✓')
+            } else {
+                return annotationShapes(step.uci, step.san, '!')
+            }
         }
 
         let nag = step.nags[0]
@@ -202,12 +259,34 @@ function ShowComponent() {
 
     const on_next_due_move = () => {
         batch(() => {
-            set_trigger_next_due_move()
-            set_is_solved(undefined)
+            set_trigger_next_due_move(true)
+            set_repeat_attempt_result(undefined)
             set_show_previous_moves(false)
+            set_one_selected_due(undefined)
         })
     }
 
+    const move_attempts = createMemo(() => one_particular_due()?.attempts)
+
+    const session_attempts = createMemo(() => {
+        let res: RepeatMoveAttempt[] = ((filtered_all()?.map(_ => _.last_attempt).filter(Boolean) ?? []) as RepeatMoveAttempt[])
+
+        res.sort((a, b) => a.created_at - b.created_at)
+
+        return res
+    })
+
+    const latest_move_attempt = createMemo(() => {
+        let aa = move_attempts()
+        if (!aa) {
+            return undefined
+        }
+        return aa[aa.length - 1]
+    })
+
+    const on_attempt_click = (attempt: RepeatMoveAttempt) => {
+        select_one_attempt_result(attempt)
+    }
 
     return (<>
     <main class='repeat-show'>
@@ -221,23 +300,29 @@ function ShowComponent() {
                 <span class='value'>{filter_title()}</span> moves
             </div>
             <div class='due-moves'><span class='label'>Due:</span> 
-                <span class='value'>{filtered_dues()?.length}</span> moves left
+                <Suspense>
+                    <span class='value'>{filtered_dues()?.length}</span> moves left
+                </Suspense>
             </div>
         </div>
         <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
             <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} play_uci={play_uci}/>
         </div>
         <div class='replay-wrap'>
+            <Suspense>
             <Show when={play_replay()} fallback={
+              <>
                 <span>Great; No due moves at this time.</span>
+                <A href="/repetition">Go Back to Repetitions</A>
+              </>
             }>{ play_replay =>
             <>
                 <PlayUciTreeReplayComponent play_replay={play_replay()} />
                 <div class="controls">
-                    <Show when={is_solved() === undefined && !show_previous_moves()}>
+                    <Show when={repeat_attempt_result() === undefined && !show_previous_moves()}>
                         <button onClick={() => set_show_previous_moves(true)}>Hint: Show Previous Moves</button>
                     </Show>
-                    <Show when={is_solved() === undefined} fallback={
+                    <Show when={repeat_attempt_result() === undefined} fallback={
                         <button onClick={on_next_due_move}>Goto Next Due Move</button>
                     }>
                         <button onClick={on_show_answer}>Show Answer</button>
@@ -245,13 +330,61 @@ function ShowComponent() {
                 </div>
             </>
             }</Show>
+            </Suspense>
         </div>
         <div class='underboard'>
-
+            <div class='move-history'>
+                <h4>Latest Attempts for this Move</h4>
+                <div class='attempts'>
+                    <For each={move_attempts()}>{ (attempt, i) => 
+                        <MoveAttemptComponent latest={i() === move_attempts()!.length - 1} attempt={attempt} time={true} />
+                    }</For>
+                </div>
+            </div>
+            <div class='session-history'>
+                <h4>Latest Attempts for Today </h4>
+                <div class='attempts'>
+                    <For each={session_attempts()}>{ attempt => 
+                        <MoveAttemptComponent latest={attempt === latest_move_attempt()} attempt={attempt!} time={false} on_click={() => on_attempt_click(attempt!)} />
+                    }</For>
+                </div>
+            </div>
         </div>
         </Suspense>
 
     </main>
     </>)
 
+}
+
+
+function MoveAttemptComponent(props: { attempt: RepeatMoveAttempt, ply?: Ply, time?: boolean, latest?: boolean, on_click?: () => void }) {
+    const klass = createMemo(() => {
+        return ' ' + props.attempt.attempt_result
+    })
+
+    const data_icon = () => {
+
+        if (props.attempt.attempt_result.includes('skip')) {
+            return "" // skip
+        }
+        if (props.attempt.attempt_result.includes('solved')) {
+            if (props.attempt.attempt_result.includes('hint')) {
+                return "" // check
+            } else {
+                return "" // star
+            }
+        }
+        return "" // cross
+    }
+
+    return (<div onClick={() => props.on_click?.()} class={'attempt ' + (props.latest ? ' latest' : '') + (props.time ? '' : ' selectable') + klass()}>
+        <i data-icon={data_icon()}></i>
+        <Show when={props.ply}>
+            <span class='ply'>{props.ply}</span>
+        </Show>
+        <Show when={props.time}>
+            <TimeAgo timestamp={props.attempt.created_at} />
+        </Show>
+    </div>)
 }

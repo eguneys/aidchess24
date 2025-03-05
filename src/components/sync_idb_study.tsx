@@ -3,7 +3,8 @@ import { Chapter, Section, Study } from "./StudyComponent";
 import { createContext, JSX } from "solid-js";
 import { NAG, Path, Step } from "./step_types";
 import { PGN, PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
-import { RepeatDueMove, RepeatStudy } from "../views/repetition/types";
+import { RepeatAttemptResult, RepeatDueMove, RepeatStudy } from "../views/repetition/types";
+import { Card } from "ts-fsrs";
 
 
 async function db_new_play_uci_tree_replay(db: StudiesDB, tree?: StepsTree) {
@@ -405,6 +406,10 @@ async function db_play_replay_by_steps_tree_id(db: StudiesDB, steps_tree_id: Ent
     return res
 }
 
+async function db_new_repeat_move_attempt(db: StudiesDB, entity: EntityRepeatMoveAttemptInsert) {
+    await db.repeat_move_attempts.add(entity)
+} 
+
 class StudiesDB extends Dexie {
     studies!: EntityTable<EntityStudy, "id">
     sections!: EntityTable<EntitySection, "id">
@@ -416,6 +421,7 @@ class StudiesDB extends Dexie {
 
     repeat_studies!: EntityTable<EntityRepeatStudy, "id">
     repeat_due_moves!: EntityTable<EntityRepeatDueMove, "id">
+    repeat_move_attempts!: EntityTable<EntityRepeatMoveAttempt, "id">
 
     remove_database() {
         this.delete()
@@ -434,7 +440,8 @@ class StudiesDB extends Dexie {
             steps_trees: 'id',
             tree_step_nodes: 'id, tree_id',
             repeat_studies: 'id, study_id',
-            repeat_due_moves: 'id, repeat_study_id, tree_step_node_id'
+            repeat_due_moves: 'id, repeat_study_id, tree_step_node_id',
+            repeat_move_attempts: 'id, repeat_due_move_id, created_at'
         })
 
 
@@ -514,6 +521,9 @@ export type EntityRepeatStudyInsert = InsertType<EntityRepeatStudy, "id">
 export type EntityRepeatDueMoveId = string
 export type EntityRepeatDueMoveInsert = InsertType<EntityRepeatDueMove, "id">
 
+export type EntityRepeatMoveAttemptId = string
+export type EntityRepeatMoveAttemptInsert = InsertType<EntityRepeatMoveAttempt, "id">
+
 class EntityRepeatStudy extends Entity<StudiesDB> {
     id!: EntityRepeatStudyId
     study_id!: EntityStudyId
@@ -525,6 +535,16 @@ class EntityRepeatDueMove extends Entity<StudiesDB> {
     repeat_study_id!: EntityRepeatStudyId
     tree_step_node_id!: EntityTreeStepNodeId
 }
+
+class EntityRepeatMoveAttempt extends Entity<StudiesDB> {
+    id!: EntityRepeatMoveAttemptId
+    repeat_due_move_id!: EntityRepeatDueMoveId
+    created_at!: number
+    card!: Card
+    attempt_result!: RepeatAttemptResult
+}
+
+
 
 export const StudiesDBContext = createContext<StudiesDBReturn>()
 
@@ -566,6 +586,7 @@ export type StudiesDBReturn = {
     load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]): Promise<RepeatDueMove[]>
 
     play_replay_by_steps_tree_id(steps_tree_id: EntityStepsTreeId): Promise<PlayUciTreeReplay>
+    add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert): Promise<void>
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -637,7 +658,10 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         play_replay_by_steps_tree_id(steps_tree_id: EntityStepsTreeId) {
             return db_play_replay_by_steps_tree_id(db, steps_tree_id)
-        }
+        },
+        add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert) {
+                return db_new_repeat_move_attempt(db, entity) 
+        },
     }
 
     return (<>

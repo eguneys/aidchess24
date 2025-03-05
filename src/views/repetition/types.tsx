@@ -1,24 +1,77 @@
 import { createEffect, createSignal } from "solid-js"
-import { EntityRepeatDueMoveId, EntityRepeatStudyId, EntitySectionId, EntityStudyId, EntityTreeStepNodeId, StudiesDBReturn } from "../../components/sync_idb_study"
+import { EntityRepeatDueMoveId, EntityRepeatMoveAttemptId, EntityRepeatMoveAttemptInsert, EntityRepeatStudyId, EntitySectionId, EntityStudyId, EntityTreeStepNodeId, gen_id8, StudiesDBReturn } from "../../components/sync_idb_study"
 import { Chapter, Section } from "../../components/StudyComponent"
-import { PlayUciTreeReplay, TreeStepNode } from "../../components/ReplayTreeComponent"
+import { TreeStepNode } from "../../components/ReplayTreeComponent"
 import { fen_turn } from "../../components/step_types"
+import { Card, createEmptyCard, FSRS, Grade, Rating } from "ts-fsrs"
 
+
+export type RepeatAttemptResult = 'solved' | 'failed' | 'solved-with-hint' | 'failed-with-hint' | 'failed-with-skip'
+
+export type RepeatMoveAttempt = {
+    id: EntityRepeatMoveAttemptId,
+    repeat_due_move_id: EntityRepeatDueMoveId,
+    created_at: number,
+    created_at_date: Date,
+    card: Card,
+    attempt_result: RepeatAttemptResult,
+    entity: EntityRepeatMoveAttemptInsert
+}
+
+
+export function RepeatMoveAttempt(
+    id: EntityRepeatMoveAttemptId, 
+    repeat_due_move_id: EntityRepeatDueMoveId,
+    attempt_result: RepeatAttemptResult,
+    card: Card,
+    created_at = Date.now()): RepeatMoveAttempt {
+
+    const entity = () => ({
+        id,
+        repeat_due_move_id,
+        attempt_result,
+        card,
+        created_at
+    })
+
+    return {
+        id,
+        repeat_due_move_id,
+        created_at,
+        get created_at_date() {
+            return new Date(created_at)
+        },
+        card,
+        attempt_result,
+        get entity() {
+            return entity()
+        }
+    }
+}
 
 export type RepeatDueMove = {
     id: EntityRepeatDueMoveId,
     repeat_study_id: EntityRepeatStudyId,
     tree_step_node_id: EntityTreeStepNodeId,
     node: TreeStepNode,
+    attempts: RepeatMoveAttempt[],
     is_unsaved: boolean,
     is_first_ten: boolean,
     is_ten_twenty: boolean,
     is_twenty_plus: boolean,
     is_white: boolean,
-    is_black: boolean
+    is_black: boolean,
+    set_attempts(attempts: RepeatMoveAttempt[]): void,
+    add_attempt_with_spaced_repetition(fs: FSRS, attempt_result: RepeatAttemptResult): RepeatMoveAttempt,
+    last_attempt: RepeatMoveAttempt | undefined,
+    is_due: boolean
 }
 
 export function RepeatDueMove(id: EntityRepeatDueMoveId, repeat_study_id: EntityRepeatStudyId, node: TreeStepNode, is_unsaved: boolean) {
+
+    let [attempts, set_attempts] = createSignal<RepeatMoveAttempt[]>([])
+
+
     return {
         id,
         repeat_study_id,
@@ -26,7 +79,50 @@ export function RepeatDueMove(id: EntityRepeatDueMoveId, repeat_study_id: Entity
             return node.id
         },
         node,
+        get attempts() { return attempts() },
+        set_attempts(attempts: RepeatMoveAttempt[]) { set_attempts(attempts) },
+        add_attempt_with_spaced_repetition(f: FSRS, attempt_result: RepeatAttemptResult) {
+            let new_card = createEmptyCard()
+
+            let old_card = attempts()[attempts().length - 1]?.card
+
+            if (old_card) {
+                let r: Grade
+                switch (attempt_result) {
+                    case 'failed':
+                        r = Rating.Hard
+                        break
+                    case 'failed-with-hint':
+                        r = Rating.Again
+                        break
+                    case 'failed-with-skip':
+                        r = Rating.Again
+                        break
+                    case 'solved':
+                        r = Rating.Easy
+                        break
+                    case 'solved-with-hint':
+                        r = Rating.Good
+                        break
+                }
+
+                new_card = f.repeat(old_card, new Date())[r].card
+            }
+
+            let attempt = RepeatMoveAttempt(gen_id8(), id, attempt_result, new_card)
+            set_attempts([...attempts(), attempt])
+            return attempt
+        },
         is_unsaved,
+        get last_attempt() {
+            return attempts()[attempts().length - 1]
+        },
+        get is_due() {
+            if (!this.last_attempt) {
+                return true
+            }
+            return this.last_attempt.card.due.getTime() < new Date().getTime()
+        },
         get is_first_ten() {
             return node.path.split(' ').length <= 10
         },
