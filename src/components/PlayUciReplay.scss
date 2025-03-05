@@ -7,10 +7,10 @@ $mistake: theme.$mistake;
 $blunder: theme.$blunder;
 
 
-$safe: #8C2D04;
-$playable: #8C2D04;
-$sharp: #8C2D04;
-$critical: #8C2D04;
+$safe: green;
+$playable: yellow;
+$sharp: orange;
+$critical: red;
 
 
 $bg: rgb(59, 59, 59);
@@ -34,6 +34,7 @@ $blue-light: rgb(176, 187, 230);
         display: flex;
         gap: 0.2em;
         align-self: center;
+        padding: 0.4em;
 
 
         .word {

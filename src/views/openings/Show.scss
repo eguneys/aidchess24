@@ -2,12 +2,11 @@
 @use '../../base_css/media';
 
 .on-openings {
-
-    @include media.mq-at-least-col2 {
-        --main-max-width: auto;
-    }
-
     .openings-show {
+
+        @include media.mq-at-least-col2 {
+            --main-max-width: auto;
+        }
 
         position: relative;
 

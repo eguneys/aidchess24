@@ -203,10 +203,10 @@ $bg-1: theme.$ac-li-orange-3;
                 }
 
                 &.white i {
-                    background-image: url('assets/images/wK.svg');
+                    background-image: url('../../assets/images/wK.svg');
                 }  
                 &.black i {
-                    background-image: url('assets/images/bK.svg');
+                    background-image: url('../../assets/images/bK.svg');
                 }  
 
 
@@ -286,11 +286,9 @@ $bg-1: theme.$ac-li-orange-3;
                 color: theme.$text-primary;
                 text-align: center;
                 padding: 0.4em;
-                border-bottom: 1px solid theme.$ac-li-orange-2;
                 border-radius: 2px 2px 0 0;
                 font-size: 1.1em;
                 text-shadow: 0 1px 0 theme.$text-light;
-                background: $bg-1;
             }
 
             a {
