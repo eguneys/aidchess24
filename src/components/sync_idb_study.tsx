@@ -3,7 +3,7 @@ import { Chapter, Section, Study } from "./StudyComponent";
 import { createContext, JSX } from "solid-js";
 import { NAG, Path, Step } from "./step_types";
 import { PGN, PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
-import { RepeatAttemptResult, RepeatDueMove, RepeatStudy } from "../views/repetition/types";
+import { RepeatAttemptResult, RepeatDueMove, RepeatMoveAttempt, RepeatStudy } from "../views/repetition/types";
 import { Card } from "ts-fsrs";
 
 
@@ -410,6 +410,22 @@ async function db_new_repeat_move_attempt(db: StudiesDB, entity: EntityRepeatMov
     await db.repeat_move_attempts.add(entity)
 } 
 
+
+async function db_load_repeat_move_attempts(db: StudiesDB, due_move_id: EntityRepeatDueMoveId): Promise<RepeatMoveAttempt[]> {
+    let e_res = await db.repeat_move_attempts.where('repeat_due_move_id').equals(due_move_id).toArray()
+
+    if (!e_res) {
+        throw new Error("No Repeat Move Attempts for given due_move_id " + due_move_id)
+    }
+
+    return e_res.map(e => RepeatMoveAttempt(e.id, e.repeat_due_move_id, e.attempt_result, e.card, e.created_at))
+
+}
+
+async function db_save_due_move(db: StudiesDB, entity: EntityRepeatDueMoveInsert) {
+    await db.repeat_due_moves.add(entity)
+}
+
 class StudiesDB extends Dexie {
     studies!: EntityTable<EntityStudy, "id">
     sections!: EntityTable<EntitySection, "id">
@@ -587,6 +603,9 @@ export type StudiesDBReturn = {
 
     play_replay_by_steps_tree_id(steps_tree_id: EntityStepsTreeId): Promise<PlayUciTreeReplay>
     add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert): Promise<void>
+    load_repeat_move_attempts(due_move_id: EntityRepeatDueMoveId): Promise<RepeatMoveAttempt[]>
+
+    save_due_move(due_move: EntityRepeatDueMoveInsert): Promise<void>;
 }
 
 export const StudiesDBProvider = (props: { children: JSX.Element }) => {
@@ -662,6 +681,13 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert) {
                 return db_new_repeat_move_attempt(db, entity) 
         },
+        load_repeat_move_attempts(due_move_id: EntityRepeatDueMoveId) {
+            return db_load_repeat_move_attempts(db, due_move_id)
+        },
+
+        save_due_move(due_move: EntityRepeatDueMoveInsert) {
+            return db_save_due_move(db, due_move)
+        }
     }
 
     return (<>

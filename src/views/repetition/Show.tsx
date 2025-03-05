@@ -16,7 +16,7 @@ import { FSRS } from "ts-fsrs"
 export default () => {
     return (<>
     <StudiesDBProvider>
-            <ShowComponent />
+        <ShowComponent />
     </StudiesDBProvider>
     </>)
 }
@@ -36,7 +36,6 @@ function ShowComponent() {
     let [study] = createResource(() => db.study_by_id(params.id))
     let [repeat_study] = createResource(async () => {
         let res = await db.get_or_new_repeat_study(params.id)
-
 
         return res
     })
@@ -65,7 +64,12 @@ function ShowComponent() {
         }
     })
 
-    const filtered_dues = createMemo(() => filtered_all()?.filter(_ => _.is_due))
+    const [filtered_all_populated] = createResource<RepeatDueMove[], RepeatDueMove[]>(filtered_all, async (all) => {
+        await Promise.all(all.map(_ => _.once_listen_load_db(db)))
+        return all
+    })
+
+    const filtered_dues = createMemo(() => filtered_all_populated()?.filter(_ => _.is_due))
 
     const filter_title = () => {
         switch (repeat_type) {
@@ -127,6 +131,8 @@ function ShowComponent() {
     )
     const solution_uci = createMemo(() => one_particular_due()?.node.uci)
 
+
+
     createEffect(() => {
         let r = play_replay()
         if (!r) {
@@ -147,7 +153,7 @@ function ShowComponent() {
     const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
 
     const color = () => fen_turn(one_particular_due()?.node.before_fen ?? INITIAL_FEN)
-    const movable = () => play_replay() && play_replay()!.cursor_path === show_at_path()
+    const movable = () => !!play_replay() && play_replay()!.cursor_path === show_at_path()
 
     createEffect(on(() => play_replay()?.cursor_path_step, (step) => {
         if (!step) {
@@ -205,10 +211,15 @@ function ShowComponent() {
         if (attempt_result !== undefined) {
             play_replay()!.hide_after_path = undefined
 
-            let repeat_move_attempt = one_particular_due()!.add_attempt_with_spaced_repetition(fs, attempt_result)
+            let due_move = one_particular_due()!
+            let repeat_move_attempt = due_move.add_attempt_with_spaced_repetition(fs, attempt_result)
 
             batch(() => {
                 set_trigger_next_due_move(false)
+                console.log(due_move.is_unsaved, 'is unsaved')
+                if (due_move.is_unsaved) {
+                    db.save_due_move(due_move.entity)
+                }
                 db.add_repeat_move_attempt(repeat_move_attempt.entity)
             })
 

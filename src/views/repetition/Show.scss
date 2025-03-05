@@ -43,6 +43,10 @@
                 grid-template-columns: minmax(200px, 300px) var(--col3-uniboard-width) minmax(300px, 400px);
                 grid-template-rows: 1fr 3fr;
 
+                .underboard {
+                    max-height: calc(var(--col3-uniboard-width) * 0.72);
+                }
+
                 .replay-wrap {
                     max-height: calc(var(--col3-uniboard-width) * 0.9);
                 }
@@ -158,17 +162,20 @@
         .underboard {
             display: flex;
             flex-flow: column;
+            min-height: 0;
 
             .move-history {
-                flex: 1;
+                flex: 1 0 0;
             }
 
             .session-history {
-                flex: 2;
+                flex: 2 0 0;
             }
 
             .move-history,
             .session-history {
+                min-height: 0;
+
                 h4 {
                     text-align: center;
                     padding: 0.3em;
@@ -178,10 +185,13 @@
 
                 .attempts {
 
+                    justify-content: center;
                     display: flex;
                     flex-flow: row wrap;
                     padding: 0.2em;
                     gap: 0.33em;
+                    overflow: auto;
+                    max-height: 70%;
 
                     .attempt {
                         .time-ago {

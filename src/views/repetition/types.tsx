@@ -1,5 +1,5 @@
 import { createEffect, createSignal } from "solid-js"
-import { EntityRepeatDueMoveId, EntityRepeatMoveAttemptId, EntityRepeatMoveAttemptInsert, EntityRepeatStudyId, EntitySectionId, EntityStudyId, EntityTreeStepNodeId, gen_id8, StudiesDBReturn } from "../../components/sync_idb_study"
+import { EntityRepeatDueMoveId, EntityRepeatDueMoveInsert, EntityRepeatMoveAttemptId, EntityRepeatMoveAttemptInsert, EntityRepeatStudyId, EntitySectionId, EntityStudyId, EntityTreeStepNodeId, gen_id8, StudiesDBReturn } from "../../components/sync_idb_study"
 import { Chapter, Section } from "../../components/StudyComponent"
 import { TreeStepNode } from "../../components/ReplayTreeComponent"
 import { fen_turn } from "../../components/step_types"
@@ -51,6 +51,7 @@ export function RepeatMoveAttempt(
 
 export type RepeatDueMove = {
     id: EntityRepeatDueMoveId,
+    entity: EntityRepeatDueMoveInsert,
     repeat_study_id: EntityRepeatStudyId,
     tree_step_node_id: EntityTreeStepNodeId,
     node: TreeStepNode,
@@ -64,13 +65,19 @@ export type RepeatDueMove = {
     set_attempts(attempts: RepeatMoveAttempt[]): void,
     add_attempt_with_spaced_repetition(fs: FSRS, attempt_result: RepeatAttemptResult): RepeatMoveAttempt,
     last_attempt: RepeatMoveAttempt | undefined,
-    is_due: boolean
+    is_due: boolean,
+    once_listen_load_db(db: StudiesDBReturn): Promise<void>
 }
 
 export function RepeatDueMove(id: EntityRepeatDueMoveId, repeat_study_id: EntityRepeatStudyId, node: TreeStepNode, is_unsaved: boolean) {
 
     let [attempts, set_attempts] = createSignal<RepeatMoveAttempt[]>([])
 
+    const entity = () => ({
+        id,
+        repeat_study_id,
+        tree_step_node_id: node.id
+    })
 
     return {
         id,
@@ -78,9 +85,10 @@ export function RepeatDueMove(id: EntityRepeatDueMoveId, repeat_study_id: Entity
         get tree_step_node_id() { 
             return node.id
         },
+        get entity() { return entity() },
         node,
         get attempts() { return attempts() },
-        set_attempts(attempts: RepeatMoveAttempt[]) { set_attempts(attempts) },
+        set_attempts(attempts: RepeatMoveAttempt[]) { set_attempts(attempts.sort((a, b) => a.created_at - b.created_at)) },
         add_attempt_with_spaced_repetition(f: FSRS, attempt_result: RepeatAttemptResult) {
             let new_card = createEmptyCard()
 
@@ -138,7 +146,11 @@ export function RepeatDueMove(id: EntityRepeatDueMoveId, repeat_study_id: Entity
         },
         get is_black() {
             return fen_turn(node.fen) === 'black'
-        }
+        },
+        async once_listen_load_db(db: StudiesDBReturn) {
+            let res = await db.load_repeat_move_attempts(id)
+            this.set_attempts(res)
+        },
     }
 }
 
