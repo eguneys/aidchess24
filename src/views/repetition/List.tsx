@@ -4,6 +4,7 @@ import './List.scss'
 import { A, useNavigate } from "@solidjs/router"
 import { Section } from "../../components/StudyComponent"
 import { makePersistedNamespaced } from "../../storage"
+import { RepeatDueMove } from "./types"
 
 export type RepeatShowType = 'first-ten' | 'ten-twenty' | 'twenty-plus' | 'white' | 'black'
 
@@ -53,7 +54,24 @@ function ListComponent() {
         r.create_effects_listen_load_db(db)
     }))
 
+    const with_load_attempts = async (res: RepeatDueMove[] | undefined) => {
+        if (!res) {
+            return undefined
+        }
 
+        await Promise.all(res.map(_ => _.once_listen_load_db(db)))
+        return res.filter(_ => _.is_due)
+    }
+
+    const [due_first_ten] = createResource(() => repeat_study()?.due_first_ten, with_load_attempts)
+    const [due_ten_twenty] = createResource(() => repeat_study()?.due_ten_twenty, with_load_attempts)
+    const [due_twenty_plus] = createResource(() => repeat_study()?.due_twenty_plus, with_load_attempts)
+    const [due_white] = createResource(() => repeat_study()?.due_white, with_load_attempts)
+    const [due_black] = createResource(() => repeat_study()?.due_black, with_load_attempts)
+
+    createEffect(() => {
+        console.log(due_black())
+    })
 
     let navigate = useNavigate()
     const navigate_show = (type: RepeatShowType) => {
@@ -102,11 +120,11 @@ function ListComponent() {
                         <h4> Memorize due moves through Spaced Repetition </h4>
                         <div class='filler'></div>
                         <div class='dues'>
-                            <button onClick={() => navigate_show('first-ten')}><span>First 10 moves</span><span class='due'>Due: {repeat_study()?.due_first_ten.length}</span></button>
-                            <button onClick={() => navigate_show('ten-twenty')}><span>10-20 moves</span><span class='due'>Due: {repeat_study()?.due_ten_twenty.length}</span></button>
-                            <button onClick={() => navigate_show('twenty-plus')}><span>20+ moves</span><span class='due'>Due: {repeat_study()?.due_twenty_plus.length}</span></button>
-                            <button onClick={() => navigate_show('white')}><span>White moves</span><span class='due'>Due: {repeat_study()?.due_white.length}</span></button>
-                            <button onClick={() => navigate_show('black')}><span>Black moves</span><span class='due'>Due: {repeat_study()?.due_black.length}</span></button>
+                            <button onClick={() => navigate_show('first-ten')}><span>First 10 moves</span><span class='due'>Due: <Suspense fallback={'..'}>{due_first_ten()?.length??'..'}</Suspense></span></button>
+                            <button onClick={() => navigate_show('ten-twenty')}><span>10-20 moves</span><span class='due'>  Due: <Suspense fallback={'..'}>{due_ten_twenty()?.length??'..'}</Suspense></span></button>
+                            <button onClick={() => navigate_show('twenty-plus')}><span>20+ moves</span><span class='due'>   Due: <Suspense fallback={'..'}>{due_twenty_plus()?.length??'..'}</Suspense></span></button>
+                            <button onClick={() => navigate_show('white')}><span>White moves</span><span class='due'>       Due: <Suspense fallback={'..'}>{due_white()?.length??'..'}</Suspense></span></button>
+                            <button onClick={() => navigate_show('black')}><span>Black moves</span><span class='due'>       Due: <Suspense fallback={'..'}>{due_black()?.length??'..'}</Suspense></span></button>
                         </div>
                     </>
                 }>

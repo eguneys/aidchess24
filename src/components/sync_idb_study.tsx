@@ -5,6 +5,7 @@ import { NAG, Path, Step } from "./step_types";
 import { PGN, PlayUciTreeReplay, StepsTree, TreeStepNode } from "./ReplayTreeComponent";
 import { RepeatAttemptResult, RepeatDueMove, RepeatMoveAttempt, RepeatStudy } from "../views/repetition/types";
 import { Card } from "ts-fsrs";
+import { _alekhine } from "../Chesstree2";
 
 
 async function db_new_play_uci_tree_replay(db: StudiesDB, tree?: StepsTree) {

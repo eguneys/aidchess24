@@ -21,7 +21,7 @@ export default () => {
     </>)
 }
 
-const FSRSContext = createContext(new FSRS({enable_fuzz: true}))
+const FSRSContext = createContext(new FSRS({ }))
 
 function ShowComponent() {
 
@@ -216,7 +216,6 @@ function ShowComponent() {
 
             batch(() => {
                 set_trigger_next_due_move(false)
-                console.log(due_move.is_unsaved, 'is unsaved')
                 if (due_move.is_unsaved) {
                     db.save_due_move(due_move.entity)
                 }
