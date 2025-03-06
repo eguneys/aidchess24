@@ -1,4 +1,4 @@
-import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, For, on, onCleanup, onMount, Show, Suspense, useContext } from "solid-js"
+import { batch, createEffect, createMemo, createResource, createSignal, ErrorBoundary, For, mapArray, on, onCleanup, onMount, Show, Suspense, useContext } from "solid-js"
 import { gen_id8, StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
 import { useNavigate, useParams } from "@solidjs/router"
 import { Chapter, EditChapterComponent, EditSectionComponent, EditStudyComponent, Section, SectionsListComponent, Study, StudyDetailsComponent } from "../../components/StudyComponent"
@@ -10,6 +10,8 @@ import { INITIAL_FEN } from "chessops/fen"
 import { usePlayer } from "../../sound"
 import { FEN, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../components/step_types"
 import { annotationShapes } from "../../annotationShapes"
+import { Color, opposite } from "chessops"
+import { arr_rnd } from "../../random"
 
 export default () => {
     return (<>
@@ -24,20 +26,287 @@ function ShowComponent() {
 
     let params = useParams()
 
-    let [study, {refetch}] = createResource(() => db.study_by_id(params.id))
+    let [study] = createResource(() => db.study_by_id(params.id))
+
+
+    const [tab, set_tab] = createSignal('practice')
 
     return (<>
         <ErrorBoundary fallback={<StudyNotFound />}>
             <Suspense fallback={<StudyLoading />}>
                 <Show when={study()}>{study =>
-                    <StudyShow study={study()} on_refetch={() => refetch()} />
+                <>
+                    <Show when={tab() === 'show'}>
+                        <StudyShow study={study()} on_feature_practice={() => set_tab('practice')} />
+                    </Show>
+                    <Show when={tab() === 'practice'}>
+                        <StudyPractice study={study()} on_feature_practice_off={() => set_tab('show')} />
+                    </Show>
+                </>
                 }</Show>
             </Suspense>
         </ErrorBoundary>
     </>)
 }
 
-function StudyShow(props: { study: Study, on_refetch: () => void }) {
+
+function StudyPractice(props: { study: Study, on_feature_practice_off: () => void }) {
+
+    const db = useContext(StudiesDBContext)!
+
+    const play_uci = PlayUciComponent()
+
+    const color = createMemo(() => play_uci.turn)
+    const movable = createMemo(() => !props.study.is_edits_disabled)
+
+    const [selected_section, set_selected_section] = createSignal<Section | undefined>(undefined)
+    const [selected_chapter, set_selected_chapter] = createSignal<Chapter | undefined>(undefined)
+
+    const on_selected_chapter = (section: Section, chapter: Chapter) => {
+        batch(() => {
+            set_selected_section(section)
+            set_selected_chapter(chapter)
+        })
+    }
+
+    const play_replay = createMemo(() => {
+        let s = selected_chapter()
+        if (!s) {
+            return PlayUciTreeReplay(gen_id8(), StepsTree(gen_id8()))
+        }
+        return s.play_replay
+    })
+
+    createEffect(on(() => play_uci.on_last_move_added, (us) => {
+        if (!us) {
+            return
+        }
+
+        let san = us[1]
+
+        let new_node = play_replay().add_child_san_to_current_path(san)
+
+        if (!new_node) {
+            return
+        }
+
+        db.new_tree_step_node(new_node)
+    }))
+
+    const initial_fen = createMemo(() => INITIAL_FEN)
+
+    createEffect(on(() => play_replay().cursor_path_step, (step) => {
+        if (!step) {
+            play_uci.set_fen_and_last_move(initial_fen())
+            return
+        }
+        play_uci.set_fen_and_last_move(step.fen, step.uci)
+    }))
+
+
+    const Player = usePlayer()
+    Player.setVolume(0.2)
+    createEffect(on(() => play_replay().cursor_path_step, (current, prev) => {
+        if (current) {
+            if (!prev || prev.ply === current.ply - 1) {
+                Player.move(current)
+            }
+        }
+    }))
+
+    const set_on_wheel = (i: number) => {
+        if (i > 0) {
+            play_replay().goto_next_if_can()
+        } else {
+            play_replay().goto_prev_if_can()
+        }
+    }
+
+    let $el_ref: HTMLDivElement
+
+    let annotation = createMemo(() => {
+        let step = play_replay().cursor_path_step
+
+        if (!step) {
+            return []
+        }
+
+        let nag = step.nags[0]
+
+        if (!nag) {
+            return []
+        }
+
+        return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
+    })
+
+    const chapter_title_or_detached = createMemo(() => {
+        return selected_chapter()?.name ?? '[detached]'
+    })
+
+    const on_rematch = (color?: Color) => {
+
+    }
+
+
+    const engine_color = createMemo(() => opposite(color()))
+
+
+    const [tab, set_tab] = createSignal('quiz')
+
+
+    const quiz_nodes = createMemo(() => play_replay().steps.all_nodes)
+
+    return (<>
+        <main ref={$el_ref!} class='openings-show study'>
+            <div class='details-wrap'>
+                <StudyDetailsComponent study={props.study} section={selected_section()} chapter={selected_chapter()} />
+            </div>
+            <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
+                <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
+            </div>
+            <div class='replay-wrap'>
+                <div class='header'>
+                    {chapter_title_or_detached()}
+                </div>
+                <PlayUciTreeReplayComponent db={db} 
+                play_replay={play_replay()} 
+                on_context_menu={() => {}} 
+                lose_focus={false}
+                features = {
+                    <>
+                    <button onClick={props.on_feature_practice_off} class='feature practice'><i data-icon=""></i></button>
+                    </>
+                }
+                feature_content = {
+                    <>
+                    <div class='practice-feature'>
+                        <div class='tabs'>
+                            <div onClick={() => set_tab('practice')} class={'feature tab' + (tab() === 'practice' ? ' active': '')}>Practice</div>
+                            <div onClick={() => set_tab('quiz')} class={'quiz tab' + (tab() === 'quiz' ? ' active': '')}>Quiz</div>
+                            <div onClick={() => set_tab('deathmatch')} class={'deathmatch tab' + (tab() === 'deathmatch' ? ' active': '')}>Deathmatch</div>
+                        </div>
+                        <div class={'content ' + tab()}>
+                            <Show when={tab() === 'quiz'}>
+                            <h4>Take Quiz</h4>
+                            <TakeQuiz nodes={quiz_nodes()}/>
+                            </Show>
+                            <Show when={tab() === 'deathmatch'}>
+                            <h4>Play Deathmatch</h4>
+                            <PlayDeathmatch />
+                            </Show>
+                            <Show when={tab() === 'practice'}>
+                            <h4>Practice with the Computer</h4>
+                            <div class='info-wrap'>
+                                <div class='status'>
+                                    Your turn.
+                                </div>
+                                <div class='info'>
+                                <p>
+                                    Computer will follow the lines in the opening.
+                                </p>
+                                <p>
+                                    Moves will be hidden.
+                                </p>
+                                </div>
+                            </div>
+                            <div class='rematch-buttons buttons'>
+                                <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
+                                <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
+                            </div>
+                            </Show>
+                        </div>
+                    </div>
+                    </>
+                }
+                />
+            </div>
+            <div class='sections-wrap'>
+                <SectionsListComponent db={db} study={props.study} is_edits_disabled={true} on_selected_chapter={on_selected_chapter}/>
+            </div>
+            <div class='tools-wrap'>
+            </div>
+        </main>
+    </>)
+}
+
+type QuizItem = {
+    step: TreeStepNode,
+    is_solved?: boolean
+}
+
+function QuizItem(step: TreeStepNode) {
+
+    let [is_solved, set_is_solved] = createSignal<boolean | undefined>(undefined)
+
+    return {
+        step,
+        get is_solved() { return is_solved() },
+        set is_solved(s: boolean | undefined) { set_is_solved(s)}
+    }
+}
+
+function TakeQuiz(props: { nodes: TreeStepNode[] }) {
+
+    let [indexes, set_indexes] = createSignal([...Array(15).keys()])
+    
+    const [status, set_status] = createSignal('info')
+    const make_quiz_item = () => QuizItem(arr_rnd(props.nodes))
+
+    let items = createMemo(mapArray(indexes, make_quiz_item))
+
+    return (<>
+    <div class='info-wrap'>
+        <div class='status'>
+            <Show when={status()=== 'info'}>
+                Press start
+            </Show>
+
+
+            <Show when={status()=== 'in-progress'}>
+                <span>1 of 15</span>
+            </Show>
+
+            <Show when={status()=== 'end'}>
+                <button class='retake'>Re-take</button>
+            </Show>
+        </div>
+        <div class='info'>
+            <Show when={status() === 'info'}>
+                <p>
+                    You are given 15 random positions from the opening.
+                    Play the correct moves.
+                </p>
+            </Show>
+        </div>
+     </div>
+        <div class='quiz-history'>
+            <For each={items()}>{ (item, i) =>
+               <div class={'quiz-item'}>{i() + 1}</div>
+            }</For>
+        </div>
+        <div class='quiz-buttons buttons'>
+            <Show when={status()=== 'info'}>
+                <button class='start'>Start</button>
+            </Show>
+        </div>
+    </>)
+}
+
+function PlayDeathmatch() {
+
+    return (<div class='info-wrap'>
+        <div class='status'>
+        
+        </div>
+        <div class='info'>
+
+        </div>
+    </div>)
+}
+
+
+function StudyShow(props: { study: Study, on_feature_practice: () => void }) {
 
     const db = useContext(StudiesDBContext)!
 
@@ -413,7 +682,16 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
                 <div class='header'>
                     {chapter_title_or_detached()}
                 </div>
-                <PlayUciTreeReplayComponent db={db} play_replay={play_replay()} on_context_menu={on_tree_context_menu} lose_focus={lose_focus()}/>
+                <PlayUciTreeReplayComponent db={db} 
+                play_replay={play_replay()} 
+                on_context_menu={on_tree_context_menu} 
+                lose_focus={lose_focus()}
+                features = {
+                    <>
+                    <button onClick={props.on_feature_practice} class='feature practice'><i data-icon=""></i></button>
+                    </>
+                }
+                />
             </div>
             <div class='sections-wrap'>
                 <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>

@@ -106,6 +106,10 @@
             }
         }
 
+        .chapter:last-child {
+            border-bottom: 2px solid theme.$text-secondary;
+        }
+
         .section {
 
             background: theme.$ac-deep-blue;

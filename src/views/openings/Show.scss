@@ -11,7 +11,7 @@
     
         display: grid;
 
-        row-gap: 0.2em;
+        row-gap: 0.5em;
         column-gap: 0.5em;
 
         justify-self: stretch;
@@ -51,7 +51,7 @@
 
                 .replay-wrap,
                 .sections-wrap {
-                    max-height: calc(var(--col3-uniboard-width) * 0.9);
+                    max-height: calc(var(--col3-uniboard-width));
                 }
         }
 
@@ -220,6 +220,196 @@
                 background: theme.$ac-li-orange-3;
                 max-height: 100%;
             }
+
+
+            .replay-jump {
+                button.feature {
+                    border:none;
+                    padding: 1em;
+                    background: theme.$ac-deep-blue;
+                    color: theme.$text-light2;
+                    font-size: 1em;
+                    user-select: none;
+                    cursor: pointer;
+
+                    &:hover, &.active {
+                        background: theme.$bu-mu-lavender;
+                        color: theme.$text-primary;
+                    }
+
+                    &:active {
+                        color: theme.$ac-li-purple2;
+                    }
+                }
+            }
+
+
+            .replay-tree {
+                .practice-feature {
+
+
+                    .tabs {
+                        display: flex;
+                        .tab {
+                            font-weight: bold;
+                            background: theme.$bu-mu-blue;
+                            padding: 0.2em;
+                            user-select: none;
+                            cursor: pointer;
+
+                            &:hover {
+                                background: theme.$ac-li-orange-2;
+                            }
+
+                            &.feature.active {
+                                color: theme.$text-light;
+                                background: theme.$deep-blue;
+                            }
+
+                            &.quiz.active {
+                                background: theme.$dark-brown;
+                                color: theme.$text-light;
+                            }
+
+                            &.deathmatch.active {
+                                background: theme.$text-primary;
+                                color: theme.$text-light;
+                            }
+
+                        }
+                    }
+
+                    .practice {
+                        h4 {
+                           background: theme.$deep-blue;
+                           color: theme.$text-light2;
+                        }
+                    }
+                    .deathmatch {
+                        h4 {
+                           background: theme.$text-primary;
+                           color: theme.$text-light2;
+                        }
+                    }
+                    .quiz {
+                        h4 {
+                           color: theme.$text-light2;
+                           background: theme.$dark-brown;
+                        }
+                    }
+
+                    h4 {
+                        font-weight: 400;
+                        font-size: 0.95em;
+                        padding: 0.3em;
+                    }
+
+                    .content {
+                        background: theme.$ac-deep-blue;
+                        color: theme.$text-light2;
+                    .info-wrap {
+                        display: flex;
+
+                        .status {
+                            flex: 2;
+                        }
+
+                        .info {
+                            flex: 3;
+                        }
+
+
+                        .status {
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                        }
+
+                        .info {
+                            font-size: 0.92em;
+                            padding: 0.2em;
+                            text-align: center;
+                        }
+                    }
+
+                    .quiz-history {
+                        display: flex;
+                        flex-flow: row-wrap;
+
+                        gap: 0.1em;
+
+                        .quiz-item {
+                            user-select: none;
+                            cursor: pointer;
+                            background: theme.$text-secondary;
+                            border-radius: 6px 6px 0 0 ;
+                            flex: 1;
+                            text-align: center;
+
+                            &:hover {
+                                background: theme.$text-primary;
+                            }
+                        }
+                    }
+
+                }
+
+                .quiz-buttons {
+                    height: 48px;
+                }
+
+                    .buttons {
+                        display: flex;
+                        .rematch {
+                            flex: 2;
+                        }
+
+                        button {
+                            background: theme.$ac-li-purple-2;
+                            color: theme.$text-primary;
+
+                            padding: 0.1em 0;
+                            font-size: 1.1em;
+                            flex: 1;
+                            border: none;
+                            user-select: none;
+                            cursor: pointer;
+                            text-transform: uppercase;
+                            transition: background .1s;
+    
+                        &:hover {
+                            background: theme.$ac-li-purple;
+                        }
+                        &:active {
+                            text-decoration: underline;
+                        }
+                        &:active i {
+                            border-bottom: 1px solid theme.$text-primary;
+                        }
+    
+                        &.white i {
+                            background-image: url('../../assets/images/wK.svg');
+                        }  
+                        &.black i {
+                            background-image: url('../../assets/images/bK.svg');
+                        }  
+    
+    
+    
+                        &{
+                                i {
+                                    justify-self: center;
+                                    display: block;
+                                    width: 45px;
+                                    height: 45px;
+                                    background-size: 45px 45px;
+                                }
+                            }
+                        }
+                    }                
+                }
+            }
+
         }
 
 

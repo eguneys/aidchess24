@@ -20,6 +20,7 @@ $bg-1: theme.$ac-li-orange-3;
 
         grid-template-columns: var(--col2-uniboard-width) var(--block-gap) minmax(240px, 400px);
 
+        margin-bottom: 3em;
 
         @include media.mq-is-col1 {
 
@@ -33,7 +34,6 @@ $bg-1: theme.$ac-li-orange-3;
             margin-bottom: 3em;
         }
 
-        margin-bottom: 3em;
 
         .board-wrap {
             grid-area: board;

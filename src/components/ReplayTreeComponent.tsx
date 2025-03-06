@@ -125,6 +125,7 @@ export type StepsTree = {
     find_parent_and_child_at_path(path: Path): [TreeStepNode | undefined, TreeStepNode] | undefined
     siblings_of(path: any): TreeStepNode[] | undefined
     previous_branch_points(path: string): TreeStepNode[] | undefined
+    all_nodes: TreeStepNode[]
 }
 
 export function StepsTree(id: EntityStepsTreeId): StepsTree {
@@ -345,6 +346,13 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
                 i = next.children
             }
             return res
+        },
+        get all_nodes() {
+            function all_children(node: TreeStepNode): TreeStepNode[] {
+                return [node, ...node.children.flatMap(all_children)]
+            }
+
+            return root().flatMap(all_children)
         }
     }
 }
@@ -895,13 +903,11 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
 }
 
 
-export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void, lose_focus?: boolean }) {
+export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_replay: PlayUciTreeReplay, on_context_menu?: (e: MouseEvent, _: Path) => void, lose_focus?: boolean, features?: JSX.Element, feature_content?: JSX.Element }) {
 
     createEffect(on(() => props.play_replay, (replay) => {
         replay.create_effects()
     }))
-
-    const steps = createMemo(() => props.play_replay.steps)
 
     let $moves_el: HTMLElement
     createEffect(() => {
@@ -961,7 +967,7 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
         <div class='replay-tree'>
             <div class='moves-wrap'>
                 <div ref={_ => $moves_el = _} class='moves'>
-                    <NodesShorten db={props.db} nodes={steps().root}
+                    <NodesShorten db={props.db} nodes={props.play_replay.steps.root}
                         success_path={props.play_replay.success_path}
                         failed_path={props.play_replay.failed_path}
                         hide_after_path={props.play_replay.hide_after_path}
@@ -971,6 +977,10 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
                          />
                 </div>
             </div>
+            <Show when={props.feature_content}>
+                {props.feature_content}
+            </Show>
+            <Show when={!props.feature_content}>
             <div class='branch-sums'>
                 <button 
                     disabled={props.play_replay.get_up_path() === undefined}
@@ -992,7 +1002,11 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
                     </div>
                 }</For>
             </div>
+            </Show>
             <div class='replay-jump'>
+                <Show when={props.features}>
+                    {props.features}
+                </Show>
                 <button disabled={props.play_replay.get_first_path() === undefined} 
                     class={"fbt first" + (props.play_replay.get_first_path() === undefined ? ' disabled' : '')}
                     onClick={() => props.play_replay.goto_first_if_can()} data-icon="" />

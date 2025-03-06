@@ -483,7 +483,7 @@ function TagOption(props: { tag: string }) {
 }
     */
 
-export function SectionsListComponent(props: { db: StudiesDBReturn, study: Study, on_selected_chapter: (section: Section, chapter: Chapter) => void, on_edit_study?: () => void, on_edit_section?: (section: Section) => void, on_edit_chapter?: (section: Section, chapter: Chapter) => void, on_chapter_order_changed?: number, on_section_order_changed?: number }) {
+export function SectionsListComponent(props: { db: StudiesDBReturn, study: Study, is_edits_disabled?: boolean, on_selected_chapter: (section: Section, chapter: Chapter) => void, on_edit_study?: () => void, on_edit_section?: (section: Section) => void, on_edit_chapter?: (section: Section, chapter: Chapter) => void, on_chapter_order_changed?: number, on_section_order_changed?: number }) {
 
     const on_new_section = async () => {
         let new_section = await props.db.new_section(props.study.id)
@@ -517,7 +517,7 @@ export function SectionsListComponent(props: { db: StudiesDBReturn, study: Study
     })
 
 
-    const is_edits_disabled = createMemo(() => props.study.is_edits_disabled)
+    const is_edits_disabled = createMemo(() => props.is_edits_disabled ?? props.study.is_edits_disabled)
 
     return (<>
     <div class='sections-list'>
