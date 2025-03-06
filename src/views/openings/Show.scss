@@ -3,11 +3,6 @@
 
 .on-openings {
     .openings-show {
-
-        @include media.mq-at-least-col2 {
-            --main-max-width: auto;
-        }
-
         position: relative;
 
         margin-bottom: 3em;
@@ -21,6 +16,10 @@
 
         justify-self: stretch;
     
+
+        @include media.mq-at-least-col2 {
+            --main-max-width: auto;
+        }
 
         @include media.mq-is-col1 {
             grid-template-areas: 'board'
@@ -274,6 +273,25 @@
                 border-radius: 0 0 4px 4px;
                 overflow: hidden;
                 min-height: 10em;
+
+                .settings {
+                    display: flex;
+                    justify-content: flex-end;
+
+                    .group {
+                        padding: 1em;
+                       display: flex;
+                       gap: 0.5em;
+                       label, input {
+                           user-select: none;
+                           cursor: pointer;
+                       }
+
+                       input[type='checkbox'] {
+                           transform: scale(1.5);
+                       }
+                    }
+                }
 
                 .export {
                     display: flex;

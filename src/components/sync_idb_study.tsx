@@ -487,6 +487,7 @@ class EntityStudy extends Entity<StudiesDB> {
     id!: EntityStudyId
     name!: string
     i_section!: number
+    is_edits_disabled!: boolean
 }
 class EntitySection extends Entity<StudiesDB> {
     id!: EntitySectionId

@@ -3,6 +3,7 @@ import { parse_PGNS, PGN, PlayUciTreeReplay } from "./ReplayTreeComponent"
 import { batch, createEffect, createMemo, createResource, createSignal, For, Show, Suspense } from "solid-js"
 import './StudyComponent.scss'
 import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, StudiesDBReturn } from "./sync_idb_study"
+import { Path } from "./step_types"
 
 const SECTION_LETTERS = 'ABCDEFGHIJKLMNOP'.split('')
 
@@ -29,6 +30,7 @@ export type Chapter = {
     set_black(black: string | undefined): void,
     create_effects_listen_and_save_db(db: StudiesDBReturn): void
     as_pgn(study_name: string, section_name: string): string
+    as_pgn_for_path(path: Path): string
 }
 
 export type Section = {
@@ -68,6 +70,8 @@ export type Study = {
     create_effects_listen_and_save_db(db: StudiesDBReturn): void
     as_export_pgn: string
     as_export_lichess: string[]
+    is_edits_disabled: boolean
+    set_is_edits_disabled(value: boolean): void
 }
 
 export function Chapter(id: EntityChapterId, section_id: EntitySectionId, play_replay: PlayUciTreeReplay): Chapter {
@@ -80,6 +84,8 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId, play_r
     let [white, set_white] = createSignal<string | undefined>(undefined)
     let [black, set_black] = createSignal<string | undefined>(undefined)
 
+
+
     return {
         set_entity(entity: EntityChapterInsert) {
             set_name(entity.name)
@@ -91,7 +97,7 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId, play_r
                 section_id,
                 tree_replay_id: play_replay.id,
                 name: name(),
-                order: order()
+                order: order(),
             }
         },
         get order() { return order() },
@@ -127,6 +133,9 @@ export function Chapter(id: EntityChapterId, section_id: EntitySectionId, play_r
             res += play_replay.steps.as_pgn
 
             return res
+        },
+        as_pgn_for_path(path: Path) {
+            return play_replay.steps.as_pgn_for_path(path)
         }
     }
 }
@@ -231,17 +240,23 @@ export function Study(id: EntityStudyId): Study {
 
     let [sections, set_sections] = createSignal<Section[]>([])
 
+    const [is_edits_disabled, set_is_edits_disabled] = createSignal(false)
+
     let entity = () => ({
         id,
         name: name(),
-        i_section: i_section()
+        i_section: i_section(),
+        is_edits_disabled: is_edits_disabled()
     })
 
     return {
         set_entity(entity: EntityStudyInsert) {
             set_name(entity.name)
             set_i_section(entity.i_section)
+            set_is_edits_disabled(entity.is_edits_disabled)
         },
+        get is_edits_disabled() { return is_edits_disabled() },
+        set_is_edits_disabled(value: boolean) { set_is_edits_disabled(value) },
         get i_section() { return i_section() },
         set_i_section(i: number) { set_i_section(i) },
         get entity() { return entity() },
@@ -502,13 +517,16 @@ export function SectionsListComponent(props: { db: StudiesDBReturn, study: Study
     })
 
 
+    const is_edits_disabled = createMemo(() => props.study.is_edits_disabled)
 
     return (<>
     <div class='sections-list'>
         <div class='header'>
             <span class='title'>{props.study.name}</span>
             <div class='tools'>
+                <Show when={!is_edits_disabled()}>
                     <i onClick={() => props.on_edit_study?.()} data-icon=""></i>
+                </Show>
             </div>
         </div>
         <div class='list'>
@@ -516,31 +534,35 @@ export function SectionsListComponent(props: { db: StudiesDBReturn, study: Study
                 <NoSections />
             }>{(section, i) =>
                 <Show when={section === selected_section()} fallback={
-                    <SectionCollapsedComponent section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section)} on_edit={() => props.on_edit_section?.(section)}/>
+                    <SectionCollapsedComponent is_edits_disabled={is_edits_disabled()} section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section)} on_edit={() => props.on_edit_section?.(section)}/>
                 }>
-                    <SectionComponent db={props.db} nth={get_letter_nth(i())} section={section} on_selected_chapter={_ => on_selected_chapter(section, _)} on_edit={() => props.on_edit_section?.(section)} on_edit_chapter={chapter => props.on_edit_chapter?.(section, chapter)} on_chapter_order_changed={props.on_chapter_order_changed}/>
+                    <SectionComponent is_edits_disabled={is_edits_disabled()} db={props.db} nth={get_letter_nth(i())} section={section} on_selected_chapter={_ => on_selected_chapter(section, _)} on_edit={() => props.on_edit_section?.(section)} on_edit_chapter={chapter => props.on_edit_chapter?.(section, chapter)} on_chapter_order_changed={props.on_chapter_order_changed}/>
                 </Show>
                 }</For>
             <div class='tools'>
-                <button onClick={() => on_new_section()} class='new'><i data-icon=""></i><span>New Section</span></button>
+                <Show when={!is_edits_disabled()}>
+                    <button onClick={() => on_new_section()} class='new'><i data-icon=""></i><span>New Section</span></button>
+                </Show>
             </div>
         </div>
     </div>
     </>)
 }
 
-function SectionCollapsedComponent(props: { section: Section, nth: string, on_selected: () => void, on_edit: () => void }) {
+function SectionCollapsedComponent(props: { is_edits_disabled: boolean, section: Section, nth: string, on_selected: () => void, on_edit: () => void }) {
     return (<>
         <div class='section'>
             <div onClick={() => props.on_selected()} class='header'>
                 <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis'>{props.section.name}</span></div>
-                <i onClick={() => props.on_edit()} data-icon=""></i>
+                <Show when={!props.is_edits_disabled}>
+                    <i onClick={() => props.on_edit()} data-icon=""></i>
+                </Show>
             </div>
         </div>
     </>)
 }
 
-function SectionComponent(props: { db: StudiesDBReturn, section: Section, nth: string, on_selected_chapter: (chapter: Chapter) => void, on_edit: () => void, on_edit_chapter: (chapter: Chapter) => void, on_chapter_order_changed?: number }) {
+function SectionComponent(props: { is_edits_disabled: boolean, db: StudiesDBReturn, section: Section, nth: string, on_selected_chapter: (chapter: Chapter) => void, on_edit: () => void, on_edit_chapter: (chapter: Chapter) => void, on_chapter_order_changed?: number }) {
 
     const on_new_chapter = async () => {
         let new_chapter = await props.db.new_chapter(props.section.id)
@@ -572,7 +594,9 @@ function SectionComponent(props: { db: StudiesDBReturn, section: Section, nth: s
         <div class='section active'>
             <div class='header'>
                 <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis' title={props.section.name}>{props.section.name}</span></div>
-                <i onClick={() => props.on_edit()} data-icon=""></i>
+                <Show when={!props.is_edits_disabled}>
+                    <i onClick={() => props.on_edit()} data-icon=""></i>
+                </Show>
             </div>
             <div class='chapters-list'>
 
@@ -580,11 +604,13 @@ function SectionComponent(props: { db: StudiesDBReturn, section: Section, nth: s
                     <For each={props.section.chapters} fallback={
                         <NoChapters />
                     }>{(chapter, i) =>
-                        <ChapterComponent chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={selected_chapter()===chapter} on_selected={() => set_selected_chapter(chapter)}  on_edit={() => props.on_edit_chapter(chapter)}/>
+                        <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={selected_chapter()===chapter} on_selected={() => set_selected_chapter(chapter)}  on_edit={() => props.on_edit_chapter(chapter)}/>
                     }</For>
                 </div>
                 <div class='tools'>
-                    <button onClick={() => on_new_chapter()} class='new'><i data-icon=""></i><span>New Chapter</span></button>
+                    <Show when={!props.is_edits_disabled}>
+                        <button onClick={() => on_new_chapter()} class='new'><i data-icon=""></i><span>New Chapter</span></button>
+                    </Show>
                 </div>
             </div>
         </div>
@@ -603,14 +629,16 @@ export function NoChapters() {
     </>)
 }
 
-export function ChapterComponent(props: { chapter: Chapter, nth: string, selected: boolean, on_selected: () => void, on_edit: () => void }) {
+export function ChapterComponent(props: { is_edits_disabled: boolean, chapter: Chapter, nth: string, selected: boolean, on_selected: () => void, on_edit: () => void }) {
 
     const klass = createMemo(() => props.selected ? ' active' : '')
 
     return (<>
         <div onClick={() => props.on_selected()} class={'chapter' + klass()}>
             <div class='title'><span class='nth'>{props.nth}.</span>{props.chapter.name}</div>
-            <i onClick={() => props.on_edit()} data-icon=""></i>
+            <Show when={!props.is_edits_disabled}>
+                <i onClick={() => props.on_edit()} data-icon=""></i>
+            </Show>
         </div>
     </>)
 }

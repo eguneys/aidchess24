@@ -181,6 +181,29 @@ function Help() {
             <br/>
             <small>If your study contains more than 64 chapters they will be departed into multiple studies.</small>
          </p>
+         <h3>
+            Special Format for Chapter Names in Lichess Studies for grouping them into Sections
+         </h3>
+         <p>
+            Name the Chapters in your Lichess Studies according to this special format, in order to further group them into sections when you import them into Aidchess.
+         </p>
+            <ul>
+                <li>SectionA: Chapter 1 </li>
+                <li>SectionA: Chapter 2 </li>
+                <li>SectionB: Chapter 3 </li>
+                <li>SectionB: Chapter 4 </li>
+                <li>SectionC: Chapter 5 </li>
+            </ul>
+         <p>
+            So if you prefix your regular chapter names with the section name that they belong to and a double colon :,
+            The chapters will group into sections with the specified section name.
+         </p>
+         <p>
+            Sections correspond to chapters of a book. Each chapter of the book includes a bunch of opening lines where each line corresponds to a chapter on the website.
+         </p>
+         <h3> Suggested way to build openings </h3>
+         <p>As Aidchess's suggestion, keep variations very light in a chapter. And always start your chapters from the initial starting position. Remember, repetition is good. Memorization is the essential key to learning chess. Finally make sure your lines mostly cover the best main lines or very common sidelines, so to make sure your time spent on memorizing is worth it.</p>
+
     </div>
     </>)
 }

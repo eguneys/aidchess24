@@ -116,6 +116,7 @@ export type StepsTree = {
     initial_fen: FEN | undefined,
     root: TreeStepNode[],
     as_pgn: string,
+    as_pgn_for_path(path: string): string
     add_load_node(node: TreeStepNode): void,
     add_sans_at_root(san: SAN[]): TreeStepNode[]
     add_child_san(path: Path, san: SAN): TreeStepNode | undefined
@@ -195,6 +196,17 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
         return res
     }
 
+    function render_path(ts: TreeStepNode[], show_index = false, i_path: Path) {
+        let res = ''
+        let step = ts.find(_ => i_path.startsWith(_.path))
+        if (!step) {
+            return res
+        }
+        res += render_data(step, show_index)
+        res += render_path(step.children, false, i_path)
+        return res
+    }
+
     const entity = () => {
         return {
             id
@@ -208,6 +220,9 @@ export function StepsTree(id: EntityStepsTreeId): StepsTree {
         id,
         get as_pgn() {
             return render_lines(root(), true)
+        },
+        as_pgn_for_path(path: Path) {
+            return render_path(root(), true, path)
         },
         get initial_fen() {
             if (root().length === 0) {

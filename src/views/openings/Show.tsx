@@ -44,7 +44,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
     const play_uci = PlayUciComponent()
 
     const color = createMemo(() => play_uci.turn)
-    const movable = createMemo(() => true)
+    const movable = createMemo(() => !props.study.is_edits_disabled)
 
     const [selected_section, set_selected_section] = createSignal<Section | undefined>(undefined)
     const [selected_chapter, set_selected_chapter] = createSignal<Chapter | undefined>(undefined)
@@ -204,7 +204,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
     let $el_context_menu: HTMLDivElement
 
     const on_tree_context_menu = (e: MouseEvent, path: Path) => {
-        play_replay().cursor_path = path
+        play_replay().goto_path(path)
         set_context_menu_open(path)
 
         let x = e.clientX
@@ -394,6 +394,11 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
         navigator.clipboard.writeText(res)
     }
 
+    const on_copy_variation_pgn = (path: Path) => {
+        let res = selected_chapter()!.as_pgn_for_path(path)
+        navigator.clipboard.writeText(res)
+        set_context_menu_open(undefined)
+    }
 
 
     return (<>
@@ -414,7 +419,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
                 <SectionsListComponent db={db} study={props.study} on_selected_chapter={on_selected_chapter} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={(section, chapter) => set_edit_chapter_dialog([section, chapter])} on_chapter_order_changed={get_on_chapter_order_changed()} on_section_order_changed={get_on_section_order_changed()}/>
             </div>
             <div class='tools-wrap'>
-                <ToolbarComponent fen={fen()} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
+                <ToolbarComponent study={props.study} fen={fen()} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
@@ -435,8 +440,11 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
             <>
                 <MoveContextMenuComponent step={step()} ref={$el_context_menu!}>
                     <a onClick={() => on_analyze_lichess(step().step)} class='analyze' data-icon=''>Analyze on lichess</a>
-                    <a ref={$el_sub_menu_anchor!} onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} class='annotate has-sub-menu' data-icon=""><i class='glyph-icon'></i>Annotate Glyph</a>
-                    <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete after this move</a>
+                    <a onClick={() => on_copy_variation_pgn(step().path)} class='copy-line' data-icon=''>Copy variation PGN</a>
+                    <Show when={!props.study.is_edits_disabled}>
+                       <a ref={$el_sub_menu_anchor!} onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} class='annotate has-sub-menu' data-icon=""><i class='glyph-icon'></i>Annotate Glyph</a>
+                       <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete after this move</a>
+                    </Show>
                 </MoveContextMenuComponent>
                 <Show when={annotate_sub_menu_open()}>
                     <div onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} ref={_ => setTimeout(() => set_$el_context_sub_menu(_))} style={sub_menu_klass()} class='context-sub-menu'>
@@ -451,7 +459,7 @@ function StudyShow(props: { study: Study, on_refetch: () => void }) {
     </>)
 }
 
-function ToolbarComponent(props: { fen: FEN, on_export_lichess: () => void, on_export_pgn: () => void, on_copy_pgn: () => void }) {
+function ToolbarComponent(props: { study: Study, fen: FEN, on_export_lichess: () => void, on_export_pgn: () => void, on_copy_pgn: () => void }) {
 
     const [tab, set_tab] = createSignal('share')
 
@@ -461,6 +469,8 @@ function ToolbarComponent(props: { fen: FEN, on_export_lichess: () => void, on_e
         props.on_copy_pgn()
     }
 
+    const is_edits_disabled = props.study.is_edits_disabled;
+    const set_is_edits_disabled = (value: boolean) => props.study.set_is_edits_disabled(value)
 
 
     return (<>
@@ -469,6 +479,14 @@ function ToolbarComponent(props: { fen: FEN, on_export_lichess: () => void, on_e
             <div onClick={() => set_tab('share')} class={'tab' + (tab() === 'share' ? ' active': '')}><i data-icon=""></i></div>
         </div>
         <div class='content'>
+            <Show when={tab() === 'settings'}>
+                <div class='settings'>
+                    <div class='group'>
+                    <label for="editable">Disable Edits</label>
+                    <input onChange={(e) => set_is_edits_disabled(e.currentTarget.checked)}id="editable" type='checkbox' checked={is_edits_disabled}></input>
+                    </div>
+                </div>
+            </Show>
             <Show when={tab() === 'share'}>
                 <div class='export'>
                     <button onClick={on_copy_pgn}><CopiedI on_copy={on_copied_pgn()}/>Copy PGN</button>
