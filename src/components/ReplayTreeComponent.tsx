@@ -546,6 +546,8 @@ export type PlayUciTreeReplay = {
     hide_after_path: Path | undefined,
     failed_path: Path | undefined,
     success_path: Path | undefined,
+    error_paths: Path[],
+    solved_paths: Path[],
     goto_path: (path: Path) => void,
     get_prev_path: () => Path | undefined,
     get_next_path: () => Path | undefined,
@@ -565,6 +567,7 @@ export type PlayUciTreeReplay = {
     delete_at_and_after_path(path: Path): TreeStepNode | undefined
     create_effects(): void
     create_effects_listen_and_save_db(db: StudiesDBReturn): void
+    add_failed_san_or_success_with_advance_cursor_path(san: string): TreeStepNode | undefined
 }
 
 export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTree): PlayUciTreeReplay {
@@ -574,6 +577,9 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
     let [hide_after_path, set_hide_after_path] = createSignal<Path | undefined>(undefined)
     let [cursor_path, set_cursor_path] = createSignal<Path>('')
 
+    let [error_paths, set_error_paths] = createSignal<Path[]>([])
+    let [solved_paths, set_solved_paths] = createSignal<Path[]>([])
+
     let sticky_paths: Path[] = []
 
 
@@ -581,7 +587,7 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         try_set_cursor_path(path)
     }
 
-    const get_prev_path = () => {
+    const get_prev_path = createMemo(() => {
         let c = cursor_path()
 
         if (c === '') {
@@ -589,9 +595,9 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         }
 
         return c.split(' ').slice(0, -1).join(' ')
-    }
+    })
 
-    const get_next_path = () => {
+    const get_next_path = createMemo(() => {
         let ss = steps
         let c = cursor_path()
 
@@ -602,9 +608,9 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         }
 
         return children.find(_ => sticky_paths.includes(_.path))?.path ?? children[0]?.path
-    }
+    })
 
-    const get_first_path = () => {
+    const get_first_path = createMemo(() => {
         let ss = steps
 
         let pc = ss.find_parent_and_child_at_path(cursor_path())
@@ -639,9 +645,9 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
             i = _i
         }
         return i[1].path
-    }
+    })
 
-    const get_last_path = () => {
+    const get_last_path = createMemo(() => {
         let ss = steps
 
         let step = ss.find_at_path(cursor_path())
@@ -660,9 +666,9 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
             i = i.children[0]
         }
         return i.path
-    }
+    })
 
-    const get_up_path = () => {
+    const get_up_path = createMemo(() => {
         let ss = steps
 
         let pc = ss.find_parent_and_child_at_path(cursor_path())
@@ -703,9 +709,9 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         }
 
         return c.path
-    }
+    })
 
-    const get_down_path = () => {
+    const get_down_path = createMemo(() => {
         let ss = steps
         let pc = ss.find_parent_and_child_at_path(cursor_path())
 
@@ -745,16 +751,16 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         }
 
         return c.path
-    }
+    })
 
 
-    const entity = () => {
+    const entity = createMemo(() => {
         return {
             id,
             steps_tree_id: steps.id,
             cursor_path: cursor_path()
         }
-    }
+    })
 
     const try_set_cursor_path = (path: Path) => {
         if (hide_after_path() !== undefined && 
@@ -764,6 +770,11 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         }
         set_cursor_path(path)
     }
+
+    const cursor_path_step = createMemo(() => {
+        return steps.find_at_path(cursor_path())
+    })
+
 
     return {
         get entity() {
@@ -793,11 +804,17 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
         set hide_after_path(path: Path | undefined) {
             set_hide_after_path(path)
         },
+        get error_paths() {
+            return error_paths()
+        },
+        get solved_paths() {
+            return solved_paths()
+        },
         get cursor_path() {
             return cursor_path()
         },
         get cursor_path_step() {
-            return steps.find_at_path(cursor_path())
+            return cursor_path_step()
         },
         goto_path,
         get_prev_path,
@@ -898,6 +915,31 @@ export function PlayUciTreeReplay(id: EntityPlayUciTreeReplayId, steps: StepsTre
                     }
                 })
             }))
+        },
+        add_failed_san_or_success_with_advance_cursor_path(san: SAN) {
+
+            let step = cursor_path_step()
+
+            if (!step) {
+                throw new Error("No cursor path step")
+            }
+
+            let existing = step.children.find(_ => _.san === san)
+
+            if (!existing) {
+                let failed_node = this.add_child_san_to_current_path(san)
+
+                if (!failed_node) {
+                    throw new Error("Couldn't add failed path with san " + san)
+                }
+
+                set_error_paths([...error_paths().filter(_ => _ !== failed_node.path), failed_node.path])
+
+                return failed_node
+            }
+
+            set_solved_paths([...solved_paths().filter(_ => _ !== existing.path), existing.path])
+            goto_path(existing.path)
         }
     }
 }
@@ -963,11 +1005,16 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
         })
     })
 
+    const feature_content = createMemo(() => props.feature_content)
+    const features = createMemo(() => props.features)
+
     return (<>
         <div class='replay-tree'>
             <div class='moves-wrap'>
                 <div ref={_ => $moves_el = _} class='moves'>
                     <NodesShorten db={props.db} nodes={props.play_replay.steps.root}
+                        solved_paths={props.play_replay.solved_paths}
+                        error_paths={props.play_replay.error_paths}
                         success_path={props.play_replay.success_path}
                         failed_path={props.play_replay.failed_path}
                         hide_after_path={props.play_replay.hide_after_path}
@@ -977,36 +1024,36 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
                          />
                 </div>
             </div>
-            <Show when={props.feature_content}>
-                {props.feature_content}
-            </Show>
-            <Show when={!props.feature_content}>
-            <div class='branch-sums'>
-                <button 
-                    disabled={props.play_replay.get_up_path() === undefined}
-                    class={"fbt prev" + (props.play_replay.get_up_path() === undefined ? ' disabled' : '')}
-                    onClick={() => props.play_replay.goto_up_if_can()}
-                    data-icon="" />
-                <button 
-                    disabled={props.play_replay.get_down_path() === undefined} 
-                    class={"fbt prev" + (props.play_replay.get_down_path() === undefined ? ' disabled' : '')} 
-                    onClick={() => props.play_replay.goto_down_if_can()} 
-                    data-icon="" />
+            <Show when={feature_content()} fallback={
+                    <div class='branch-sums'>
+                        <button
+                            disabled={props.play_replay.get_up_path() === undefined}
+                            class={"fbt prev" + (props.play_replay.get_up_path() === undefined ? ' disabled' : '')}
+                            onClick={() => props.play_replay.goto_up_if_can()}
+                            data-icon="" />
+                        <button
+                            disabled={props.play_replay.get_down_path() === undefined}
+                            class={"fbt prev" + (props.play_replay.get_down_path() === undefined ? ' disabled' : '')}
+                            onClick={() => props.play_replay.goto_down_if_can()}
+                            data-icon="" />
 
-                <For each={props.play_replay.previous_branch_points_at_cursor_path}>{branch =>
-                    <div class='fbt' onClick={() => props.play_replay.cursor_path = branch.path}>
-                        <Show when={branch.ply}>
-                            <span class='index'>{ply_to_index(branch.ply)}</span>
-                        </Show>
-                        {branch.san}
+                        <For each={props.play_replay.previous_branch_points_at_cursor_path}>{branch =>
+                            <div class='fbt' onClick={() => props.play_replay.cursor_path = branch.path}>
+                                <Show when={branch.ply}>
+                                    <span class='index'>{ply_to_index(branch.ply)}</span>
+                                </Show>
+                                {branch.san}
+                            </div>
+                        }</For>
                     </div>
-                }</For>
-            </div>
-            </Show>
+            }>{content =>
+                content()
+            }</Show>
+            
             <div class='replay-jump'>
-                <Show when={props.features}>
-                    {props.features}
-                </Show>
+                <Show when={features()}>{ features => 
+                    features()
+                }</Show>
                 <button disabled={props.play_replay.get_first_path() === undefined} 
                     class={"fbt first" + (props.play_replay.get_first_path() === undefined ? ' disabled' : '')}
                     onClick={() => props.play_replay.goto_first_if_can()} data-icon="" />
@@ -1026,7 +1073,10 @@ export function PlayUciTreeReplayComponent(props: { db?: StudiesDBReturn, play_r
 }
 
 
-function NodesShorten(props: { db?: StudiesDBReturn, nodes: TreeStepNode[], success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function NodesShorten(props: { db?: StudiesDBReturn, nodes: TreeStepNode[], 
+    solved_paths: Path[],
+    error_paths: Path[],
+    success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
     return (<>
     <Show when={props.nodes.length === 1}>
         <StepNode {...props} node={props.nodes[0]} />
@@ -1054,7 +1104,10 @@ function NodesShorten(props: { db?: StudiesDBReturn, nodes: TreeStepNode[], succ
     </>)
 }
 
-function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?: boolean, collapsed?: boolean, 
+    error_paths: Path[],
+    solved_paths: Path[],
+    success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
 
     let show_index = createMemo(() => props.node.ply % 2 === 1 || props.show_index)
 
@@ -1070,6 +1123,8 @@ function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?
     const is_failed = createMemo(() => props.failed_path === path())
     const is_success = createMemo(() => props.success_path === path())
 
+    const is_in_solved = createMemo(() => props.solved_paths.includes(path()))
+    const is_in_error = createMemo(() => props.error_paths.includes(path()))
 
 
     const klass = createMemo(() => {
@@ -1097,6 +1152,14 @@ function StepNode(props: { db?: StudiesDBReturn, node: TreeStepNode, show_index?
 
         if (is_success()) {
             res.push('success')
+        }
+
+        if (is_in_solved()) {
+            res.push('in_solved')
+        }
+
+        if (is_in_error()) {
+            res.push('in_error')
         }
 
 

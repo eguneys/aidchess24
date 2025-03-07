@@ -56,9 +56,6 @@ function StudyPractice(props: { study: Study, on_feature_practice_off: () => voi
 
     const play_uci = PlayUciComponent()
 
-    const color = createMemo(() => play_uci.turn)
-    const movable = createMemo(() => !props.study.is_edits_disabled)
-
     const [selected_section, set_selected_section] = createSignal<Section | undefined>(undefined)
     const [selected_chapter, set_selected_chapter] = createSignal<Chapter | undefined>(undefined)
 
@@ -77,21 +74,8 @@ function StudyPractice(props: { study: Study, on_feature_practice_off: () => voi
         return s.play_replay
     })
 
-    createEffect(on(() => play_uci.on_last_move_added, (us) => {
-        if (!us) {
-            return
-        }
-
-        let san = us[1]
-
-        let new_node = play_replay().add_child_san_to_current_path(san)
-
-        if (!new_node) {
-            return
-        }
-
-        db.new_tree_step_node(new_node)
-    }))
+    const [color, set_color] = createSignal(play_uci.turn)
+    const [movable, set_movable] = createSignal(false)
 
     const initial_fen = createMemo(() => INITIAL_FEN)
 
@@ -144,15 +128,8 @@ function StudyPractice(props: { study: Study, on_feature_practice_off: () => voi
         return selected_chapter()?.name ?? '[detached]'
     })
 
-    const on_rematch = (color?: Color) => {
 
-    }
-
-
-    const engine_color = createMemo(() => opposite(color()))
-
-
-    const [tab, set_tab] = createSignal('quiz')
+    const [tab, set_tab] = createSignal('practice')
 
 
     const quiz_nodes = createMemo(() => play_replay().steps.all_nodes)
@@ -197,23 +174,7 @@ function StudyPractice(props: { study: Study, on_feature_practice_off: () => voi
                             </Show>
                             <Show when={tab() === 'practice'}>
                             <h4>Practice with the Computer</h4>
-                            <div class='info-wrap'>
-                                <div class='status'>
-                                    Your turn.
-                                </div>
-                                <div class='info'>
-                                <p>
-                                    Computer will follow the lines in the opening.
-                                </p>
-                                <p>
-                                    Moves will be hidden.
-                                </p>
-                                </div>
-                            </div>
-                            <div class='rematch-buttons buttons'>
-                                <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
-                                <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
-                            </div>
+                            <Practice color={color()} set_color={set_color} set_movable={set_movable} play_uci={play_uci} play_replay={play_replay()}/>
                             </Show>
                         </div>
                     </div>
@@ -227,6 +188,60 @@ function StudyPractice(props: { study: Study, on_feature_practice_off: () => voi
             <div class='tools-wrap'>
             </div>
         </main>
+    </>)
+}
+
+function Practice(props: { color: Color, set_color: (_: Color) => void, set_movable: (_: boolean)=> void, play_uci: PlayUciComponent, play_replay: PlayUciTreeReplay}) {
+    const on_rematch = (color?: Color) => {
+        if (color) {
+            set_color(color)
+        }
+    }
+
+    const color = createMemo(() => props.color)
+    const set_color = props.set_color
+
+    const engine_color = createMemo(() => opposite(color()))
+
+    props.set_movable(true)
+
+    const play_uci = props.play_uci
+    const play_replay = createMemo(() => props.play_replay)
+
+    createEffect(on(() => play_uci.on_last_move_added, (us) => {
+        if (!us) {
+            return
+        }
+
+        let san = us[1]
+
+        let failed_node = play_replay().add_failed_san_or_success_with_advance_cursor_path(san)
+
+        if (failed_node) {
+
+        }
+
+    }, { defer: true }))
+
+
+    return (<>
+        <div class='info-wrap'>
+            <div class='status'>
+                Your turn.
+            </div>
+            <div class='info'>
+                <p>
+                    Computer will follow the lines in the opening.
+                </p>
+                <p>
+                    Moves will be hidden.
+                </p>
+            </div>
+        </div>
+        <div class='rematch-buttons buttons'>
+            <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
+            <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
+        </div>
     </>)
 }
 
@@ -248,9 +263,9 @@ function QuizItem(step: TreeStepNode) {
 
 function TakeQuiz(props: { nodes: TreeStepNode[] }) {
 
-    let [indexes, set_indexes] = createSignal([...Array(15).keys()])
+    let [indexes, _set_indexes] = createSignal([...Array(15).keys()])
     
-    const [status, set_status] = createSignal('info')
+    const [status, _set_status] = createSignal('info')
     const make_quiz_item = () => QuizItem(arr_rnd(props.nodes))
 
     let items = createMemo(mapArray(indexes, make_quiz_item))
@@ -261,7 +276,6 @@ function TakeQuiz(props: { nodes: TreeStepNode[] }) {
             <Show when={status()=== 'info'}>
                 Press start
             </Show>
-
 
             <Show when={status()=== 'in-progress'}>
                 <span>1 of 15</span>
@@ -281,7 +295,7 @@ function TakeQuiz(props: { nodes: TreeStepNode[] }) {
         </div>
      </div>
         <div class='quiz-history'>
-            <For each={items()}>{ (item, i) =>
+            <For each={items()}>{ (_item, i) =>
                <div class={'quiz-item'}>{i() + 1}</div>
             }</For>
         </div>
@@ -295,14 +309,40 @@ function TakeQuiz(props: { nodes: TreeStepNode[] }) {
 
 function PlayDeathmatch() {
 
-    return (<div class='info-wrap'>
+    const [status, _set_status] = createSignal('info')
+    return (
+        <>
+    <div class='info-wrap'>
         <div class='status'>
-        
-        </div>
-        <div class='info'>
+            <Show when={status() === 'info'}>
+                Press start
+            </Show>
+
+            <Show when={status()=== 'in-progress'}>
+                <span>1 of 15</span>
+            </Show>
+
+            <Show when={status()=== 'end'}>
+                <button class='retake'>Re-take</button>
+            </Show>
 
         </div>
-    </div>)
+        <div class='info'>
+            <Show when={status() === 'info'}>
+                <p>
+                    You will play the moves from the opening.
+                    If you go out of book game ends.
+                </p>
+            </Show>
+        </div>
+
+        </div>
+        <div class='quiz-buttons buttons'>
+            <Show when={status()=== 'info'}>
+                <button class='start'>Start</button>
+            </Show>
+        </div>
+    </>)
 }
 
 

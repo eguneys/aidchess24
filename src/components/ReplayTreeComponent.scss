@@ -157,6 +157,16 @@
                 }
             }
 
+            &.in-error {
+                color: theme.$error;
+                &:hover {
+                   background: theme.$error;
+                   color: $text-light;
+                }
+            }
+
+
+
 
 
             &.on-path-end {
