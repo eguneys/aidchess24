@@ -204,7 +204,7 @@ async function db_load_sections(db: StudiesDB, e_sections: EntitySection[], with
 }
 
 async function db_studies_by_predicate(db: StudiesDB, predicate?: StudiesPredicate): Promise<ModelStudy[]> {
-    let res = await (predicate ? db.studies.where('pred').equals(predicate).toArray() : db.studies.toArray())
+    let res = await (predicate ? db.studies.where('predicate').equals(predicate).toArray() : db.studies.toArray())
 
 
     return Promise.all(res.map(_ => db_load_study(db, _.id, false, 5)))
@@ -339,7 +339,8 @@ function new_study_model(): ModelStudy {
         name: 'New Study',
         i_section: 0,
         is_edits_disabled: false,
-        sections: []
+        sections: [],
+        predicate: 'mine'
     }
 }
 
@@ -403,7 +404,7 @@ class StudiesDB extends Dexie {
 
 
         this.version(1).stores({
-            studies: 'id',
+            studies: 'id, predicate',
             sections: 'id, study_id',
             chapters: 'id, section_id, tree_replay_id',
             play_uci_tree_replays: 'id, steps_tree_id',
@@ -441,6 +442,7 @@ class EntityStudy extends Entity<StudiesDB> {
     name!: string
     i_section!: number
     is_edits_disabled!: boolean
+    predicate!: StudiesPredicate
 }
 class EntitySection extends Entity<StudiesDB> {
     id!: EntitySectionId

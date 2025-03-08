@@ -2,7 +2,8 @@ import { Route, A, useLocation, useBeforeLeave, Router } from "@solidjs/router";
 import { ErrorBoundary, Show, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
-
+import { StoreProvider } from "./store";
+import { StudiesDBProvider } from "./components/sync_idb_study";
 const Home = lazy(() => import('./Home'))
 const Contact = lazy(() => import('./Contact'))
 const Dashboard = lazy(() => import('./Dashboard'))
@@ -17,9 +18,8 @@ const RepetitionShow = lazy(() => import('./views/repetition/Show'))
 
 export const MyApp = () => {
     return (<>
-    
         <MetaProvider>
-          <Router root={AppInRouter}>
+          <Router root={AppInRouterWithStore}>
             <Route path='/' component={Home}/>
             <Route path='/builder' component={Builder}/>
             {/*
@@ -43,6 +43,17 @@ export const MyApp = () => {
     </>)
 }
 
+const AppInRouterWithStore = (props: any) => {
+
+  return (<>
+    <StudiesDBProvider>
+      <StoreProvider>
+        <AppInRouter {...props} />
+      </StoreProvider>
+    </StudiesDBProvider>
+  </>)
+
+}
 
 const AppInRouter = (props: any) => {
 
@@ -64,7 +75,6 @@ const AppInRouter = (props: any) => {
   })
 
     return (<>
-
       <header id='top'>
           <div class='site-title-nav'>
 

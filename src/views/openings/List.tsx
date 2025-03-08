@@ -1,44 +1,72 @@
-import { A, useNavigate } from '@solidjs/router'
+import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import './List.scss'
-import { StudiesDBContext, StudiesDBProvider } from '../../components/sync_idb_study'
-import { createResource, createSignal, For, Show, Suspense, useContext } from 'solid-js'
-import { Study } from '../../components/StudyComponent'
+import { createEffect, createMemo, For, Show, Suspense } from 'solid-js'
 import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
 import import_lichess_png from '../../assets/images/importlichess.png'
+import { StoreState, useStore } from '../../store'
+import { ModelStudy, StudiesPredicate } from '../../components/sync_idb_study'
 
 export default () => {
+
+    const [store, { load_studies }] = useStore()
+
+    let [params, set_params] = useSearchParams()
+
+    const tab = createMemo<Tab>(() => params.filter as Tab ?? 'mine')
+
+    const set_tab = (tab: Tab) => {
+        if (tab === 'help') {
+            set_params({ filter: 'help' })
+            return
+        }
+        set_params({ filter: tab })
+    }
+
+    const get_predicate = createMemo(() => {
+        let res = tab()
+        if (res === 'mine') {
+            return res
+        }
+        if (res === 'featured') {
+            return res
+        }
+        if (res === 'auto') {
+            return res
+        }
+        return 'mine'
+    })
+
+    createEffect(() => load_studies(get_predicate()))
+
     return (<>
-    <StudiesDBProvider>
-        <ListComponent />
-    </StudiesDBProvider>
+        <ListComponent store={store} tab={tab()} set_tab={set_tab} />
     </>)
 }
 
+type Tab = StudiesPredicate | 'help'
 
-const ListComponent = () => {
 
-    let db = useContext(StudiesDBContext)!
+const ListComponent = (props: { store: StoreState, tab: Tab, set_tab: (_: Tab) => void }) => {
 
+    const tab = () => props.tab
+    const set_tab = props.set_tab
+
+    console.log(tab())
     let navigate = useNavigate()
 
     const on_new_opening = async () => {
-        let study = await db.new_study()
+        //let study = await db.new_study()
 
-        navigate('/openings/' + study.id)
+        //navigate('/openings/' + study.id)
     }
 
-    let auto_studies = () => []
-    let featured_studies = () => []
+    const studies = () => Object.values(props.store.studies)
 
-    let [studies] = createResource(() => db.light_list_studies())
-
-    const on_click_study = (study: Study) => {
+    const on_click_study = (study: ModelStudy) => {
         navigate('/openings/' + study.id)
     }
-
-    const [tab, set_tab] = createSignal('mine')
 
     return (<>
     <main class="openings-list">
@@ -61,13 +89,13 @@ const ListComponent = () => {
                     <Suspense fallback={
                         <div class='loading'>Loading featured openings..</div>}
                         >
-                    <For each={featured_studies()} fallback={
+                    <For each={studies()} fallback={
                         <div class='no-studies'>
                             <p>No Openings listed here yet. Likely to be coming soon.</p>
                             <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
                         </div>
                     }>{study => 
-                        <StudyListItem study={study} on_click_study={() => on_click_study(study)}/>
+                        <StudyListItem study={study} on_click_study={on_click_study}/>
                     }</For>
                     </Suspense>
                 </div>
@@ -79,13 +107,13 @@ const ListComponent = () => {
                     <Suspense fallback={
                         <div class='loading'>Loading auto generated openings..</div>}
                         >
-                    <For each={auto_studies()} fallback={
+                    <For each={studies()} fallback={
                         <div class='no-studies'>
                             <p>No Openings listed here yet. Likely to be coming soon.</p>
                             <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
                         </div>
                     }>{study => 
-                        <StudyListItem study={study} on_click_study={() => on_click_study(study)}/>
+                        <StudyListItem study={study} on_click_study={on_click_study}/>
                     }</For>
                     </Suspense>
                 </div>
@@ -116,10 +144,10 @@ const ListComponent = () => {
     </>)
 }
 
-function StudyListItem(props: { study: Study, on_click_study: () => void }) {
+function StudyListItem(props: { study: ModelStudy, on_click_study: (study: ModelStudy) => void }) {
 
     return (
-        <div onClick={() => props.on_click_study()} class='study'>
+        <div onClick={[props.on_click_study, props.study]} class='study'>
             <h3 class='title'><i data-icon=""></i>{props.study.name}</h3>
             <div class='sections'>
                 <Show when={props.study.sections.length === 1} fallback={

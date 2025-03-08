@@ -5,13 +5,13 @@ import { EntityStudyId, ModelStudy, StudiesPredicate } from "../components/sync_
 import { createSignal } from "solid-js";
 import { createAsync } from "@solidjs/router";
 
-export function createStudies(agent: Agent, actions: StoreActions, state: StoreState, setState: SetStoreFunction<StoreState>) {
+export function createStudies(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
     type Source = ["studies", StudiesPredicate] | ["study", EntityStudyId]
     const [source, set_source] = createSignal<Source>()
 
 
 
-    let get_articles = async (value: Record<EntityStudyId, ModelStudy>) => {
+    let get_studies = async (value: Record<EntityStudyId, ModelStudy>) => {
         let s = source()
         if (s === undefined) {
             return value
@@ -27,14 +27,14 @@ export function createStudies(agent: Agent, actions: StoreActions, state: StoreS
         }
 
         let study_id = s[1]
-        let study = state.studies[study_id]
+        let study = value[study_id]
         if (study) return value
         study = await agent.Studies.get(study_id)
         return {...value, [study_id]: study }
     }
 
 
-    const articles = createAsync<Record<EntityStudyId, ModelStudy>>(get_articles, { initialValue: {} })
+    const studies = createAsync<Record<EntityStudyId, ModelStudy>>(get_studies, { initialValue: {} })
 
     function $req(pred: StudiesPredicate) {
         if (pred === 'mine') {
@@ -73,5 +73,5 @@ export function createStudies(agent: Agent, actions: StoreActions, state: StoreS
         }
     })
 
-    return articles
+    return studies
 }

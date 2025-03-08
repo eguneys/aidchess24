@@ -1,4 +1,4 @@
-import { useContext } from "solid-js/types/server/reactive.js";
+import { useContext } from "solid-js";
 import type { Store } from ".";
 import { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelStudy, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
 import { query, revalidate } from "@solidjs/router";

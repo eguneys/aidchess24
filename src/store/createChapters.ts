@@ -4,7 +4,7 @@ import { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
 import { EntitySectionId, ModelChapter } from "../components/sync_idb_study";
 
-export function createChapters(agent: Agent, actions: StoreActions, state: StoreState, setState: SetStoreFunction<StoreState>) {
+export function createChapters(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
 
 
     const chapters = createAsync<ModelChapter[]>(async () => {
