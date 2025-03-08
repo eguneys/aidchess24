@@ -4,9 +4,7 @@ import { Chapter, Section } from "../../components/StudyComponent"
 import { TreeStepNode } from "../../components/ReplayTreeComponent"
 import { fen_turn } from "../../components/step_types"
 import { Card, createEmptyCard, FSRS, Grade, Rating } from "ts-fsrs"
-
-
-export type RepeatAttemptResult = 'solved' | 'failed' | 'solved-with-hint' | 'failed-with-hint' | 'failed-with-skip'
+import { RepeatAttemptResult } from "../../components/repeat_types"
 
 export type RepeatMoveAttempt = {
     id: EntityRepeatMoveAttemptId,
