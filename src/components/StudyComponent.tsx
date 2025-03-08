@@ -2,13 +2,14 @@ import { Color } from "chessops"
 import { parse_PGNS, PGN, PlayUciTreeReplay } from "./ReplayTreeComponent"
 import { batch, createEffect, createMemo, createResource, createSignal, For, Show, Suspense } from "solid-js"
 import './StudyComponent.scss'
-import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, StudiesDBReturn } from "./sync_idb_study"
+import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelChapter, StudiesDBReturn } from "./sync_idb_study"
 import { Path } from "./step_types"
 
 const SECTION_LETTERS = 'ABCDEFGHIJKLMNOP'.split('')
 
 export type Chapter = {
-    entity: EntityChapterInsert,
+    model: ModelChapter,
+    set_model(model: ModelChapter): void,
     id: EntityChapterId,
     section_id: EntityStudyId,
     tree_replay_id: EntityPlayUciTreeReplayId,
@@ -21,7 +22,6 @@ export type Chapter = {
     black?: string,
     order: number,
     set_order(order: number): void,
-    set_entity(entity: EntityChapterInsert): void,
     set_name(name: string): void,
     set_orientation(orientation: Color | undefined): void,
     set_event(event: string | undefined): void,
