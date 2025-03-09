@@ -10,12 +10,12 @@ import { createChapters } from "./createChapters";
 export type StoreActions = {
     load_studies(predicate: StudiesPredicate): Promise<void>
     load_study(id: EntityStudyId): Promise<void>
-    create_study(): Promise<void>
+    create_study(): Promise<ModelStudy>
     delete_study(id: EntityStudyId): Promise<void>
 
 
     load_chapters(section_id: EntitySectionId): Promise<void>
-    create_chapter(section_id: EntitySectionId, order: number): Promise<void>
+    create_chapter(section_id: EntitySectionId, order: number): Promise<ModelChapter>
 }
 
 export type StoreState = {
@@ -36,10 +36,10 @@ export function StoreProvider(props: { children: JSX.Element }) {
 
     let [state, setState] = createStore<StoreState>({
         get studies() {
-            return studies() ?? {}
+            return studies()
         },
         get chapters() {
-            return chapters() ?? []
+            return chapters()
         }
     }),
     actions: Partial<StoreActions> = {},

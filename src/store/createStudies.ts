@@ -10,11 +10,11 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
     const [source, set_source] = createSignal<Source>()
 
 
-
     let get_studies = async (value: Record<EntityStudyId, ModelStudy>) => {
         let s = source()
+
         if (s === undefined) {
-            return value
+            return {}
         }
 
         if (s[0] === "studies") {

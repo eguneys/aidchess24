@@ -5,12 +5,12 @@ import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
 import import_lichess_png from '../../assets/images/importlichess.png'
-import { StoreState, useStore } from '../../store'
+import { useStore } from '../../store'
 import { ModelStudy, StudiesPredicate } from '../../components/sync_idb_study'
 
 export default () => {
 
-    const [store, { load_studies }] = useStore()
+    const [store, { create_study, load_studies }] = useStore()
 
     let [params, set_params] = useSearchParams()
 
@@ -40,29 +40,31 @@ export default () => {
 
     createEffect(() => load_studies(get_predicate()))
 
+    const studies = () => Object.values(store.studies)
+
+    const navigate = useNavigate()
+    const on_new_opening = async () => {
+        let study = await create_study()
+
+        navigate('/openings/' + study.id)
+    }
+
+
+
     return (<>
-        <ListComponent store={store} tab={tab()} set_tab={set_tab} />
+        <ListComponent studies={studies()} tab={tab()} set_tab={set_tab} on_new_opening={on_new_opening} />
     </>)
 }
 
 type Tab = StudiesPredicate | 'help'
 
 
-const ListComponent = (props: { store: StoreState, tab: Tab, set_tab: (_: Tab) => void }) => {
+const ListComponent = (props: { studies: ModelStudy[], tab: Tab, set_tab: (_: Tab) => void, on_new_opening: () => Promise<void> }) => {
 
     const tab = () => props.tab
     const set_tab = props.set_tab
 
-    console.log(tab())
     let navigate = useNavigate()
-
-    const on_new_opening = async () => {
-        //let study = await db.new_study()
-
-        //navigate('/openings/' + study.id)
-    }
-
-    const studies = () => Object.values(props.store.studies)
 
     const on_click_study = (study: ModelStudy) => {
         navigate('/openings/' + study.id)
@@ -89,7 +91,7 @@ const ListComponent = (props: { store: StoreState, tab: Tab, set_tab: (_: Tab) =
                     <Suspense fallback={
                         <div class='loading'>Loading featured openings..</div>}
                         >
-                    <For each={studies()} fallback={
+                    <For each={props.studies} fallback={
                         <div class='no-studies'>
                             <p>No Openings listed here yet. Likely to be coming soon.</p>
                             <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
@@ -107,7 +109,7 @@ const ListComponent = (props: { store: StoreState, tab: Tab, set_tab: (_: Tab) =
                     <Suspense fallback={
                         <div class='loading'>Loading auto generated openings..</div>}
                         >
-                    <For each={studies()} fallback={
+                    <For each={props.studies} fallback={
                         <div class='no-studies'>
                             <p>No Openings listed here yet. Likely to be coming soon.</p>
                             <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
@@ -120,13 +122,13 @@ const ListComponent = (props: { store: StoreState, tab: Tab, set_tab: (_: Tab) =
             </Show>
             <Show when={tab()==='mine'}>
                 <div class='tools'>
-                    <button onClick={() => on_new_opening()} class='new'><i data-icon=""></i> New Opening Repertoire</button>
+                    <button onClick={() => props.on_new_opening()} class='new'><i data-icon=""></i> New Opening Repertoire</button>
                 </div>
                 <div class='list'>
                     <Suspense fallback={
                         <div class='loading'>Loading your openings..</div>}
                         >
-                    <For each={studies()} fallback={
+                    <For each={props.studies} fallback={
                         <div class='no-studies'>
                             <p>No Openings here yet.</p>
                             <p>Try importing a lichess study.</p>
@@ -134,7 +136,7 @@ const ListComponent = (props: { store: StoreState, tab: Tab, set_tab: (_: Tab) =
                                 <A href='/builder'>Builder</A> feature</p>
                         </div>
                     }>{study => 
-                        <StudyListItem study={study} on_click_study={() => on_click_study(study)}/>
+                        <StudyListItem study={study} on_click_study={on_click_study}/>
                     }</For>
                     </Suspense>
                 </div>
