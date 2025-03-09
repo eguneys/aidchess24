@@ -126,7 +126,7 @@ async function db_load_play_replay_model(db: StudiesDB, id: EntityPlayUciTreeRep
         throw new EntityNotFoundError("Steps Tree", e_replay.steps_tree_id)
     }
 
-    let flat_nodes = await db.tree_step_nodes.where('steps_tree_id').equals(e_steps_tree.id).toArray()
+    let flat_nodes = await db.tree_step_nodes.where('tree_id').equals(e_steps_tree.id).toArray()
 
     let steps_tree: ModelStepsTree = {
         ...e_steps_tree,

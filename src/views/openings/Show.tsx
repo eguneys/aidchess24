@@ -5,12 +5,11 @@ import { non_passive_on_wheel } from "../../components/PlayUciComponent"
 import { DialogComponent } from "../../components/DialogComponent"
 import { FEN, glyph_to_nag, nag_to_glyph, Path, Step } from "../../components/step_types"
 import { annotationShapes } from "../../annotationShapes"
-import { useStore } from "../../store"
-import { EntityChapterId, EntitySectionId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../components/sync_idb_study"
+import { StoreState, useStore } from "../../store"
+import { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../components/sync_idb_study"
 import { get_letter_nth } from "../../components/hard_limits"
 
 import '../../components/StudyComponent.scss'
-
 
 export default () => {
 
@@ -19,19 +18,67 @@ export default () => {
     let params = useParams()
     createEffect(() => load_study(params.id))
 
-    const study = () => store.studies[params.id]
-
     return (<>
-        <ShowComponent study={study()}/>
+        <ShowComponent {...ShowComputedProps(store, params.id)}/>
     </>)
 }
 
-function ShowComponent(props: { study?: ModelStudy }) {
+type ShowComputedPropsOpStudy = {
+    study?: ModelStudy,
+    selected_section?: ModelSection,
+    selected_chapter?: ModelChapter
+}
 
+type ShowComputedProps = ShowComputedPropsOpStudy & {
+    study: ModelStudy
+}
 
-    const [, {}] = useStore()
+function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
+
+    let study = createMemo(() => store.studies[study_id])
+
+    let selected_section = createMemo(() => {
+        let s = study()
+        let selected_section_id = s?.selected_section_id
+        if (!selected_section_id) {
+            return undefined
+        }
+        return s?.sections.find(_ => _.id === selected_section_id)
+    })
+
+    let selected_chapter = createMemo(() => {
+        let section = selected_section()
+        let selected_chapter_id = section?.selected_chapter_id
+        if (!selected_chapter_id) {
+            return undefined
+        }
+
+        return store.chapters.find(_ => _.id === selected_chapter_id)
+    })
+
+    return {
+        get study() {
+            return study()
+        },
+        get selected_section() {
+            return selected_section()
+        },
+        get selected_chapter() {
+            return selected_chapter()
+        }
+    }
+
+}
+
+function ShowComponent(props: ShowComputedPropsOpStudy) {
+
+    const [, { load_chapter }] = useStore()
 
     const [tab, set_tab] = createSignal('show')
+
+    createEffect(on(() => props.selected_chapter, (chapter) => chapter && load_chapter(chapter.id)))
+
+    const props_with_study = (study: ModelStudy) => ({...props, study })
 
     return (<>
         <ErrorBoundary fallback={<StudyNotFound />}>
@@ -39,7 +86,7 @@ function ShowComponent(props: { study?: ModelStudy }) {
                 <Show when={props.study}>{study =>
                 <>
                     <Show when={tab() === 'show'}>
-                        <StudyShow study={study()} on_feature_practice={() => set_tab('practice')} />
+                        <StudyShow {...props_with_study(study())} on_feature_practice={() => set_tab('practice')} />
                     </Show>
                     <Show when={tab() === 'practice'}>
                         <></>
@@ -355,10 +402,9 @@ function PlayDeathmatch() {
 
 */
 
-function StudyShow(props: { study: ModelStudy, on_feature_practice: () => void }) {
+function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void }) {
 
     const [store, {
-        load_chapter,
         goto_path,
         replay_tree_delete_at_and_after_path,
         replay_tree_goto_next_if_can,
@@ -466,9 +512,6 @@ function StudyShow(props: { study: ModelStudy, on_feature_practice: () => void }
         return `top: ${y}px; left: ${x}px;`
     })
 
-    let { selected_section, selected_chapter } = compute_study_memos(props)
-
-    createEffect(on(selected_chapter, (chapter) => chapter && load_chapter(chapter.id)))
 
     let annotation = createMemo(() => {
         let step = store.replay_tree_cursor_path_step
@@ -487,7 +530,7 @@ function StudyShow(props: { study: ModelStudy, on_feature_practice: () => void }
     })
 
     const chapter_title_or_detached = createMemo(() => {
-        return selected_chapter()?.name ?? '[detached]'
+        return props.selected_chapter?.name ?? '[detached]'
     })
 
     const lose_focus = createMemo(() => {
@@ -580,7 +623,7 @@ function StudyShow(props: { study: ModelStudy, on_feature_practice: () => void }
     }
 
     const on_copy_variation_pgn = (path: Path) => {
-        let res = chapter_as_pgn_for_path(selected_chapter()!, path)
+        let res = chapter_as_pgn_for_path(props.selected_chapter!, path)
         navigator.clipboard.writeText(res)
         set_context_menu_open(undefined)
     }
@@ -598,7 +641,7 @@ function StudyShow(props: { study: ModelStudy, on_feature_practice: () => void }
     return (<>
         <main ref={$el_ref!} class='openings-show study'>
             <div class='details-wrap'>
-                <StudyDetailsComponent study={props.study} section={selected_section()} chapter={selected_chapter()} />
+                <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
                 {/*
@@ -623,10 +666,10 @@ function StudyShow(props: { study: ModelStudy, on_feature_practice: () => void }
                 */}
             </div>
             <div class='sections-wrap'>
-                <SectionsListComponent study={props.study} is_edits_disabled={props.study.is_edits_disabled} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={set_edit_chapter_dialog}/>
+                <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={set_edit_chapter_dialog}/>
             </div>
             <div class='tools-wrap'>
-                <ToolbarComponent study={props.study} fen={store.play_fen} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
+                <ToolbarComponent {...props} fen={store.play_fen} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
@@ -668,30 +711,9 @@ function StudyShow(props: { study: ModelStudy, on_feature_practice: () => void }
     </>)
 }
 
-function compute_study_memos(props: {study: ModelStudy}) {
-    const selected_section = createMemo(() => {
-        return props.study.sections.find(_ => _.id === props.study.selected_section_id)
-    })
+function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: boolean, on_edit_study: () => void, on_edit_section: (section: ModelSection) => void, on_edit_chapter: (chapter: ModelChapter) => void, }) {
 
-    const selected_chapter = createMemo(() => {
-        let section = selected_section()
-        if (!section) {
-            return undefined
-        }
-        return section.chapters.find(_ => _.id === section.selected_chapter_id)
-    })
-
-
-    return {
-        selected_section,
-        selected_chapter
-    }
-}
-
-function SectionsListComponent(props: { study: ModelStudy, is_edits_disabled: boolean, on_edit_study: () => void, on_edit_section: (section: ModelSection) => void, on_edit_chapter: (chapter: ModelChapter) => void, }) {
-
-    let [,{ create_section, update_study_props }] = useStore()
-    let { selected_section } = compute_study_memos(props)
+    let [,{ create_section, update_study}] = useStore()
 
     const on_new_section = async () => {
         let section = await create_section(props.study.id)
@@ -699,7 +721,7 @@ function SectionsListComponent(props: { study: ModelStudy, is_edits_disabled: bo
     }
 
     const set_selected_section = (selected_section_id: EntitySectionId) => 
-        update_study_props({id: props.study.id, selected_section_id })
+        update_study({id: props.study.id, selected_section_id })
 
     return (<>
     <div class='sections-list'>
@@ -715,7 +737,7 @@ function SectionsListComponent(props: { study: ModelStudy, is_edits_disabled: bo
             <For each={props.study.sections} fallback={
                 <NoSections />
             }>{(section, i) =>
-                <Show when={section === selected_section()} fallback={
+                <Show when={section === props.selected_section} fallback={
                     <SectionCollapsedComponent is_edits_disabled={props.is_edits_disabled} section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section.id)} on_edit={() => props.on_edit_section(section)}/>
                 }>
                     <SectionComponent 
@@ -738,21 +760,26 @@ function SectionsListComponent(props: { study: ModelStudy, is_edits_disabled: bo
     </>)
 }
 
-function SectionComponent(props: { study: ModelStudy, nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit: () => void, on_edit_chapter: (chapter: ModelChapter) => void }) {
+function SectionComponent(props: ShowComputedProps & { nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit: () => void, on_edit_chapter: (chapter: ModelChapter) => void }) {
 
-    let [,{ create_chapter, update_section }] = useStore()
+    let [store,{ update_section }] = useStore()
 
     const on_new_chapter = async () => {
+        /*
         let chapter = await create_chapter(props.section.id)
+        await load_chapter(chapter.id)
         set_selected_chapter(chapter.id)
+        */
     }
 
 
-    let { selected_chapter } = compute_study_memos(props)
     const set_selected_chapter = (selected_chapter_id: EntityChapterId) => 
-        update_section({id: props.section.id, selected_chapter_id })
+        update_section(props.study.id, {id: props.section.id, selected_chapter_id })
 
 
+    const chapters_for_section = createMemo(() =>
+        store.chapters.filter(_ => _.section_id === props.section.id)
+    )
 
     return (<>
         <div class='section active'>
@@ -765,10 +792,10 @@ function SectionComponent(props: { study: ModelStudy, nth: string, section: Mode
             <div class='chapters-list'>
 
                 <div class='list'>
-                    <For each={props.section.chapters} fallback={
+                    <For each={chapters_for_section()} fallback={
                         <NoChapters />
                     }>{(chapter, i) =>
-                        <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={selected_chapter()===chapter} on_selected={() => set_selected_chapter(chapter.id)}  on_edit={() => props.on_edit_chapter(chapter)}/>
+                        <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={props.selected_chapter===chapter} on_selected={() => set_selected_chapter(chapter.id)}  on_edit={() => props.on_edit_chapter(chapter)}/>
                     }</For>
                 </div>
                 <div class='tools'>
@@ -824,6 +851,13 @@ export function NoChapters() {
     </>)
 }
 
+export function LoadingChapters() {
+    return (<>
+    <div class='loading-chapters'>Loading Chapters.</div>
+    </>)
+}
+
+
 
 
 function StudyDetailsComponent(_props: { study: ModelStudy, section?: ModelSection, chapter?: ModelChapter }) {
@@ -851,7 +885,7 @@ function EditChapterComponent(_props: { chapter: ModelChapter }) {
 }
 
 function ToolbarComponent(props: { study: ModelStudy, fen: FEN, on_export_lichess: () => void, on_export_pgn: () => void, on_copy_pgn: () => void }) {
-    const [, { update_study_props }] = useStore()
+    const [, { update_study}] = useStore()
 
     const [tab, set_tab] = createSignal('share')
 
@@ -862,7 +896,7 @@ function ToolbarComponent(props: { study: ModelStudy, fen: FEN, on_export_liches
     }
 
     const is_edits_disabled = props.study.is_edits_disabled;
-    const set_is_edits_disabled = (value: boolean) => update_study_props({ id: props.study.id, is_edits_disabled: value })
+    const set_is_edits_disabled = (value: boolean) => update_study({ id: props.study.id, is_edits_disabled: value })
 
 
     return (<>
