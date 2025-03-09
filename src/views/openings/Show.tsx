@@ -10,6 +10,8 @@ import { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelSec
 import { get_letter_nth } from "../../components/hard_limits"
 
 import '../../components/StudyComponent.scss'
+import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "../../components2/EditStudyComponent"
+import { PGN } from "../../components2/parse_pgn"
 
 export default () => {
 
@@ -72,10 +74,11 @@ function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
 
 function ShowComponent(props: ShowComputedPropsOpStudy) {
 
-    const [, { load_chapter }] = useStore()
+    const [, { load_chapter, load_chapters }] = useStore()
 
     const [tab, set_tab] = createSignal('show')
 
+    createEffect(on(() => props.selected_section, (section) => section && load_chapters(section.id)))
     createEffect(on(() => props.selected_chapter, (chapter) => chapter && load_chapter(chapter.id)))
 
     const props_with_study = (study: ModelStudy) => ({...props, study })
@@ -541,7 +544,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     })
 
 
-    /*
     const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
 
         let study_name = props.study.name
@@ -565,41 +567,47 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             study_name = default_study_name
         }
 
-        props.study.set_name(study_name)
+        await on_update_study({ id: props.study.id, name: study_name })
 
         let section_name = Object.keys(sections)[0]
         let section = edit_section_dialog()
         if (section) {
-            section.set_name(section_name)
+            await on_edit_section(props.study.id, { id: section.id, name: section_name })
         }
 
-        let s_chapter: Chapter | undefined = undefined
-        let s_section: Section | undefined = section
+        let s_chapter: ModelChapter | undefined = undefined
+        let s_section: ModelSection | undefined = section
 
         let i_order = props.study.sections.length
         for (section_name of Object.keys(sections)) {
 
             if (!section) {
+                /*
                 section = await db.new_section_with_name(props.study.id, section_name, i_order++)
                 props.study.add_new_section(section)
+                */
+
             }
 
             let i_chapter = 0
             let chapters = sections[section_name]
             for (let [chapter_name, pgn] of chapters) {
+                /*
                 s_chapter = await db.new_chapter_from_pgn(section.id, chapter_name, pgn, i_chapter++)
                 section.add_new_chapter(s_chapter)
+                */
             }
             s_section = section
             section = undefined
         }
 
         if (s_section && s_chapter) {
+            /*
             on_selected_chapter(s_section, s_chapter)
+            */
         }
         set_edit_section_dialog(undefined)
     }
-        */
 
 
     const on_export_lichess = () => {
@@ -637,6 +645,25 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     }
 
 
+    const get_i_section = (section: ModelSection) => props.study.sections.indexOf(section)
+    const get_i_chapter = (chapter: ModelChapter) => store.chapters.indexOf(chapter)
+
+    const [, {
+        update_section,
+        delete_section,
+        update_chapter,
+        delete_chapter,
+        update_study,
+        delete_study,
+    }] = useStore()
+
+    const on_edit_section = update_section
+    const on_delete_section = delete_section
+    const on_edit_chapter = update_chapter
+    const on_delete_chapter = delete_chapter
+    const on_update_study = update_study
+    const on_delete_study = delete_study
+
 
     return (<>
         <main ref={$el_ref!} class='openings-show study'>
@@ -673,17 +700,17 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
-                    <EditSectionComponent section={section()}/>
+                    <EditSectionComponent section={section()} i_section={get_i_section(section())} nb_sections={props.study.sections.length} on_delete_section={() => on_delete_section(props.study.id, section().id)} on_edit_section={_ => on_edit_section(props.study.id, _)} on_import_pgns={on_import_pgns} />
                 </DialogComponent>
             }</Show>
             <Show when={edit_chapter_dialog()}>{ (chapter) => 
                 <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(undefined)}>
-                    <EditChapterComponent chapter={chapter()}/>
+                    <EditChapterComponent chapter={chapter()} i_chapter={get_i_chapter(chapter())} on_edit_chapter={_ => on_edit_chapter(props.study.id, chapter().section_id, _)} on_delete_chapter={() => on_delete_chapter(chapter().id)}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_study_dialog()}>
                 <DialogComponent klass='edit-study' on_close={() => set_edit_study_dialog(false)}>
-                    <EditStudyComponent/>
+                    <EditStudyComponent study={props.study} on_delete_study={() => on_delete_study(props.study.id)} on_update_study={on_update_study}/>
                 </DialogComponent>
             </Show>
             {/*
@@ -762,14 +789,12 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
 
 function SectionComponent(props: ShowComputedProps & { nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit: () => void, on_edit_chapter: (chapter: ModelChapter) => void }) {
 
-    let [store,{ update_section }] = useStore()
+    let [store,{ load_chapters, create_chapter, update_section }] = useStore()
 
     const on_new_chapter = async () => {
-        /*
         let chapter = await create_chapter(props.section.id)
-        await load_chapter(chapter.id)
+        await load_chapters(props.section.id)
         set_selected_chapter(chapter.id)
-        */
     }
 
 
@@ -865,24 +890,6 @@ function StudyDetailsComponent(_props: { study: ModelStudy, section?: ModelSecti
     </>)
 }
 
-
-function EditStudyComponent() {
-
-    return (<>
-    </>)
-}
-
-function EditSectionComponent(_props: { section: ModelSection }) {
-
-    return (<>
-    </>)
-}
-
-function EditChapterComponent(_props: { chapter: ModelChapter }) {
-
-    return (<>
-    </>)
-}
 
 function ToolbarComponent(props: { study: ModelStudy, fen: FEN, on_export_lichess: () => void, on_export_pgn: () => void, on_copy_pgn: () => void }) {
     const [, { update_study}] = useStore()

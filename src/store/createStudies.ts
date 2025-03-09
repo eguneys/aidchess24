@@ -1,8 +1,8 @@
 import { SetStoreFunction } from "solid-js/store";
 import type { Agent } from "./createAgent";
 import { type StoreActions, type StoreState } from './'
-import { EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, section_sort_by_order, StudiesPredicate } from "../components/sync_idb_study";
-import { createSignal } from "solid-js";
+import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, section_sort_by_order, StudiesPredicate } from "../components/sync_idb_study";
+import { batch, createSignal } from "solid-js";
 import { createAsync } from "@solidjs/router";
 
 export function createStudies(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
@@ -77,7 +77,10 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
         },
         async update_section(study_id: EntityStudyId, data: EntitySectionInsert) {
             await agent.Studies.update_section(data)
-            setState("studies", study_id, "sections", _ => _.id === data.id, data)
+            batch(() => {
+                setState("studies", study_id, "sections", _ => _.id === data.id, data)
+                setState("studies", study_id, "sections", _ => [..._.sort(section_sort_by_order)])
+            })
         },
         async create_section(study_id: EntityStudyId) {
             const section = await agent.Studies.create_section(study_id)
@@ -89,7 +92,17 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
                 }))
             }
             return section
-        }
+        },
+        async delete_section(study_id: EntityStudyId, id: EntitySectionId) {
+            await agent.Studies.delete_section(study_id, id)
+
+            let study = state.studies[study_id]
+            if (study) {
+                setState("studies", study_id, (study) => ({
+                    sections: study.sections.filter(_ => _.id !== id).sort(section_sort_by_order)
+                }))
+            }
+        },
     })
 
     return studies

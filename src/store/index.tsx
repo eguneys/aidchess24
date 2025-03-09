@@ -2,7 +2,7 @@ import { Accessor, createContext, useContext } from "solid-js";
 import { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createAgent } from "./createAgent";
-import { EntityChapterId, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelSection,  ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
+import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelSection,  ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { FEN } from "../components/step_types";
@@ -17,11 +17,14 @@ export type StoreActions = {
     update_study(study: Partial<EntityStudyInsert>): Promise<EntityStudy>
     create_section(study_id: EntityStudyId): Promise<ModelSection>
     update_section(study_id: EntityStudyId, section: Partial<ModelSection>): Promise<void>
+    delete_section(study_id: EntityStudyId, id: EntitySectionId): Promise<void>
 
 
     load_chapters(section_id: EntitySectionId): Promise<void>
     load_chapter(chapter_id: EntityChapterId): Promise<void>
     create_chapter(section_id: EntitySectionId): Promise<ModelChapter>
+    update_chapter(study_id: EntityStudyId, section_id: EntitySectionId, chapter: Partial<EntityChapterInsert>): Promise<EntityChapter>
+    delete_chapter(id: EntityChapterId): Promise<void>
 }
 
 export type StoreState = {

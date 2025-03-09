@@ -1,6 +1,6 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
-import { EntityChapterId, EntitySection, EntitySectionId, EntitySectionInsert, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
 import { query, revalidate } from "@solidjs/router";
 
 export type Agent = {
@@ -13,6 +13,7 @@ type Chapters = {
     by_section_id(id: EntitySectionId): Promise<ModelChapter[]>
     create(section_id: EntitySectionId): Promise<ModelChapter>
     delete(model: ModelChapter): Promise<void>
+    update_chapter(section_id: EntitySectionId, data: Partial<EntityChapterInsert>): Promise<void>
 }
 
 type Studies = {
@@ -26,6 +27,7 @@ type Studies = {
     create_section(id: EntityStudyId): Promise<ModelSection>
     update(data: Partial<EntityStudyInsert>): Promise<void>
     update_section(data: Partial<EntitySectionInsert>): Promise<void>
+    delete_section(id: EntityStudyId, section_id: EntitySectionId): Promise<void>
 }
 
 function createAgentStudies(db: StudiesDBReturn): Studies {
@@ -68,7 +70,11 @@ function createAgentStudies(db: StudiesDBReturn): Studies {
         update_section: async (data: EntitySectionInsert) => {
             await db.update_section(data)
             revalidate_study_id(data.id!)
-        }
+        },
+        delete_section: async (id: EntityStudyId, section_id: EntitySectionId) => {
+            await db.delete_section(section_id)
+            revalidate_study_id(id)
+        },
     }
 }
 
@@ -90,7 +96,12 @@ function createAgentChapters(db: StudiesDBReturn): Chapters {
             await db.delete_study(chapter.id)
             revalidate(get.keyFor(chapter.id))
             revalidate(by_section_id.keyFor(chapter.section_id))
-        }
+        },
+        update_chapter: async (section_id: EntitySectionId, data: EntityChapterInsert) => {
+            await db.update_chapter(data)
+            revalidate(get.keyFor(data.id!))
+            revalidate(by_section_id.keyFor(section_id))
+        },
     }
 }
 

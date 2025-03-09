@@ -2,7 +2,7 @@ import { SetStoreFunction } from "solid-js/store";
 import { StoreActions, StoreState } from ".";
 import { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
-import { EntityChapterId, EntitySectionId, ModelChapter } from "../components/sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudyId, ModelChapter } from "../components/sync_idb_study";
 import { createSignal } from "solid-js";
 
 export function createChapters(agent: Agent, actions: Partial<StoreActions>, _state: StoreState, setState: SetStoreFunction<StoreState>) {
@@ -12,7 +12,6 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, _st
 
     const chapters = createAsync<ModelChapter[]>(async (value: ModelChapter[]) => {
         let s = source()
-        console.log(s, value)
 
         if (s === undefined) {
             return []
@@ -25,16 +24,16 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, _st
         let chapter_id = s[1]
         let i = value.findIndex(_ => _.id === chapter_id)
 
-        console.log(i, value)
         if (i === -1 || !value[i].tree_replay) {
             let chapter = await agent.Chapters.get(chapter_id)
 
-            console.log(i)
             if (i === -1) {
                 value.push(chapter)
             } else {
                 value.splice(i, 1, chapter)
             }
+            console.log(value)
+            return [...value]
         }
 
         return value
@@ -51,7 +50,11 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, _st
             let chapter = await agent.Chapters.create(section_id)
             setState("chapters", { [chapter.id]: chapter })
             return chapter
-        }
+        },
+        async update_chapter(_study_id: EntityStudyId, section_id: EntitySectionId, data: EntityChapterInsert) {
+            await agent.Chapters.update_chapter(section_id, data)
+            setState("chapters", _ => _.id === data.id, data)
+        },
 
     })
 

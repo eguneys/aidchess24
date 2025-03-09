@@ -1,0 +1,210 @@
+import { createMemo, createResource, createSignal, For, Show, Suspense } from "solid-js"
+import { EntityChapterInsert, EntitySectionInsert, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy } from "../components/sync_idb_study"
+import { SECTION_LETTERS } from "../components/hard_limits"
+import { parse_PGNS, PGN } from "./parse_pgn"
+import { useStore } from "../store"
+
+export function EditStudyComponent(props: { study: ModelStudy, on_update_study: (data: Partial<EntityStudyInsert>) => void, on_delete_study: () => void }) {
+
+    const on_name_key_down = (key: string, e: HTMLInputElement) => {
+        if (key === 'Escape') {
+            e.value = props.study.name
+        }
+    }
+
+
+
+    const on_name_changed = (e: HTMLInputElement) => {
+        let name = e.value
+        if (name.length < 3) {
+            name = "New Chapter"
+            e.value = name
+        }
+        props.on_update_study({ id: props.study.id, name })
+    }
+
+    const on_delete_study = () => {
+        props.on_delete_study()
+    }
+
+    return (<>
+        <h2>Edit Opening</h2>
+
+        <div class='group'>
+        <label for='name'>Name</label>
+        <input name="name" id="name" onKeyDown={e => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Opening Name" minLength={3} value={props.study.name}></input>
+        </div>
+
+        <div class='group buttons'>
+            <span class='split'></span>
+            <button onClick={on_delete_study} class='delete'>Delete <i data-icon=''></i></button>
+        </div>
+    </>)
+}
+
+export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void }) {
+
+    const [store] = useStore()
+
+    const on_name_key_down = (key: string, e: HTMLInputElement) => {
+        if (key === 'Escape') {
+            e.value = props.chapter.name
+        }
+    }
+
+    const on_name_changed = (e: HTMLInputElement) => {
+        let name = e.value
+        if (name.length < 3) {
+            name = "New Chapter"
+            e.value = name
+        }
+        props.on_edit_chapter({ id: props.chapter.id, name })
+    }
+
+    const on_order_changed = (value: string) => {
+        let order = parseInt(value)
+        props.on_edit_chapter({ id: props.chapter.id, order })
+    }
+
+    const on_delete_chapter = () => {
+        props.on_delete_chapter()
+    }
+
+    return (<>
+        <h2>Edit Chapter</h2>
+
+        <div class='group'>
+        <label for='name'>Name</label>
+        <input name="name" id="name" onKeyDown={e => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.chapter.name}></input>
+        </div>
+
+        
+        <div class='group'>
+        <label for='order'>Set Order</label>
+        <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+            <For each={store.chapters}>{(_, i) => 
+                <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
+            }</For>
+        </select>
+
+        <div class='group buttons'>
+            <span class='split'></span>
+            <button onClick={on_delete_chapter} class='delete'>Delete <i data-icon=''></i></button>
+        </div>
+        </div>
+    </>)
+}
+
+export function EditSectionComponent(props: { section: ModelSection, i_section: number, nb_sections: number, on_delete_section: () => void, on_edit_section: (data: Partial<EntitySectionInsert>) => void, on_import_pgns: (pgns: PGN[], section_name: string) => void }) {
+
+    const on_name_key_down = (key: string, e: HTMLInputElement) => {
+        if (key === 'Escape') {
+            e.value = props.section.name
+        }
+    }
+
+    const on_name_changed = (e: HTMLInputElement) => {
+        let name = e.value
+        if (name.length < 3) {
+            name = "New Section"
+            e.value = name
+        }
+        props.on_edit_section({ id: props.section.id, name })
+    }
+
+    const on_order_changed = (value: string) => {
+        let order = SECTION_LETTERS.indexOf(value)
+        props.on_edit_section({ id: props.section.id, order })
+    }
+
+    const on_delete_section = () => {
+        props.on_delete_section()
+    }
+
+    const [tab, set_tab] = createSignal('lichess')
+
+
+    const [import_study_text, set_import_study_text] = createSignal('')
+
+    const import_lichess_link = createMemo(() => {
+
+        let m = import_study_text().match(/\/study\/([a-zA-Z0-9]{8})\/?$/)
+
+        if (!m) {
+            return undefined
+        }
+
+        let id = m[1]
+
+        return `https://lichess.org/api/study/${id}.pgn`
+    })
+
+    const fetch_lichess_link = async (link: string) => {
+        return await fetch(link)
+        .then(_ => _.text())
+        .then(_ => parse_PGNS(_))
+    }
+
+    const [lichess_pgns] = createResource(import_lichess_link, fetch_lichess_link)
+
+    const on_import_lichess = async () => {
+        let pgns = lichess_pgns()
+        if (!pgns) {
+            return
+        }
+        props.on_import_pgns(pgns, props.section.name)
+    }
+
+   const import_lichess_disabled = createMemo(() => {
+        return import_lichess_link() === undefined
+    })
+
+    return (<>
+        <h2>Edit Section</h2>
+        <div class='group'>
+            <label for='name'>Name</label>
+            <input name="name" id="name" onKeyDown={(e) => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.section.name}></input>
+        </div>
+
+
+
+        <div class='tabs'>
+            <div class={'tab ' + (tab() === 'empty' ? 'active' : '')} onClick={() => set_tab('empty')}>Empty</div>
+            <div class={'tab ' + (tab() === 'lichess' ? 'active' : '')} onClick={() => set_tab('lichess')}>Import Lichess Study</div>
+        </div>
+        <div class='content'>
+            <Show when={tab() === 'lichess'}>
+                <div class='group'>
+                <label for='name'>Import a Study from Lichess</label>
+                <input class={import_lichess_disabled() ? 'error': 'success'} onKeyUp={(e) => set_import_study_text(e.currentTarget.value)} onChange={(e) => set_import_study_text(e.target.value)} name="name" id="name" type="text" placeholder="Lichess Study URL"></input>
+                </div>
+            </Show>
+            <Show when={tab() === 'empty'}>
+        
+                <div class='group'>
+                <label for='order'>Set Order</label>
+                <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+                    <For each={SECTION_LETTERS.slice(0, props.nb_sections)}>{(letter, i) => 
+                        <option value={letter} selected={props.i_section === i()}>{letter}</option>
+                    }</For>
+                </select>
+                </div>
+            </Show>
+        </div>
+
+        <div class='filler'></div>
+
+        <div class='group buttons'>
+            <span class='split'></span>
+
+            <Show when={tab() === 'lichess'}>
+                <Suspense fallback={
+                    <button class='loading' disabled={true}>Loading ...</button>
+                }>
+                <button onClick={on_import_lichess} class='import' disabled={lichess_pgns() === undefined}>Import<i data-icon=''></i></button>
+                </Suspense>
+            </Show>
+            <button onClick={on_delete_section} class='delete'>Delete <i data-icon=''></i></button>
+        </div>
+    </>)
+}

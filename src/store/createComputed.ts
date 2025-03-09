@@ -1,4 +1,4 @@
-import type { StoreComputed, StoreState } from ".";
+import type { StoreComputed } from ".";
 
 export function createComputed(): StoreComputed {
     return {
