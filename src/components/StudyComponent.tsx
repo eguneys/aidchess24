@@ -5,7 +5,7 @@ import './StudyComponent.scss'
 import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelChapter, StudiesDBReturn } from "./sync_idb_study"
 import { Path } from "./step_types"
 
-const SECTION_LETTERS = 'ABCDEFGHIJKLMNOP'.split('')
+
 
 export type Chapter = {
     model: ModelChapter,

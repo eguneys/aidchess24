@@ -2,24 +2,52 @@ import { SetStoreFunction } from "solid-js/store";
 import { StoreActions, StoreState } from ".";
 import { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
-import { EntitySectionId, ModelChapter } from "../components/sync_idb_study";
+import { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter } from "../components/sync_idb_study";
+import { createSignal } from "solid-js";
 
-export function createChapters(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
+export function createChapters(agent: Agent, actions: Partial<StoreActions>, _state: StoreState, setState: SetStoreFunction<StoreState>) {
 
+    type Source = ["chapters", EntitySectionId] | ["chapter", EntityChapterId]
+    const [source, set_source] = createSignal<Source>()
 
-    const chapters = createAsync<ModelChapter[]>(async () => {
-        if (!state.section_id) {
+    const chapters = createAsync<ModelChapter[]>(async (value: ModelChapter[]) => {
+        let s = source()
+
+        if (s === undefined) {
             return []
         }
-        return agent.Chapters.by_section_id(state.section_id)
+
+        if (s[0] === 'chapters') {
+            return agent.Chapters.by_section_id(s[1])
+        }
+
+        let chapter_id = s[1]
+        let i = value.findIndex(_ => _.id === chapter_id)
+
+        if (i === -1 || !value[i].tree_replay) {
+            let chapter = await agent.Chapters.get(chapter_id)
+
+            if (i === -1) {
+                value.push(chapter)
+            } else {
+                value.splice(i, 1, chapter)
+            }
+        }
+
+        return value
     }, { initialValue: []})
 
     Object.assign(actions, {
         load_chapters(section_id: EntitySectionId) {
-            setState({ section_id })
+            set_source(["chapters", section_id])
         },
-        async create_chapter(section_id: EntitySectionId, order: number) {
-            await agent.Chapters.create(section_id, order)
+        load_chapter(chapter_id: EntityChapterId) {
+            set_source(["chapter", chapter_id])
+        },
+        async create_chapter(study_id: EntityStudyId, section_id: EntitySectionId) {
+            let chapter = await agent.Chapters.create(section_id)
+            setState("chapters", { [chapter.id]: chapter })
+            return chapter
         }
 
     })

@@ -2,9 +2,11 @@ import { Accessor, createContext, useContext } from "solid-js";
 import { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createAgent } from "./createAgent";
-import { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
+import { EntityChapterId, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelSection,  ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
+import { FEN } from "../components/step_types";
+import { INITIAL_FEN } from "chessops/fen";
 
 
 export type StoreActions = {
@@ -12,17 +14,21 @@ export type StoreActions = {
     load_study(id: EntityStudyId): Promise<void>
     create_study(): Promise<ModelStudy>
     delete_study(id: EntityStudyId): Promise<void>
+    update_study_props(study: Partial<EntityStudyInsert>): Promise<EntityStudy>
+    create_section(study_id: EntityStudyId): Promise<ModelSection>
+    update_section(section: Partial<ModelSection>): Promise<void>
 
 
     load_chapters(section_id: EntitySectionId): Promise<void>
-    create_chapter(section_id: EntitySectionId, order: number): Promise<ModelChapter>
+    load_chapter(chapter_id: EntityChapterId): Promise<void>
+    create_chapter(section_id: EntitySectionId): Promise<ModelChapter>
 }
 
 export type StoreState = {
     studies: Record<EntityStudyId, ModelStudy>
-    chapters: ModelChapter[],
-    section_id?: EntitySectionId
-    chapter_id?: EntityChapterId
+    chapters: ModelChapter[]
+    section_id?: EntitySectionId,
+    play_fen: FEN
 }
 
 export type Store = [StoreState, StoreActions]
@@ -40,7 +46,8 @@ export function StoreProvider(props: { children: JSX.Element }) {
         },
         get chapters() {
             return chapters()
-        }
+        },
+        play_fen: INITIAL_FEN,
     }),
     actions: Partial<StoreActions> = {},
     store: Store = [state, actions as StoreActions],
