@@ -1,17 +1,23 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
-import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
 import { query, revalidate } from "@solidjs/router";
+import { PGN } from "../components2/parse_pgn";
 
 export type Agent = {
     Studies: Studies,
-    Chapters: Chapters
+    Chapters: Chapters,
+    ReplayTree: ReplayTree
+}
+
+type ReplayTree = {
+    by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
 }
 
 type Chapters = {
     get(id: EntityChapterId): Promise<ModelChapter>
     by_section_id(id: EntitySectionId): Promise<ModelChapter[]>
-    create(section_id: EntitySectionId): Promise<ModelChapter>
+    create(section_id: EntitySectionId, name?: string, pgn?: PGN): Promise<ModelChapter>
     delete(model: ModelChapter): Promise<void>
     update_chapter(section_id: EntitySectionId, data: Partial<EntityChapterInsert>): Promise<void>
     order_chapters(section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
@@ -25,7 +31,7 @@ type Studies = {
     get(id: EntityStudyId): Promise<ModelStudy>
     create(): Promise<ModelStudy>
     delete(id: EntityStudyId): Promise<void>
-    create_section(id: EntityStudyId): Promise<ModelSection>
+    create_section(id: EntityStudyId, name?: string): Promise<ModelSection>
     update(data: Partial<EntityStudyInsert>): Promise<void>
     update_section(data: Partial<EntitySectionInsert>): Promise<void>
     delete_section(id: EntityStudyId, section_id: EntitySectionId): Promise<void>
@@ -59,8 +65,8 @@ function createAgentStudies(db: StudiesDBReturn): Studies {
             await db.delete_study(id)
             revalidate_study_id(id)
         },
-        create_section: async (id: EntitySectionId) => {
-            let model = await db.new_section(id)
+        create_section: async (id: EntitySectionId, name?: string) => {
+            let model = await db.new_section(id, name)
             revalidate_study_id(model.study_id)
             return model
         },
@@ -91,8 +97,8 @@ function createAgentChapters(db: StudiesDBReturn): Chapters {
     return {
         by_section_id,
         get,
-        create: async (section_id: EntitySectionId) => {
-            let chapter = await db.new_chapter(section_id)
+        create: async (section_id: EntitySectionId, name?: string, pgn?: PGN) => {
+            let chapter = await db.new_chapter(section_id, name, pgn)
             revalidate([get.keyFor(chapter.id), by_section_id.keyFor(chapter.section_id)])
             return chapter
         },
@@ -111,6 +117,14 @@ function createAgentChapters(db: StudiesDBReturn): Chapters {
     }
 }
 
+function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
+    const by_chapter_id = query((id: EntityChapterId) => db.get_replay_tree_by_chapter_id(id), 'replay_tree_by_chapter_id')
+
+    return {
+        by_chapter_id
+    }
+}
+
 export function createAgent(_: Store): Agent {
     let db = useContext(StudiesDBContext)!
 
@@ -118,8 +132,11 @@ export function createAgent(_: Store): Agent {
 
     let Chapters = createAgentChapters(db)
 
+    let ReplayTree = createAgentReplayTree(db)
+
     return {
         Studies,
-        Chapters
+        Chapters,
+        ReplayTree
     }
 }

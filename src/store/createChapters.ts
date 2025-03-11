@@ -1,9 +1,10 @@
 import { SetStoreFunction } from "solid-js/store";
 import { StoreActions, StoreState } from ".";
-import { Agent } from "./createAgent";
+import type { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
 import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudyId, ModelChapter } from "../components/sync_idb_study";
 import { createSignal } from "solid-js";
+import { PGN } from "../components2/parse_pgn";
 
 export function createChapters(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
 
@@ -24,15 +25,9 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
         let chapter_id = s[1]
         let i = value.findIndex(_ => _.id === chapter_id)
 
-        if (i === -1 || !value[i].tree_replay) {
+        if (i === -1) {
             let chapter = await agent.Chapters.get(chapter_id)
-
-            if (i === -1) {
-                value.push(chapter)
-            } else {
-                value.splice(i, 1, chapter)
-            }
-            return [...value]
+            return [...value, chapter]
         }
 
         return value
@@ -45,8 +40,8 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
         load_chapter(chapter_id: EntityChapterId) {
             set_source(["chapter", chapter_id])
         },
-        async create_chapter(study_id: EntityStudyId, section_id: EntitySectionId) {
-            let chapter = await agent.Chapters.create(section_id)
+        async create_chapter(study_id: EntityStudyId, section_id: EntitySectionId, name?: string, pgn?: PGN) {
+            let chapter = await agent.Chapters.create(section_id, name, pgn)
             setState("chapters", state.chapters.length, chapter)
             setState("studies", study_id, "sections", _ => _.id === chapter.section_id, "chapter_ids", _ => [..._, chapter.id])
             return chapter

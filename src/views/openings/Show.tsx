@@ -102,7 +102,7 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
     createEffect(on(() => props.selected_section, (section) => section && load_chapters(section.id)))
     createEffect(on(() => props.selected_chapter, (chapter) => chapter && load_chapter(chapter.id)))
 
-    const props_with_study = (study: ModelStudy) => ({...props, study })
+    const props_with_study = (study: ModelStudy): ShowComputedProps => ({...props, study } as ShowComputedProps)
 
     return (<>
         <ErrorBoundary fallback={<StudyNotFound />}>
@@ -565,6 +565,10 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     })
 
 
+
+
+
+    let [,{ create_section, create_chapter }] = useStore()
     const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
 
         let study_name = props.study.name
@@ -599,32 +603,22 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         let s_chapter: ModelChapter | undefined = undefined
         let s_section: ModelSection | undefined = section
 
-        let i_order = props.sections.length
         for (section_name of Object.keys(sections)) {
             if (!section) {
-                /*
-                section = await db.new_section_with_name(props.study.id, section_name, i_order++)
-                props.study.add_new_section(section)
-                */
-
+                section = await create_section(props.study.id, section_name)
             }
 
-            let i_chapter = 0
             let chapters = sections[section_name]
             for (let [chapter_name, pgn] of chapters) {
-                /*
-                s_chapter = await db.new_chapter_from_pgn(section.id, chapter_name, pgn, i_chapter++)
-                section.add_new_chapter(s_chapter)
-                */
+                s_chapter = await create_chapter(props.study.id, section!.id, chapter_name, pgn)
             }
             s_section = section
             section = undefined
         }
 
         if (s_section && s_chapter) {
-            /*
-            on_selected_chapter(s_section, s_chapter)
-            */
+            update_study({ id: props.study.id, selected_section_id: s_section.id })
+            update_section(props.study.id, { id: s_section.id, selected_chapter_id: s_chapter.id })
         }
         set_edit_section_dialog(undefined)
     }
@@ -693,9 +687,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     const on_order_chapter = (chapter: ModelChapter, order: number) => {
         order_chapters(props.study.id, chapter.section_id, chapter.id, order)
     }
-
-
-
 
     return (<>
         <main ref={$el_ref!} class='openings-show study'>

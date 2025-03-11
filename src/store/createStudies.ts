@@ -1,6 +1,6 @@
 import { SetStoreFunction } from "solid-js/store";
 import type { Agent } from "./createAgent";
-import { StoreProvider, type StoreActions, type StoreState } from './'
+import { type StoreActions, type StoreState } from './'
 import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
 import { batch, createSignal } from "solid-js";
 import { createAsync } from "@solidjs/router";
@@ -81,8 +81,8 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
                 setState("studies", study_id, "sections", _ => _.id === data.id, data)
             })
         },
-        async create_section(study_id: EntityStudyId) {
-            const section = await agent.Studies.create_section(study_id)
+        async create_section(study_id: EntityStudyId, name?: string) {
+            const section = await agent.Studies.create_section(study_id, name)
 
             let study = state.studies[study_id]
             if (study) {

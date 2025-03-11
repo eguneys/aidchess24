@@ -1,8 +1,12 @@
 import { Chess, Color, makeUci, Position } from "chessops"
-import { INITIAL_FEN, parseFen } from "chessops/fen"
+import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { ChildNode, parsePgn, PgnNodeData } from "chessops/pgn"
 import { parseSan } from "chessops/san"
-import { Path } from "../components/step_types"
+import { Path, Ply, Step } from "../components/step_types"
+
+function pos_fen(pos: Position) {
+    return makeFen(pos.toSetup())
+}
 
 export type PGN = {
     orientation?: Color,
@@ -12,7 +16,7 @@ export type PGN = {
     white?: string,
     black?: string,
     fen?: string,
-//    tree: StepsTree
+    flat_steps: Record<Path, Step[]>
 }
 
 export function parse_PGNS(pgn: string): PGN[] {
@@ -31,13 +35,13 @@ export function parse_PGNS(pgn: string): PGN[] {
         let before_fen = fen ?? INITIAL_FEN
         let i_pos = Chess.fromSetup(parseFen(before_fen).unwrap()).unwrap()
 
-        //let tree = StepsTree(gen_id8())
+        let flat_steps: Record<Path, Step[]> = {}
 
         g.moves.children.forEach(child => {
-            append_children(child, i_pos, '')
+            append_children(child, i_pos, 0, '')
         })
 
-        function append_children(child: ChildNode<PgnNodeData>, before_pos: Position, path: Path) {
+        function append_children(child: ChildNode<PgnNodeData>, before_pos: Position, base_ply: Ply, base_path: Path) {
             let san = child.data.san
             let move = parseSan(before_pos, san)!
 
@@ -46,13 +50,27 @@ export function parse_PGNS(pgn: string): PGN[] {
             let uci = makeUci(move)
             let nags = child.data.nags
 
-            //tree.add_child_san(path, san)!
-            //.set_nags(nags ?? [])
 
-            let next_path = path.length === 0 ? uci : `${path} ${uci}`
+            let flat_steps_res = flat_steps[base_path]
+            if (!flat_steps_res) {
+                flat_steps_res = []
+                flat_steps[base_path] = flat_steps_res
+            }
+
+            flat_steps_res.push({
+                path: base_path,
+                ply: base_ply + 1,
+                before_fen: pos_fen(before_pos),
+                fen: pos_fen(after_pos),
+                uci,
+                san,
+                nags
+            })
+
+            let next_path = base_path.length === 0 ? uci : `${base_path} ${uci}`
 
             child.children.forEach(child => {
-                append_children(child, after_pos, next_path)
+                append_children(child, after_pos, base_ply + 1, next_path)
             })
         }
 
@@ -64,7 +82,7 @@ export function parse_PGNS(pgn: string): PGN[] {
             chapter,
             fen,
             orientation,
-            //tree
+            flat_steps
         }
     })
 }

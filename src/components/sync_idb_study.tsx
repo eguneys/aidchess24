@@ -1,8 +1,9 @@
 import Dexie, { Entity, EntityTable, InsertType } from "dexie";
 import { createContext, JSX } from "solid-js";
-import { NAG, Path, Step } from "./step_types";
+import { Path, Step } from "./step_types";
 import { Card } from "ts-fsrs";
 import { RepeatAttemptResult } from "./repeat_types";
+import { PGN } from "../components2/parse_pgn";
 
 export function gen_id8() {
     return Math.random().toString(16).slice(2, 12)
@@ -162,34 +163,7 @@ async function db_chapters_by_section_id(db: StudiesDB, section_id: EntitySectio
     return section.chapter_ids.map(_ => res.find(c => c.id === _)!)
 }
 
-async function db_load_play_replay_model(db: StudiesDB, id: EntityPlayUciTreeReplayId): Promise<ModelTreeReplay> {
-
-    let e_replay = await db.play_uci_tree_replays.get(id)
-
-    if (!e_replay) {
-        throw new EntityNotFoundError("Replay Tree", id)
-    }
-
-    let e_steps_tree = await db.steps_trees.get(e_replay.steps_tree_id)
-
-    if (!e_steps_tree) {
-        throw new EntityNotFoundError("Steps Tree", e_replay.steps_tree_id)
-    }
-
-    let flat_nodes = await db.tree_step_nodes.where('tree_id').equals(e_steps_tree.id).toArray()
-
-    let steps_tree: ModelStepsTree = {
-        ...e_steps_tree,
-        flat_nodes
-    }
-
-    return {
-        ...e_replay,
-        steps_tree
-    }
-}
-
-async function db_load_chapter_model(db: StudiesDB, id: EntityChapterId): Promise<ModelChapter> {
+async function db_chapter_by_id(db: StudiesDB, id: EntityChapterId): Promise<ModelChapter> {
 
     let e_chapter = await db.chapters.where('id').equals(id).first()
 
@@ -197,15 +171,15 @@ async function db_load_chapter_model(db: StudiesDB, id: EntityChapterId): Promis
         throw new EntityNotFoundError('Chapter', id)
     }
 
-    let tree_replay = await db_load_play_replay_model(db, e_chapter.tree_replay_id)
-
-    return {
-        ...e_chapter,
-        tree_replay
-    }
+    return e_chapter
 }
 
-async function db_load_replay_tree_model(db: StudiesDB, id: EntityPlayUciTreeReplayId): Promise<ModelTreeReplay> {
+async function db_replay_tree_by_chapter_id(db: StudiesDB, id: EntityChapterId): Promise<ModelReplayTree> {
+    let chapter = await db_get_chapter(db, id)
+    return db_replay_tree_by_id(db, chapter.tree_replay_id)
+}
+
+async function db_replay_tree_by_id(db: StudiesDB, id: EntityPlayUciTreeReplayId): Promise<ModelReplayTree> {
     let e_replay = await db.play_uci_tree_replays.where('id').equals(id).first()
 
     if (!e_replay) {
@@ -220,18 +194,26 @@ async function db_load_replay_tree_model(db: StudiesDB, id: EntityPlayUciTreeRep
 
     let nodes = await db.tree_step_nodes.where('tree_id').equals(e_steps.id).toArray()
 
-    nodes.sort((a, b) => {
-        let res = a.step.path.length - b.step.path.length
-        if (res === 0) {
-            res = a.order - b.order
+    let flat_nodes: Record<Path, ModelTreeStepNode[]> = {}
+
+
+    nodes.forEach(node => {
+        let res = flat_nodes[node.step.path]
+        if (res === undefined) {
+            res = []
+            flat_nodes[node.step.path] = res
         }
-        return res
+
+        if (node.order !== undefined) {
+            res[node.order] = node
+        } else {
+            res.push(node)
+        }
     })
 
     let steps_tree: ModelStepsTree = {
         ...e_steps,
-        flat_nodes: nodes
-
+        flat_nodes
     }
 
     return {
@@ -316,6 +298,33 @@ async function db_order_chapters(db: StudiesDB, section_id: EntitySectionId, cha
     section.chapter_ids.splice(new_order, 0, chapter_id)
 
     await db_update_section(db, section)
+}
+
+async function db_new_tree_steps_nodes(db: StudiesDB, tree_id: EntityStepsTreeId, steps: Record<Path, Step[]>) {
+    let nodes: EntityTreeStepNodeInsert[] = []
+
+    for (let path of Object.keys(steps)) {
+        let i_steps = steps[path]
+        if (i_steps.length === 1) {
+            nodes.push({
+                id: gen_id8(),
+                step: i_steps[0],
+                tree_id
+            })
+        } else {
+            let order = 0
+            for (let step of steps[path]) {
+                nodes.push({
+                    id: gen_id8(),
+                    step,
+                    tree_id,
+                    order: order++
+                })
+            }
+        }
+    }
+
+    await db.tree_step_nodes.bulkAdd(nodes)
 }
 
 async function db_delete_tree_nodes(db: StudiesDB, node_ids: EntityTreeStepNodeId[]) {
@@ -436,21 +445,21 @@ function new_study_entity(): EntityStudyInsert {
     }
 }
 
-function new_section_entity(study_id: EntityStudyId): EntitySectionInsert {
+function new_section_entity(study_id: EntityStudyId, name = 'New Section'): EntitySectionInsert {
     return {
         id: gen_id8(),
         study_id,
-        name: 'New Section',
+        name,
         chapter_ids: []
     }
 }
 
-function new_chapter_entity(section_id: EntitySectionId, tree_replay_id: EntityPlayUciTreeReplayId): EntityChapterInsert {
+function new_chapter_entity(section_id: EntitySectionId, tree_replay_id: EntityPlayUciTreeReplayId, name = 'New Chapter'): EntityChapterInsert {
     return {
         id: gen_id8(),
         tree_replay_id,
         section_id,
-        name: 'New Chapter'
+        name
     }
 }
 
@@ -570,8 +579,7 @@ class EntityTreeStepNode extends Entity<StudiesDB> {
     id!: EntityTreeStepNodeId
     tree_id!: EntityStepsTreeId
     step!: Step
-    nags!: NAG[]
-    order!: number
+    order?: number
 }
 
 export type EntityRepeatStudyId = string
@@ -617,17 +625,16 @@ export type ModelSection = EntitySectionInsert & {
 
 export type ModelChapter = EntityChapterInsert & {
     id: EntityChapterId,
-    tree_replay?: ModelTreeReplay
 }
 
-export type ModelTreeReplay = EntityPlayUciTreeReplayInsert & {
+export type ModelReplayTree = EntityPlayUciTreeReplayInsert & {
     id: EntityPlayUciTreeReplayId,
     steps_tree: ModelStepsTree
 }
 
 export type ModelStepsTree = EntityStepsTreeInsert & {
     id: EntityStepsTreeId,
-    flat_nodes: ModelTreeStepNode[]
+    flat_nodes: Record<Path, ModelTreeStepNode[]>
 }
 
 export type ModelTreeStepNode = EntityTreeStepNodeInsert & {
@@ -666,8 +673,8 @@ export type StudiesDBReturn = {
     get_studies(): Promise<ModelStudy[]>;
 
     new_study(): Promise<ModelStudy>
-    new_section(study_id: EntityStudyId): Promise<ModelSection>
-    new_chapter(section_id: EntitySectionId): Promise<ModelChapter>
+    new_section(study_id: EntityStudyId, name?: string): Promise<ModelSection>
+    new_chapter(section_id: EntitySectionId, name?: string, pgn?: PGN): Promise<ModelChapter>
 
     update_study(study: EntityStudyInsert): Promise<void>
     update_section(section: EntitySectionInsert): Promise<void>
@@ -686,6 +693,8 @@ export type StudiesDBReturn = {
     new_tree_step_node(node: ModelTreeStepNode): Promise<void>
     */
 
+    get_replay_tree_by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
+
     update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert): Promise<void>
     update_tree_step_node(entity: EntityTreeStepNodeInsert): Promise<void>
     delete_tree_nodes(nodes: EntityTreeStepNodeId[]): Promise<void>;
@@ -693,10 +702,6 @@ export type StudiesDBReturn = {
     put_repeat_study_sections(entity: EntityRepeatStudyInsert): Promise<void>;
     get_or_new_repeat_study(study_id: EntityStudyId): Promise<ModelRepeatStudy>;
     load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]>
-
-  /*  play_replay_by_steps_tree_id(steps_tree_id: EntityStepsTreeId): Promise<ModelTreeReplay> */
-
-
 
     add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert): Promise<void>
     load_repeat_move_attempts(due_move_id: EntityRepeatDueMoveId): Promise<ModelRepeatMoveAttempt[]>
@@ -719,8 +724,8 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
                 sections: []
             }
         },
-        async new_section(study_id: EntityStudyId) { 
-            let entity = new_section_entity(study_id)
+        async new_section(study_id: EntityStudyId, name?: string) { 
+            let entity = new_section_entity(study_id, name)
             await db_new_section(db, entity) 
             return {
                 id: entity.id!,
@@ -728,15 +733,20 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
                 chapters: []
             }
         },
-        async new_chapter(section_id: EntitySectionId) { 
-            return db.transaction('rw', [db.steps_trees, db.play_uci_tree_replays, db.sections, db.chapters], async () => {
+        async new_chapter(section_id: EntitySectionId, name?: string, pgn?: PGN) { 
+            return db.transaction('rw', [db.tree_step_nodes, db.steps_trees, db.play_uci_tree_replays, db.sections, db.chapters], async () => {
+
                 let steps_tree_entity = new_steps_tree_entity()
                 await db_new_steps_tree(db, steps_tree_entity)
+
+                if (pgn) {
+                    await db_new_tree_steps_nodes(db, steps_tree_entity.id!, pgn.flat_steps)
+                }
 
                 let tree_replay_entity = new_tree_replay_entity(steps_tree_entity.id!)
                 await db_new_tree_replay(db, tree_replay_entity)
 
-                let entity = new_chapter_entity(section_id, tree_replay_entity.id!)
+                let entity = new_chapter_entity(section_id, tree_replay_entity.id!, name)
                 await db_new_chapter(db, entity)
                 return {
                     id: entity.id!,
@@ -746,7 +756,7 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
 
         get_chapter_by_id(id: EntityChapterId) {
-            return db_load_chapter_model(db, id)
+            return db_chapter_by_id(db, id)
         },
 
         get_chapters_by_section_id(id: EntitySectionId) {
@@ -787,6 +797,9 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         order_chapters(section_id: EntitySectionId, chapter_id: EntityChapterId, order: number) {
             return db_order_chapters(db, section_id, chapter_id, order)
         },
+        get_replay_tree_by_chapter_id(id: EntityChapterId) {
+            return db_replay_tree_by_chapter_id(db, id)
+        },
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
         },
@@ -805,11 +818,6 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]) {
             return db_load_repeat_due_moves_model(db, repeat_study_id, sections)
         },
-        /*
-        play_replay_by_steps_tree_id(steps_tree_id: EntityStepsTreeId) {
-            return db_play_replay_by_steps_tree_id(db, steps_tree_id)
-        },
-        */
         add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert) {
                 return db_new_repeat_move_attempt(db, entity) 
         },
