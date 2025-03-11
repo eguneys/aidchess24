@@ -14,6 +14,7 @@ type Chapters = {
     create(section_id: EntitySectionId): Promise<ModelChapter>
     delete(model: ModelChapter): Promise<void>
     update_chapter(section_id: EntitySectionId, data: Partial<EntityChapterInsert>): Promise<void>
+    order_chapters(section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
 }
 
 type Studies = {
@@ -28,6 +29,7 @@ type Studies = {
     update(data: Partial<EntityStudyInsert>): Promise<void>
     update_section(data: Partial<EntitySectionInsert>): Promise<void>
     delete_section(id: EntityStudyId, section_id: EntitySectionId): Promise<void>
+    order_sections(study_id: EntityStudyId, section_id: EntitySectionId, order: number): Promise<void>
 }
 
 function createAgentStudies(db: StudiesDBReturn): Studies {
@@ -39,8 +41,7 @@ function createAgentStudies(db: StudiesDBReturn): Studies {
     const get = query((id: EntityStudyId) => db.get_study_by_id(id), 'studies_by_id')
 
     function revalidate_study_id(id: EntityStudyId) {
-        revalidate(get.keyFor(id))
-        revalidate(all.key)
+        revalidate([get.keyFor(id), all.key])
     }
 
     return {
@@ -60,7 +61,7 @@ function createAgentStudies(db: StudiesDBReturn): Studies {
         },
         create_section: async (id: EntitySectionId) => {
             let model = await db.new_section(id)
-            revalidate_study_id(model.id)
+            revalidate_study_id(model.study_id)
             return model
         },
         update: async (data: EntityStudyInsert) => {
@@ -69,12 +70,17 @@ function createAgentStudies(db: StudiesDBReturn): Studies {
         },
         update_section: async (data: EntitySectionInsert) => {
             await db.update_section(data)
-            revalidate_study_id(data.id!)
+            revalidate_study_id(data.study_id!)
         },
         delete_section: async (id: EntityStudyId, section_id: EntitySectionId) => {
             await db.delete_section(section_id)
             revalidate_study_id(id)
         },
+        order_sections: async (study_id: EntityStudyId, section_id: EntitySectionId, order: number) => {
+            await db.order_sections(study_id, section_id, order)
+            revalidate([all.key])
+        }
+
     }
 }
 
@@ -82,26 +88,26 @@ function createAgentChapters(db: StudiesDBReturn): Chapters {
     const by_section_id = query((id: EntitySectionId) => db.get_chapters_by_section_id(id), 'chapters_by_section_id')
     const get = query((id: EntityChapterId) => db.get_chapter_by_id(id), 'chapters_by_id')
 
-
     return {
         by_section_id,
         get,
         create: async (section_id: EntitySectionId) => {
             let chapter = await db.new_chapter(section_id)
-            revalidate(get.keyFor(chapter.id))
-            revalidate(by_section_id.keyFor(chapter.section_id))
+            revalidate([get.keyFor(chapter.id), by_section_id.keyFor(chapter.section_id)])
             return chapter
         },
         delete: async (chapter: ModelChapter) => {
             await db.delete_study(chapter.id)
-            revalidate(get.keyFor(chapter.id))
-            revalidate(by_section_id.keyFor(chapter.section_id))
+            revalidate([get.keyFor(chapter.id), by_section_id.keyFor(chapter.section_id)])
         },
         update_chapter: async (section_id: EntitySectionId, data: EntityChapterInsert) => {
             await db.update_chapter(data)
-            revalidate(get.keyFor(data.id!))
-            revalidate(by_section_id.keyFor(section_id))
+            revalidate([get.keyFor(data.id!), by_section_id.keyFor(section_id)])
         },
+        order_chapters: async (section_id: EntitySectionId, chapter_id: EntityChapterId, order: number) => {
+            await db.order_chapters(section_id, chapter_id, order)
+            revalidate([by_section_id.keyFor(section_id)])
+        }
     }
 }
 

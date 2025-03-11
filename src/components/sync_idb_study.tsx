@@ -13,13 +13,27 @@ async function db_new_study(db: StudiesDB, entity: EntityStudyInsert) {
 }
 
 async function db_new_section(db: StudiesDB, entity: EntitySectionInsert) {
-    entity.order = await db.sections.where('study_id').equals(entity.study_id).count()
-    await db.sections.add(entity)
+    db.transaction('rw', [db.studies, db.sections], async () => {
+
+        let e_study = await db_get_study(db, entity.study_id)
+
+        e_study.section_ids.push(entity.id!)
+        await db_update_study(db, e_study)
+
+        return await db.sections.add(entity)
+    })
 }
 
 async function db_new_chapter(db: StudiesDB, entity: EntityChapterInsert) {
-    entity.order = await db.chapters.where('section_id').equals(entity.section_id).count()
-    await db.chapters.add(entity)
+    await db.transaction('rw', [db.sections, db.chapters], async () => {
+
+        let e_section = await db_get_section(db, entity.section_id)
+
+        e_section.chapter_ids.push(entity.id!)
+        await db_update_section(db, e_section)
+
+        return await db.chapters.add(entity)
+    })
 }
 
 async function db_new_steps_tree(db: StudiesDB, entity: EntityStepsTreeInsert) {
@@ -30,7 +44,36 @@ async function db_new_tree_replay(db: StudiesDB, entity: EntityPlayUciTreeReplay
     await db.play_uci_tree_replays.add(entity)
 }
 
+async function db_get_chapter(db: StudiesDB, id: EntityChapterId) {
+    let res = await db.chapters.get(id)
 
+    if (!res) {
+        throw new EntityNotFoundError("Chapter", id)
+    }
+    return res
+}
+
+
+
+async function db_get_section(db: StudiesDB, id: EntitySectionId) {
+    let res = await db.sections.get(id)
+
+    if (!res) {
+        throw new EntityNotFoundError("Section", id)
+    }
+    return res
+}
+
+
+
+async function db_get_study(db: StudiesDB, id: EntityStudyId) {
+    let res = await db.studies.get(id)
+
+    if (!res) {
+        throw new EntityNotFoundError("Study", id)
+    }
+    return res
+}
 
 async function db_update_study(db: StudiesDB, entity: EntityStudyInsert) {
     await db.studies.update(entity.id!, entity)
@@ -64,6 +107,12 @@ async function db_delete_study(db: StudiesDB, id: EntityStudyId) {
 
 async function db_delete_section(db: StudiesDB, id: EntitySectionId) {
     db.transaction('rw', [db.sections, db.chapters], async () => {
+
+        let section = await db_get_section(db, id)
+        let study = await db_get_study(db, section.study_id)
+        study.section_ids.splice(study.section_ids.indexOf(id), 1)
+        await db_update_study(db, study)
+
         await db.sections.delete(id)
 
         await db_delete_section_rest(db, id)
@@ -80,13 +129,13 @@ async function db_delete_section_rest(db: StudiesDB, id: EntitySectionId) {
 
 async function db_delete_chapter(db: StudiesDB, id: EntityChapterId) {
     db.transaction('rw', [db.chapters], async () => {
-        let e_chapter = await db.chapters.where('id').equals(id).first()
-        if (!e_chapter) {
-            throw new EntityNotFoundError("Chapter", id)
-        }
+        let chapter = await db_get_chapter(db, id)
+        let section = await db_get_section(db, chapter.section_id)
+        section.chapter_ids.splice(section.chapter_ids.indexOf(id), 1)
+        await db_update_section(db, section)
 
         await db.chapters.delete(id)
-        await db_delete_chapter_rest(db, e_chapter)
+        await db_delete_chapter_rest(db, chapter)
     })
 }
 
@@ -108,8 +157,9 @@ async function db_update_tree_step_node(db: StudiesDB, entity: EntityTreeStepNod
 }
 
 async function db_chapters_by_section_id(db: StudiesDB, section_id: EntitySectionId) {
+    let section = await db_get_section(db, section_id)
     let res = await db.chapters.where('section_id').equals(section_id).toArray()
-    return res
+    return section.chapter_ids.map(_ => res.find(c => c.id === _)!)
 }
 
 async function db_load_play_replay_model(db: StudiesDB, id: EntityPlayUciTreeReplayId): Promise<ModelTreeReplay> {
@@ -193,7 +243,6 @@ async function db_load_replay_tree_model(db: StudiesDB, id: EntityPlayUciTreeRep
 async function db_studies_model_by_predicate(db: StudiesDB, predicate?: StudiesPredicate): Promise<ModelStudy[]> {
     let res = await (predicate ? db.studies.where('predicate').equals(predicate).toArray() : db.studies.toArray())
 
-
     return Promise.all(res.map(_ => db_load_study_model(db, _.id, 5)))
 }
 
@@ -229,12 +278,44 @@ async function db_load_study_model(db: StudiesDB, id: EntityStudyId, limit_chapt
         .equals(e_study.id)
         .toArray()
 
-    let sections = await db_load_sections_model(db, e_sections, limit_chapters)
+    let u_sections = await db_load_sections_model(db, e_sections, limit_chapters)
+
+    let sections = e_study.section_ids.map(id => u_sections.find(_ => _.id === id)!)
 
     return {
         ...e_study,
         sections
     }
+}
+
+async function db_order_sections(db: StudiesDB, study_id: EntityStudyId, section_id: EntitySectionId, new_order: number) {
+    let study = await db_get_study(db, study_id)
+
+    let old_order = study.section_ids.indexOf(section_id)
+
+    if (old_order === -1) {
+        throw new Error("Section not found in study.section_ids " + section_id)
+    }
+
+    study.section_ids.splice(old_order, 1)
+    study.section_ids.splice(new_order, 0, section_id)
+
+    await db_update_study(db, study)
+}
+
+async function db_order_chapters(db: StudiesDB, section_id: EntitySectionId, chapter_id: EntityChapterId, new_order: number) {
+    let section = await db_get_section(db, section_id)
+
+    let old_order = section.chapter_ids.indexOf(chapter_id)
+
+    if (old_order === -1) {
+        throw new Error("Chapter not found in section.chapter_ids " + chapter_id)
+    }
+
+    section.chapter_ids.splice(old_order, 1)
+    section.chapter_ids.splice(new_order, 0, chapter_id)
+
+    await db_update_section(db, section)
 }
 
 async function db_delete_tree_nodes(db: StudiesDB, node_ids: EntityTreeStepNodeId[]) {
@@ -350,7 +431,8 @@ function new_study_entity(): EntityStudyInsert {
         id: gen_id8(),
         name: 'New Study',
         is_edits_disabled: false,
-        predicate: 'mine'
+        predicate: 'mine',
+        section_ids: []
     }
 }
 
@@ -359,7 +441,7 @@ function new_section_entity(study_id: EntityStudyId): EntitySectionInsert {
         id: gen_id8(),
         study_id,
         name: 'New Section',
-        order: 0
+        chapter_ids: []
     }
 }
 
@@ -368,8 +450,7 @@ function new_chapter_entity(section_id: EntitySectionId, tree_replay_id: EntityP
         id: gen_id8(),
         tree_replay_id,
         section_id,
-        name: 'New Chapter',
-        order: 0
+        name: 'New Chapter'
     }
 }
 
@@ -449,20 +530,20 @@ export class EntityStudy extends Entity<StudiesDB> {
     is_edits_disabled!: boolean
     predicate!: StudiesPredicate
     selected_section_id?: EntitySectionId
+    section_ids!: EntitySectionId[]
 }
 export class EntitySection extends Entity<StudiesDB> {
     id!: EntitySectionId
     study_id!: EntityStudyId
     name!: string
-    order!: number
     selected_chapter_id?: EntityChapterId
+    chapter_ids!: EntityChapterId[]
 }
 export class EntityChapter extends Entity<StudiesDB> {
     id!: EntityChapterId
     section_id!: EntitySectionId
     tree_replay_id!: EntityPlayUciTreeReplayId
     name!: string
-    order!: number
 }
 
 export type EntityStepsTreeId = string
@@ -592,6 +673,9 @@ export type StudiesDBReturn = {
     update_section(section: EntitySectionInsert): Promise<void>
     update_chapter(chapter: EntityChapterInsert): Promise<void>
 
+    order_sections(study_id: EntityStudyId, section_id: EntitySectionId, order: number): Promise<void>
+    order_chapters(section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
+
     delete_study(id: EntityStudyId): Promise<void>
     delete_section(section: EntitySectionId): Promise<void>
     delete_chapter(chapter: EntityChapterId): Promise<void>
@@ -605,9 +689,6 @@ export type StudiesDBReturn = {
     update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert): Promise<void>
     update_tree_step_node(entity: EntityTreeStepNodeInsert): Promise<void>
     delete_tree_nodes(nodes: EntityTreeStepNodeId[]): Promise<void>;
-
-    new_section_from_model(model: ModelSection): Promise<void>;
-    new_chapter_from_model(model: ModelChapter): Promise<void>;
 
     put_repeat_study_sections(entity: EntityRepeatStudyInsert): Promise<void>;
     get_or_new_repeat_study(study_id: EntityStudyId): Promise<ModelRepeatStudy>;
@@ -648,7 +729,7 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
             }
         },
         async new_chapter(section_id: EntitySectionId) { 
-            return db.transaction('rw', [db.steps_trees, db.play_uci_tree_replays, db.chapters], async () => {
+            return db.transaction('rw', [db.steps_trees, db.play_uci_tree_replays, db.sections, db.chapters], async () => {
                 let steps_tree_entity = new_steps_tree_entity()
                 await db_new_steps_tree(db, steps_tree_entity)
 
@@ -700,7 +781,12 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         delete_study(id: EntityStudyId) {
             return db_delete_study(db, id)
         },
-
+        order_sections(study_id: EntityStudyId, section_id: EntitySectionId, order: number) {
+            return db_order_sections(db, study_id, section_id, order)
+        },
+        order_chapters(section_id: EntitySectionId, chapter_id: EntityChapterId, order: number) {
+            return db_order_chapters(db, section_id, chapter_id, order)
+        },
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
         },
@@ -709,12 +795,6 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         delete_tree_nodes(node_ids: EntityTreeStepNodeId[]) {
             return db_delete_tree_nodes(db, node_ids)
-        },
-        new_section_from_model(model: ModelSection): Promise<void> {
-            return db_new_section(db, model)
-        },
-        new_chapter_from_model(entity: ModelChapter): Promise<void> {
-            return db_new_chapter(db, entity)
         },
         put_repeat_study_sections(entity: EntityRepeatStudyInsert) {
             return db_put_repeat_study(db, entity)
@@ -753,6 +833,3 @@ class EntityNotFoundError extends Error {
         super(`DB ${entity}${id?(' by id ' + id) : ''} not found.`)
     }
 }
-
-
-export const section_sort_by_order = (a: ModelSection, b: ModelSection) => a.order - b.order

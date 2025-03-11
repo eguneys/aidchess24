@@ -42,7 +42,7 @@ export function EditStudyComponent(props: { study: ModelStudy, on_update_study: 
     </>)
 }
 
-export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void }) {
+export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void, on_order_chapter: (order: number) => void }) {
 
     const [store] = useStore()
 
@@ -63,7 +63,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: 
 
     const on_order_changed = (value: string) => {
         let order = parseInt(value)
-        props.on_edit_chapter({ id: props.chapter.id, order })
+        props.on_order_chapter(order)
     }
 
     const on_delete_chapter = () => {
@@ -95,7 +95,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: 
     </>)
 }
 
-export function EditSectionComponent(props: { section: ModelSection, i_section: number, nb_sections: number, on_delete_section: () => void, on_edit_section: (data: Partial<EntitySectionInsert>) => void, on_import_pgns: (pgns: PGN[], section_name: string) => void }) {
+export function EditSectionComponent(props: { section: ModelSection, i_section: number, nb_sections: number, on_delete_section: () => void, on_edit_section: (data: Partial<EntitySectionInsert>) => void, on_import_pgns: (pgns: PGN[], section_name: string) => void , on_order_section: (order: number) => void}) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -114,7 +114,7 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
 
     const on_order_changed = (value: string) => {
         let order = SECTION_LETTERS.indexOf(value)
-        props.on_edit_section({ id: props.section.id, order })
+        props.on_order_section(order)
     }
 
     const on_delete_section = () => {

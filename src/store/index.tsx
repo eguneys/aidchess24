@@ -18,13 +18,15 @@ export type StoreActions = {
     create_section(study_id: EntityStudyId): Promise<ModelSection>
     update_section(study_id: EntityStudyId, section: Partial<ModelSection>): Promise<void>
     delete_section(study_id: EntityStudyId, id: EntitySectionId): Promise<void>
+    order_sections(study_id: EntityStudyId, section_id: EntitySectionId, order: number): Promise<void>
 
 
     load_chapters(section_id: EntitySectionId): Promise<void>
     load_chapter(chapter_id: EntityChapterId): Promise<void>
-    create_chapter(section_id: EntitySectionId): Promise<ModelChapter>
+    create_chapter(study_id: EntityStudyId, section_id: EntitySectionId): Promise<ModelChapter>
     update_chapter(study_id: EntityStudyId, section_id: EntitySectionId, chapter: Partial<EntityChapterInsert>): Promise<EntityChapter>
     delete_chapter(id: EntityChapterId): Promise<void>
+    order_chapters(study_id: EntityStudyId, section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
 }
 
 export type StoreState = {

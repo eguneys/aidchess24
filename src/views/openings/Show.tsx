@@ -33,11 +33,18 @@ type ShowComputedPropsOpStudy = {
 
 type ShowComputedProps = ShowComputedPropsOpStudy & {
     study: ModelStudy
+    sections: ModelSection[]
+    chapters: ModelChapter[]
 }
 
 function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
 
     let study = createMemo(() => store.studies[study_id])
+
+    let sections = createMemo(() => {
+        let ss = study()?.sections
+        return study()?.section_ids.map(id => ss.find(_ => _.id === id))
+    })
 
     let selected_section = createMemo(() => {
         let s = study()
@@ -48,14 +55,22 @@ function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
         return s?.sections.find(_ => _.id === selected_section_id)
     })
 
+    let chapters = createMemo(() => {
+        let section = selected_section()
+        if (!section) {
+            return undefined
+        }
+
+        return section.chapter_ids.map(id => store.chapters.find(_ => _.id === id)!).filter(Boolean)
+    })
+
     let selected_chapter = createMemo(() => {
         let section = selected_section()
         let selected_chapter_id = section?.selected_chapter_id
         if (!selected_chapter_id) {
             return undefined
         }
-
-        return store.chapters.find(_ => _.id === selected_chapter_id)
+        return chapters()?.find(_ => _.id === selected_chapter_id)
     })
 
     return {
@@ -67,6 +82,12 @@ function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
         },
         get selected_chapter() {
             return selected_chapter()
+        },
+        get sections() {
+            return sections()
+        },
+        get chapters() {
+            return chapters()
         }
     }
 
@@ -578,9 +599,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         let s_chapter: ModelChapter | undefined = undefined
         let s_section: ModelSection | undefined = section
 
-        let i_order = props.study.sections.length
+        let i_order = props.sections.length
         for (section_name of Object.keys(sections)) {
-
             if (!section) {
                 /*
                 section = await db.new_section_with_name(props.study.id, section_name, i_order++)
@@ -645,8 +665,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     }
 
 
-    const get_i_section = (section: ModelSection) => props.study.sections.indexOf(section)
-    const get_i_chapter = (chapter: ModelChapter) => store.chapters.indexOf(chapter)
+    const get_i_section = (section: ModelSection) => props.sections.indexOf(section)
+    const get_i_chapter = (chapter: ModelChapter) => props.chapters.indexOf(chapter)
 
     const [, {
         update_section,
@@ -655,6 +675,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         delete_chapter,
         update_study,
         delete_study,
+        order_sections,
+        order_chapters,
     }] = useStore()
 
     const on_edit_section = update_section
@@ -663,6 +685,16 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     const on_delete_chapter = delete_chapter
     const on_update_study = update_study
     const on_delete_study = delete_study
+
+
+    const on_order_section = (section: ModelSection, order: number) => {
+        order_sections(section.study_id, section.id, order)
+    }
+    const on_order_chapter = (chapter: ModelChapter, order: number) => {
+        order_chapters(props.study.id, chapter.section_id, chapter.id, order)
+    }
+
+
 
 
     return (<>
@@ -700,12 +732,12 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
-                    <EditSectionComponent section={section()} i_section={get_i_section(section())} nb_sections={props.study.sections.length} on_delete_section={() => on_delete_section(props.study.id, section().id)} on_edit_section={_ => on_edit_section(props.study.id, _)} on_import_pgns={on_import_pgns} />
+                    <EditSectionComponent section={section()} i_section={get_i_section(section())} nb_sections={props.sections.length} on_delete_section={() => on_delete_section(props.study.id, section().id)} on_edit_section={_ => on_edit_section(props.study.id, _)} on_order_section={_ => on_order_section(section(), _)} on_import_pgns={on_import_pgns} />
                 </DialogComponent>
             }</Show>
             <Show when={edit_chapter_dialog()}>{ (chapter) => 
                 <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(undefined)}>
-                    <EditChapterComponent chapter={chapter()} i_chapter={get_i_chapter(chapter())} on_edit_chapter={_ => on_edit_chapter(props.study.id, chapter().section_id, _)} on_delete_chapter={() => on_delete_chapter(chapter().id)}/>
+                    <EditChapterComponent chapter={chapter()} i_chapter={get_i_chapter(chapter())} on_edit_chapter={_ => on_edit_chapter(props.study.id, chapter().section_id, _)} on_delete_chapter={() => on_delete_chapter(chapter().id)} on_order_chapter={_ => on_order_chapter(chapter(), _)}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_study_dialog()}>
@@ -761,14 +793,14 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
             </div>
         </div>
         <div class='list'>
-            <For each={props.study.sections} fallback={
+            <For each={props.sections} fallback={
                 <NoSections />
             }>{(section, i) =>
                 <Show when={section === props.selected_section} fallback={
                     <SectionCollapsedComponent is_edits_disabled={props.is_edits_disabled} section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section.id)} on_edit={() => props.on_edit_section(section)}/>
                 }>
                     <SectionComponent 
-                                study={props.study}
+                                {...props}
                                 section={section} 
                                 is_edits_disabled={props.is_edits_disabled} 
                                 nth={get_letter_nth(i())} 
@@ -789,22 +821,16 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
 
 function SectionComponent(props: ShowComputedProps & { nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit: () => void, on_edit_chapter: (chapter: ModelChapter) => void }) {
 
-    let [store,{ load_chapters, create_chapter, update_section }] = useStore()
+    let [,{ create_chapter, update_section }] = useStore()
 
     const on_new_chapter = async () => {
-        let chapter = await create_chapter(props.section.id)
-        await load_chapters(props.section.id)
+        let chapter = await create_chapter(props.study.id, props.section.id)
         set_selected_chapter(chapter.id)
     }
 
 
     const set_selected_chapter = (selected_chapter_id: EntityChapterId) => 
         update_section(props.study.id, {id: props.section.id, selected_chapter_id })
-
-
-    const chapters_for_section = createMemo(() =>
-        store.chapters.filter(_ => _.section_id === props.section.id)
-    )
 
     return (<>
         <div class='section active'>
@@ -817,7 +843,7 @@ function SectionComponent(props: ShowComputedProps & { nth: string, section: Mod
             <div class='chapters-list'>
 
                 <div class='list'>
-                    <For each={chapters_for_section()} fallback={
+                    <For each={props.chapters} fallback={
                         <NoChapters />
                     }>{(chapter, i) =>
                         <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={props.selected_chapter===chapter} on_selected={() => set_selected_chapter(chapter.id)}  on_edit={() => props.on_edit_chapter(chapter)}/>

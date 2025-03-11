@@ -1,7 +1,7 @@
 import { SetStoreFunction } from "solid-js/store";
 import type { Agent } from "./createAgent";
-import { type StoreActions, type StoreState } from './'
-import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, section_sort_by_order, StudiesPredicate } from "../components/sync_idb_study";
+import { StoreProvider, type StoreActions, type StoreState } from './'
+import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
 import { batch, createSignal } from "solid-js";
 import { createAsync } from "@solidjs/router";
 
@@ -79,7 +79,6 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
             await agent.Studies.update_section(data)
             batch(() => {
                 setState("studies", study_id, "sections", _ => _.id === data.id, data)
-                setState("studies", study_id, "sections", _ => [..._.sort(section_sort_by_order)])
             })
         },
         async create_section(study_id: EntityStudyId) {
@@ -87,9 +86,13 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
 
             let study = state.studies[study_id]
             if (study) {
-                setState("studies", study_id, (study) => ({
-                    sections: [...study.sections, section].sort(section_sort_by_order)
-                }))
+                batch(() => {
+                    setState("studies", study_id, (study) => ({
+                        sections: [...study.sections, section]
+                    }))
+
+                    setState("studies", study_id, "section_ids", _ => [..._, section.id])
+                })
             }
             return section
         },
@@ -99,10 +102,21 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
             let study = state.studies[study_id]
             if (study) {
                 setState("studies", study_id, (study) => ({
-                    sections: study.sections.filter(_ => _.id !== id).sort(section_sort_by_order)
+                    sections: study.sections.filter(_ => _.id !== id)
                 }))
             }
         },
+        async order_sections(study_id: EntityStudyId, section_id: EntitySectionId, new_order: number) {
+            await agent.Studies.order_sections(study_id, section_id, new_order)
+
+            setState("studies", study_id, "section_ids", section_ids => {
+                let old_order = section_ids.indexOf(section_id)
+                section_ids.splice(old_order, 1)
+                section_ids.splice(new_order, 0, section_id)
+
+                return [...section_ids]
+            })
+        }
     })
 
     return studies
