@@ -1,4 +1,4 @@
-import { Accessor, createContext, useContext } from "solid-js";
+import { Accessor, batch, createContext, useContext } from "solid-js";
 import { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createAgent } from "./createAgent";
@@ -6,9 +6,11 @@ import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, E
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
-import { FEN } from "../components/step_types";
-import { INITIAL_FEN } from "chessops/fen";
+import { FEN, fen_pos, Path, SAN, UCI } from "../components/step_types";
+import { INITIAL_FEN, makeFen } from "chessops/fen";
 import { PGN } from "../components2/parse_pgn";
+import { parseUci } from "chessops";
+import { makeSan } from "chessops/san";
 
 
 export type StoreActions = {
@@ -29,6 +31,16 @@ export type StoreActions = {
     update_chapter(study_id: EntityStudyId, section_id: EntitySectionId, chapter: Partial<EntityChapterInsert>): Promise<EntityChapter>
     delete_chapter(id: EntityChapterId): Promise<void>
     order_chapters(study_id: EntityStudyId, section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
+
+    load_replay_tree(chapter_id: EntityChapterId): Promise<void>
+    goto_path(path: Path): void
+    goto_path_if_can(path: Path | undefined): void 
+    delete_at_and_after_path(path: Path): void
+    add_child_san_to_current_path(san: SAN): void
+
+    set_fen(fen: FEN): void
+    set_last_move(last_move: [UCI, SAN] | undefined): void
+    play_uci(uci: UCI): SAN
 }
 
 export type StoreState = {
@@ -36,10 +48,10 @@ export type StoreState = {
     chapters: ModelChapter[]
     replay_tree: ModelReplayTree
     play_fen: FEN
+    last_move: [UCI, SAN] | undefined
 }
 
-export type StoreComputed = {
-}
+
 
 export type Store = [StoreState, StoreActions]
 
@@ -62,6 +74,7 @@ export function StoreProvider(props: { children: JSX.Element }) {
             return replay_tree()
         },
         play_fen: INITIAL_FEN,
+        last_move: undefined
     }),
     actions: Partial<StoreActions> = {},
     store: Store = [state, actions as StoreActions],
@@ -70,6 +83,39 @@ export function StoreProvider(props: { children: JSX.Element }) {
     studies = createStudies(agent, actions, state, setState)
     chapters = createChapters(agent, actions, state, setState)
     replay_tree = createReplayTree(agent, actions, state, setState)
+
+    const set_fen = (fen: FEN) => {
+        setState("play_fen", fen)
+    }
+    const set_last_move = (last_move: [UCI, SAN] | undefined) => {
+        setState('last_move', last_move)
+    }
+
+    Object.assign(actions, {
+        set_fen,
+        set_last_move,
+        play_uci(uci: UCI) {
+            let position = fen_pos(state.play_fen)
+
+            let move = parseUci(uci)!
+
+            let san = makeSan(position, move)
+
+            position.play(move)
+
+
+            batch(() => {
+                set_last_move([uci, san])
+                set_fen(makeFen(position.toSetup()))
+
+                if (uci.length === 5) {
+                    //set_promotion(dest)
+                }
+            })
+
+            return san
+        }
+    })
 
     return (<StoreContext.Provider value={store}>
         {props.children}

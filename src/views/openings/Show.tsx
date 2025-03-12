@@ -3,7 +3,7 @@ import { useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components/PlayUciComponent"
 import { DialogComponent } from "../../components/DialogComponent"
-import { FEN, glyph_to_nag, nag_to_glyph, Path, Step } from "../../components/step_types"
+import { FEN, fen_pos, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../components/step_types"
 import { annotationShapes } from "../../annotationShapes"
 import { StoreState, useStore } from "../../store"
 import { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../components/sync_idb_study"
@@ -12,6 +12,11 @@ import { get_letter_nth } from "../../components/hard_limits"
 import '../../components/StudyComponent.scss'
 import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "../../components2/EditStudyComponent"
 import { PGN } from "../../components2/parse_pgn"
+import { createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
+import { PlayUciBoard } from "../../components2/PlayUciBoard"
+import { INITIAL_FEN } from "chessops/fen"
+import { Key } from "chessground/types"
+import { parseSquare } from "chessops"
 
 export default () => {
 
@@ -95,12 +100,17 @@ function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
 
 function ShowComponent(props: ShowComputedPropsOpStudy) {
 
-    const [, { load_chapter, load_chapters }] = useStore()
+    const [, { load_replay_tree, load_chapter, load_chapters }] = useStore()
 
     const [tab, set_tab] = createSignal('show')
 
     createEffect(on(() => props.selected_section, (section) => section && load_chapters(section.id)))
-    createEffect(on(() => props.selected_chapter, (chapter) => chapter && load_chapter(chapter.id)))
+    createEffect(on(() => props.selected_chapter, (chapter) => {
+        if (chapter) {
+            load_chapter(chapter.id)
+            load_replay_tree(chapter.id)
+        }
+    }))
 
     const props_with_study = (study: ModelStudy): ShowComputedProps => ({...props, study } as ShowComputedProps)
 
@@ -429,18 +439,32 @@ function PlayDeathmatch() {
 function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void }) {
 
     const [store, {
+        play_uci,
+        set_fen,
+        set_last_move,
         goto_path,
-        replay_tree_delete_at_and_after_path,
-        replay_tree_goto_next_if_can,
-        replay_tree_goto_prev_if_can,
-        tree_step_node_set_nags
+        goto_path_if_can,
+        delete_at_and_after_path,
+        tree_step_node_set_nags,
+        add_child_san_to_current_path
     }] = useStore()
 
-    let [context_menu_open, set_context_menu_open] = createSignal()
-    let [_annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal()
+    let c_props = createReplayTreeComputed(store)
+
+    let [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>()
+    let [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)
     let [edit_study_dialog, set_edit_study_dialog] = createSignal(false)
     let [edit_section_dialog, set_edit_section_dialog] = createSignal<ModelSection>()
     let [edit_chapter_dialog, set_edit_chapter_dialog] = createSignal<ModelChapter>()
+
+
+    const context_menu_step = createMemo(() => {
+        let c_path = context_menu_open()
+        if (c_path) {
+            return find_at_path(store.replay_tree.steps_tree, c_path)
+        }
+        return undefined
+    })
 
     onMount(() => {
         const on_click = () => {
@@ -484,7 +508,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     }
 
     const on_delete_move = async (path: Path) => {
-        replay_tree_delete_at_and_after_path(path)
+        delete_at_and_after_path(path)
         set_context_menu_open(undefined)
     }
 
@@ -538,19 +562,19 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
 
     let annotation = createMemo(() => {
-        let step = store.replay_tree_cursor_path_step
+        let step = c_props.step_at_cursor_path
 
         if (!step) {
             return []
         }
 
-        let nag = step.nags[0]
+        let nag = step.step.nags?.[0]
 
         if (!nag) {
             return []
         }
 
-        return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
+        return annotationShapes(step.step.uci, step.step.san, nag_to_glyph(nag))
     })
 
     const chapter_title_or_detached = createMemo(() => {
@@ -563,8 +587,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
          edit_section_dialog() !== undefined || 
          edit_chapter_dialog() !== undefined
     })
-
-
 
 
 
@@ -650,11 +672,12 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         set_context_menu_open(undefined)
     }
 
+
     const set_on_wheel = (i: number) => {
         if (i > 0) {
-            replay_tree_goto_next_if_can()
+            goto_path_if_can(c_props.get_next_path)
         } else {
-            replay_tree_goto_prev_if_can()
+            goto_path_if_can(c_props.get_prev_path)
         }
     }
 
@@ -688,12 +711,43 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         order_chapters(props.study.id, chapter.section_id, chapter.id, order)
     }
 
+    createEffect(on(() => c_props.step_at_cursor_path, (step) => {
+        if (!step) {
+            set_last_move(undefined)
+            set_fen(INITIAL_FEN)
+            return
+        }
+        set_fen(step.step.fen)
+        set_last_move([step.step.uci, step.step.san])
+    }))
+
+    const on_play_orig_key = (orig: Key, dest: Key) => {
+
+        const pos = () => fen_pos(store.play_fen)
+
+        let position = pos()
+        let turn_color = position.turn
+
+        let piece = position.board.get(parseSquare(orig)!)!
+
+        let uci = orig + dest
+        if (piece.role === 'pawn' &&
+            ((dest[1] === '8' && turn_color === 'white') || (dest[1] === '1' && turn_color === 'black'))) {
+            uci += 'q'
+        }
+
+        let san = play_uci(uci)
+
+        add_child_san_to_current_path(san)
+    }
+
     return (<>
         <main ref={$el_ref!} class='openings-show study'>
             <div class='details-wrap'>
                 <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
+                <PlayUciBoard movable={true} color={'white'} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
                 {/*
                 <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
                 */}
@@ -702,6 +756,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <div class='header'>
                     {chapter_title_or_detached()}
                 </div>
+                <ReplayTreeComponent on_context_menu={on_tree_context_menu}/>
                 {/*
                 <PlayUciTreeReplayComponent
                 play_replay={play_replay()} 
@@ -736,15 +791,14 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                     <EditStudyComponent study={props.study} on_delete_study={() => on_delete_study(props.study.id)} on_update_study={on_update_study}/>
                 </DialogComponent>
             </Show>
-            {/*
             <Show when={context_menu_step()}>{ step => 
             <>
-                <MoveContextMenuComponent step={step()} ref={$el_context_menu!}>
+                <MoveContextMenuComponent step={step().step} ref={$el_context_menu!}>
                     <a onClick={() => on_analyze_lichess(step().step)} class='analyze' data-icon=''>Analyze on lichess</a>
-                    <a onClick={() => on_copy_variation_pgn(step().path)} class='copy-line' data-icon=''>Copy variation PGN</a>
+                    <a onClick={() => on_copy_variation_pgn(step().step.path)} class='copy-line' data-icon=''>Copy variation PGN</a>
                     <Show when={!props.study.is_edits_disabled}>
                        <a ref={$el_sub_menu_anchor!} onMouseLeave={() => delay_set_annotate_sub_menu_open(false)} onMouseEnter={() => delay_set_annotate_sub_menu_open(true)} class='annotate has-sub-menu' data-icon=""><i class='glyph-icon'></i>Annotate Glyph</a>
-                       <a onClick={() => on_delete_move(step().path)} class='delete' data-icon=''>Delete after this move</a>
+                       <a onClick={() => on_delete_move(step().step.path)} class='delete' data-icon=''>Delete after this move</a>
                     </Show>
                 </MoveContextMenuComponent>
                 <Show when={annotate_sub_menu_open()}>
@@ -756,7 +810,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 </Show>
                 </>
             }</Show>
-            */}
         </main>
     </>)
 }

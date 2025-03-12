@@ -1,6 +1,6 @@
 import Dexie, { Entity, EntityTable, InsertType } from "dexie";
 import { createContext, JSX } from "solid-js";
-import { Path, Step } from "./step_types";
+import { parent_path, Path, Step } from "./step_types";
 import { Card } from "ts-fsrs";
 import { RepeatAttemptResult } from "./repeat_types";
 import { PGN } from "../components2/parse_pgn";
@@ -198,10 +198,10 @@ async function db_replay_tree_by_id(db: StudiesDB, id: EntityPlayUciTreeReplayId
 
 
     nodes.forEach(node => {
-        let res = flat_nodes[node.step.path]
+        let res = flat_nodes[parent_path(node.step.path)]
         if (res === undefined) {
             res = []
-            flat_nodes[node.step.path] = res
+            flat_nodes[parent_path(node.step.path)] = res
         }
 
         if (node.order !== undefined) {
@@ -298,6 +298,18 @@ async function db_order_chapters(db: StudiesDB, section_id: EntitySectionId, cha
     section.chapter_ids.splice(new_order, 0, chapter_id)
 
     await db_update_section(db, section)
+}
+
+
+async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId, step: Step, order?: number) {
+    let node = {
+        id: gen_id8(),
+        step,
+        tree_id,
+        order
+    }
+    await db.tree_step_nodes.add(node)
+    return node
 }
 
 async function db_new_tree_steps_nodes(db: StudiesDB, tree_id: EntityStepsTreeId, steps: Record<Path, Step[]>) {
@@ -690,8 +702,9 @@ export type StudiesDBReturn = {
     /*
     new_play_uci_tree_replay(): Promise<ModelTreeReplay>
     new_steps_tree(): Promise<ModelStepsTree>
-    new_tree_step_node(node: ModelTreeStepNode): Promise<void>
     */
+
+    new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, order?: number): Promise<ModelTreeStepNode>
 
     get_replay_tree_by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
 
@@ -803,12 +816,16 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
         },
+        async new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, order?: number) {
+            return await db_new_tree_steps_node(db, tree_id, step, order)
+        },
         update_tree_step_node(entity: EntityTreeStepNode) {
             return db_update_tree_step_node(db, entity)
         },
         delete_tree_nodes(node_ids: EntityTreeStepNodeId[]) {
             return db_delete_tree_nodes(db, node_ids)
         },
+
         put_repeat_study_sections(entity: EntityRepeatStudyInsert) {
             return db_put_repeat_study(db, entity)
         },

@@ -57,8 +57,11 @@ export function parse_PGNS(pgn: string): PGN[] {
                 flat_steps[base_path] = flat_steps_res
             }
 
+
+            let next_path = base_path.length === 0 ? uci : `${base_path} ${uci}`
+
             flat_steps_res.push({
-                path: base_path,
+                path: next_path,
                 ply: base_ply + 1,
                 before_fen: pos_fen(before_pos),
                 fen: pos_fen(after_pos),
@@ -67,7 +70,6 @@ export function parse_PGNS(pgn: string): PGN[] {
                 nags
             })
 
-            let next_path = base_path.length === 0 ? uci : `${base_path} ${uci}`
 
             child.children.forEach(child => {
                 append_children(child, after_pos, base_ply + 1, next_path)

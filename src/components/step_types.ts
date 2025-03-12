@@ -21,12 +21,68 @@ export type Step = {
     comments?: string
 }
 
+export const parent_path = (path: Path) => path.split(' ').slice(0, -1).join(' ')
+
 export const fen_pos = (fen: FEN) => Chess.fromSetup(parseFen(fen).unwrap()).unwrap()
 export const fen_is_end = (fen: FEN) => fen_pos(fen).isEnd()
 export const fen_turn = (fen: FEN) => fen_pos(fen).turn
 
+export function initial_step_play_san(san: SAN, initial_fen = INITIAL_FEN) {
+    let pos = fen_pos(initial_fen)
 
-export function make_step_and_play(ply: Ply, pos: Position, san: SAN, path: Path, before_uci?: UCI): Step {
+    let move = parseSan(pos, san)!
+
+    let uci = makeUci(move)
+
+    pos.play(move)
+
+    let fen = makeFen(pos.toSetup())
+
+    let path = `${uci}`
+    let ply = 1
+    let before_fen = initial_fen
+    let before_uci = undefined
+
+    return {
+        path,
+        ply,
+        before_fen,
+        fen,
+        before_uci,
+        uci,
+        san
+    }
+}
+
+export function next_step_play_san(step: Step, san: SAN) {
+    let pos = fen_pos(step.fen)
+
+    let move = parseSan(pos, san)!
+
+    let uci = makeUci(move)
+
+    pos.play(move)
+
+    let fen = makeFen(pos.toSetup())
+
+    let path = `${step.path} ${uci}`
+    let ply = step.ply + 1
+    let before_fen = step.fen
+    let before_uci = step.uci
+
+    return {
+        path,
+        ply,
+        before_fen,
+        fen,
+        before_uci,
+        uci,
+        san
+    }
+
+}
+
+ function make_step_and_play(ply: Ply, pos: Position, san: SAN, path: Path, before_uci?: UCI): Step {
     let move = parseSan(pos, san)!
     let uci = makeUci(move)
 

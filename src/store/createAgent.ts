@@ -1,8 +1,9 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
-import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
 import { query, revalidate } from "@solidjs/router";
 import { PGN } from "../components2/parse_pgn";
+import { Step } from "../components/step_types";
 
 export type Agent = {
     Studies: Studies,
@@ -12,6 +13,7 @@ export type Agent = {
 
 type ReplayTree = {
     by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
+    create_node(steps_tree_id: EntityStepsTreeId, step: Step): Promise<ModelTreeStepNode>
 }
 
 type Chapters = {
@@ -121,7 +123,12 @@ function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
     const by_chapter_id = query((id: EntityChapterId) => db.get_replay_tree_by_chapter_id(id), 'replay_tree_by_chapter_id')
 
     return {
-        by_chapter_id
+        by_chapter_id,
+        create_node: async (steps_tree_id: EntityStepsTreeId, step: Step) => {
+            let model = await db.new_tree_step_node(steps_tree_id, step)
+            revalidate(by_chapter_id.key)
+            return model
+        }
     }
 }
 
