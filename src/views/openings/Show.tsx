@@ -1,5 +1,5 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense } from "solid-js"
-import { useParams } from "@solidjs/router"
+import { Navigate, useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components/PlayUciComponent"
 import { DialogComponent } from "../../components/DialogComponent"
@@ -709,7 +709,11 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         set_edit_chapter_dialog(undefined)
     }
     const on_update_study = update_study
-    const on_delete_study = delete_study
+    const navigate = useNavigate()
+    const on_delete_study = async (id: EntityStudyId) => {
+        await delete_study(id)
+        navigate('/openings')
+    }
 
 
     const on_order_section = (section: ModelSection, order: number) => {

@@ -1,9 +1,11 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
 import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayInsert, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
-import { query} from "@solidjs/router";
 import { PGN } from "../components2/parse_pgn";
 import { Step } from "../components/step_types";
+
+// mock query
+const query = (id: any) => id
 
 export type Agent = {
     Studies: Studies,
