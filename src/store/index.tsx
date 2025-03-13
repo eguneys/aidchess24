@@ -6,7 +6,7 @@ import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, E
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
-import { FEN, fen_pos, Path, SAN, UCI } from "../components/step_types";
+import { FEN, fen_pos, NAG, Path, SAN, UCI } from "../components/step_types";
 import { INITIAL_FEN, makeFen } from "chessops/fen";
 import { PGN } from "../components2/parse_pgn";
 import { parseUci } from "chessops";
@@ -32,11 +32,13 @@ export type StoreActions = {
     delete_chapter(id: EntityChapterId): Promise<void>
     order_chapters(study_id: EntityStudyId, section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
 
+    reset_replay_tree(): Promise<void>
     load_replay_tree(chapter_id: EntityChapterId): Promise<void>
     goto_path(path: Path): void
     goto_path_if_can(path: Path | undefined): void 
     delete_at_and_after_path(path: Path): void
     add_child_san_to_current_path(san: SAN): Promise<ModelTreeStepNode>
+    tree_step_node_set_nags(node: ModelTreeStepNode, nags: NAG[]): Promise<void>
 
     set_fen(fen: FEN): void
     set_last_move(last_move: [UCI, SAN] | undefined): void

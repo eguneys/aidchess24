@@ -1,6 +1,6 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
-import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayInsert, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayInsert, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
 import { query} from "@solidjs/router";
 import { PGN } from "../components2/parse_pgn";
 import { Step } from "../components/step_types";
@@ -16,6 +16,7 @@ type ReplayTree = {
     create_node(steps_tree_id: EntityStepsTreeId, step: Step): Promise<ModelTreeStepNode>
 
     update(entity: Partial<EntityPlayUciTreeReplayInsert>): Promise<void>
+    update_tree_node(entity: Partial<EntityTreeStepNodeInsert>): Promise<void>
     delete_tree_node(id: EntityTreeStepNodeId): Promise<void>
 }
 
@@ -119,9 +120,13 @@ function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
         update: async (entity: EntityPlayUciTreeReplayInsert) => {
             await db.update_play_uci_tree_replay(entity)
         },
+        update_tree_node: async (entity: EntityTreeStepNodeInsert) => {
+            await db.update_tree_step_node(entity)
+        },
         delete_tree_node: async (id: EntityTreeStepNodeId) => {
             await db.delete_tree_nodes([id])
         }
+
     }
 }
 

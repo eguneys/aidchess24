@@ -2,7 +2,7 @@ import { Chess, Color, makeUci, Position } from "chessops"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { ChildNode, parsePgn, PgnNodeData } from "chessops/pgn"
 import { parseSan } from "chessops/san"
-import { Path, Ply, Step } from "../components/step_types"
+import { NAG, Path, Ply, Step } from "../components/step_types"
 
 function pos_fen(pos: Position) {
     return makeFen(pos.toSetup())
@@ -17,6 +17,8 @@ export type PGN = {
     black?: string,
     fen?: string,
     flat_steps: Record<Path, Step[]>
+    flat_comments: Record<Path, string[]>
+    flat_nags: Record<Path, NAG[]>
 }
 
 export function parse_PGNS(pgn: string): PGN[] {
@@ -36,6 +38,8 @@ export function parse_PGNS(pgn: string): PGN[] {
         let i_pos = Chess.fromSetup(parseFen(before_fen).unwrap()).unwrap()
 
         let flat_steps: Record<Path, Step[]> = {}
+        let flat_comments: Record<Path, string[]> = {}
+        let flat_nags: Record<Path, NAG[]> = {}
 
         g.moves.children.forEach(child => {
             append_children(child, i_pos, 0, '')
@@ -67,8 +71,11 @@ export function parse_PGNS(pgn: string): PGN[] {
                 fen: pos_fen(after_pos),
                 uci,
                 san,
-                nags
             })
+
+            if (nags) {
+                flat_nags[next_path] = nags
+            }
 
 
             child.children.forEach(child => {
@@ -84,7 +91,9 @@ export function parse_PGNS(pgn: string): PGN[] {
             chapter,
             fen,
             orientation,
-            flat_steps
+            flat_steps,
+            flat_nags,
+            flat_comments
         }
     })
 }

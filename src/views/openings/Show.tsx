@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, ErrorBoundary, For, on, onCleanup, onMount, Show, Suspense } from "solid-js"
+import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense } from "solid-js"
 import { useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components/PlayUciComponent"
@@ -18,7 +18,6 @@ import { INITIAL_FEN } from "chessops/fen"
 import { Key } from "chessground/types"
 import { parseSquare } from "chessops"
 import { fen_turn } from "../../chess_pgn_logic"
-import { unwrap } from "solid-js/store"
 
 export default () => {
 
@@ -102,7 +101,7 @@ function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
 
 function ShowComponent(props: ShowComputedPropsOpStudy) {
 
-    const [, { load_replay_tree, load_chapter, load_chapters }] = useStore()
+    const [, { reset_replay_tree, load_replay_tree, load_chapter, load_chapters }] = useStore()
 
     const [tab, set_tab] = createSignal('show')
 
@@ -111,6 +110,8 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
         if (chapter) {
             load_chapter(chapter.id)
             load_replay_tree(chapter.id)
+        } else {
+            reset_replay_tree()
         }
     }))
 
@@ -528,8 +529,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         }
     }
 
-    const on_annotate_click = (step: ModelTreeStepNode, glyph: string) => {
-        tree_step_node_set_nags(step.id, [glyph_to_nag(glyph)])
+    const on_annotate_click = async (step: ModelTreeStepNode, glyph: string) => {
+        await tree_step_node_set_nags(step, [glyph_to_nag(glyph)])
 
         clearTimeout(i_delay_sub_menu_open)
         set_annotate_sub_menu_open(false)
@@ -568,7 +569,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             return []
         }
 
-        let nag = step.step.nags?.[0]
+        let nag = step.nags?.[0]
 
         if (!nag) {
             return []
@@ -747,9 +748,10 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
 
         let node = await add_child_san_to_current_path(san)
-        console.log(node, unwrap(store.replay_tree.steps_tree.flat_nodes))
         goto_path(node.step.path)
     }
+
+
 
     return (<>
         <main ref={$el_ref!} class='openings-show study'>
@@ -1043,13 +1045,6 @@ function CopiedI(props: { on_copy: boolean }) {
         }>
             <span class='copied'><i data-icon=""></i></span>
         </Show>
-    </>)
-}
-
-function StudyNotFound() {
-
-    return (<>
-        <div class='not-found'>Opening Not Found</div>
     </>)
 }
 

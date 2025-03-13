@@ -401,6 +401,17 @@ export const ReplayTreeComponent = (props: { on_context_menu?: (e: MouseEvent, _
         })
     })
 
+    createEffect(() => {
+        let n = store.replay_tree.steps_tree.flat_nodes
+
+        let node = n[Object.keys(n)[0]]
+
+        if (!node) {
+            return
+        }
+        console.log('yes nags', node, node[0].nags)
+    })
+
     return (<>
     <div class='replay-tree'>
         <div class='moves-wrap'>
@@ -522,7 +533,7 @@ function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collap
         collapsed: props.collapsed,
         ['on-path']: on_path(),
         ['on-path-end']: on_path_end(),
-        [nag_klass[step().nags?.[0] ?? 0]]: step().nags !== undefined
+        [nag_klass[props.node.nags?.[0] ?? 0]]: props.node.nags !== undefined
     }))
 
     return (<>
@@ -534,7 +545,7 @@ function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collap
     onClick={() => { props.on_set_cursor(step().path) } }>
         <Show when={show_index()}><span class='index'>{ply_to_index(step().ply)}</span></Show>
         {step().san}
-            <Show when={step().nags}>{nags =>
+            <Show when={props.node.nags}>{nags =>
                 <Nags nags={nags()} />
             }</Show>
     </div>

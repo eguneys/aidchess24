@@ -17,8 +17,6 @@ export type Step = {
     before_uci?: UCI
     uci: UCI
     san: SAN
-    nags?: NAG[]
-    comments?: string
 }
 
 export const parent_path = (path: Path) => path.split(' ').slice(0, -1).join(' ')
@@ -50,7 +48,7 @@ export function initial_step_play_san(san: SAN, initial_fen = INITIAL_FEN) {
         fen,
         before_uci,
         uci,
-        san
+        san,
     }
 }
 
@@ -77,7 +75,7 @@ export function next_step_play_san(step: Step, san: SAN) {
         fen,
         before_uci,
         uci,
-        san
+        san,
     }
 
 }
@@ -99,7 +97,7 @@ export function next_step_play_san(step: Step, san: SAN) {
         fen,
         before_uci,
         uci,
-        san
+        san,
     }
 }
 

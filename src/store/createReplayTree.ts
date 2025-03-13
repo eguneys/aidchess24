@@ -4,13 +4,14 @@ import { SetStoreFunction } from "solid-js/store";
 import { EntityChapterId, ModelReplayTree, ModelTreeStepNode } from "../components/sync_idb_study";
 import { createAsync } from "@solidjs/router";
 import { Accessor, createSignal } from "solid-js";
-import { initial_step_play_san, next_step_play_san, parent_path, Path, SAN } from "../components/step_types";
+import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "../components/step_types";
 import { find_at_path, find_children_at_path } from "../components2/ReplayTreeComponent";
+import { _alekhine } from "../Chesstree2";
 
 export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>): Accessor<ModelReplayTree> {
 
     const [source, set_source] = createSignal<EntityChapterId>()
-    const default_replay_tree: ModelReplayTree = {
+    const default_replay_tree: Accessor<ModelReplayTree> = () => ({
         id: '',
         steps_tree_id: '',
         cursor_path: '',
@@ -18,15 +19,15 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             id: '',
             flat_nodes: {}
         }
-    }
+    })
 
     const replay_tree = createAsync<ModelReplayTree>(async () => {
         let s = source()
         if (!s) {
-            return default_replay_tree
+            return default_replay_tree()
         }
         return agent.ReplayTree.by_chapter_id(s)
-    }, { initialValue: default_replay_tree })
+    }, { initialValue: default_replay_tree() })
 
     const goto_path = (path: Path) => {
         agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
@@ -34,6 +35,9 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
     }
 
     Object.assign(actions, {
+        reset_replay_tree() {
+            set_source(undefined)
+        },
         load_replay_tree(chapter_id: EntityChapterId) {
             set_source(chapter_id)
         },
@@ -49,6 +53,22 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             agent.ReplayTree.delete_tree_node(d_node.id)
             setState("replay_tree", "steps_tree", "flat_nodes", parent, _ => _.filter(_ => _.step.path !== path))
             goto_path(parent)
+        },
+        async tree_step_node_set_nags(node: ModelTreeStepNode, nags: NAG[]) {
+            let parent = parent_path(node.step.path)
+            let data = {
+                id: node.id,
+                nags
+            }
+            await agent.ReplayTree.update_tree_node(data)
+
+            let pp = state.replay_tree.steps_tree.flat_nodes[parent]
+
+            setState("replay_tree", "steps_tree", "flat_nodes", 
+                parent,
+                pp.indexOf(node),
+                "nags", nags
+            )
         },
         async add_child_san_to_current_path(san: SAN) {
             let path = state.replay_tree.cursor_path
