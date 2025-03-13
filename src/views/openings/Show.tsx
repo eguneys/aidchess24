@@ -17,6 +17,8 @@ import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { INITIAL_FEN } from "chessops/fen"
 import { Key } from "chessground/types"
 import { parseSquare } from "chessops"
+import { fen_turn } from "../../chess_pgn_logic"
+import { unwrap } from "solid-js/store"
 
 export default () => {
 
@@ -66,7 +68,7 @@ function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
             return undefined
         }
 
-        return section.chapter_ids.map(id => store.chapters.find(_ => _.id === id)!).filter(Boolean)
+        return section.chapter_ids.map(id => store.chapters.list.find(_ => _.id === id)!).filter(Boolean)
     })
 
     let selected_chapter = createMemo(() => {
@@ -697,7 +699,10 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     }] = useStore()
 
     const on_edit_section = update_section
-    const on_delete_section = delete_section
+    const on_delete_section = (study_id: EntityStudyId, section_id: EntitySectionId) => {
+        delete_section(study_id, section_id)
+        set_edit_section_dialog(undefined)
+    }
     const on_edit_chapter = update_chapter
     const on_delete_chapter = delete_chapter
     const on_update_study = update_study
@@ -738,8 +743,9 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
         let san = play_uci(uci)
 
+
         let node = await add_child_san_to_current_path(san)
-        console.log('goto path')
+        console.log(node, unwrap(store.replay_tree.steps_tree.flat_nodes))
         goto_path(node.step.path)
     }
 
@@ -749,7 +755,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard movable={true} color={'white'} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
+                <PlayUciBoard movable={true} color={fen_turn(store.play_fen)} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
                 {/*
                 <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
                 */}
@@ -881,7 +887,7 @@ function SectionComponent(props: ShowComputedProps & { nth: string, section: Mod
     return (<>
         <div class='section active'>
             <div class='header'>
-                <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis' title={props.section.name}>{props.section.name}</span></div>
+                <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis' title={props.section?.name}>{props.section?.name}</span></div>
                 <Show when={!props.is_edits_disabled}>
                     <i onClick={() => props.on_edit()} data-icon=""></i>
                 </Show>

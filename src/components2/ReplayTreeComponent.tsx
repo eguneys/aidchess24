@@ -3,6 +3,7 @@ import { ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../component
 import { parent_path, Path, Step } from "../components/step_types"
 import './ReplayTreeComponent.scss'
 import { useStore } from "../store"
+import { unwrap } from "solid-js/store"
 
 function previous_branch_points_at_cursor_path(tree: ModelReplayTree) {
     return previous_branch_points(tree.steps_tree, tree.cursor_path)
@@ -16,6 +17,10 @@ function previous_branch_points(tree: ModelStepsTree, path: Path) {
     let i = find_root_children(tree)
 
     let add_variation = i.length > 1
+
+    if (path === '') {
+        return i
+    }
 
     for (let uci of path.split(' ')) {
 
@@ -432,7 +437,7 @@ function NodesShorten(props: { path: Path, replay_tree: ModelReplayTree, on_set_
                             </>
                 }>
                     <>
-                    <StepNode {...props} cursor_path={props.replay_tree.cursor_path} node={node} />
+                    <StepNode {...props} cursor_path={props.replay_tree.cursor_path} node={node} show_index={true}/>
                     <NodesShorten {...props} path={node.step.path} />
                     </>
                 </Show>
@@ -495,6 +500,6 @@ function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collap
 }
 
 export const ply_to_index = (ply: number) => {
-    let res = Math.floor(ply / 2) + 1
+    let res = Math.ceil(ply / 2)
     return `${res}.` + (ply % 2 === 0 ? '..' : '')
 }

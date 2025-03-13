@@ -3,7 +3,7 @@ import { StoreActions, StoreState } from ".";
 import { SetStoreFunction } from "solid-js/store";
 import { EntityChapterId, ModelReplayTree, ModelTreeStepNode } from "../components/sync_idb_study";
 import { createAsync } from "@solidjs/router";
-import { Accessor, batch, createSignal } from "solid-js";
+import { Accessor, createSignal } from "solid-js";
 import { initial_step_play_san, next_step_play_san, parent_path, Path, SAN } from "../components/step_types";
 import { find_at_path, find_children_at_path } from "../components2/ReplayTreeComponent";
 
@@ -60,16 +60,21 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
                 return existing
             }
 
-            let parent = parent_path(path)
-            let parent_node = find_at_path(state.replay_tree.steps_tree, path)
+            let node = find_at_path(state.replay_tree.steps_tree, path)
 
-            let step = parent_node ? next_step_play_san(parent_node.step, san) : initial_step_play_san(san)
+            let step = node ? next_step_play_san(node.step, san) : initial_step_play_san(san)
 
             let new_node: ModelTreeStepNode = await agent.ReplayTree.create_node(state.replay_tree.steps_tree_id, step)
 
-            setState("replay_tree", "steps_tree", "flat_nodes", parent, _ => {
-                return [..._, new_node]
-            })
+            let nodes = state.replay_tree.steps_tree.flat_nodes[path]
+
+            if (!nodes) {
+                setState("replay_tree", "steps_tree", "flat_nodes", path, [new_node])
+            } else {
+                setState("replay_tree", "steps_tree", "flat_nodes", path, _ => {
+                    return [..._, new_node]
+                })
+            }
 
             return new_node
         }

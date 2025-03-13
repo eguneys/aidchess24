@@ -107,7 +107,7 @@ async function db_delete_study(db: StudiesDB, id: EntityStudyId) {
 }
 
 async function db_delete_section(db: StudiesDB, id: EntitySectionId) {
-    db.transaction('rw', [db.sections, db.chapters], async () => {
+    db.transaction('rw', [db.studies, db.sections, db.chapters], async () => {
 
         let section = await db_get_section(db, id)
         let study = await db_get_study(db, section.study_id)
@@ -129,7 +129,7 @@ async function db_delete_section_rest(db: StudiesDB, id: EntitySectionId) {
 }
 
 async function db_delete_chapter(db: StudiesDB, id: EntityChapterId) {
-    db.transaction('rw', [db.chapters], async () => {
+    db.transaction('rw', [db.play_uci_tree_replays, db.sections, db.chapters], async () => {
         let chapter = await db_get_chapter(db, id)
         let section = await db_get_section(db, chapter.section_id)
         section.chapter_ids.splice(section.chapter_ids.indexOf(id), 1)
@@ -196,7 +196,6 @@ async function db_replay_tree_by_id(db: StudiesDB, id: EntityPlayUciTreeReplayId
 
     let flat_nodes: Record<Path, ModelTreeStepNode[]> = {}
 
-
     nodes.forEach(node => {
         let res = flat_nodes[parent_path(node.step.path)]
         if (res === undefined) {
@@ -204,11 +203,7 @@ async function db_replay_tree_by_id(db: StudiesDB, id: EntityPlayUciTreeReplayId
             flat_nodes[parent_path(node.step.path)] = res
         }
 
-        if (node.order !== undefined) {
-            res[node.order] = node
-        } else {
-            res.push(node)
-        }
+        res.push(node)
     })
 
     let steps_tree: ModelStepsTree = {
@@ -300,13 +295,11 @@ async function db_order_chapters(db: StudiesDB, section_id: EntitySectionId, cha
     await db_update_section(db, section)
 }
 
-
-async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId, step: Step, order?: number) {
+async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId, step: Step) {
     let node = {
         id: gen_id8(),
         step,
         tree_id,
-        order
     }
     await db.tree_step_nodes.add(node)
     return node
@@ -520,7 +513,8 @@ class StudiesDB extends Dexie {
             tree_step_nodes: 'id, tree_id',
             repeat_studies: 'id, study_id',
             repeat_due_moves: 'id, repeat_study_id, tree_step_node_id',
-            repeat_move_attempts: 'id, repeat_due_move_id, created_at'
+            repeat_move_attempts: 'id, repeat_due_move_id, created_at',
+            tree_step_node_order_for_paths: 'id, tree_id, path'
         })
 
 
@@ -576,6 +570,10 @@ export type EntityTreeStepNodeInsert = InsertType<EntityTreeStepNode, "id">
 export type EntityPlayUciTreeReplayInsert = InsertType<EntityPlayUciTreeReplay, "id">
 
 
+export type EntityTreeStepNodeOrderForPathId = string
+
+export type EntityTreeStepNodeOrderForPathInsert = InsertType<EntityTreeStepNodeOrderForPath, "id">
+
 class EntityPlayUciTreeReplay extends Entity<StudiesDB> {
     id!: EntityPlayUciTreeReplayId
     steps_tree_id!: EntityStepsTreeId
@@ -591,7 +589,14 @@ class EntityTreeStepNode extends Entity<StudiesDB> {
     id!: EntityTreeStepNodeId
     tree_id!: EntityStepsTreeId
     step!: Step
-    order?: number
+}
+
+
+class EntityTreeStepNodeOrderForPath extends Entity<StudiesDB> {
+    id!: EntityTreeStepNodeOrderForPathId
+    tree_id!: EntityStepsTreeId
+    path!: Path
+    order!: EntityTreeStepNodeId[]
 }
 
 export type EntityRepeatStudyId = string
@@ -816,8 +821,8 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
         },
-        async new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, order?: number) {
-            return await db_new_tree_steps_node(db, tree_id, step, order)
+        async new_tree_step_node(tree_id: EntityStepsTreeId, step: Step) {
+            return await db_new_tree_steps_node(db, tree_id, step)
         },
         update_tree_step_node(entity: EntityTreeStepNode) {
             return db_update_tree_step_node(db, entity)

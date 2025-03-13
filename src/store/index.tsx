@@ -45,7 +45,7 @@ export type StoreActions = {
 
 export type StoreState = {
     studies: Record<EntityStudyId, ModelStudy>
-    chapters: ModelChapter[]
+    chapters: { list: ModelChapter[] }
     replay_tree: ModelReplayTree
     play_fen: FEN
     last_move: [UCI, SAN] | undefined
@@ -60,7 +60,7 @@ const StoreContext = createContext<Store>()
 export function StoreProvider(props: { children: JSX.Element }) {
 
     let studies: Accessor<Record<EntityStudyId, ModelStudy>>,
-    chapters: Accessor<ModelChapter[]>,
+    chapters: Accessor<{ list: ModelChapter[] }>,
     replay_tree: Accessor<ModelReplayTree>
 
     let [state, setState] = createStore<StoreState>({

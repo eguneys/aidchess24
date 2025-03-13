@@ -84,27 +84,26 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
         async create_section(study_id: EntityStudyId, name?: string) {
             const section = await agent.Studies.create_section(study_id, name)
 
-            let study = state.studies[study_id]
-            if (study) {
-                batch(() => {
-                    setState("studies", study_id, (study) => ({
-                        sections: [...study.sections, section]
-                    }))
+            batch(() => {
+                setState("studies", study_id, (study) => ({
+                    sections: [...study.sections, section]
+                }))
 
-                    setState("studies", study_id, "section_ids", _ => [..._, section.id])
-                })
-            }
+                setState("studies", study_id, "section_ids", _ => [..._, section.id])
+            })
             return section
         },
         async delete_section(study_id: EntityStudyId, id: EntitySectionId) {
             await agent.Studies.delete_section(study_id, id)
 
-            let study = state.studies[study_id]
-            if (study) {
+            batch(() => {
+
+                setState("studies", study_id, "section_ids", _ => _.filter(_ => _ !== id))
+
                 setState("studies", study_id, (study) => ({
                     sections: study.sections.filter(_ => _.id !== id)
                 }))
-            }
+            })
         },
         async order_sections(study_id: EntityStudyId, section_id: EntitySectionId, new_order: number) {
             await agent.Studies.order_sections(study_id, section_id, new_order)

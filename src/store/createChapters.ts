@@ -1,4 +1,4 @@
-import { SetStoreFunction } from "solid-js/store";
+import { SetStoreFunction, unwrap } from "solid-js/store";
 import { StoreActions, StoreState } from ".";
 import type { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
@@ -11,27 +11,28 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
     type Source = ["chapters", EntitySectionId] | ["chapter", EntityChapterId]
     const [source, set_source] = createSignal<Source>()
 
-    const chapters = createAsync<ModelChapter[]>(async (value: ModelChapter[]) => {
+    const chapters = createAsync<{ list: ModelChapter[]}>(async (value: { list: ModelChapter[] }) => {
         let s = source()
 
         if (s === undefined) {
-            return []
+            return { list: [] }
         }
 
         if (s[0] === 'chapters') {
-            return agent.Chapters.by_section_id(s[1])
+            let list = await agent.Chapters.by_section_id(s[1]) 
+            return { list }
         }
 
         let chapter_id = s[1]
-        let i = value.findIndex(_ => _.id === chapter_id)
+        let i = value.list.findIndex(_ => _.id === chapter_id)
 
         if (i === -1) {
             let chapter = await agent.Chapters.get(chapter_id)
-            return [...value, chapter]
+            return { list: [...value.list, chapter] }
         }
 
         return value
-    }, { initialValue: []})
+    }, { initialValue: { list: [] }})
 
     Object.assign(actions, {
         load_chapters(section_id: EntitySectionId) {
@@ -42,13 +43,13 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
         },
         async create_chapter(study_id: EntityStudyId, section_id: EntitySectionId, name?: string, pgn?: PGN) {
             let chapter = await agent.Chapters.create(section_id, name, pgn)
-            setState("chapters", state.chapters.length, chapter)
+            setState("chapters", "list", state.chapters.list.length, chapter)
             setState("studies", study_id, "sections", _ => _.id === chapter.section_id, "chapter_ids", _ => [..._, chapter.id])
             return chapter
         },
-        async update_chapter(_study_id: EntityStudyId, section_id: EntitySectionId, data: EntityChapterInsert) {
-            await agent.Chapters.update_chapter(section_id, data)
-            setState("chapters", _ => _.id === data.id, data)
+        async update_chapter(_study_id: EntityStudyId, _section_id: EntitySectionId, data: EntityChapterInsert) {
+            await agent.Chapters.update_chapter(data)
+            setState("chapters", "list", _ => _.id === data.id, data)
         },
         async order_chapters(study_id: EntityStudyId, section_id: EntitySectionId, chapter_id: EntitySectionId, new_order: number) {
             await agent.Chapters.order_chapters(section_id, chapter_id, new_order)
@@ -60,6 +61,12 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
 
                 return [...chapter_ids]
             })
+        },
+        async delete_chapter(id: EntityChapterId) {
+            await agent.Chapters.delete(id)
+
+            setState("chapters", "list", _ => _.filter(_ => _.id !== id))
+            console.log(id, unwrap(state.chapters.list))
         }
 
     })

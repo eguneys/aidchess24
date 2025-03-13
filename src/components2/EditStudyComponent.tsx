@@ -82,7 +82,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: 
         <div class='group'>
         <label for='order'>Set Order</label>
         <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
-            <For each={store.chapters}>{(_, i) => 
+            <For each={store.chapters.list}>{(_, i) => 
                 <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
             }</For>
         </select>
