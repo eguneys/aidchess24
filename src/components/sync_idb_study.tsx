@@ -340,9 +340,7 @@ async function db_new_tree_steps_nodes(db: StudiesDB, tree_id: EntityStepsTreeId
             })
         }
 
-        if (nn.length > 1) {
-            await db_new_tree_step_node_orders(db, nn)
-        }
+        await db_new_tree_step_node_orders(db, nn)
         nodes.push(...nn)
     }
 
@@ -374,7 +372,29 @@ async function db_new_tree_step_node_orders(db: StudiesDB, nodes: EntityTreeStep
 }
 
 async function db_delete_tree_nodes(db: StudiesDB, node_ids: EntityTreeStepNodeId[]) {
-    await db.tree_step_nodes.bulkDelete(node_ids)
+    await db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes], async () => {
+        let nodes = await db.tree_step_nodes.where('id').anyOf(node_ids).toArray()
+
+        for (let node of nodes) {
+            const order = await db.tree_step_node_order_for_paths.where('tree_id')
+            .equals(node.tree_id)
+            .and(_ => _.path === parent_path(node.step.path))
+            .first()
+
+            if (order !== undefined) {
+                order.order.splice(order.order.indexOf(node.id), 1)
+                if (order.order.length === 0) {
+                    await db.tree_step_node_order_for_paths.delete(order.id)
+                } else {
+                    await db.tree_step_node_order_for_paths.update(order.id, {
+                        order: order.order
+                    })
+                }
+            }
+        }
+
+        await db.tree_step_nodes.bulkDelete(node_ids)
+    })
 }
 
 async function db_put_repeat_study(db: StudiesDB, entity: EntityRepeatStudyInsert) {
@@ -870,8 +890,8 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         update_tree_step_node(entity: EntityTreeStepNode) {
             return db_update_tree_step_node(db, entity)
         },
-        delete_tree_nodes(node_ids: EntityTreeStepNodeId[]) {
-            return db_delete_tree_nodes(db, node_ids)
+        async delete_tree_nodes(node_ids: EntityTreeStepNodeId[]) {
+            await db_delete_tree_nodes(db, node_ids)
         },
 
         put_repeat_study_sections(entity: EntityRepeatStudyInsert) {

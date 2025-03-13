@@ -3,7 +3,6 @@ import { ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../component
 import { parent_path, Path, Step } from "../components/step_types"
 import './ReplayTreeComponent.scss'
 import { useStore } from "../store"
-import { unwrap } from "solid-js/store"
 
 function previous_branch_points_at_cursor_path(tree: ModelReplayTree) {
     return previous_branch_points(tree.steps_tree, tree.cursor_path)
@@ -482,6 +481,7 @@ function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collap
         collapsed: props.collapsed,
         ['on-path']: on_path(),
         ['on-path-end']: on_path_end(),
+        [nag_klass[step().nags?.[0] ?? 0]]: step().nags !== undefined
     }))
 
     return (<>
@@ -493,9 +493,23 @@ function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collap
     onClick={() => { props.on_set_cursor(step().path) } }>
         <Show when={show_index()}><span class='index'>{ply_to_index(step().ply)}</span></Show>
         {step().san}
+            <Show when={step().nags}>{nags =>
+                <Nags nags={nags()} />
+            }</Show>
     </div>
     </>)
 }
+
+export let text = ['', '!', '?', '!!', '??', '!?', '?!']
+text[22] = '⨀'
+
+let nag_klass = ['', 'good', 'mistake', 'top', 'blunder', 'interesting', 'inaccuracy']
+
+const Nags = (props: { nags: number[] }) => {
+  return (<> <span class='nag'>{text[props.nags[0]]}</span> </>)
+}
+
+
 
 export const ply_to_index = (ply: number) => {
     let res = Math.ceil(ply / 2)

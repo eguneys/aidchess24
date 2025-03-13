@@ -48,6 +48,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             let d_node = state.replay_tree.steps_tree.flat_nodes[parent].find(_ => _.step.path === path)!
             agent.ReplayTree.delete_tree_node(d_node.id)
             setState("replay_tree", "steps_tree", "flat_nodes", parent, _ => _.filter(_ => _.step.path !== path))
+            goto_path(parent)
         },
         async add_child_san_to_current_path(san: SAN) {
             let path = state.replay_tree.cursor_path

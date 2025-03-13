@@ -592,6 +592,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
     let [,{ create_section, create_chapter }] = useStore()
     const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
+        set_edit_section_dialog(undefined)
 
         let study_name = props.study.name
         let sections: Record<string, [string, PGN][]> = {}
@@ -642,7 +643,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             update_study({ id: props.study.id, selected_section_id: s_section.id })
             update_section(props.study.id, { id: s_section.id, selected_chapter_id: s_chapter.id })
         }
-        set_edit_section_dialog(undefined)
     }
 
 
@@ -681,6 +681,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         }
     }
 
+    const movable = createMemo(() => !props.study.is_edits_disabled)
 
     const get_i_section = (section: ModelSection) => props.sections.indexOf(section)
     const get_i_chapter = (chapter: ModelChapter) => props.chapters.indexOf(chapter)
@@ -702,7 +703,10 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         set_edit_section_dialog(undefined)
     }
     const on_edit_chapter = update_chapter
-    const on_delete_chapter = delete_chapter
+    const on_delete_chapter = (id: EntityChapterId) => {
+        delete_chapter(id)
+        set_edit_chapter_dialog(undefined)
+    }
     const on_update_study = update_study
     const on_delete_study = delete_study
 
@@ -753,7 +757,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard movable={true} color={fen_turn(store.play_fen)} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
+                <PlayUciBoard shapes={annotation()} movable={movable()} color={fen_turn(store.play_fen)} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
                 {/*
                 <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
                 */}

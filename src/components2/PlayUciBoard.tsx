@@ -4,9 +4,11 @@ import { Color, Key } from "chessground/types"
 import { FEN, fen_pos, SAN, UCI } from "../components/step_types"
 import { createEffect, createMemo, onMount } from "solid-js"
 import { chessgroundDests } from "chessops/compat"
+import { DrawShape } from "chessground/draw"
 
 export function PlayUciBoard(props: { 
-    orientation?: Color,
+  shapes?: DrawShape[],
+  orientation?: Color,
     movable?: boolean,
     color: Color, fen: FEN, 
     last_move: [UCI, SAN] | undefined, play_orig_key?: (orig: Key, dest: Key) => void }) {
@@ -59,6 +61,9 @@ export function PlayUciBoard(props: {
         }
       }) 
     })
+
+
+    createEffect(() => { ground.setAutoShapes(props.shapes ?? []) })
 
     return (<><div ref={(el) => board = el} class='is2d chessboard'> </div></>)
 }
