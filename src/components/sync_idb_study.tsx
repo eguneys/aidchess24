@@ -206,6 +206,23 @@ async function db_replay_tree_by_id(db: StudiesDB, id: EntityPlayUciTreeReplayId
         res.push(node)
     })
 
+
+    for (let path of Object.keys(flat_nodes)) {
+        let order = await db.tree_step_node_order_for_paths
+        .where('tree_id').equals(e_steps.id)
+        .and(_ => _.path === path)
+        .first()
+        if (order !== undefined) {
+            flat_nodes[path] = order.order.map(id => {
+                let res = flat_nodes[path].find(_ => _.id === id)
+                if (!res) {
+                    throw new Error("Ordered Tree Step Node Not Found " + id)
+                }
+                return res
+            })
+        }
+    }
+
     let steps_tree: ModelStepsTree = {
         ...e_steps,
         flat_nodes
@@ -301,7 +318,11 @@ async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId,
         step,
         tree_id,
     }
-    await db.tree_step_nodes.add(node)
+
+    db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes], async () => {
+        await db_new_tree_step_node_orders(db, [node])
+        await db.tree_step_nodes.add(node)
+    })
     return node
 }
 
@@ -310,26 +331,46 @@ async function db_new_tree_steps_nodes(db: StudiesDB, tree_id: EntityStepsTreeId
 
     for (let path of Object.keys(steps)) {
         let i_steps = steps[path]
-        if (i_steps.length === 1) {
-            nodes.push({
+        let nn = []
+        for (let step of i_steps) {
+            nn.push({
                 id: gen_id8(),
-                step: i_steps[0],
+                step,
                 tree_id
             })
-        } else {
-            let order = 0
-            for (let step of steps[path]) {
-                nodes.push({
-                    id: gen_id8(),
-                    step,
-                    tree_id,
-                    order: order++
-                })
-            }
         }
+
+        if (nn.length > 1) {
+            await db_new_tree_step_node_orders(db, nn)
+        }
+        nodes.push(...nn)
     }
 
     await db.tree_step_nodes.bulkAdd(nodes)
+}
+
+async function db_new_tree_step_node_orders(db: StudiesDB, nodes: EntityTreeStepNodeInsert[]) {
+    let path = parent_path(nodes[0].step.path)
+    const tree_id = nodes[0].tree_id
+
+    let order = await db.tree_step_node_order_for_paths
+    .where('tree_id').equals(tree_id)
+    .and(_ => _.path === path)
+    .first()
+
+    if (!order) {
+        await db.tree_step_node_order_for_paths.add({
+            id: gen_id8(),
+            tree_id: nodes[0].tree_id,
+            path,
+            order: nodes.map(_ => _.id!)
+        })
+    } else {
+        let new_order = [...order.order, ...nodes.map(_ => _.id!)]
+        await db.tree_step_node_order_for_paths.update(order.id, {
+            order: new_order
+        })
+    }
 }
 
 async function db_delete_tree_nodes(db: StudiesDB, node_ids: EntityTreeStepNodeId[]) {
@@ -490,6 +531,7 @@ class StudiesDB extends Dexie {
     play_uci_tree_replays!: EntityTable<EntityPlayUciTreeReplay, "id">
     steps_trees!: EntityTable<EntityStepsTree, "id">
     tree_step_nodes!: EntityTable<EntityTreeStepNode, "id">
+    tree_step_node_order_for_paths!: EntityTable<EntityTreeStepNodeOrderForPath, "id">
 
     repeat_studies!: EntityTable<EntityRepeatStudy, "id">
     repeat_due_moves!: EntityTable<EntityRepeatDueMove, "id">
@@ -525,6 +567,7 @@ class StudiesDB extends Dexie {
         this.play_uci_tree_replays.mapToClass(EntityPlayUciTreeReplay)
         this.steps_trees.mapToClass(EntityStepsTree)
         this.tree_step_nodes.mapToClass(EntityTreeStepNode)
+        this.tree_step_node_order_for_paths.mapToClass(EntityTreeStepNodeOrderForPath)
 
         this.repeat_studies.mapToClass(EntityRepeatStudy)
         this.repeat_due_moves.mapToClass(EntityRepeatDueMove)
@@ -752,7 +795,7 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
             }
         },
         async new_chapter(section_id: EntitySectionId, name?: string, pgn?: PGN) { 
-            return db.transaction('rw', [db.tree_step_nodes, db.steps_trees, db.play_uci_tree_replays, db.sections, db.chapters], async () => {
+            return db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes, db.steps_trees, db.play_uci_tree_replays, db.sections, db.chapters], async () => {
 
                 let steps_tree_entity = new_steps_tree_entity()
                 await db_new_steps_tree(db, steps_tree_entity)

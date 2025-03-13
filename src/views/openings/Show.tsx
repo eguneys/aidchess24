@@ -117,23 +117,21 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
     const props_with_study = (study: ModelStudy): ShowComputedProps => ({...props, study } as ShowComputedProps)
 
     return (<>
-        <ErrorBoundary fallback={<StudyNotFound />}>
-            <Suspense fallback={<StudyLoading />}>
-                <Show when={props.study}>{study =>
-                <>
-                    <Show when={tab() === 'show'}>
-                        <StudyShow {...props_with_study(study())} on_feature_practice={() => set_tab('practice')} />
-                    </Show>
-                    <Show when={tab() === 'practice'}>
-                        <></>
-                        {/*
-                        <StudyPractice study={study()} on_feature_practice_off={() => set_tab('show')} />
-                            */}
-                    </Show>
-                </>
-                }</Show>
-            </Suspense>
-        </ErrorBoundary>
+        <Suspense fallback={<StudyLoading />}>
+            <Show when={props.study}>{study =>
+            <>
+                <Show when={tab() === 'show'}>
+                    <StudyShow {...props_with_study(study())} on_feature_practice={() => set_tab('practice')} />
+                </Show>
+                <Show when={tab() === 'practice'}>
+                    <></>
+                    {/*
+                    <StudyPractice study={study()} on_feature_practice_off={() => set_tab('show')} />
+                        */}
+                </Show>
+            </>
+            }</Show>
+        </Suspense>
     </>)
 }
 

@@ -100,12 +100,10 @@ export function createReplayTreeComputed(store: { replay_tree: ModelReplayTree }
 
     if (sticky_path_effects) {
         createEffect(on(() => store.replay_tree, () => {
-            console.log('reset tree')
             sticky_paths = []
         }))
 
         createEffect(on(cursor_path, (path: Path) => {
-            console.log('cursor path', path)
             previous_branch_points(steps(), path)?.map(branch => {
                 if (!sticky_paths.includes(branch.step.path)) {
                     siblings_of(steps(), branch.step.path)?.forEach(sibling => {
