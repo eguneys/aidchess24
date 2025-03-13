@@ -449,7 +449,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         add_child_san_to_current_path
     }] = useStore()
 
-    let c_props = createReplayTreeComputed(store)
+    let c_props = createReplayTreeComputed(store, true)
 
     let [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>()
     let [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)
@@ -721,7 +721,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         set_last_move([step.step.uci, step.step.san])
     }))
 
-    const on_play_orig_key = (orig: Key, dest: Key) => {
+    const on_play_orig_key = async (orig: Key, dest: Key) => {
 
         const pos = () => fen_pos(store.play_fen)
 
@@ -738,7 +738,9 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
         let san = play_uci(uci)
 
-        add_child_san_to_current_path(san)
+        let node = await add_child_san_to_current_path(san)
+        console.log('goto path')
+        goto_path(node.step.path)
     }
 
     return (<>

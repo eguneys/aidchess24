@@ -28,7 +28,10 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         return agent.ReplayTree.by_chapter_id(s)
     }, { initialValue: default_replay_tree })
 
-    const goto_path = (path: Path) => setState("replay_tree", "cursor_path", path)
+    const goto_path = (path: Path) => {
+        agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
+        setState("replay_tree", "cursor_path", path)
+    }
 
     Object.assign(actions, {
         load_replay_tree(chapter_id: EntityChapterId) {
@@ -42,6 +45,8 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         },
         delete_at_and_after_path(path: Path) {
             let parent = parent_path(path)
+            let d_node = state.replay_tree.steps_tree.flat_nodes[parent].find(_ => _.step.path === path)!
+            agent.ReplayTree.delete_tree_node(d_node.id)
             setState("replay_tree", "steps_tree", "flat_nodes", parent, _ => _.filter(_ => _.step.path !== path))
         },
         async add_child_san_to_current_path(san: SAN) {
@@ -62,15 +67,11 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
             let new_node: ModelTreeStepNode = await agent.ReplayTree.create_node(state.replay_tree.steps_tree_id, step)
 
-            batch(() => {
-                setState("replay_tree", "steps_tree", "flat_nodes", parent, _ => {
-                    return [..._, new_node]
-                })
-
-                goto_path(path)
+            setState("replay_tree", "steps_tree", "flat_nodes", parent, _ => {
+                return [..._, new_node]
             })
 
-            return find_at_path(state.replay_tree.steps_tree, path)
+            return new_node
         }
     })
 

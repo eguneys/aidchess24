@@ -9,7 +9,7 @@ function previous_branch_points_at_cursor_path(tree: ModelReplayTree) {
 }
 
 function siblings_of(tree: ModelStepsTree, path: Path) {
-    return find_children_at_path(tree, path)
+    return find_children_at_path(tree, parent_path(path))
 }
 function previous_branch_points(tree: ModelStepsTree, path: Path) {
     let res = []
@@ -85,7 +85,7 @@ type ReplayTreeComputed = {
     step_at_cursor_path: ModelTreeStepNode | undefined,
 }
 
-export function createReplayTreeComputed(store: { replay_tree: ModelReplayTree }): ReplayTreeComputed {
+export function createReplayTreeComputed(store: { replay_tree: ModelReplayTree }, sticky_path_effects: boolean = false): ReplayTreeComputed {
 
     const cursor_path = createMemo(() => store.replay_tree.cursor_path)
 
@@ -93,19 +93,26 @@ export function createReplayTreeComputed(store: { replay_tree: ModelReplayTree }
 
     let sticky_paths: Path[] = []
 
+    if (sticky_path_effects) {
+        createEffect(on(() => store.replay_tree, () => {
+            console.log('reset tree')
+            sticky_paths = []
+        }))
 
-    createEffect(on(cursor_path, (path: Path) => {
-        previous_branch_points(steps(), path)?.map(branch => {
-            if (!sticky_paths.includes(branch.step.path)) {
-                siblings_of(steps(), branch.step.path)?.forEach(sibling => {
-                    sticky_paths = sticky_paths
-                    .filter(_ => _ !== sibling.step.path)
-                })
+        createEffect(on(cursor_path, (path: Path) => {
+            console.log('cursor path', path)
+            previous_branch_points(steps(), path)?.map(branch => {
+                if (!sticky_paths.includes(branch.step.path)) {
+                    siblings_of(steps(), branch.step.path)?.forEach(sibling => {
+                        sticky_paths = sticky_paths
+                            .filter(_ => _ !== sibling.step.path)
+                    })
 
-                sticky_paths.push(branch.step.path)
-            }
-        })
-    }))
+                    sticky_paths.push(branch.step.path)
+                }
+            })
+        }))
+    }
 
 
     const get_prev_path = createMemo(() => {

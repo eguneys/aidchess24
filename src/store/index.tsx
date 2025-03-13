@@ -2,7 +2,7 @@ import { Accessor, batch, createContext, useContext } from "solid-js";
 import { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createAgent } from "./createAgent";
-import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelReplayTree,  ModelSection,  ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
+import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelReplayTree,  ModelSection,  ModelStudy, ModelTreeStepNode, StudiesPredicate } from "../components/sync_idb_study";
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
@@ -36,7 +36,7 @@ export type StoreActions = {
     goto_path(path: Path): void
     goto_path_if_can(path: Path | undefined): void 
     delete_at_and_after_path(path: Path): void
-    add_child_san_to_current_path(san: SAN): void
+    add_child_san_to_current_path(san: SAN): Promise<ModelTreeStepNode>
 
     set_fen(fen: FEN): void
     set_last_move(last_move: [UCI, SAN] | undefined): void
