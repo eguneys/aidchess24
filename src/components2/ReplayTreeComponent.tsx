@@ -77,6 +77,47 @@ export function find_children_at_path(tree: ModelStepsTree, path: Path) {
     return tree.flat_nodes[path] ?? []
 }
 
+export function node_length(tree: ModelStepsTree, node: ModelTreeStepNode) {
+
+    let cc = find_children_at_path(tree, node.step.path)
+
+    if (cc.length > 1) {
+        return 1
+    }
+    if (cc.length === 0) {
+        return 0
+    }
+
+    let res = 1
+    let i = cc[0]
+    while (find_children_at_path(tree, i.step.path).length === 1) {
+        res++
+        i = find_children_at_path(tree, i.step.path)[0]
+    }
+    return res
+}
+
+export function node_nb_first_variations(tree: ModelStepsTree, node: ModelTreeStepNode) {
+    return node_children_first_variations(tree, node)?.length ?? 0
+}
+
+const node_children_first_variations = (tree: ModelStepsTree, node: ModelTreeStepNode) => {
+    let child = node_first_child_with_variations(tree, node)
+    return child ? find_children_at_path(tree, child.step.path) : undefined
+}
+
+const node_first_child_with_variations = (tree: ModelStepsTree, node: ModelTreeStepNode) => {
+    let cc = find_children_at_path(tree, node.step.path)
+    if (cc.length === 0) {
+        return undefined
+    } else if (cc.length === 1) {
+        return node_first_child_with_variations(tree, cc[0])
+    } else {
+        return node
+    }
+}
+
+
 
 type ReplayTreeComputed = {
     cursor_path: Path
@@ -447,7 +488,7 @@ function NodesShorten(props: { path: Path, replay_tree: ModelReplayTree, on_set_
 
 function NodesCollapsed(props: { node: ModelTreeStepNode, replay_tree: ModelReplayTree }) {
     return (<>
-        <span class='collapsed'>..</span>
+        <span class='collapsed'>..{node_length(props.replay_tree.steps_tree, props.node)} {node_nb_first_variations(props.replay_tree.steps_tree, props.node)}</span>
     </>)
 }
 
