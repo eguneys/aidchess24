@@ -6,7 +6,7 @@ import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
 import import_lichess_png from '../../assets/images/importlichess.png'
 import { useStore } from '../../store'
-import { ModelStudy, StudiesPredicate } from '../../components/sync_idb_study'
+import type { ModelStudy, StudiesPredicate } from '../../store/sync_idb_study'
 
 export default () => {
 
