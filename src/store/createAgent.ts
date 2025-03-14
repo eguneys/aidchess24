@@ -2,10 +2,10 @@ import { useContext } from "solid-js";
 import type { Store } from ".";
 import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayInsert, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "../components/sync_idb_study";
 import { PGN } from "../components2/parse_pgn";
-import { Step } from "../components/step_types";
+import { NAG, Step } from "../components/step_types";
 
 // mock query
-const query = (id: any) => id
+const query = (id: any, _key: string) => id
 
 export type Agent = {
     Studies: Studies,
@@ -115,8 +115,8 @@ function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
 
     return {
         by_chapter_id,
-        create_node: async (steps_tree_id: EntityStepsTreeId, step: Step) => {
-            let model = await db.new_tree_step_node(steps_tree_id, step)
+        create_node: async (steps_tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]) => {
+            let model = await db.new_tree_step_node(steps_tree_id, step, nags, comments)
             return model
         },
         update: async (entity: EntityPlayUciTreeReplayInsert) => {

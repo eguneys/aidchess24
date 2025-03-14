@@ -1,5 +1,5 @@
 import { createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
-import { ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../components/sync_idb_study"
+import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../components/sync_idb_study"
 import { parent_path, Path, Step } from "../components/step_types"
 import './ReplayTreeComponent.scss'
 import { useStore } from "../store"
@@ -117,7 +117,61 @@ const node_first_child_with_variations = (tree: ModelStepsTree, node: ModelTreeS
     }
 }
 
+export function as_pgn_for_path(tree: ModelStepsTree, path: Path) {
+    return render_path(tree, find_children_at_path(tree, ''), true, path)
+}
 
+
+
+export function as_export_pgn(tree: ModelStepsTree) {
+    return render_lines(tree, find_children_at_path(tree, ''), true)
+}
+
+function render_data(data: ModelTreeStepNode, show_index = false) {
+    let ply = data.step.ply
+    let i = (ply % 2 === 1 || show_index) ? (Math.ceil(ply / 2) + (ply % 2 === 1 ? '.' : '...')) : ''
+    let tail = ply % 2 === 1 ? '' : ' '
+    return `${i} ${data.step.san}${data.comments ? ' { ' + data.comments + ' }' : ''}${tail}`
+}
+
+function render_lines(tree: ModelStepsTree, ts: ModelTreeStepNode[], show_index = false) {
+
+    let res = ''
+    if (ts.length === 0) {
+    } else if (ts.length === 1) {
+        res += render_data(ts[0], show_index)
+        res += render_lines(tree, find_children_at_path(tree, ts[0].step.path), false)
+    } else {
+        res += render_data(ts[0], false).trimEnd()
+        res += ' ' + ts.slice(1).map(_ => `(${render_lines(tree, [_], true).trimEnd()})`).join(' ')
+        res += ' ' + render_lines(tree, find_children_at_path(tree, ts[0].step.path), true)
+    }
+    return res
+}
+
+function render_path(tree: ModelStepsTree, ts: ModelTreeStepNode[], show_index = false, i_path: Path) {
+    let res = ''
+    let step = ts.find(_ => i_path.startsWith(_.step.path))
+    if (!step) {
+        return res
+    }
+    res += render_data(step, show_index)
+    res += render_path(tree, find_children_at_path(tree, step.step.path), false, i_path)
+    return res
+}
+
+
+export function chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter, steps_tree: ModelStepsTree) {
+    let res = ''
+
+    res += `[Event] ${study_name}: ${section_name}: ${chapter.name}\n`
+    res += `[StudyName] ${study_name}\n`
+    res += `[ChapterName] ${chapter.name}\n`
+    res += '\n'
+    res += as_export_pgn(steps_tree)
+
+    return res
+}
 
 type ReplayTreeComputed = {
     cursor_path: Path
@@ -399,17 +453,6 @@ export const ReplayTreeComponent = (props: { on_context_menu?: (e: MouseEvent, _
         onCleanup(() => {
             document.removeEventListener('keydown', on_key_down)
         })
-    })
-
-    createEffect(() => {
-        let n = store.replay_tree.steps_tree.flat_nodes
-
-        let node = n[Object.keys(n)[0]]
-
-        if (!node) {
-            return
-        }
-        console.log('yes nags', node, node[0].nags)
     })
 
     return (<>

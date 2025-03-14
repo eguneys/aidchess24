@@ -3,7 +3,7 @@ import { StoreActions, StoreState } from ".";
 import type { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
 import { EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudyId, ModelChapter } from "../components/sync_idb_study";
-import { createSignal } from "solid-js";
+import { batch, createSignal } from "solid-js";
 import { PGN } from "../components2/parse_pgn";
 
 export function createChapters(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
@@ -43,8 +43,10 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
         },
         async create_chapter(study_id: EntityStudyId, section_id: EntitySectionId, name?: string, pgn?: PGN) {
             let chapter = await agent.Chapters.create(section_id, name, pgn)
-            setState("chapters", "list", state.chapters.list.length, chapter)
-            setState("studies", study_id, "sections", _ => _.id === chapter.section_id, "chapter_ids", _ => [..._, chapter.id])
+            batch(() => {
+                setState("chapters", "list", state.chapters.list.length, chapter)
+                setState("studies", study_id, "sections", _ => _.id === chapter.section_id, "chapter_ids", _ => [..._, chapter.id])
+            })
             return chapter
         },
         async update_chapter(_study_id: EntityStudyId, _section_id: EntitySectionId, data: EntityChapterInsert) {
@@ -62,13 +64,14 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
                 return [...chapter_ids]
             })
         },
-        async delete_chapter(id: EntityChapterId) {
+        async delete_chapter(study_id: EntityStudyId, section_id: EntitySectionId, id: EntityChapterId) {
             await agent.Chapters.delete(id)
 
-            setState("chapters", "list", _ => _.filter(_ => _.id !== id))
-            console.log(id, unwrap(state.chapters.list))
+            batch(() => {
+                setState("chapters", "list", _ => _.filter(_ => _.id !== id))
+                setState("studies", study_id, "sections", _ => _.id === section_id, "chapter_ids", _ => _.filter(_ => _ !== id))
+            })
         }
-
     })
 
     return () => chapters.latest

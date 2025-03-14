@@ -153,7 +153,7 @@ function StudyListItem(props: { study: ModelStudy, on_click_study: (study: Model
             <h3 class='title'><i data-icon=""></i>{props.study.name}</h3>
             <div class='sections'>
                 <Show when={props.study.sections.length === 1} fallback={
-                    <For each={props.study.sections}>{section =>
+                    <For each={props.study.sections.slice(0, 5)}>{section =>
                         <div class='section'><i data-icon=""></i><span class='title'>{section.name}</span></div>
                     }</For>
                 }>

@@ -29,8 +29,9 @@ export type StoreActions = {
     load_chapter(chapter_id: EntityChapterId): Promise<void>
     create_chapter(study_id: EntityStudyId, section_id: EntitySectionId, name?: string, pgn?: PGN): Promise<ModelChapter>
     update_chapter(study_id: EntityStudyId, section_id: EntitySectionId, chapter: Partial<EntityChapterInsert>): Promise<EntityChapter>
-    delete_chapter(id: EntityChapterId): Promise<void>
+    delete_chapter(study_id: EntityStudyId, section_id: EntitySectionId, id: EntityChapterId): Promise<void>
     order_chapters(study_id: EntityStudyId, section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
+    chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter): Promise<string>
 
     reset_replay_tree(): Promise<void>
     load_replay_tree(chapter_id: EntityChapterId): Promise<void>

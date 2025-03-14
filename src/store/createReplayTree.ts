@@ -1,12 +1,11 @@
 import type { Agent } from "./createAgent";
 import { StoreActions, StoreState } from ".";
 import { SetStoreFunction } from "solid-js/store";
-import { EntityChapterId, ModelReplayTree, ModelTreeStepNode } from "../components/sync_idb_study";
+import { EntityChapterId, ModelChapter, ModelReplayTree, ModelTreeStepNode } from "../components/sync_idb_study";
 import { createAsync } from "@solidjs/router";
 import { Accessor, createSignal } from "solid-js";
 import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "../components/step_types";
-import { find_at_path, find_children_at_path } from "../components2/ReplayTreeComponent";
-import { _alekhine } from "../Chesstree2";
+import { chapter_as_export_pgn, find_at_path, find_children_at_path } from "../components2/ReplayTreeComponent";
 
 export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>): Accessor<ModelReplayTree> {
 
@@ -98,6 +97,10 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             }
 
             return new_node
+        },
+        async chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter) {
+            let res = await agent.ReplayTree.by_chapter_id(chapter.id)
+            return chapter_as_export_pgn(study_name, section_name, chapter, res.steps_tree)
         }
     })
 

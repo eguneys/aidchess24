@@ -1,5 +1,5 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense } from "solid-js"
-import { Navigate, useNavigate, useParams } from "@solidjs/router"
+import { useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components/PlayUciComponent"
 import { DialogComponent } from "../../components/DialogComponent"
@@ -12,12 +12,13 @@ import { get_letter_nth } from "../../components/hard_limits"
 import '../../components/StudyComponent.scss'
 import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "../../components2/EditStudyComponent"
 import { PGN } from "../../components2/parse_pgn"
-import { createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
+import { as_pgn_for_path, createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { INITIAL_FEN } from "chessops/fen"
 import { Key } from "chessground/types"
 import { parseSquare } from "chessops"
 import { fen_turn } from "../../chess_pgn_logic"
+import { unwrap } from "solid-js/store"
 
 export default () => {
 
@@ -447,7 +448,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         goto_path_if_can,
         delete_at_and_after_path,
         tree_step_node_set_nags,
-        add_child_san_to_current_path
+        add_child_san_to_current_path,
+        chapter_as_export_pgn
     }] = useStore()
 
     let c_props = createReplayTreeComputed(store, true)
@@ -650,25 +652,30 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     const on_export_lichess = () => {
     }
 
-    function study_as_export_pgn(study: ModelStudy) {
-        return ''
+    createEffect(() => {
+        console.log(unwrap(props.selected_section?.chapter_ids))
+    })
+
+    async function study_as_export_pgn() {
+        let res = await Promise.all(props.sections.map(section =>
+            Promise.all(section.chapter_ids.map(id => store.chapters.list.find(_ => _.id === id)!).map(chapter =>
+                chapter_as_export_pgn(props.study.name, section.name, chapter)
+            )).then(_ => _.join('\n\n'))
+        )).then(_ => _.join('\n\n\n'))
+        return res
     }
 
-    function chapter_as_pgn_for_path(chapter: ModelChapter, path: Path) {
-        return ''
-    }
-
-    const on_export_pgn = () => {
-        let res = study_as_export_pgn(props.study)
+    const on_export_pgn = async () => {
+        let res = await study_as_export_pgn()
         downloadBlob(res, `${props.study.name}.pgn`)
     }
-    const on_copy_pgn = () => {
-        let res = study_as_export_pgn(props.study)
+    const on_copy_pgn = async () => {
+        let res = await chapter_as_export_pgn(props.study.name, props.selected_section!.name, props.selected_chapter!)
         navigator.clipboard.writeText(res)
     }
 
     const on_copy_variation_pgn = (path: Path) => {
-        let res = chapter_as_pgn_for_path(props.selected_chapter!, path)
+        let res = as_pgn_for_path(store.replay_tree.steps_tree, path)
         navigator.clipboard.writeText(res)
         set_context_menu_open(undefined)
     }
@@ -705,7 +712,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     }
     const on_edit_chapter = update_chapter
     const on_delete_chapter = (id: EntityChapterId) => {
-        delete_chapter(id)
+        delete_chapter(props.study.id, props.selected_section!.id, id)
         set_edit_chapter_dialog(undefined)
     }
     const on_update_study = update_study
@@ -936,6 +943,7 @@ export function ChapterComponent(props: { is_edits_disabled: boolean, chapter: M
 
 
 function SectionCollapsedComponent(props: { is_edits_disabled: boolean, section: ModelSection, nth: string, on_selected: () => void, on_edit: () => void }) {
+
     return (<>
         <div class='section'>
             <div onClick={() => props.on_selected()} class='header'>

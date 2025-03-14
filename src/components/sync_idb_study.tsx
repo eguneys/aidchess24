@@ -216,7 +216,7 @@ async function db_replay_tree_by_id(db: StudiesDB, id: EntityPlayUciTreeReplayId
             flat_nodes[path] = order.order.map(id => {
                 let res = flat_nodes[path].find(_ => _.id === id)
                 if (!res) {
-                    throw new Error("Ordered Tree Step Node Not Found " + id)
+                    throw new BadIntegrityError("Ordered Tree Step Node Not Found ", id)
                 }
                 return res
             })
@@ -249,7 +249,20 @@ async function db_load_sections_model(db: StudiesDB, e_sections: EntitySectionIn
         if (limit_chapters)
             q = q.limit(limit_chapters)
         
-        let chapters = await q.toArray()
+        let chapters = (await q.toArray()).map(_ => ({..._}))
+
+        chapters = e_section.chapter_ids.flatMap(id => {
+            let res = chapters.find(_ => _.id === id)
+
+            if (!res) {
+                if (limit_chapters === undefined) {
+                    throw new BadIntegrityError('Chapter ids dont contain chapter', id)
+                }
+                return []
+            }
+
+            return res
+        })
 
         res.push({
             id: e_section.id!,
@@ -274,7 +287,13 @@ async function db_load_study_model(db: StudiesDB, id: EntityStudyId, limit_chapt
 
     let u_sections = await db_load_sections_model(db, e_sections, limit_chapters)
 
-    let sections = e_study.section_ids.map(id => u_sections.find(_ => _.id === id)!)
+    let sections = e_study.section_ids.map(id => {
+        let res = u_sections.find(_ => _.id === id)
+        if (!res) {
+            throw new BadIntegrityError('Section not found in section_ids', id)
+        }
+        return res
+    })
 
     return {
         ...e_study,
@@ -288,7 +307,7 @@ async function db_order_sections(db: StudiesDB, study_id: EntityStudyId, section
     let old_order = study.section_ids.indexOf(section_id)
 
     if (old_order === -1) {
-        throw new Error("Section not found in study.section_ids " + section_id)
+        throw new BadIntegrityError("Section not found in study.section_ids ", section_id)
     }
 
     study.section_ids.splice(old_order, 1)
@@ -303,7 +322,7 @@ async function db_order_chapters(db: StudiesDB, section_id: EntitySectionId, cha
     let old_order = section.chapter_ids.indexOf(chapter_id)
 
     if (old_order === -1) {
-        throw new Error("Chapter not found in section.chapter_ids " + chapter_id)
+        throw new BadIntegrityError("Chapter not found in section.chapter_ids ", chapter_id)
     }
 
     section.chapter_ids.splice(old_order, 1)
@@ -312,7 +331,7 @@ async function db_order_chapters(db: StudiesDB, section_id: EntitySectionId, cha
     await db_update_section(db, section)
 }
 
-async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId, step: Step, nags: NAG[], comments?: string[]) {
+async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]) {
     let node = {
         id: gen_id8(),
         step,
@@ -656,7 +675,7 @@ class EntityTreeStepNode extends Entity<StudiesDB> {
     id!: EntityTreeStepNodeId
     tree_id!: EntityStepsTreeId
     step!: Step
-    nags!: NAG[]
+    nags?: NAG[]
     comments?: string[]
 }
 
@@ -778,7 +797,7 @@ export type StudiesDBReturn = {
     new_steps_tree(): Promise<ModelStepsTree>
     */
 
-    new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags: NAG[], comments: string[]): Promise<ModelTreeStepNode>
+    new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]): Promise<ModelTreeStepNode>
 
     get_replay_tree_by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
 
@@ -890,7 +909,7 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
         },
-        async new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags: NAG[], comments?: string[]) {
+        async new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]) {
             return await db_new_tree_steps_node(db, tree_id, step, nags, comments)
         },
         update_tree_step_node(entity: EntityTreeStepNode) {
@@ -930,5 +949,11 @@ class EntityNotFoundError extends Error {
 
     constructor(readonly entity: string, readonly id?: string) {
         super(`DB ${entity}${id?(' by id ' + id) : ''} not found.`)
+    }
+}
+class BadIntegrityError extends Error {
+
+    constructor(readonly msg: string, readonly id?: string) {
+        super(`DB ${msg}${id?(' by id ' + id) : ''} .`)
     }
 }
