@@ -225,14 +225,14 @@ function Help() {
                 <li>SectionC: Chapter 5 </li>
             </ul>
          <p>
-            So if you prefix your regular chapter names with the section name that they belong to and a double colon :,
+            So if you prefix your regular chapter names with the section name that they belong to followed by a double colon :,
             The chapters will group into sections with the specified section name.
          </p>
          <p>
             Sections correspond to chapters of a book. Each chapter of the book includes a bunch of opening lines where each line corresponds to a chapter on the website.
          </p>
          <h3> Suggested way to build openings </h3>
-         <p>As Aidchess's suggestion, keep variations very light in a chapter. And always start your chapters from the initial starting position. Remember, repetition is good. Memorization is the essential key to learning chess. Finally make sure your lines mostly cover the best main lines or very common sidelines, so to make sure your time spent on memorizing is worth it.</p>
+         <p>As Aidchess's suggestion, keep variations very light in a chapter. And always start your chapters from the initial starting position. Remember, repetition is good. Memorization is the essential key to learning chess. Finally make sure your lines mostly cover the best main lines or very common sidelines, as to make sure your valuable time is well spent on memorizing.</p>
 
     </div>
     </>)
