@@ -1,6 +1,6 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
-import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayInsert, EntityRepeatDueMoveId, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "./sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityRepeatDueMoveId, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "./sync_idb_study";
 import { PGN } from "../components2/parse_pgn";
 import type { NAG, Step } from "../store/step_types";
 import { Card } from "ts-fsrs";
@@ -23,7 +23,9 @@ type DueMoves = {
 }
 
 type ReplayTree = {
+    by_id(id: EntityPlayUciTreeReplayId): Promise<ModelReplayTree>
     by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
+    by_steps_tree_id(id: EntityStepsTreeId): Promise<ModelReplayTree>
     create_node(steps_tree_id: EntityStepsTreeId, step: Step): Promise<ModelTreeStepNode>
 
     update(entity: Partial<EntityPlayUciTreeReplayInsert>): Promise<void>
@@ -120,10 +122,14 @@ function createAgentChapters(db: StudiesDBReturn): Chapters {
 }
 
 function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
+    const by_steps_tree_id = query((id: EntityChapterId) => db.get_replay_tree_by_steps_tree_id(id), 'replay_tree_by_steps_tree_id')
     const by_chapter_id = query((id: EntityChapterId) => db.get_replay_tree_by_chapter_id(id), 'replay_tree_by_chapter_id')
+    const by_id = query((id: EntityChapterId) => db.get_replay_tree_by_id(id), 'replay_tree_by_id')
 
     return {
+        by_steps_tree_id,
         by_chapter_id,
+        by_id,
         create_node: async (steps_tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]) => {
             let model = await db.new_tree_step_node(steps_tree_id, step, nags, comments)
             return model

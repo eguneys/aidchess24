@@ -441,8 +441,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
     const [store, {
         play_uci,
-        set_fen,
-        set_last_move,
         goto_path,
         goto_path_if_can,
         delete_at_and_after_path,
@@ -451,7 +449,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         chapter_as_export_pgn
     }] = useStore()
 
-    let c_props = createReplayTreeComputed(store, true)
+    let c_props = createReplayTreeComputed({ sticky_path_effects: true })
 
     let [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>()
     let [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)
@@ -728,16 +726,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     const on_order_chapter = (chapter: ModelChapter, order: number) => {
         order_chapters(props.study.id, chapter.section_id, chapter.id, order)
     }
-
-    createEffect(on(() => c_props.step_at_cursor_path, (step) => {
-        if (!step) {
-            set_last_move(undefined)
-            set_fen(INITIAL_FEN)
-            return
-        }
-        set_fen(step.step.fen)
-        set_last_move([step.step.uci, step.step.san])
-    }))
 
     const on_play_orig_key = async (orig: Key, dest: Key) => {
 

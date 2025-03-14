@@ -5,7 +5,7 @@ import { arr_rnd } from "../../random"
 import './Show.scss'
 import { INITIAL_FEN } from "chessops/fen"
 import { annotationShapes } from "../../components2/annotationShapes"
-import { FSRS } from "ts-fsrs"
+import { FSRS, State } from "ts-fsrs"
 import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
 import { RepeatAttemptResult } from "../../store/repeat_types"
 import { fen_pos, fen_turn, nag_to_glyph, Ply } from "../../store/step_types"
@@ -55,7 +55,10 @@ function ShowComponent() {
         save_due_move_if_not,
         add_attempt_with_spaced_repetition,
 
-        load_study
+        load_study,
+
+        reset_replay_tree,
+        load_replay_tree_by_steps_id
     }] = useStore()
 
     let [, {
@@ -69,7 +72,7 @@ function ShowComponent() {
      */
 
     let r_props = createRepeatProps()
-    let c_props = createReplayTreeComputed(store, true)
+    let c_props = createReplayTreeComputed()
 
     let params = useParams()
     //set_repeat_selected_study(params.id)
@@ -133,6 +136,23 @@ function ShowComponent() {
     const solution_uci = createMemo(() => one_particular_due()?.tree_step_node.step.uci)
 
     createEffect(() => {
+        let due = one_particular_due()
+
+        if (!due) {
+            reset_replay_tree()
+            return
+        }
+
+        load_replay_tree_by_steps_id(due.tree_step_node.tree_id)
+    })
+
+    createEffect(() => {
+        let due = one_particular_due()
+
+        if (due?.tree_step_node.tree_id !== store.replay_tree.steps_tree_id) {
+            return
+        }
+
         let path = show_at_path()
         if (!path) {
             return
@@ -146,7 +166,6 @@ function ShowComponent() {
             })
         })
     })
-
 
     const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
 
@@ -311,7 +330,7 @@ function ShowComponent() {
         </div>
         <div class='replay-wrap'>
             <Suspense>
-            <Show when={false} fallback={
+            <Show when={one_particular_due()} fallback={
               <>
                 <span>Great; No due moves at this time.</span>
                 <A href="/repetition">Go Back to Repetitions</A>

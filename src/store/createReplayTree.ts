@@ -1,15 +1,15 @@
 import type { Agent } from "./createAgent";
 import { StoreActions, StoreState } from ".";
 import { SetStoreFunction } from "solid-js/store";
-import { EntityChapterId, ModelChapter, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
+import { EntityChapterId, EntityPlayUciTreeReplayId, EntityStepsTreeId, ModelChapter, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
 import { createAsync } from "@solidjs/router";
 import { Accessor, createSignal } from "solid-js";
 import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "./step_types";
 import { chapter_as_export_pgn, find_at_path, find_children_at_path } from "../components2/ReplayTreeComponent";
 
 export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>): Accessor<ModelReplayTree> {
-
-    const [source, set_source] = createSignal<EntityChapterId>()
+    type Source = EntityChapterId | ['by_id', EntityPlayUciTreeReplayId] | ['by_steps_id', EntityStepsTreeId]
+    const [source, set_source] = createSignal<Source>()
     const default_replay_tree: Accessor<ModelReplayTree> = () => ({
         id: '',
         steps_tree_id: '',
@@ -28,6 +28,15 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         if (!s) {
             return default_replay_tree()
         }
+
+        if (Array.isArray(s)) {
+            if (s[0] === 'by_id') {
+                return agent.ReplayTree.by_id(s[1])
+            } else {
+                return agent.ReplayTree.by_steps_tree_id(s[1])
+            }
+        }
+
         return agent.ReplayTree.by_chapter_id(s)
     }, { initialValue: default_replay_tree() })
 
@@ -54,6 +63,12 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         },
         load_replay_tree(chapter_id: EntityChapterId) {
             set_source(chapter_id)
+        },
+        load_replay_tree_by_id(id: EntityPlayUciTreeReplayId) {
+            set_source(['by_id', id])
+        },
+        load_replay_tree_by_steps_id(id: EntityStepsTreeId) {
+            set_source(['by_steps_id', id])
         },
         set_success_path,
         set_failed_path,

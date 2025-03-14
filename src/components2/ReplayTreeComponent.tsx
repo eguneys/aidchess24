@@ -3,6 +3,7 @@ import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from
 import { parent_path, Path, Step } from "../store/step_types"
 import './ReplayTreeComponent.scss'
 import { useStore } from "../store"
+import { INITIAL_FEN } from "chessops/fen"
 
 function previous_branch_points_at_cursor_path(tree: ModelReplayTree) {
     return previous_branch_points(tree.steps_tree, tree.cursor_path)
@@ -184,15 +185,44 @@ type ReplayTreeComputed = {
     step_at_cursor_path: ModelTreeStepNode | undefined,
 }
 
-export function createReplayTreeComputed(store: { replay_tree: ModelReplayTree }, sticky_path_effects: boolean = false): ReplayTreeComputed {
+export function createReplayTreeComputed(opts: { 
+        sticky_path_effects?: boolean, 
+        set_fen_effects?: boolean
+    } = {}): ReplayTreeComputed {
+
+        if (opts.sticky_path_effects === undefined) {
+            opts.sticky_path_effects = false
+        }
+        if (opts.set_fen_effects === undefined) {
+            opts.set_fen_effects = true
+        }
+
+        let [store, {
+            set_fen,
+            set_last_move
+        }]  = useStore()
 
     const cursor_path = createMemo(() => store.replay_tree.cursor_path)
 
     const steps = createMemo(() => store.replay_tree.steps_tree)
 
+    if (opts.set_fen_effects) {
+        createEffect(on(() => step_at_cursor_path(), (step) => {
+            if (!step) {
+                set_last_move(undefined)
+                set_fen(INITIAL_FEN)
+                return
+            }
+            set_fen(step.step.fen)
+            set_last_move([step.step.uci, step.step.san])
+        }))
+
+
+    }
+
     let sticky_paths: Path[] = []
 
-    if (sticky_path_effects) {
+    if (opts.sticky_path_effects) {
         createEffect(on(() => store.replay_tree, () => {
             sticky_paths = []
         }))
@@ -394,7 +424,7 @@ export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_men
         goto_path_if_can
     }] = useStore()
 
-    let c_props = createReplayTreeComputed(store)
+    let c_props = createReplayTreeComputed()
  
     const on_set_cursor = (path: Path) => {
         goto_path(path)

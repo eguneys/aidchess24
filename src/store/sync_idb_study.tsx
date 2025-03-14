@@ -174,6 +174,22 @@ async function db_chapter_by_id(db: StudiesDB, id: EntityChapterId): Promise<Mod
     return e_chapter
 }
 
+async function db_replay_tree_by_steps_tree_id(db: StudiesDB, id: EntityStepsTreeId): Promise<ModelReplayTree> {
+    let e_replay = await db.play_uci_tree_replays.where('steps_tree_id').equals(id).first()
+
+    if (!e_replay) {
+        throw new EntityNotFoundError('Play Uci Tree Replay', id)
+    }
+
+    let e_steps = await db.steps_trees.where('id').equals(e_replay.steps_tree_id).first()
+
+    if (!e_steps) {
+        throw new EntityNotFoundError('Steps Tree', id)
+    }
+
+    return db_replay_tree_load_rest(db, e_replay, e_steps)
+}
+
 async function db_replay_tree_by_chapter_id(db: StudiesDB, id: EntityChapterId): Promise<ModelReplayTree> {
     let chapter = await db_get_chapter(db, id)
     return db_replay_tree_by_id(db, chapter.tree_replay_id)
@@ -191,6 +207,11 @@ async function db_replay_tree_by_id(db: StudiesDB, id: EntityPlayUciTreeReplayId
     if (!e_steps) {
         throw new EntityNotFoundError('Steps Tree', id)
     }
+
+    return db_replay_tree_load_rest(db, e_replay, e_steps)
+}
+
+async function db_replay_tree_load_rest(db: StudiesDB, e_replay: EntityPlayUciTreeReplay, e_steps: EntityStepsTree): Promise<ModelReplayTree> {
 
     let nodes = await db.tree_step_nodes.where('tree_id').equals(e_steps.id).toArray()
 
@@ -458,7 +479,7 @@ async function db_load_repeat_due_moves_model(db: StudiesDB, study_id: EntityStu
                 id: e_existing_due_move.id,
                 study_id,
                 tree_step_node_id: e_step_tree_node.id,
-                tree_step_node: e_step_tree_node,
+                tree_step_node: {...e_step_tree_node},
                 attempts,
                 is_saved: true
             })
@@ -467,7 +488,7 @@ async function db_load_repeat_due_moves_model(db: StudiesDB, study_id: EntityStu
                 id: gen_id8(),
                 study_id,
                 tree_step_node_id: e_step_tree_node.id,
-                tree_step_node: e_step_tree_node,
+                tree_step_node: {...e_step_tree_node},
                 attempts: [],
                 is_saved: false
             })
@@ -761,7 +782,9 @@ export type StudiesDBReturn = {
 
     new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]): Promise<ModelTreeStepNode>
 
+    get_replay_tree_by_id(id: EntityPlayUciTreeReplayId): Promise<ModelReplayTree>;
     get_replay_tree_by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
+    get_replay_tree_by_steps_tree_id(id: EntityStepsTreeId): Promise<ModelReplayTree>
 
     update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert): Promise<void>
     update_tree_step_node(entity: EntityTreeStepNodeInsert): Promise<void>
@@ -863,8 +886,14 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         order_chapters(section_id: EntitySectionId, chapter_id: EntityChapterId, order: number) {
             return db_order_chapters(db, section_id, chapter_id, order)
         },
+        get_replay_tree_by_id(id: EntityPlayUciTreeReplayId) {
+            return db_replay_tree_by_id(db, id)
+        },
         get_replay_tree_by_chapter_id(id: EntityChapterId) {
             return db_replay_tree_by_chapter_id(db, id)
+        },
+        get_replay_tree_by_steps_tree_id(id: EntityStepsTreeId) {
+            return db_replay_tree_by_steps_tree_id(db, id)
         },
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)

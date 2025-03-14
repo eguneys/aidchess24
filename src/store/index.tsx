@@ -2,7 +2,7 @@ import { Accessor, batch, createContext, useContext } from "solid-js";
 import { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createAgent } from "./createAgent";
-import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelRepeatDueMove,  ModelRepeatMoveAttempt,  ModelReplayTree,  ModelSection,  ModelStudy, ModelTreeStepNode, StudiesPredicate } from "./sync_idb_study";
+import { EntityChapter, EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntitySectionId, EntityStepsTreeId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelRepeatDueMove,  ModelRepeatMoveAttempt,  ModelReplayTree,  ModelSection,  ModelStudy, ModelTreeStepNode, StudiesPredicate } from "./sync_idb_study";
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
@@ -39,6 +39,9 @@ export type StoreActions = {
 
     reset_replay_tree(): Promise<void>
     load_replay_tree(chapter_id: EntityChapterId): void
+    load_replay_tree_by_id(id: EntityPlayUciTreeReplayId): void
+    load_replay_tree_by_steps_id(id: EntityStepsTreeId): void
+
     goto_path(path: Path): void
     goto_path_if_can(path: Path | undefined): void 
     delete_at_and_after_path(path: Path): void
