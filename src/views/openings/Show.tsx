@@ -14,10 +14,8 @@ import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "
 import { PGN } from "../../components2/parse_pgn"
 import { as_pgn_for_path, createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import { PlayUciBoard } from "../../components2/PlayUciBoard"
-import { INITIAL_FEN } from "chessops/fen"
 import { Key } from "chessground/types"
 import { parseSquare } from "chessops"
-import { unwrap } from "solid-js/store"
 
 export default () => {
 
@@ -592,10 +590,12 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
     let [,{ create_section, create_chapter }] = useStore()
     const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
+        let section = edit_section_dialog()
         set_edit_section_dialog(undefined)
 
         let study_name = props.study.name
         let sections: Record<string, [string, PGN][]> = {}
+        update_study({ id: props.study.id, is_edits_disabled: true })
 
         for (let pgn of pgns) {
             let event = pgn.event!
@@ -618,7 +618,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         await on_update_study({ id: props.study.id, name: study_name })
 
         let section_name = Object.keys(sections)[0]
-        let section = edit_section_dialog()
         if (section) {
             await on_edit_section(props.study.id, { id: section.id, name: section_name })
         }
@@ -648,10 +647,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
     const on_export_lichess = () => {
     }
-
-    createEffect(() => {
-        console.log(unwrap(props.selected_section?.chapter_ids))
-    })
 
     async function study_as_export_pgn() {
         let res = await Promise.all(props.sections.map(section =>
