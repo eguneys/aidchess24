@@ -1,7 +1,7 @@
 import { SetStoreFunction } from "solid-js/store";
 import type { Agent } from "./createAgent";
 import { type StoreActions, type StoreState } from './'
-import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, StudiesPredicate } from "../components/sync_idb_study";
+import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, StudiesPredicate } from "./sync_idb_study";
 import { batch, createSignal } from "solid-js";
 import { createAsync } from "@solidjs/router";
 

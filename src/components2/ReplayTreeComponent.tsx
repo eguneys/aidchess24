@@ -1,5 +1,5 @@
 import { createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
-import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../components/sync_idb_study"
+import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../store/sync_idb_study"
 import { parent_path, Path, Step } from "../store/step_types"
 import './ReplayTreeComponent.scss'
 import { useStore } from "../store"
