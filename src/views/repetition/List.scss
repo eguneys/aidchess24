@@ -169,5 +169,22 @@
                 }
             }
         }
+
+        .studies-list {
+            .no-study {
+                display: flex;
+                flex-flow: column;
+                padding: 1em;
+                align-items: center;
+            }
+        }
+        .sections-list-multiple {
+            .no-section {
+                display: flex;
+                flex-flow: column;
+                padding: 1em;
+                align-items: center;
+            }
+        }
     }
 }

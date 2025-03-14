@@ -2,7 +2,7 @@ import { Route, A, useLocation, useBeforeLeave, Router } from "@solidjs/router";
 import { ErrorBoundary, Show, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
-import { StoreProvider } from "./store";
+import { PersistedStoreProvider, StoreProvider } from "./store";
 import { StudiesDBProvider } from "./store/sync_idb_study";
 const Home = lazy(() => import('./Home'))
 const Contact = lazy(() => import('./Contact'))
@@ -55,9 +55,11 @@ const AppInRouterWithStore = (props: any) => {
 
   return (<>
     <StudiesDBProvider>
+      <PersistedStoreProvider>
       <StoreProvider>
         <AppInRouter {...props} />
       </StoreProvider>
+      </PersistedStoreProvider>
     </StudiesDBProvider>
   </>)
 

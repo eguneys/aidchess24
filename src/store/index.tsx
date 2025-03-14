@@ -11,6 +11,7 @@ import { INITIAL_FEN, makeFen } from "chessops/fen";
 import { PGN } from "../components2/parse_pgn";
 import { parseUci } from "chessops";
 import { makeSan } from "chessops/san";
+import { makePersisted } from "@solid-primitives/storage";
 
 
 export type StoreActions = {
@@ -128,3 +129,57 @@ export function StoreProvider(props: { children: JSX.Element }) {
 export function useStore() {
     return useContext(StoreContext)!
 }
+
+
+type PersistedActions = {
+    set_repeat_selected_study(id?: EntityStudyId): void
+    toggle_repeat_study_section(id: EntitySectionId): void
+}
+
+type PersistedState = {
+    repeat_selected_study_id: EntityStudyId | undefined
+    selected_section_ids: Record<EntityStudyId, EntitySectionId[]>
+}
+
+const p_version = 1
+
+export type PersistedStore = [PersistedState, PersistedActions]
+
+const PersistedStoreContext = createContext<PersistedStore>()
+
+export function PersistedStoreProvider(props: { children: JSX.Element }) {
+    let [state, setState] = makePersisted(createStore<PersistedState>({
+        repeat_selected_study_id: undefined,
+        selected_section_ids: {}
+    }), { name: '.aidchess.pstore?v' + p_version })
+
+    let actions: PersistedActions = {
+        set_repeat_selected_study(id?: EntityStudyId) {
+            setState('repeat_selected_study_id', id)
+        },
+        toggle_repeat_study_section(id: EntitySectionId) {
+            let study_id = state.repeat_selected_study_id
+            if (!study_id) {
+                return
+            }
+            let list = state.selected_section_ids[study_id]
+
+            if (!list) {
+                setState('selected_section_ids', study_id, [id])
+            } else if (list.includes(id)) {
+                setState('selected_section_ids', study_id, list => list.filter(_ => _ !== id))
+            } else {
+                setState('selected_section_ids', study_id, list => [...list, id])
+            }
+        }
+    }
+
+    let store: PersistedStore = [state, actions]
+
+    return <PersistedStoreContext.Provider value={store}>
+        {props.children}
+    </PersistedStoreContext.Provider>
+
+}
+
+export const usePersistedStore = () => useContext(PersistedStoreContext)!

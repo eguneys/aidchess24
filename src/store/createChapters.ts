@@ -1,4 +1,4 @@
-import { SetStoreFunction } from "solid-js/store";
+import { reconcile, SetStoreFunction } from "solid-js/store";
 import { StoreActions, StoreState } from ".";
 import type { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
@@ -19,8 +19,14 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
         }
 
         if (s[0] === 'chapters') {
-            let list = await agent.Chapters.by_section_id(s[1]) 
-            return { list }
+            let new_list = await agent.Chapters.by_section_id(s[1]) 
+            let old_list = value.list
+
+            let keep = old_list.filter(o => !new_list.find(n => n.id === o.id))
+
+            return {
+                list: [...new_list, ...keep]
+            }
         }
 
         let chapter_id = s[1]
