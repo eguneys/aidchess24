@@ -45,6 +45,7 @@ type ComputedRepeatProps = {
     selected_study_id: EntityStudyId | undefined,
     isSelectedStudy: (_: EntityStudyId) => boolean
     isSelectedSection: (_: EntitySectionId) => boolean
+    study: ModelStudy | undefined,
     studies: ModelStudy[]
     sections: ModelSection[] | undefined
     selected_sections: ModelSection[]
@@ -58,7 +59,7 @@ type ComputedRepeatProps = {
     due_black: ModelRepeatDueMove[]
 }
 
-function createRepeatProps(): ComputedRepeatProps {
+export function createRepeatProps(): ComputedRepeatProps {
     let [store, { load_chapters, load_due_moves }] = useStore()
     let [pstore] = usePersistedStore()
 
@@ -78,13 +79,20 @@ function createRepeatProps(): ComputedRepeatProps {
 
 
 
-
     const selected_study_id = createMemo(() => pstore.repeat_selected_study_id)
     const isSelectedStudy = createSelector(() => pstore.repeat_selected_study_id)
     const isSelectedSection = (id: EntitySectionId) => pstore.selected_section_ids[pstore.repeat_selected_study_id!]?.includes(id)
 
     const selected_sections = createMemo(() => sections()?.filter(_ => isSelectedSection(_.id)) ?? [])
     const selected_section_ids = createMemo(() => selected_sections().map(_ => _.id))
+
+    const study = createMemo(() => { 
+        let study_id = selected_study_id() 
+        if (!study_id) {
+            return undefined
+        }
+        return store.studies[study_id] 
+    })
 
     createEffect(() => {
         selected_section_ids().forEach(_ => load_chapters(_))
@@ -107,6 +115,9 @@ function createRepeatProps(): ComputedRepeatProps {
         isSelectedSection,
         get selected_study_id() {
             return selected_study_id()
+        },
+        get study() {
+            return study()
         },
         get studies() {
             return studies()

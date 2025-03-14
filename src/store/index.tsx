@@ -2,7 +2,7 @@ import { Accessor, batch, createContext, useContext } from "solid-js";
 import { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createAgent } from "./createAgent";
-import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelRepeatDueMove,  ModelReplayTree,  ModelSection,  ModelStudy, ModelTreeStepNode, StudiesPredicate } from "./sync_idb_study";
+import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelRepeatDueMove,  ModelRepeatMoveAttempt,  ModelReplayTree,  ModelSection,  ModelStudy, ModelTreeStepNode, StudiesPredicate } from "./sync_idb_study";
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
@@ -13,6 +13,8 @@ import { PGN } from "../components2/parse_pgn";
 import { parseUci } from "chessops";
 import { makeSan } from "chessops/san";
 import { makePersisted } from "@solid-primitives/storage";
+import { FSRS } from "ts-fsrs";
+import { RepeatAttemptResult } from "./repeat_types";
 
 
 export type StoreActions = {
@@ -43,12 +45,20 @@ export type StoreActions = {
     add_child_san_to_current_path(san: SAN): Promise<ModelTreeStepNode>
     tree_step_node_set_nags(node: ModelTreeStepNode, nags: NAG[]): Promise<void>
 
+    set_success_path(path?: Path): void
+    set_failed_path(path?: Path): void
+    set_hide_after_path(path?: Path): void
+
     set_fen(fen: FEN): void
     set_last_move(last_move: [UCI, SAN] | undefined): void
     play_uci(uci: UCI): SAN
 
 
     load_due_moves(study_id: EntityStudyId, section_ids: EntitySectionId[]): void
+    save_due_move_if_not(due_move: ModelRepeatDueMove): Promise<void>
+    add_attempt_with_spaced_repetition(fs: FSRS, attempt_result: RepeatAttemptResult): Promise<ModelRepeatMoveAttempt>
+
+
 }
 
 export type StoreState = {

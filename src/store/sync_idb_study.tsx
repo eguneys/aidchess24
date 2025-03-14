@@ -450,12 +450,16 @@ async function db_load_repeat_due_moves_model(db: StudiesDB, study_id: EntityStu
         let e_existing_due_move = e_existing_due_moves.find(_ => _.tree_step_node_id === e_step_tree_node.id)
 
         if (e_existing_due_move) {
+
+
+            let attempts = await db_load_repeat_move_attempts_model(db, e_existing_due_move.id, 5)
+
             res.push({
                 id: e_existing_due_move.id,
                 study_id,
                 tree_step_node_id: e_step_tree_node.id,
                 tree_step_node: e_step_tree_node,
-                attempts: [],
+                attempts,
                 is_saved: true
             })
         } else {
@@ -477,8 +481,14 @@ async function db_new_repeat_move_attempt(db: StudiesDB, entity: EntityRepeatMov
     await db.repeat_move_attempts.add(entity)
 } 
 
-async function db_load_repeat_move_attempts_model(db: StudiesDB, due_move_id: EntityRepeatDueMoveId): Promise<ModelRepeatMoveAttempt[]> {
-    let e_res = await db.repeat_move_attempts.where('repeat_due_move_id').equals(due_move_id).toArray()
+async function db_load_repeat_move_attempts_model(db: StudiesDB, due_move_id: EntityRepeatDueMoveId, limit?: number): Promise<ModelRepeatMoveAttempt[]> {
+    let q = db.repeat_move_attempts.where('repeat_due_move_id').equals(due_move_id)
+    
+    if (limit !== undefined) {
+        q = q.limit(limit)
+    }
+
+    let e_res = await q.toArray()
 
     if (!e_res) {
         throw new EntityNotFoundError("RepeatMoveAttempt", due_move_id)
@@ -629,6 +639,9 @@ class EntityPlayUciTreeReplay extends Entity<StudiesDB> {
     id!: EntityPlayUciTreeReplayId
     steps_tree_id!: EntityStepsTreeId
     cursor_path!: Path
+    success_path?: Path
+    failed_path?: Path
+    hide_after_path?: Path
 }
 
 

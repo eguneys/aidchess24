@@ -14,6 +14,9 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         id: '',
         steps_tree_id: '',
         cursor_path: '',
+        success_path: undefined,
+        failed_path: undefined,
+        hide_after_path: undefined,
         steps_tree: {
             id: '',
             flat_nodes: {}
@@ -32,6 +35,18 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
         setState("replay_tree", "cursor_path", path)
     }
+    const set_success_path = (path: Path) => {
+        agent.ReplayTree.update({ id: state.replay_tree.id, success_path: path })
+        setState("replay_tree", "success_path", path)
+    }
+    const set_failed_path = (path: Path) => {
+        agent.ReplayTree.update({ id: state.replay_tree.id, failed_path: path })
+        setState("replay_tree", "failed_path", path)
+    }
+    const set_hide_after_path = (path: Path) => {
+        agent.ReplayTree.update({ id: state.replay_tree.id, hide_after_path: path })
+        setState("replay_tree", "hide_after_path", path)
+    }
 
     Object.assign(actions, {
         reset_replay_tree() {
@@ -40,6 +55,9 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         load_replay_tree(chapter_id: EntityChapterId) {
             set_source(chapter_id)
         },
+        set_success_path,
+        set_failed_path,
+        set_hide_after_path,
         goto_path,
         goto_path_if_can(res: Path | undefined) {
             if (res !== undefined) {

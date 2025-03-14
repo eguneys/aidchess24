@@ -1,23 +1,24 @@
-import { batch, createContext, createEffect, createMemo, createResource, createSignal, For, on, Show, Suspense, untrack, useContext } from "solid-js"
-import { StudiesDBContext, StudiesDBProvider } from "../../components/sync_idb_study"
+import { batch, createContext, createEffect, createMemo, createSignal, For, on, Show, Suspense, untrack, useContext } from "solid-js"
 import { A, useParams, useSearchParams } from "@solidjs/router"
-import { RepeatShowType } from "./List"
-import { non_passive_on_wheel, PlayUciBoard, PlayUciComponent } from "../../components/PlayUciComponent"
-import { PlayUciTreeReplayComponent } from "../../components/ReplayTreeComponent"
+import { createRepeatProps, RepeatShowType } from "./List"
 import { arr_rnd } from "../../random"
 import './Show.scss'
-import { fen_turn, nag_to_glyph, Ply } from "../../components/step_types"
 import { INITIAL_FEN } from "chessops/fen"
 import { annotationShapes } from "../../annotationShapes"
-import { RepeatAttemptResult, RepeatDueMove, RepeatMoveAttempt } from "./types"
-import TimeAgo from "../../components/TimeAgo"
 import { FSRS } from "ts-fsrs"
+import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
+import { RepeatAttemptResult } from "../../store/repeat_types"
+import { fen_pos, fen_turn, nag_to_glyph, Ply } from "../../store/step_types"
+import { non_passive_on_wheel, PlayUciBoard } from "../../components2/PlayUciBoard"
+import { parseSquare } from "chessops"
+import { usePersistedStore, useStore } from "../../store"
+import { createReplayTreeComputed, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
+import TimeAgo from "../../components2/TimeAgo"
+import { Key } from "chessground/types"
 
 export default () => {
     return (<>
-    <StudiesDBProvider>
         <ShowComponent />
-    </StudiesDBProvider>
     </>)
 }
 
@@ -26,50 +27,11 @@ const FSRSContext = createContext(new FSRS({ }))
 function ShowComponent() {
 
     let fs = useContext(FSRSContext)
-    let db = useContext(StudiesDBContext)!
 
     let [searchParams] = useSearchParams()
     let repeat_type: RepeatShowType = (searchParams.filter ?? 'white') as RepeatShowType
 
-    let params = useParams()
 
-    let [study] = createResource(() => db.study_by_id(params.id))
-    let [repeat_study] = createResource(async () => {
-        let res = await db.get_or_new_repeat_study(params.id)
-
-        return res
-    })
-
-    createEffect(on(repeat_study, (r) => {
-        if (!r) {
-            return
-        }
-        r.create_effects_listen_load_db(db)
-    }))
-
-    const play_uci = PlayUciComponent()
-
-    const filtered_all = createMemo(() => {
-        let r = repeat_study()
-        if (!r) {
-            return undefined
-        }
-
-        switch (repeat_type) {
-            case 'first-ten': return r.due_first_ten
-            case 'ten-twenty': return r.due_ten_twenty
-            case 'twenty-plus': return r.due_twenty_plus
-            case 'white': return r.due_white
-            case 'black': return r.due_black
-        }
-    })
-
-    const [filtered_all_populated] = createResource<RepeatDueMove[], RepeatDueMove[]>(filtered_all, async (all) => {
-        await Promise.all(all.map(_ => _.once_listen_load_db(db)))
-        return all
-    })
-
-    const filtered_dues = createMemo(() => filtered_all_populated()?.filter(_ => _.is_due))
 
     const filter_title = () => {
         switch (repeat_type) {
@@ -81,10 +43,52 @@ function ShowComponent() {
         }
     }
 
+    let [store, { 
+        play_uci,
+        add_child_san_to_current_path,
+        goto_path, 
+        goto_path_if_can,
+        set_success_path,
+        set_failed_path,
+        set_hide_after_path,
+    
+        save_due_move_if_not,
+        add_attempt_with_spaced_repetition,
+
+        load_study
+    }] = useStore()
+
+    let [, {
+    /*    set_repeat_selected_study */
+    }] = usePersistedStore()
+
+    /*
+    let [, {
+        set_repeat_selected_study
+    }] = usePersistedStore()
+     */
+
+    let r_props = createRepeatProps()
+    let c_props = createReplayTreeComputed(store, true)
+
+    let params = useParams()
+    //set_repeat_selected_study(params.id)
+    load_study(params.id)
+
+    const due_list_by_type = createMemo(() => {
+        switch(repeat_type) {
+            case 'first-ten': return r_props.due_first_ten
+            case 'ten-twenty': return r_props.due_ten_twenty
+            case 'twenty-plus': return r_props.due_twenty_plus
+            case 'white': return r_props.due_white
+            case 'black': return r_props.due_black
+        }
+    })
+
     const [trigger_next_due_move, set_trigger_next_due_move] = createSignal<boolean>(true, { equals: false })
 
-    const one_random_due = createMemo<RepeatDueMove | undefined>((prev) => {
-        let res = filtered_dues()
+    const one_random_due = createMemo<ModelRepeatDueMove | undefined>((prev) => {
+        let res = due_list_by_type()
         if (res === undefined) {
             return undefined
         }
@@ -96,9 +100,9 @@ function ShowComponent() {
         return arr_rnd(res)
     })
 
-    const [one_selected_due, set_one_selected_due] = createSignal<RepeatDueMove | undefined>(undefined)
+    const [one_selected_due, set_one_selected_due] = createSignal<ModelRepeatDueMove | undefined>(undefined)
 
-    const select_one_attempt_result = (attempt_result?: RepeatMoveAttempt) => {
+    const select_one_attempt_result = (attempt_result?: ModelRepeatMoveAttempt) => {
 
         if (!attempt_result) {
             set_one_selected_due(undefined)
@@ -106,7 +110,7 @@ function ShowComponent() {
         }
 
 
-        let due_move = filtered_all()?.find(_ => _.id === attempt_result.repeat_due_move_id)
+        let due_move = due_list_by_type()?.find(_ => _.id === attempt_result.repeat_due_move_id)
 
         if (!due_move) {
             return
@@ -121,60 +125,54 @@ function ShowComponent() {
 
     const one_particular_due = createMemo(() => one_selected_due() ?? one_random_due())
 
-    const [play_replay] = createResource(() => [one_particular_due()?.node.tree_id],
-        ([u_id]) => u_id ? db.play_replay_by_steps_tree_id(u_id) : undefined)
-
     const [show_previous_moves, set_show_previous_moves] = createSignal(false)
 
     const show_at_path = createMemo(() =>
-        one_particular_due()?.node.path.split(' ').slice(0, -1).join(' ')
+        one_particular_due()?.tree_step_node.step.path.split(' ').slice(0, -1).join(' ')
     )
-    const solution_uci = createMemo(() => one_particular_due()?.node.uci)
-
-
+    const solution_uci = createMemo(() => one_particular_due()?.tree_step_node.step.uci)
 
     createEffect(() => {
-        let r = play_replay()
-        if (!r) {
+        let path = show_at_path()
+        if (!path) {
             return
         }
-        let path = show_at_path()!
 
         let show_previous = show_previous_moves()
-
         untrack(() => {
             batch(() => {
-                r.goto_path(path)
-                r.hide_after_path = show_previous ? path : ''
+                goto_path(path)
+                set_hide_after_path(show_previous ? path : '')
             })
         })
     })
 
+
     const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
 
-    const color = () => fen_turn(one_particular_due()?.node.before_fen ?? INITIAL_FEN)
-    const movable = () => !!play_replay() && play_replay()!.cursor_path === show_at_path()
+    const color = () => fen_turn(one_particular_due()?.tree_step_node.step.before_fen ?? INITIAL_FEN)
+    const movable = () => store.replay_tree.cursor_path === show_at_path()
 
-    createEffect(on(() => play_replay()?.cursor_path_step, (step) => {
-        if (!step) {
-            play_uci.set_fen_and_last_move(INITIAL_FEN)
-            return
+    const on_play_orig_key = async (orig: Key, dest: Key) => {
+
+        const pos = () => fen_pos(store.play_fen)
+
+        let position = pos()
+        let turn_color = position.turn
+
+        let piece = position.board.get(parseSquare(orig)!)!
+
+        let uci = orig + dest
+        if (piece.role === 'pawn' &&
+            ((dest[1] === '8' && turn_color === 'white') || (dest[1] === '1' && turn_color === 'black'))) {
+            uci += 'q'
         }
 
-        play_uci.set_fen_and_last_move(step.fen, step.uci)
-    }))
+        let san = play_uci(uci)
 
 
-    createEffect(on(() => play_uci.on_last_move_added, (lm) => {
-        if (!lm) {
-            return
-        }
-
-        let [uci, san] = lm
-
-        let r = play_replay()!
-
-        let node = r.add_child_san_to_current_path(san)!
+        let node = await add_child_san_to_current_path(san)
+        goto_path(node.step.path)
 
         if (uci === solution_uci()) {
             if (show_previous_moves()) {
@@ -186,7 +184,7 @@ function ShowComponent() {
                     set_repeat_attempt_result('solved')
                 }
             }
-            r.success_path = node.path
+            set_success_path(node.step.path)
 
         } else {
             if (show_previous_moves()) {
@@ -194,77 +192,70 @@ function ShowComponent() {
             } else {
                 set_repeat_attempt_result('failed')
             }
-            r.failed_path = node.path
+            set_failed_path(node.step.path)
         }
-    }))
+    }
 
     const on_show_answer = () => {
         set_repeat_attempt_result('failed-with-skip')
-        let path = one_particular_due()!.node.path
-        play_replay()!.failed_path = path
-        play_replay()!.goto_path(path)
+        let path = one_particular_due()!.tree_step_node.step.path
+        set_failed_path(path)
+        goto_path(path)
     }
 
 
 
-    createEffect(on(repeat_attempt_result, (attempt_result) => {
+    createEffect(on(repeat_attempt_result, async (attempt_result) => {
         if (attempt_result !== undefined) {
-            play_replay()!.hide_after_path = undefined
+            set_hide_after_path(undefined)
 
             let due_move = one_particular_due()!
-            let repeat_move_attempt = due_move.add_attempt_with_spaced_repetition(fs, attempt_result)
+
+            await add_attempt_with_spaced_repetition(fs, attempt_result)
 
             batch(() => {
                 set_trigger_next_due_move(false)
-                if (due_move.is_unsaved) {
-                    db.save_due_move(due_move.entity)
-                }
-                db.add_repeat_move_attempt(repeat_move_attempt.entity)
+                save_due_move_if_not(due_move)
             })
-
         }
     }))
 
+
     const set_on_wheel = (i: number) => {
-        if (!play_replay()) {
-            return
-        }
         if (i > 0) {
-            play_replay()!.goto_next_if_can()
+            goto_path_if_can(c_props.get_next_path)
         } else {
-            play_replay()!.goto_prev_if_can()
+            goto_path_if_can(c_props.get_prev_path)
         }
     }
 
-    let annotation = createMemo(() => {
-        if (!play_replay()) {
-            return []
-        }
 
-        let step = play_replay()!.cursor_path_step
+
+    let annotation = createMemo(() => {
+        let step = c_props.step_at_cursor_path
 
         if (!step) {
             return []
         }
 
-        if (play_replay()!.failed_path === step.path) {
-            return annotationShapes(step.uci, step.san, '✗')
+        if (store.replay_tree.failed_path === step.step.path) {
+            return annotationShapes(step.step.uci, step.step.san, '✗')
         }
-        if (play_replay()!.success_path === step.path) {
+        if (store.replay_tree.success_path === step.step.path) {
             if (repeat_attempt_result()?.includes('hint')) {
-                return annotationShapes(step.uci, step.san, '✓')
+                return annotationShapes(step.step.uci, step.step.san, '✓')
             } else {
-                return annotationShapes(step.uci, step.san, '!')
+                return annotationShapes(step.step.uci, step.step.san, '!')
             }
         }
 
-        let nag = step.nags[0]
+        let nag = step.nags?.[0]
 
         if (!nag) {
             return []
         }
 
-        return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
+        return annotationShapes(step.step.uci, step.step.san, nag_to_glyph(nag))
     })
 
     const on_next_due_move = () => {
@@ -279,7 +270,7 @@ function ShowComponent() {
     const move_attempts = createMemo(() => one_particular_due()?.attempts)
 
     const session_attempts = createMemo(() => {
-        let res: RepeatMoveAttempt[] = ((filtered_all()?.map(_ => _.last_attempt).filter(Boolean) ?? []) as RepeatMoveAttempt[])
+        let res: ModelRepeatMoveAttempt[] = ((due_list_by_type()?.map(_ => _.attempts[0]).filter(Boolean) ?? []) as ModelRepeatMoveAttempt[])
 
         res.sort((a, b) => a.created_at - b.created_at)
 
@@ -294,7 +285,7 @@ function ShowComponent() {
         return aa[aa.length - 1]
     })
 
-    const on_attempt_click = (attempt: RepeatMoveAttempt) => {
+    const on_attempt_click = (attempt: ModelRepeatMoveAttempt) => {
         select_one_attempt_result(attempt)
     }
 
@@ -305,29 +296,29 @@ function ShowComponent() {
         }>
 
         <div class='header'>
-            <div class='title'>{study()?.name}</div>
+            <div class='title'>{r_props.study?.name}</div>
             <div class='filter'><span class='label'>Filter:</span> 
                 <span class='value'>{filter_title()}</span> moves
             </div>
             <div class='due-moves'><span class='label'>Due:</span> 
                 <Suspense>
-                    <span class='value'>{filtered_dues()?.length}</span> moves left
+                    <span class='value'>{due_list_by_type().length}</span> moves left
                 </Suspense>
             </div>
         </div>
         <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-            <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} play_uci={play_uci}/>
+            <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
         </div>
         <div class='replay-wrap'>
             <Suspense>
-            <Show when={play_replay()} fallback={
+            <Show when={false} fallback={
               <>
                 <span>Great; No due moves at this time.</span>
                 <A href="/repetition">Go Back to Repetitions</A>
               </>
-            }>{ play_replay =>
+            }>
             <>
-                <PlayUciTreeReplayComponent play_replay={play_replay()} />
+                <ReplayTreeComponent lose_focus={false}/>
                 <div class="controls">
                     <Show when={repeat_attempt_result() === undefined && !show_previous_moves()}>
                         <button onClick={() => set_show_previous_moves(true)}>Hint: Show Previous Moves</button>
@@ -339,7 +330,7 @@ function ShowComponent() {
                     </Show>
                 </div>
             </>
-            }</Show>
+            </Show>
             </Suspense>
         </div>
         <div class='underboard'>
@@ -368,7 +359,7 @@ function ShowComponent() {
 }
 
 
-function MoveAttemptComponent(props: { attempt: RepeatMoveAttempt, ply?: Ply, time?: boolean, latest?: boolean, on_click?: () => void }) {
+function MoveAttemptComponent(props: { attempt: ModelRepeatMoveAttempt, ply?: Ply, time?: boolean, latest?: boolean, on_click?: () => void }) {
     const klass = createMemo(() => {
         return ' ' + props.attempt.attempt_result
     })
@@ -388,7 +379,13 @@ function MoveAttemptComponent(props: { attempt: RepeatMoveAttempt, ply?: Ply, ti
         return "" // cross
     }
 
-    return (<div onClick={() => props.on_click?.()} class={'attempt ' + (props.latest ? ' latest' : '') + (props.time ? '' : ' selectable') + klass()}>
+    return (<div onClick={() => props.on_click?.()} 
+        class={'attempt' + klass()}
+        classList={{
+            latest: props.latest,
+            selectable: !props.time
+        }}>
+
         <i data-icon={data_icon()}></i>
         <Show when={props.ply}>
             <span class='ply'>{props.ply}</span>
