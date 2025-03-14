@@ -52,6 +52,13 @@ type ComputedRepeatProps = {
     selected_section_ids: EntitySectionId[]
     all_chapters_selected: ModelChapter[]
 
+
+    all_first_ten: ModelRepeatDueMove[]
+    all_ten_twenty: ModelRepeatDueMove[]
+    all_twenty_plus: ModelRepeatDueMove[]
+    all_white: ModelRepeatDueMove[]
+    all_black: ModelRepeatDueMove[]
+
     due_first_ten: ModelRepeatDueMove[]
     due_ten_twenty: ModelRepeatDueMove[]
     due_twenty_plus: ModelRepeatDueMove[]
@@ -108,6 +115,8 @@ export function createRepeatProps(): ComputedRepeatProps {
     const all_chapters_selected = createMemo(() => store.chapters.list.filter(_ => selected_section_ids().includes(_.section_id)))
 
 
+
+    const all = createMemo<ModelRepeatDueMove[]>(() => store.due_moves.list)
     const due_all = createMemo<ModelRepeatDueMove[]>(() => store.due_moves.list.filter(_ => !_.attempts[0] || attempt_is_due(_.attempts[0])))
 
     return {
@@ -148,6 +157,21 @@ export function createRepeatProps(): ComputedRepeatProps {
         },
         get due_black() {
             return due_all().filter(_ => is_step_black(_.tree_step_node.step))
+        },
+        get all_first_ten() {
+            return all().filter(_ => is_step_first_ten(_.tree_step_node.step))
+        },
+        get all_ten_twenty() {
+            return all().filter(_ => is_step_ten_twenty(_.tree_step_node.step))
+        },
+        get all_twenty_plus() {
+            return all().filter(_ => is_step_twenty_plus(_.tree_step_node.step))
+        },
+        get all_white() {
+            return all().filter(_ => is_step_white(_.tree_step_node.step))
+        },
+        get all_black() {
+            return all().filter(_ => is_step_black(_.tree_step_node.step))
         }
     }
 }

@@ -5,7 +5,7 @@ import { arr_rnd } from "../../random"
 import './Show.scss'
 import { INITIAL_FEN } from "chessops/fen"
 import { annotationShapes } from "../../components2/annotationShapes"
-import { FSRS, State } from "ts-fsrs"
+import { FSRS } from "ts-fsrs"
 import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
 import { RepeatAttemptResult } from "../../store/repeat_types"
 import { fen_pos, fen_turn, nag_to_glyph, Ply } from "../../store/step_types"
@@ -87,6 +87,15 @@ function ShowComponent() {
             case 'black': return r_props.due_black
         }
     })
+    const all_list_by_type = createMemo(() => {
+        switch(repeat_type) {
+            case 'first-ten': return r_props.all_first_ten
+            case 'ten-twenty': return r_props.all_ten_twenty
+            case 'twenty-plus': return r_props.all_twenty_plus
+            case 'white': return r_props.all_white
+            case 'black': return r_props.all_black
+        }
+    })
 
     const [trigger_next_due_move, set_trigger_next_due_move] = createSignal<boolean>(true, { equals: false })
 
@@ -139,11 +148,15 @@ function ShowComponent() {
         let due = one_particular_due()
 
         if (!due) {
-            reset_replay_tree()
             return
         }
 
-        load_replay_tree_by_steps_id(due.tree_step_node.tree_id)
+        untrack(() => {
+            reset_replay_tree()
+            setTimeout(() => {
+                load_replay_tree_by_steps_id(due.tree_step_node.tree_id)
+            }, 100)
+        })
     })
 
     let awaiting_tree_load = createMemo(() => {
@@ -152,7 +165,6 @@ function ShowComponent() {
     })
 
     const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
-
 
     createEffect(() => {
         if (awaiting_tree_load()) {
@@ -189,7 +201,6 @@ function ShowComponent() {
             batch(() => {
                 set_trigger_next_due_move(false)
                 save_due_move_if_not(due_move)
-                reset_replay_tree()
             })
         }
     }))
@@ -299,9 +310,9 @@ function ShowComponent() {
     const move_attempts = createMemo(() => one_particular_due()?.attempts)
 
     const session_attempts = createMemo(() => {
-        let res: ModelRepeatMoveAttempt[] = ((due_list_by_type()?.map(_ => _.attempts[0]).filter(Boolean) ?? []) as ModelRepeatMoveAttempt[])
+        let res: ModelRepeatMoveAttempt[] = ((all_list_by_type()?.map(_ => _.attempts[0]).filter(Boolean) ?? []) as ModelRepeatMoveAttempt[])
 
-        res.sort((a, b) => a.created_at - b.created_at)
+        res.sort((a, b) => b.created_at - a.created_at)
 
         return res
     })

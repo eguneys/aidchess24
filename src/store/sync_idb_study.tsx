@@ -515,7 +515,7 @@ async function db_load_repeat_move_attempts_model(db: StudiesDB, due_move_id: En
         throw new EntityNotFoundError("RepeatMoveAttempt", due_move_id)
     }
 
-    return e_res
+    return e_res.sort((a, b) => b.created_at - a.created_at)
 }
 
 async function db_new_due_move(db: StudiesDB, entity: EntityRepeatDueMoveInsert) {
@@ -907,6 +907,7 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
             return db_replay_tree_by_chapter_id(db, id)
         },
         get_replay_tree_by_steps_tree_id(id: EntityStepsTreeId) {
+            console.log(id)
             return db_replay_tree_by_steps_tree_id(db, id)
         },
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
