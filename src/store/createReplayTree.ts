@@ -35,7 +35,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             if (s[0] === 'by_id') {
                 return agent.ReplayTree.by_id(s[1])
             } else {
-                return agent.ReplayTree.by_steps_tree_id(s[1])
+                return agent.ReplayTree.by_steps_tree_id(s[1]).then(_ => { console.log('resolved'); return _})
             }
         }
 
@@ -55,16 +55,17 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
         setState("replay_tree", "cursor_path", path)
     }
-    const set_success_path = (path: Path) => {
-        agent.ReplayTree.update({ id: state.replay_tree.id, success_path: path })
+    const set_success_path = (path?: Path) => {
+        //agent.ReplayTree.update({ id: state.replay_tree.id, success_path: path })
         setState("replay_tree", "success_path", path)
     }
-    const set_failed_path = (path: Path) => {
-        agent.ReplayTree.update({ id: state.replay_tree.id, failed_path: path })
+    const set_failed_path = (path?: Path) => {
+        //agent.ReplayTree.update({ id: state.replay_tree.id, failed_path: path })
         setState("replay_tree", "failed_path", path)
     }
-    const set_hide_after_path = (path: Path) => {
-        agent.ReplayTree.update({ id: state.replay_tree.id, hide_after_path: path })
+    const set_hide_after_path = (path?: Path) => {
+        //agent.ReplayTree.update({ id: state.replay_tree.id, hide_after_path: path })
+        console.log('set hide', path)
         setState("replay_tree", "hide_after_path", path)
     }
 

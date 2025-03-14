@@ -567,6 +567,16 @@ function new_tree_replay_entity(steps_tree_id: EntityStepsTreeId): EntityPlayUci
     }
 }
 
+function new_repeat_move_attempt_entity(repeat_due_move_id: EntityRepeatDueMoveId, card: Card, attempt_result: RepeatAttemptResult) {
+    return {
+        id: gen_id8(),
+        repeat_due_move_id,
+        created_at: Date.now(),
+        card,
+        attempt_result
+    }
+}
+
 class StudiesDB extends Dexie {
     studies!: EntityTable<EntityStudy, "id">
     sections!: EntityTable<EntitySection, "id">
@@ -796,7 +806,7 @@ export type StudiesDBReturn = {
 
     load_repeat_due_moves(study_id: EntityStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]>
 
-    add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert): Promise<void>
+    add_repeat_move_attempt(repeat_due_move_id: EntityRepeatDueMoveId, card: Card, attempt_result: RepeatAttemptResult): Promise<ModelRepeatMoveAttempt>
     load_repeat_move_attempts(due_move_id: EntityRepeatDueMoveId): Promise<ModelRepeatMoveAttempt[]>
 
     new_due_move(due_move: EntityRepeatDueMoveInsert): Promise<void>;
@@ -914,8 +924,12 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         load_repeat_due_moves(study_id: EntityStudyId, sections: EntitySectionId[]) {
             return db_load_repeat_due_moves_model(db, study_id, sections)
         },
-        add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert) {
-                return db_new_repeat_move_attempt(db, entity) 
+        async add_repeat_move_attempt(repeat_due_move_id: EntityRepeatDueMoveId, card: Card, attempt_result: RepeatAttemptResult) {
+            let entity = new_repeat_move_attempt_entity(repeat_due_move_id, card, attempt_result)
+            await db_new_repeat_move_attempt(db, entity) 
+            return {
+                ...entity
+            }
         },
         load_repeat_move_attempts(due_move_id: EntityRepeatDueMoveId) {
             return db_load_repeat_move_attempts_model(db, due_move_id)

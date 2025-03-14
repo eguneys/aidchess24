@@ -5,7 +5,7 @@ import { arr_rnd } from "../../random"
 import './Show.scss'
 import { INITIAL_FEN } from "chessops/fen"
 import { annotationShapes } from "../../components2/annotationShapes"
-import { FSRS } from "ts-fsrs"
+import { FSRS, State } from "ts-fsrs"
 import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
 import { RepeatAttemptResult } from "../../store/repeat_types"
 import { fen_pos, fen_turn, nag_to_glyph, Ply } from "../../store/step_types"
@@ -146,10 +146,16 @@ function ShowComponent() {
         load_replay_tree_by_steps_id(due.tree_step_node.tree_id)
     })
 
-    createEffect(() => {
+    let awaiting_tree_load = createMemo(() => {
         let due = one_particular_due()
+        return due?.tree_step_node.tree_id !== store.replay_tree.steps_tree_id
+    })
 
-        if (due?.tree_step_node.tree_id !== store.replay_tree.steps_tree_id) {
+    const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
+
+
+    createEffect(() => {
+        if (awaiting_tree_load()) {
             return
         }
 
@@ -159,15 +165,34 @@ function ShowComponent() {
         }
 
         let show_previous = show_previous_moves()
-        untrack(() => {
-            batch(() => {
+
+        batch(() => {
+            untrack(() => {
                 goto_path(path)
                 set_hide_after_path(show_previous ? path : '')
             })
         })
     })
 
-    const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
+    createEffect(on(repeat_attempt_result, (attempt_result) => {
+        if (awaiting_tree_load()) {
+            return
+        }
+
+        if (attempt_result !== undefined) {
+            set_hide_after_path(undefined)
+
+            let due_move = one_particular_due()!
+
+            add_attempt_with_spaced_repetition(fs, due_move, attempt_result)
+
+            batch(() => {
+                set_trigger_next_due_move(false)
+                save_due_move_if_not(due_move)
+                reset_replay_tree()
+            })
+        }
+    }))
 
     const color = () => fen_turn(one_particular_due()?.tree_step_node.step.before_fen ?? INITIAL_FEN)
     const movable = () => store.replay_tree.cursor_path === show_at_path()
@@ -223,21 +248,6 @@ function ShowComponent() {
     }
 
 
-
-    createEffect(on(repeat_attempt_result, async (attempt_result) => {
-        if (attempt_result !== undefined) {
-            set_hide_after_path(undefined)
-
-            let due_move = one_particular_due()!
-
-            await add_attempt_with_spaced_repetition(fs, attempt_result)
-
-            batch(() => {
-                set_trigger_next_due_move(false)
-                save_due_move_if_not(due_move)
-            })
-        }
-    }))
 
 
     const set_on_wheel = (i: number) => {

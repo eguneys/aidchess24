@@ -1,6 +1,6 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
-import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityRepeatDueMoveId, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "./sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityRepeatDueMoveId, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, gen_id8, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "./sync_idb_study";
 import { PGN } from "../components2/parse_pgn";
 import type { NAG, Step } from "../store/step_types";
 import { Card } from "ts-fsrs";
@@ -153,10 +153,14 @@ function createAgentDueMoves(db: StudiesDBReturn): DueMoves {
     return {
     by_study_id,
     async save_due_move(due_move: ModelRepeatDueMove) {
-        throw new Error("Function not implemented.");
+        return db.new_due_move({
+            id: due_move.id,
+            study_id: due_move.study_id,
+            tree_step_node_id: due_move.tree_step_node_id
+        })
     },
-    async new_attempt(id: EntityRepeatDueMoveId, attempt_result: RepeatAttemptResult, new_card: Card) {
-        throw new Error("Function not implemented.");
+    async new_attempt(repeat_due_move_id: EntityRepeatDueMoveId, attempt_result: RepeatAttemptResult, card: Card) {
+        return db.add_repeat_move_attempt(repeat_due_move_id, card, attempt_result)
     }
 }
 }

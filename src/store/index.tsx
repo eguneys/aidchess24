@@ -59,7 +59,7 @@ export type StoreActions = {
 
     load_due_moves(study_id: EntityStudyId, section_ids: EntitySectionId[]): void
     save_due_move_if_not(due_move: ModelRepeatDueMove): Promise<void>
-    add_attempt_with_spaced_repetition(fs: FSRS, attempt_result: RepeatAttemptResult): Promise<ModelRepeatMoveAttempt>
+    add_attempt_with_spaced_repetition(fs: FSRS, due_move: ModelRepeatDueMove, attempt_result: RepeatAttemptResult): Promise<ModelRepeatMoveAttempt>
 
 
 }
