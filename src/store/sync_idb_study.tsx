@@ -88,7 +88,7 @@ async function db_update_chapter(db: StudiesDB, entity: EntityChapterInsert) {
 
 async function db_delete_study(db: StudiesDB, id: EntityStudyId) {
 
-    db.transaction('rw', [db.studies, db.sections, db.chapters], async () => {
+    db.transaction('rw', [db.studies, db.sections, db.chapters, db.play_uci_tree_replays], async () => {
 
         let e_study = await db.studies.where('id').equals(id).first()
 
