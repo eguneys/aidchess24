@@ -420,38 +420,6 @@ async function db_delete_tree_nodes(db: StudiesDB, node_ids: EntityTreeStepNodeI
     })
 }
 
-async function db_put_repeat_study(db: StudiesDB, entity: EntityRepeatStudyInsert) {
-    await db.repeat_studies.put(entity)
-}
-
-async function db_get_or_new_repeat_study(db: StudiesDB, study_id: EntityStudyId): Promise<ModelRepeatStudy> {
-    let e_res = await db.repeat_studies.where('study_id').equals(study_id).first()
-
-    if (!e_res) {
-        let i_res = {
-            id: gen_id8(),
-            study_id,
-            section_ids: []
-        }
-
-        await db.repeat_studies.add(i_res)
-
-        return {
-            ...i_res,
-            sections: []
-        }
-    }
-
-    let e_sections = await db.sections.where('id').anyOf(e_res.section_ids).toArray()
-
-    let sections = await db_load_sections_model(db, e_sections)
-
-    return {
-        ...e_res,
-        sections
-    }
-}
-
 async function db_load_repeat_due_moves_model(db: StudiesDB, repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]> {
 
     let chapters = await db.chapters.where('section_id')
@@ -576,7 +544,6 @@ class StudiesDB extends Dexie {
     tree_step_nodes!: EntityTable<EntityTreeStepNode, "id">
     tree_step_node_order_for_paths!: EntityTable<EntityTreeStepNodeOrderForPath, "id">
 
-    repeat_studies!: EntityTable<EntityRepeatStudy, "id">
     repeat_due_moves!: EntityTable<EntityRepeatDueMove, "id">
     repeat_move_attempts!: EntityTable<EntityRepeatMoveAttempt, "id">
 
@@ -596,8 +563,7 @@ class StudiesDB extends Dexie {
             play_uci_tree_replays: 'id, steps_tree_id',
             steps_trees: 'id',
             tree_step_nodes: 'id, tree_id',
-            repeat_studies: 'id, study_id',
-            repeat_due_moves: 'id, repeat_study_id, tree_step_node_id',
+            repeat_due_moves: 'id, study_id, tree_step_node_id',
             repeat_move_attempts: 'id, repeat_due_move_id, created_at',
             tree_step_node_order_for_paths: 'id, tree_id, path'
         })
@@ -612,7 +578,6 @@ class StudiesDB extends Dexie {
         this.tree_step_nodes.mapToClass(EntityTreeStepNode)
         this.tree_step_node_order_for_paths.mapToClass(EntityTreeStepNodeOrderForPath)
 
-        this.repeat_studies.mapToClass(EntityRepeatStudy)
         this.repeat_due_moves.mapToClass(EntityRepeatDueMove)
     }
 }
@@ -746,12 +711,6 @@ export type ModelTreeStepNode = EntityTreeStepNodeInsert & {
     id: EntityTreeStepNodeId,
 }
 
-export type ModelRepeatStudy = EntityRepeatStudyInsert & {
-    id: EntityRepeatStudyId,
-    sections: ModelSection[]
-    due_moves?: ModelRepeatDueMove[]
-}
-
 export type ModelRepeatDueMove = EntityRepeatDueMoveInsert & {
     id: EntityRepeatDueMoveId,
     tree_step_node: ModelTreeStepNode,
@@ -805,9 +764,7 @@ export type StudiesDBReturn = {
     update_tree_step_node(entity: EntityTreeStepNodeInsert): Promise<void>
     delete_tree_nodes(nodes: EntityTreeStepNodeId[]): Promise<void>;
 
-    put_repeat_study_sections(entity: EntityRepeatStudyInsert): Promise<void>;
-    get_or_new_repeat_study(study_id: EntityStudyId): Promise<ModelRepeatStudy>;
-    load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]>
+    load_repeat_due_moves(study_id: EntityStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]>
 
     add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert): Promise<void>
     load_repeat_move_attempts(due_move_id: EntityRepeatDueMoveId): Promise<ModelRepeatMoveAttempt[]>
@@ -917,13 +874,6 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         async delete_tree_nodes(node_ids: EntityTreeStepNodeId[]) {
             await db_delete_tree_nodes(db, node_ids)
-        },
-
-        put_repeat_study_sections(entity: EntityRepeatStudyInsert) {
-            return db_put_repeat_study(db, entity)
-        },
-        get_or_new_repeat_study(study_id: EntityStudyId) {
-            return db_get_or_new_repeat_study(db, study_id)
         },
         load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]) {
             return db_load_repeat_due_moves_model(db, repeat_study_id, sections)

@@ -1,6 +1,6 @@
 import { useContext } from "solid-js";
 import type { Store } from ".";
-import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayInsert, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "./sync_idb_study";
+import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayInsert, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelRepeatDueMove, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "./sync_idb_study";
 import { PGN } from "../components2/parse_pgn";
 import type { NAG, Step } from "../store/step_types";
 
@@ -11,6 +11,11 @@ export type Agent = {
     Studies: Studies,
     Chapters: Chapters,
     ReplayTree: ReplayTree
+    DueMoves: DueMoves
+}
+
+type DueMoves = {
+    by_study_id(id: EntityStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]>
 }
 
 type ReplayTree = {
@@ -132,6 +137,14 @@ function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
     }
 }
 
+function createAgentDueMoves(db: StudiesDBReturn): DueMoves {
+    const by_study_id = query((study_id: EntityStudyId, sections: EntitySectionId[]) => db.load_repeat_due_moves(study_id, sections), 'due_moves_by_study_id')
+
+    return {
+        by_study_id
+    }
+}
+
 export function createAgent(_: Store): Agent {
     let db = useContext(StudiesDBContext)!
 
@@ -141,9 +154,12 @@ export function createAgent(_: Store): Agent {
 
     let ReplayTree = createAgentReplayTree(db)
 
+    let DueMoves = createAgentDueMoves(db)
+
     return {
         Studies,
         Chapters,
-        ReplayTree
+        ReplayTree,
+        DueMoves,
     }
 }

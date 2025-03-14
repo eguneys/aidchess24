@@ -2,10 +2,11 @@ import { Accessor, batch, createContext, useContext } from "solid-js";
 import { JSX } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createAgent } from "./createAgent";
-import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelReplayTree,  ModelSection,  ModelStudy, ModelTreeStepNode, StudiesPredicate } from "./sync_idb_study";
+import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudy, EntityStudyId, EntityStudyInsert, ModelChapter,  ModelRepeatDueMove,  ModelReplayTree,  ModelSection,  ModelStudy, ModelTreeStepNode, StudiesPredicate } from "./sync_idb_study";
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
+import { createDueMoves } from "./createDueMoves";
 import { FEN, fen_pos, NAG, Path, SAN, UCI } from "./step_types";
 import { INITIAL_FEN, makeFen } from "chessops/fen";
 import { PGN } from "../components2/parse_pgn";
@@ -15,8 +16,8 @@ import { makePersisted } from "@solid-primitives/storage";
 
 
 export type StoreActions = {
-    load_studies(predicate: StudiesPredicate): Promise<void>
-    load_study(id: EntityStudyId): Promise<void>
+    load_studies(predicate: StudiesPredicate): void
+    load_study(id: EntityStudyId): void
     create_study(): Promise<ModelStudy>
     delete_study(id: EntityStudyId): Promise<void>
     update_study(study: Partial<EntityStudyInsert>): Promise<EntityStudy>
@@ -26,8 +27,8 @@ export type StoreActions = {
     order_sections(study_id: EntityStudyId, section_id: EntitySectionId, order: number): Promise<void>
 
 
-    load_chapters(section_id: EntitySectionId): Promise<void>
-    load_chapter(chapter_id: EntityChapterId): Promise<void>
+    load_chapters(section_id: EntitySectionId): void
+    load_chapter(chapter_id: EntityChapterId): void
     create_chapter(study_id: EntityStudyId, section_id: EntitySectionId, name?: string, pgn?: PGN): Promise<ModelChapter>
     update_chapter(study_id: EntityStudyId, section_id: EntitySectionId, chapter: Partial<EntityChapterInsert>): Promise<EntityChapter>
     delete_chapter(study_id: EntityStudyId, section_id: EntitySectionId, id: EntityChapterId): Promise<void>
@@ -35,7 +36,7 @@ export type StoreActions = {
     chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter): Promise<string>
 
     reset_replay_tree(): Promise<void>
-    load_replay_tree(chapter_id: EntityChapterId): Promise<void>
+    load_replay_tree(chapter_id: EntityChapterId): void
     goto_path(path: Path): void
     goto_path_if_can(path: Path | undefined): void 
     delete_at_and_after_path(path: Path): void
@@ -45,6 +46,9 @@ export type StoreActions = {
     set_fen(fen: FEN): void
     set_last_move(last_move: [UCI, SAN] | undefined): void
     play_uci(uci: UCI): SAN
+
+
+    load_due_moves(study_id: EntityStudyId, section_ids: EntitySectionId[]): void
 }
 
 export type StoreState = {
@@ -53,6 +57,9 @@ export type StoreState = {
     replay_tree: ModelReplayTree
     play_fen: FEN
     last_move: [UCI, SAN] | undefined
+
+
+    due_moves: { list: ModelRepeatDueMove[] }
 }
 
 
@@ -65,7 +72,9 @@ export function StoreProvider(props: { children: JSX.Element }) {
 
     let studies: Accessor<Record<EntityStudyId, ModelStudy>>,
     chapters: Accessor<{ list: ModelChapter[] }>,
-    replay_tree: Accessor<ModelReplayTree>
+    replay_tree: Accessor<ModelReplayTree>,
+    due_moves: Accessor<{ list: ModelRepeatDueMove[] }>
+
 
     let [state, setState] = createStore<StoreState>({
         get studies() {
@@ -77,6 +86,9 @@ export function StoreProvider(props: { children: JSX.Element }) {
         get replay_tree() {
             return replay_tree()
         },
+        get due_moves() {
+            return due_moves()
+        },
         play_fen: INITIAL_FEN,
         last_move: undefined
     }),
@@ -87,6 +99,7 @@ export function StoreProvider(props: { children: JSX.Element }) {
     studies = createStudies(agent, actions, state, setState)
     chapters = createChapters(agent, actions, state, setState)
     replay_tree = createReplayTree(agent, actions, state, setState)
+    due_moves = createDueMoves(agent, actions, state, setState)
 
     const set_fen = (fen: FEN) => {
         setState("play_fen", fen)
