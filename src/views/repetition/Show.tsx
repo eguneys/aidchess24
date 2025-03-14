@@ -152,6 +152,7 @@ function ShowComponent() {
         }
 
         untrack(() => {
+            set_repeat_attempt_result(undefined)
             reset_replay_tree()
             setTimeout(() => {
                 load_replay_tree_by_steps_id(due.tree_step_node.tree_id, false)
@@ -204,6 +205,8 @@ function ShowComponent() {
         })
     })
 
+    const [i_idle, set_i_idle] = createSignal<number>()
+
     createEffect(on(repeat_attempt_result, (attempt_result) => {
         if (awaiting_tree_load()) {
             return
@@ -219,6 +222,13 @@ function ShowComponent() {
             batch(() => {
                 set_trigger_next_due_move(false)
                 save_due_move_if_not(due_move)
+
+                if (attempt_result.includes('solved')) {
+                    set_i_idle(setTimeout(() => {
+                        set_trigger_next_due_move(true)
+                        set_i_idle(undefined)
+                    }, 600))
+                }
             })
         }
     }))
@@ -379,13 +389,19 @@ function ShowComponent() {
             <>
                 <ReplayTreeComponent lose_focus={false}/>
                 <div class="controls">
-                    <Show when={repeat_attempt_result() === undefined && !show_previous_moves()}>
-                        <button onClick={() => set_show_previous_moves(true)}>Hint: Show Previous Moves</button>
-                    </Show>
-                    <Show when={repeat_attempt_result() === undefined} fallback={
-                        <button onClick={on_next_due_move}>Goto Next Due Move</button>
+                    <Show when={i_idle() === undefined} fallback={
+                        <span class='idle'>...</span>
                     }>
-                        <button onClick={on_show_answer}>Show Answer</button>
+    
+                        <Show when={repeat_attempt_result() === undefined && !show_previous_moves()}>
+                            <button onClick={() => set_show_previous_moves(true)}>Hint: Show Previous Moves</button>
+                        </Show>
+                        <Show when={repeat_attempt_result() === undefined} fallback={
+                            <button onClick={on_next_due_move}>Goto Next Due Move</button>
+                        }>
+                            <button onClick={on_show_answer}>Show Answer</button>
+                        </Show>
+
                     </Show>
                 </div>
             </>
