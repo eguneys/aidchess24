@@ -176,6 +176,11 @@ export function chapter_as_export_pgn(study_name: string, section_name: string, 
 
 type ReplayTreeComputed = {
     cursor_path: Path
+    hide_after_path: Path | undefined
+    solved_paths: Path[]
+    error_paths: Path[]
+    success_path: Path | undefined
+    failed_path: Path | undefined
     get_prev_path: Path | undefined
     get_next_path: Path | undefined
     get_up_path: Path | undefined
@@ -203,6 +208,11 @@ export function createReplayTreeComputed(opts: {
         }]  = useStore()
 
     const cursor_path = createMemo(() => store.replay_tree.cursor_path)
+    const hide_after_path = createMemo(() => store.replay_tree.hide_after_path)
+    const solved_paths = createMemo(() => store.replay_tree.solved_paths)
+    const error_paths = createMemo(() => store.replay_tree.error_paths)
+    const success_path = createMemo(() => store.replay_tree.success_path)
+    const failed_path = createMemo(() => store.replay_tree.failed_path)
 
     const steps = createMemo(() => store.replay_tree.steps_tree)
 
@@ -408,6 +418,11 @@ export function createReplayTreeComputed(opts: {
     return {
         get step_at_cursor_path() { return step_at_cursor_path() },
         get cursor_path() { return cursor_path() },
+        get hide_after_path() { return hide_after_path() },
+        get solved_paths() { return solved_paths() },
+        get error_paths() { return error_paths() },
+        get success_path() { return success_path() },
+        get failed_path() { return failed_path() },
         get get_prev_path() { return get_prev_path() },
         get get_next_path() { return get_next_path() },
         get get_first_path() { return get_first_path() },
@@ -543,7 +558,12 @@ export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_men
 }
 
 
-function NodesShorten(props: { path: Path, replay_tree: ModelReplayTree, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function NodesShorten(props: { path: Path, replay_tree: ModelReplayTree, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void 
+    cursor_path: Path,
+    solved_paths: Path[],
+    error_paths: Path[],
+    success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined
+}) {
 
     const nodes = createMemo(() => props.replay_tree.steps_tree.flat_nodes[props.path] ?? [])
 
@@ -596,7 +616,12 @@ export function MoveContextMenuComponent(props: { step: Step, children: JSX.Elem
 
 
 
-function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collapsed?: boolean, cursor_path: Path, on_set_cursor: (_: Path) => void, on_context_menu: (e: MouseEvent, _: Path) => void }) {
+function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collapsed?: boolean, on_context_menu: (e: MouseEvent, _: Path) => void,
+    cursor_path: Path, on_set_cursor: (_: Path) => void,
+    error_paths: Path[],
+    solved_paths: Path[],
+    success_path: Path | undefined, failed_path: Path | undefined, hide_after_path: Path | undefined
+ }) {
 
     const step = createMemo(() => props.node.step)
     let show_index = createMemo(() => step().ply % 2 === 1 || props.show_index)
@@ -606,10 +631,28 @@ function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collap
     const on_path = createMemo(() => props.cursor_path.startsWith(path()))
     const on_path_end = createMemo(() => path() === props.cursor_path)
 
+    const is_hidden = createMemo(() => props.hide_after_path !== undefined &&
+        path() !== props.hide_after_path &&
+        path().startsWith(props.hide_after_path)
+    )
+    const is_failed = createMemo(() => props.failed_path === path())
+    const is_success = createMemo(() => props.success_path === path())
+
+    const is_in_solved = createMemo(() => props.solved_paths.includes(path()))
+    const is_in_error = createMemo(() => props.error_paths.includes(path()))
+
+
+
     const klassList = createMemo(() => ({
         collapsed: props.collapsed,
         ['on-path']: on_path(),
         ['on-path-end']: on_path_end(),
+        ['hidden']: is_hidden(),
+        ['failed']: is_failed(),
+        ['success']: is_success(),
+        ['in_solved']: is_in_solved(),
+        ['in_error']: is_in_error(),
+
         [nag_klass[props.node.nags?.[0] ?? 0]]: props.node.nags !== undefined
     }))
 

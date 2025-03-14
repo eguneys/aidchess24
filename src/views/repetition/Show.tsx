@@ -5,7 +5,7 @@ import { arr_rnd } from "../../random"
 import './Show.scss'
 import { INITIAL_FEN } from "chessops/fen"
 import { annotationShapes } from "../../components2/annotationShapes"
-import { FSRS, State } from "ts-fsrs"
+import { FSRS } from "ts-fsrs"
 import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
 import { RepeatAttemptResult } from "../../store/repeat_types"
 import { fen_pos, fen_turn, nag_to_glyph, Ply } from "../../store/step_types"

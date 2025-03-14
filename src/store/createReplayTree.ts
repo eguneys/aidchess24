@@ -14,6 +14,8 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         id: '',
         steps_tree_id: '',
         cursor_path: '',
+        solved_paths: [],
+        error_paths: [],
         success_path: undefined,
         failed_path: undefined,
         hide_after_path: undefined,
@@ -41,6 +43,15 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
     }, { initialValue: default_replay_tree() })
 
     const goto_path = (path: Path) => {
+
+        let hide_after_path = state.replay_tree.hide_after_path
+
+        if (hide_after_path !== undefined &&
+            path !== hide_after_path &&
+            path.startsWith(hide_after_path!)) {
+            return
+        }
+
         agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
         setState("replay_tree", "cursor_path", path)
     }

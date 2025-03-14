@@ -562,6 +562,8 @@ function new_tree_replay_entity(steps_tree_id: EntityStepsTreeId): EntityPlayUci
         id: gen_id8(),
         steps_tree_id,
         cursor_path: '',
+        solved_paths: [],
+        error_paths: []
     }
 }
 
@@ -660,6 +662,8 @@ class EntityPlayUciTreeReplay extends Entity<StudiesDB> {
     id!: EntityPlayUciTreeReplayId
     steps_tree_id!: EntityStepsTreeId
     cursor_path!: Path
+    solved_paths!: Path[]
+    error_paths!: Path[]
     success_path?: Path
     failed_path?: Path
     hide_after_path?: Path
