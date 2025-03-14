@@ -586,7 +586,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
     const lose_focus = createMemo(() => {
         return context_menu_open() !== undefined ||
-         edit_study_dialog() !== undefined || 
+         edit_study_dialog() || 
          edit_section_dialog() !== undefined || 
          edit_chapter_dialog() !== undefined
     })
@@ -779,7 +779,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <div class='header'>
                     {chapter_title_or_detached()}
                 </div>
-                <ReplayTreeComponent on_context_menu={on_tree_context_menu}/>
+                <ReplayTreeComponent lose_focus={lose_focus()} on_context_menu={on_tree_context_menu}/>
                 {/*
                 <PlayUciTreeReplayComponent
                 play_replay={play_replay()} 

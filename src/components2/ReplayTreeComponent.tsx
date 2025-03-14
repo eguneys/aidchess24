@@ -387,7 +387,7 @@ export function createReplayTreeComputed(store: { replay_tree: ModelReplayTree }
     }
 }
 
-export const ReplayTreeComponent = (props: { on_context_menu?: (e: MouseEvent, _: Path) => void  }) => {
+export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_menu?: (e: MouseEvent, _: Path) => void  }) => {
 
     let [store, { 
         goto_path,
@@ -424,6 +424,10 @@ export const ReplayTreeComponent = (props: { on_context_menu?: (e: MouseEvent, _
     })
 
     const on_key_down = (e: KeyboardEvent) => {
+        if (props.lose_focus) {
+            return
+        }
+
         let catched = false
         if (e.key === 'ArrowLeft') {
             goto_path_if_can(c_props.get_prev_path)
