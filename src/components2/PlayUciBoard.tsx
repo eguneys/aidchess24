@@ -1,10 +1,15 @@
 import { Chessground } from "chessground"
 import { Api } from "chessground/api"
 import { Color, Key } from "chessground/types"
-import { FEN, fen_pos, SAN, UCI } from "../components/step_types"
+import { FEN, fen_pos, SAN, UCI } from "../store/step_types"
 import { createEffect, createMemo, onMount } from "solid-js"
 import { chessgroundDests } from "chessops/compat"
 import { DrawShape } from "chessground/draw"
+import { stepwiseScroll } from "../common/scroll"
+import '../assets/chessground/chessground.css'
+import '../assets/chessground/cburnett.css'
+import '../assets/chessground/theme.css'
+import './chessground.scss'
 
 export function PlayUciBoard(props: { 
   shapes?: DrawShape[],
@@ -67,3 +72,20 @@ export function PlayUciBoard(props: {
 
     return (<><div ref={(el) => board = el} class='is2d chessboard'> </div></>)
 }
+
+export const non_passive_on_wheel = (set_on_wheel: (delta: number) => void) => ({
+  handleEvent: make_onWheel(set_on_wheel),
+  passive: false
+})
+
+export const make_onWheel = (set_on_wheel: (delta: number) => void) => stepwiseScroll((e: WheelEvent) => {
+  const target = e.target as HTMLElement;
+  if (
+    target.tagName !== 'PIECE' &&
+    target.tagName !== 'SQUARE' &&
+    target.tagName !== 'CG-BOARD'
+  )
+    return;
+  e.preventDefault()
+  set_on_wheel(Math.sign(e.deltaY))
+})

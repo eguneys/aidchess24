@@ -289,7 +289,6 @@ body {
 
         section {
             position: relative;
-            height: 48px;
             .home {
                 display: none;
             }
@@ -307,7 +306,6 @@ body {
 
             a {
                 display: block;
-                height: 48px;
                 line-height: var(--site-header-height);
                 padding: 0 0.7rem;
                 border-left: 2px solid rgba(0, 0, 0, 0);

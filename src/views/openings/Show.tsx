@@ -1,15 +1,15 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
-import { non_passive_on_wheel } from "../../components/PlayUciComponent"
-import { DialogComponent } from "../../components/DialogComponent"
-import { FEN, fen_pos, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../components/step_types"
+import { non_passive_on_wheel } from "../../components2/PlayUciBoard"
+import { DialogComponent } from "../../components2/DialogComponent"
+import { FEN, fen_pos, fen_turn, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../store/step_types"
 import { annotationShapes } from "../../annotationShapes"
 import { StoreState, useStore } from "../../store"
 import { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../components/sync_idb_study"
-import { get_letter_nth } from "../../components/hard_limits"
+import { get_letter_nth } from "../../components2/hard_limits"
 
-import '../../components/StudyComponent.scss'
+import '../../components2/StudyComponent.scss'
 import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "../../components2/EditStudyComponent"
 import { PGN } from "../../components2/parse_pgn"
 import { as_pgn_for_path, createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
@@ -17,7 +17,6 @@ import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { INITIAL_FEN } from "chessops/fen"
 import { Key } from "chessground/types"
 import { parseSquare } from "chessops"
-import { fen_turn } from "../../chess_pgn_logic"
 import { unwrap } from "solid-js/store"
 
 export default () => {

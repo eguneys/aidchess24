@@ -6,7 +6,7 @@ import { EntityChapter, EntityChapterId, EntityChapterInsert, EntitySectionId, E
 import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
-import { FEN, fen_pos, NAG, Path, SAN, UCI } from "../components/step_types";
+import { FEN, fen_pos, NAG, Path, SAN, UCI } from "./step_types";
 import { INITIAL_FEN, makeFen } from "chessops/fen";
 import { PGN } from "../components2/parse_pgn";
 import { parseUci } from "chessops";

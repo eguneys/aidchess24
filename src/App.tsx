@@ -3,10 +3,9 @@ import { ErrorBoundary, Show, createMemo, createSignal, lazy } from 'solid-js'
 import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { StoreProvider } from "./store";
-import { StudiesDBProvider } from "./components/sync_idb_study";
+import { StudiesDBProvider } from "./store/sync_idb_study";
 const Home = lazy(() => import('./Home'))
 const Contact = lazy(() => import('./Contact'))
-const Dashboard = lazy(() => import('./Dashboard'))
 const Builder = lazy(() => import('./views/builder/Builder'))
 const Beta = lazy(() => import('./Beta'))
 
@@ -37,10 +36,19 @@ export const MyApp = () => {
             <Route path='/about' component={Contact}/>
             <Route path='/donate' component={Contact}/>
             <Route path='/thanks' component={Contact}/>
-            <Route path='/dashboard' component={Dashboard}/>
+            <Route path="*" component={NotFound}/>
           </Router>
         </MetaProvider>
     </>)
+}
+
+const NotFound = () => {
+  return (<>
+    <main class='not-found'>
+      <h3>404 Not Found</h3>
+      <A href="/">Go back home.</A>
+    </main>
+  </>)
 }
 
 const AppInRouterWithStore = (props: any) => {

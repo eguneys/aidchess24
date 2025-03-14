@@ -1,6 +1,6 @@
 import { createMemo, createResource, createSignal, For, Show, Suspense } from "solid-js"
-import { EntityChapterInsert, EntitySectionInsert, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy } from "../components/sync_idb_study"
-import { SECTION_LETTERS } from "../components/hard_limits"
+import { EntityChapterInsert, EntitySectionInsert, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy } from "../store/sync_idb_study"
+import { SECTION_LETTERS } from "./hard_limits"
 import { parse_PGNS, PGN } from "./parse_pgn"
 import { useStore } from "../store"
 

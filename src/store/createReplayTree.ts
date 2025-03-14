@@ -1,10 +1,10 @@
 import type { Agent } from "./createAgent";
 import { StoreActions, StoreState } from ".";
 import { SetStoreFunction } from "solid-js/store";
-import { EntityChapterId, ModelChapter, ModelReplayTree, ModelTreeStepNode } from "../components/sync_idb_study";
+import { EntityChapterId, ModelChapter, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
 import { createAsync } from "@solidjs/router";
 import { Accessor, createSignal } from "solid-js";
-import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "../components/step_types";
+import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "./step_types";
 import { chapter_as_export_pgn, find_at_path, find_children_at_path } from "../components2/ReplayTreeComponent";
 
 export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>): Accessor<ModelReplayTree> {

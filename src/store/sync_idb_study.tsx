@@ -1,8 +1,8 @@
 import Dexie, { Entity, EntityTable, InsertType } from "dexie";
 import { createContext, JSX } from "solid-js";
-import { NAG, parent_path, Path, Step } from "../store/step_types";
+import { NAG, parent_path, Path, Step } from "./step_types";
 import { Card } from "ts-fsrs";
-import { RepeatAttemptResult } from "../store/repeat_types";
+import { RepeatAttemptResult } from "./repeat_types";
 import { PGN } from "../components2/parse_pgn";
 
 export function gen_id8() {

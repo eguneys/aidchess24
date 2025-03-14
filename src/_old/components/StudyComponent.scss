@@ -1,0 +1,242 @@
+@use '../base_css/theme';
+
+.study-details {
+    background: theme.$he2;
+    border-radius: 4px;
+
+    .title {
+        padding: 0.5em;
+        border-bottom: 2px solid theme.$ac-li-purple2;
+        color: theme.$text-light2;
+        display: flex;
+        gap: 0.2em;
+        align-items: flex-end;
+
+        .study-name {
+            font-size: 1.2em;
+        }
+
+        .section-name {
+            font-size: 1.1em;
+        }
+    }
+
+    .tags {
+        padding: 0.5em;
+    }
+}
+
+.sections-list {
+    color: theme.$text-light2;
+    display: flex;
+    flex-flow: column;
+    max-height: 100%;
+    min-height: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+
+
+    & > .header {
+        background: theme.$he2;
+        padding: 0.5em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1em;
+        border-bottom: 2px solid theme.$bu-neutral2;
+        
+        .tools i {
+            user-select: none;
+            cursor: pointer;
+
+            &:hover {
+                color: theme.$text-light2;
+            }
+        }
+    }
+
+    /* https://stackoverflow.com/questions/14962468/how-can-i-combine-flexbox-and-vertical-scroll-in-a-full-height-app */
+    & > .list {
+        flex: 1 1 auto;
+        overflow: hidden;
+        overflow-y: auto;
+        min-height: 0px;
+    }
+
+
+    & > .list {
+        display: flex;
+        flex-flow: column;
+
+        .no-sections {
+            background: theme.$ac-deep-blue;
+            padding: 1em 0;
+            text-align: center;
+        }
+
+        .tools {
+            display: flex;
+            flex-flow: column;
+            justify-items: center;
+            border-top: 2px solid theme.$ac-li-blue-2;
+
+            button {
+                display: flex;
+                align-items: center;
+                gap: 0.3em;
+                text-align: left;
+                padding: 0.5em;
+                border: none;
+                user-select: none;
+                cursor: pointer;
+                color: theme.$text-primary;
+                background: theme.$bu-mu-blue;
+
+                transition: .25s;
+
+                i {
+                    color: theme.$bu-sa-green;
+                }
+
+
+                &:hover {
+                    color: theme.$text-secondary;
+                    background: theme.$ac-li-blue2;
+                }
+            }
+        }
+
+        .chapter:last-child {
+            border-bottom: 2px solid theme.$text-secondary;
+        }
+
+        .section {
+
+            background: theme.$ac-deep-blue;
+
+            &.active, &.active:hover {
+              background: theme.$ac-deep-blue2;
+            }
+
+            &:hover {
+              background: theme.$ac-deep-blue2;
+            }
+
+
+
+            .header {
+                display: flex;
+                padding: 0.2em;
+
+
+                user-select: none;
+                cursor: pointer;
+                border-bottom: 2px solid theme.$ac-li-blue2;
+
+                i {
+                    padding: 0.4em;
+                    border-radius: 50%;
+                    color: theme.$text-light;
+                    text-align: center;
+                    height: 100%;
+                    aspect-ratio: 1;
+                    align-self: center;
+                    display: flex;
+                    align-items: center;
+
+                    transition: .2s;
+                    &:hover {
+                        background: theme.$ac-li-blue;
+                        color: theme.$text-primary;
+                        transform: rotate(80deg);
+                    }
+                }
+
+                .title {
+                    flex: 1;
+
+                    display: flex;
+                    gap: 0.3em;
+                    padding: 0.2em 0.3em;
+                    color: theme.$text-light;
+
+                    span {
+                        font-weight: 500;
+                    }
+                }
+            }
+
+
+            .chapters-list {
+                display: flex;
+                flex-flow: column;
+                .no-chapters {
+                    padding: 0.5em;
+                    color: theme.$text-secondary;
+                    background: theme.$bu-mu-blue;
+                    text-align: center;
+                }
+
+
+                .chapter {
+
+                    background: theme.$bu-mu-blue2;
+                    color: theme.$text-primary;
+
+                    &.active, &.active:hover {
+                        background: theme.$ac-li-blue-2;
+                        i {
+                           color: theme.$ac-deep-blue2;
+                        }
+                    }
+
+                    &:hover {
+                        background: theme.$ac-li-blue;
+
+                        i {
+                           color: theme.$ac-deep-blue2;
+                        }
+                    }
+
+                display: flex;
+                padding: 0.2em;
+
+                user-select: none;
+                cursor: pointer;
+
+                i {
+                    padding: 0.4em;
+                    border-radius: 50%;
+                    color: theme.$text-primary;
+                    text-align: center;
+                    height: 100%;
+                    aspect-ratio: 1;
+                    align-self: center;
+                    display: flex;
+                    align-items: center;
+
+                    transition: .2s;
+                    &:hover {
+                        background: theme.$ac-deep-blue;
+                        color: theme.$text-light !important;
+                        transform: rotate(80deg);
+                    }
+                }
+
+
+                    .title {
+                        flex: 1;
+                        display: flex;
+                        gap: 0.3em;
+                        padding: 0.2em 0.3em;
+
+                        span {
+                            font-weight: 500;
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}

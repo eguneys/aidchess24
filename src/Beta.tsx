@@ -1,14 +1,9 @@
 import './Beta.scss'
-import { RepertoiresDBContext } from './components/idb_repository'
-import { useContext } from 'solid-js'
 
 const Beta = () => {
 
-    let rdb = useContext(RepertoiresDBContext)!
-
     const clear_local_storage = () => {
         
-        rdb.remove_database()
         window.localStorage.clear()
         window.alert('Done.')
         window.location.href = ''

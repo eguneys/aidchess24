@@ -2,7 +2,7 @@ import { Chess, Color, makeUci, Position } from "chessops"
 import { INITIAL_FEN, makeFen, parseFen } from "chessops/fen"
 import { ChildNode, parsePgn, PgnNodeData } from "chessops/pgn"
 import { parseSan } from "chessops/san"
-import { NAG, Path, Ply, Step } from "../components/step_types"
+import { NAG, Path, Ply, Step } from "../store/step_types"
 
 function pos_fen(pos: Position) {
     return makeFen(pos.toSetup())
