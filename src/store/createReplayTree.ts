@@ -8,6 +8,9 @@ import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN 
 import { chapter_as_export_pgn, find_at_path, find_children_at_path } from "../components2/ReplayTreeComponent";
 
 export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>): Accessor<ModelReplayTree> {
+
+    const [write_enabled, set_write_enabled] = createSignal(true)
+
     type Source = EntityChapterId | ['by_id', EntityPlayUciTreeReplayId] | ['by_steps_id', EntityStepsTreeId]
     const [source, set_source] = createSignal<Source>()
     const default_replay_tree: Accessor<ModelReplayTree> = () => ({
@@ -35,7 +38,6 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             if (s[0] === 'by_id') {
                 return agent.ReplayTree.by_id(s[1])
             } else {
-                console.log('load second', s[1])
                 return agent.ReplayTree.by_steps_tree_id(s[1])
             }
         }
@@ -53,7 +55,9 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             return
         }
 
-        agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
+        if (write_enabled()) {
+            agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
+        }
         setState("replay_tree", "cursor_path", path)
     }
     const set_success_path = (path?: Path) => {
@@ -73,14 +77,17 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         reset_replay_tree() {
             set_source(undefined)
         },
-        load_replay_tree(chapter_id: EntityChapterId) {
+        load_replay_tree(chapter_id: EntityChapterId, write_enabled = true) {
             set_source(chapter_id)
+            set_write_enabled(write_enabled)
         },
-        load_replay_tree_by_id(id: EntityPlayUciTreeReplayId) {
+        load_replay_tree_by_id(id: EntityPlayUciTreeReplayId, write_enabled = true) {
             set_source(['by_id', id])
+            set_write_enabled(write_enabled)
         },
-        load_replay_tree_by_steps_id(id: EntityStepsTreeId) {
+        load_replay_tree_by_steps_id(id: EntityStepsTreeId, write_enabled = true) {
             set_source(['by_steps_id', id])
+            set_write_enabled(write_enabled)
         },
         set_success_path,
         set_failed_path,
@@ -94,7 +101,10 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         delete_at_and_after_path(path: Path) {
             let parent = parent_path(path)
             let d_node = state.replay_tree.steps_tree.flat_nodes[parent].find(_ => _.step.path === path)!
-            agent.ReplayTree.delete_tree_node(d_node.id)
+
+            if (write_enabled()) {
+                agent.ReplayTree.delete_tree_node(d_node.id)
+            }
             setState("replay_tree", "steps_tree", "flat_nodes", parent, _ => _.filter(_ => _.step.path !== path))
             goto_path(parent)
         },
@@ -104,7 +114,10 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
                 id: node.id,
                 nags
             }
-            await agent.ReplayTree.update_tree_node(data)
+
+            if (write_enabled()) {
+                await agent.ReplayTree.update_tree_node(data)
+            }
 
             let pp = state.replay_tree.steps_tree.flat_nodes[parent]
 
@@ -129,7 +142,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
             let step = node ? next_step_play_san(node.step, san) : initial_step_play_san(san)
 
-            let new_node: ModelTreeStepNode = await agent.ReplayTree.create_node(state.replay_tree.steps_tree_id, step)
+            let new_node: ModelTreeStepNode = await agent.ReplayTree.create_node(state.replay_tree.steps_tree_id, step, undefined, undefined, write_enabled())
 
             let nodes = state.replay_tree.steps_tree.flat_nodes[path]
 

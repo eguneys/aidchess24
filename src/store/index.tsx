@@ -38,9 +38,9 @@ export type StoreActions = {
     chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter): Promise<string>
 
     reset_replay_tree(): Promise<void>
-    load_replay_tree(chapter_id: EntityChapterId): void
-    load_replay_tree_by_id(id: EntityPlayUciTreeReplayId): void
-    load_replay_tree_by_steps_id(id: EntityStepsTreeId): void
+    load_replay_tree(chapter_id: EntityChapterId, write_enabled?: boolean): void
+    load_replay_tree_by_id(id: EntityPlayUciTreeReplayId, write_enabled?: boolean): void
+    load_replay_tree_by_steps_id(id: EntityStepsTreeId, write_enabled?: boolean): void
 
     goto_path(path: Path): void
     goto_path_if_can(path: Path | undefined): void 

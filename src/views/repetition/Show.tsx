@@ -72,7 +72,7 @@ function ShowComponent() {
      */
 
     let r_props = createRepeatProps()
-    let c_props = createReplayTreeComputed()
+    let c_props = createReplayTreeComputed({sticky_path_effects: true })
 
     let params = useParams()
     //set_repeat_selected_study(params.id)
@@ -122,7 +122,7 @@ function ShowComponent() {
         }
 
 
-        let due_move = due_list_by_type()?.find(_ => _.id === attempt_result.repeat_due_move_id)
+        let due_move = all_list_by_type()?.find(_ => _.id === attempt_result.repeat_due_move_id)
 
         if (!due_move) {
             return
@@ -154,28 +154,46 @@ function ShowComponent() {
         untrack(() => {
             reset_replay_tree()
             setTimeout(() => {
-                load_replay_tree_by_steps_id(due.tree_step_node.tree_id)
-            }, 100)
+                load_replay_tree_by_steps_id(due.tree_step_node.tree_id, false)
+            }, 300)
         })
     })
 
-    let awaiting_tree_load = createMemo(() => {
+    let awaiting_tree_load = () => {
         let due = one_particular_due()
         return due?.tree_step_node.tree_id !== store.replay_tree.steps_tree_id
-    })
+    }
 
     const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
 
+
     createEffect(() => {
+
         if (awaiting_tree_load()) {
+            /*
+            untrack(() =>
+                console.log('early await', JSON.stringify([one_particular_due()?.tree_step_node.tree_id, 'x', store.replay_tree.steps_tree_id, 'yes']))
+            )
+            */
             return
         }
 
+        //console.log(one_particular_due()?.tree_step_node.step.path)
         let path = show_at_path()
-        if (!path) {
+        if (path === undefined) {
+            /*
+            untrack(() =>
+                console.log('early path', one_particular_due()?.tree_step_node.tree_id, 'x', store.replay_tree.steps_tree_id, 'yes')
+            )
+            */
             return
         }
 
+        /*
+        untrack(() => {
+            console.log('hide not early', JSON.stringify([one_particular_due()?.tree_step_node.tree_id, 'x', store.replay_tree.steps_tree_id, 'yes']))
+        })
+            */
         let show_previous = show_previous_moves()
 
         batch(() => {
@@ -227,6 +245,7 @@ function ShowComponent() {
 
 
         let node = await add_child_san_to_current_path(san)
+        set_hide_after_path(undefined)
         goto_path(node.step.path)
 
         if (uci === solution_uci()) {
@@ -322,7 +341,7 @@ function ShowComponent() {
         if (!aa) {
             return undefined
         }
-        return aa[aa.length - 1]
+        return aa[0]
     })
 
     const on_attempt_click = (attempt: ModelRepeatMoveAttempt) => {
@@ -378,7 +397,7 @@ function ShowComponent() {
                 <h4>Latest Attempts for this Move</h4>
                 <div class='attempts'>
                     <For each={move_attempts()}>{ (attempt, i) => 
-                        <MoveAttemptComponent latest={i() === move_attempts()!.length - 1} attempt={attempt} time={true} />
+                        <MoveAttemptComponent latest={i() === 0} attempt={attempt} time={true} />
                     }</For>
                 </div>
             </div>

@@ -352,7 +352,7 @@ async function db_order_chapters(db: StudiesDB, section_id: EntitySectionId, cha
     await db_update_section(db, section)
 }
 
-async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]) {
+async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[], write_enabled?: boolean) {
     let node = {
         id: gen_id8(),
         step,
@@ -361,10 +361,12 @@ async function db_new_tree_steps_node(db: StudiesDB, tree_id: EntityStepsTreeId,
         comments
     }
 
-    db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes], async () => {
-        await db_new_tree_step_node_orders(db, [node])
-        await db.tree_step_nodes.add(node)
-    })
+    if (write_enabled) {
+        await db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes], async () => {
+            await db_new_tree_step_node_orders(db, [node])
+            await db.tree_step_nodes.add(node)
+        })
+    }
     return node
 }
 
@@ -794,7 +796,7 @@ export type StudiesDBReturn = {
     new_steps_tree(): Promise<ModelStepsTree>
     */
 
-    new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]): Promise<ModelTreeStepNode>
+    new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[], write_enabled?: boolean): Promise<ModelTreeStepNode>
 
     get_replay_tree_by_id(id: EntityPlayUciTreeReplayId): Promise<ModelReplayTree>;
     get_replay_tree_by_chapter_id(id: EntityChapterId): Promise<ModelReplayTree>
@@ -907,14 +909,13 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
             return db_replay_tree_by_chapter_id(db, id)
         },
         get_replay_tree_by_steps_tree_id(id: EntityStepsTreeId) {
-            console.log(id)
             return db_replay_tree_by_steps_tree_id(db, id)
         },
         update_play_uci_tree_replay(entity: EntityPlayUciTreeReplayInsert) {
             return db_update_tree_replay(db, entity)
         },
-        async new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[]) {
-            return await db_new_tree_steps_node(db, tree_id, step, nags, comments)
+        async new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[], write_enabled?: boolean) {
+            return await db_new_tree_steps_node(db, tree_id, step, nags, comments, write_enabled)
         },
         update_tree_step_node(entity: EntityTreeStepNode) {
             return db_update_tree_step_node(db, entity)
