@@ -420,7 +420,7 @@ async function db_delete_tree_nodes(db: StudiesDB, node_ids: EntityTreeStepNodeI
     })
 }
 
-async function db_load_repeat_due_moves_model(db: StudiesDB, repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]> {
+async function db_load_repeat_due_moves_model(db: StudiesDB, study_id: EntityStudyId, sections: EntitySectionId[]): Promise<ModelRepeatDueMove[]> {
 
     let chapters = await db.chapters.where('section_id')
     .anyOf(sections)
@@ -439,8 +439,8 @@ async function db_load_repeat_due_moves_model(db: StudiesDB, repeat_study_id: En
     .anyOf(step_trees.map(_ => _.id))
     .toArray()
 
-    let e_existing_due_moves = await db.repeat_due_moves.where('repeat_study_id')
-    .equals(repeat_study_id)
+    let e_existing_due_moves = await db.repeat_due_moves.where('study_id')
+    .equals(study_id)
     .toArray()
 
 
@@ -452,7 +452,7 @@ async function db_load_repeat_due_moves_model(db: StudiesDB, repeat_study_id: En
         if (e_existing_due_move) {
             res.push({
                 id: e_existing_due_move.id,
-                repeat_study_id,
+                study_id,
                 tree_step_node_id: e_step_tree_node.id,
                 tree_step_node: e_step_tree_node,
                 attempts: [],
@@ -461,7 +461,7 @@ async function db_load_repeat_due_moves_model(db: StudiesDB, repeat_study_id: En
         } else {
             res.push({
                 id: gen_id8(),
-                repeat_study_id,
+                study_id,
                 tree_step_node_id: e_step_tree_node.id,
                 tree_step_node: e_step_tree_node,
                 attempts: [],
@@ -652,25 +652,15 @@ class EntityTreeStepNodeOrderForPath extends Entity<StudiesDB> {
     order!: EntityTreeStepNodeId[]
 }
 
-export type EntityRepeatStudyId = string
-export type EntityRepeatStudyInsert = InsertType<EntityRepeatStudy, "id">
-
-
 export type EntityRepeatDueMoveId = string
 export type EntityRepeatDueMoveInsert = InsertType<EntityRepeatDueMove, "id">
 
 export type EntityRepeatMoveAttemptId = string
 export type EntityRepeatMoveAttemptInsert = InsertType<EntityRepeatMoveAttempt, "id">
 
-class EntityRepeatStudy extends Entity<StudiesDB> {
-    id!: EntityRepeatStudyId
-    study_id!: EntityStudyId
-    section_ids!: EntitySectionId[]
-}
-
 class EntityRepeatDueMove extends Entity<StudiesDB> {
     id!: EntityRepeatDueMoveId
-    repeat_study_id!: EntityRepeatStudyId
+    study_id!: EntityStudyId
     tree_step_node_id!: EntityTreeStepNodeId
 }
 
@@ -875,8 +865,8 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         async delete_tree_nodes(node_ids: EntityTreeStepNodeId[]) {
             await db_delete_tree_nodes(db, node_ids)
         },
-        load_repeat_due_moves(repeat_study_id: EntityRepeatStudyId, sections: EntitySectionId[]) {
-            return db_load_repeat_due_moves_model(db, repeat_study_id, sections)
+        load_repeat_due_moves(study_id: EntityStudyId, sections: EntitySectionId[]) {
+            return db_load_repeat_due_moves_model(db, study_id, sections)
         },
         add_repeat_move_attempt(entity: EntityRepeatMoveAttemptInsert) {
                 return db_new_repeat_move_attempt(db, entity) 

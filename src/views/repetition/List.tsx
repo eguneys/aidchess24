@@ -59,7 +59,7 @@ type ComputedRepeatProps = {
 }
 
 function createRepeatProps(): ComputedRepeatProps {
-    let [store, { load_chapters }] = useStore()
+    let [store, { load_chapters, load_due_moves }] = useStore()
     let [pstore] = usePersistedStore()
 
     const studies = createMemo(() => Object.values(store.studies))
@@ -88,12 +88,19 @@ function createRepeatProps(): ComputedRepeatProps {
 
     createEffect(() => {
         selected_section_ids().forEach(_ => load_chapters(_))
+
+        let study_id = selected_study_id()
+        let section_ids = selected_section_ids()
+
+        if (study_id && section_ids.length > 0) {
+            load_due_moves(study_id, section_ids)
+        }
     })
 
     const all_chapters_selected = createMemo(() => store.chapters.list.filter(_ => selected_section_ids().includes(_.section_id)))
 
 
-    const due_all = createMemo<ModelRepeatDueMove[]>(() => store.due_moves.list.filter(_ => attempt_is_due(_.attempts[0])))
+    const due_all = createMemo<ModelRepeatDueMove[]>(() => store.due_moves.list.filter(_ => !_.attempts[0] || attempt_is_due(_.attempts[0])))
 
     return {
         isSelectedStudy,
