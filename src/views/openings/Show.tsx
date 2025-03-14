@@ -4,7 +4,7 @@ import './Show.scss'
 import { non_passive_on_wheel } from "../../components2/PlayUciBoard"
 import { DialogComponent } from "../../components2/DialogComponent"
 import { FEN, fen_pos, fen_turn, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../store/step_types"
-import { annotationShapes } from "../../annotationShapes"
+import { annotationShapes } from "../../components2/annotationShapes"
 import { StoreState, useStore } from "../../store"
 import type { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../store/sync_idb_study"
 import { get_letter_nth } from "../../components2/hard_limits"

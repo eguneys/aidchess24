@@ -4,7 +4,7 @@ import { createRepeatProps, RepeatShowType } from "./List"
 import { arr_rnd } from "../../random"
 import './Show.scss'
 import { INITIAL_FEN } from "chessops/fen"
-import { annotationShapes } from "../../annotationShapes"
+import { annotationShapes } from "../../components2/annotationShapes"
 import { FSRS } from "ts-fsrs"
 import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
 import { RepeatAttemptResult } from "../../store/repeat_types"

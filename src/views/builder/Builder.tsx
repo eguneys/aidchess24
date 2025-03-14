@@ -13,7 +13,7 @@ import { Path, Ply, SAN, Step } from "../../components/step_types"
 import { parse_PGNS, PlayUciTreeReplay, PlayUciTreeReplayComponent, ply_to_index, StepsTree, TreeStepNode } from "../../components/ReplayTreeComponent"
 import { COOLDOWN_TIME, DEPTH8, StepLazyQueueWork, StepsWithStockfishComponent } from "../../components/StockfishComponent"
 import { arr_rnd } from "../../random"
-import { annotationShapes } from "../../annotationShapes"
+import { annotationShapes } from "../../components2/annotationShapes"
 import createRAF from "@solid-primitives/raf"
 import { gen_id8 } from "../../components/sync_idb_study"
 

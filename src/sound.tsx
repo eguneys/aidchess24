@@ -1,6 +1,11 @@
+import { makePersisted } from "@solid-primitives/storage"
+import { createContext, createSignal, Signal, useContext } from "solid-js"
 import throttle from "./common/throttle"
-import { makePersistedNamespaced } from "./storage"
-import { createContext, useContext } from "solid-js"
+
+
+function makePersistedNamespaced<T>(def: T, name: string, version?: number): Signal<T> {
+  return makePersisted(createSignal(def), { name: `.aidchess.v${version ?? 1}.${name}` })
+}
 
 type Name = string
 type Path = string
@@ -13,7 +18,7 @@ class Player {
 
     theme = 'standard'
 
-    volumeStorage = makePersistedNamespaced('1', 'sound.volume')
+    volumeStorage = makePersistedNamespaced("1", "sound.volume")
 
     enabled = () => this.theme !== 'silent'
 
