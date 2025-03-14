@@ -152,11 +152,11 @@ function ShowComponent() {
         }
 
         untrack(() => {
-            set_repeat_attempt_result(undefined)
-            reset_replay_tree()
-            setTimeout(() => {
+            batch(() => {
+                set_repeat_attempt_result(undefined)
+                reset_replay_tree()
                 load_replay_tree_by_steps_id(due.tree_step_node.tree_id, false)
-            }, 300)
+            })
         })
     })
 
