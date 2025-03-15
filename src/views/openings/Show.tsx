@@ -447,7 +447,9 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         chapter_as_export_pgn
     }] = useStore()
 
-    let c_props = createReplayTreeComputed({ sticky_path_effects: true })
+    let c_props = createReplayTreeComputed()
+    c_props.create_sticky_path_effects()
+    c_props.create_cursor_path_effects()
 
     let [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>()
     let [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)

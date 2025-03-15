@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
+import { Accessor, createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
 import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../store/sync_idb_study"
 import { parent_path, Path, Step } from "../store/step_types"
 import './ReplayTreeComponent.scss'
@@ -197,19 +197,13 @@ type ReplayTreeComputed = {
     get_first_path: Path | undefined
     get_last_path: Path | undefined
     step_at_cursor_path: ModelTreeStepNode | undefined,
+    create_cursor_path_effects: (hold?: Accessor<CursorPathEffectOption>) => void
+    create_sticky_path_effects: () => void
 }
 
-export function createReplayTreeComputed(opts: { 
-        sticky_path_effects?: boolean, 
-        set_fen_effects?: boolean
-    } = {}): ReplayTreeComputed {
+export type CursorPathEffectOption = 'hold' | 'no-last-move' | 'allow'
 
-        if (opts.sticky_path_effects === undefined) {
-            opts.sticky_path_effects = false
-        }
-        if (opts.set_fen_effects === undefined) {
-            opts.set_fen_effects = true
-        }
+export function createReplayTreeComputed(): ReplayTreeComputed {
 
         let [store, {
             set_fen,
@@ -225,23 +219,32 @@ export function createReplayTreeComputed(opts: {
 
     const steps = createMemo(() => store.replay_tree.steps_tree)
 
-    if (opts.set_fen_effects) {
+    const create_cursor_path_effects = (opts?: Accessor<CursorPathEffectOption>) => {
         createEffect(on(() => step_at_cursor_path(), (step) => {
+            let hold = opts?.() ?? 'allow'
+
+            if (hold === 'hold') {
+                return
+            }
+
             if (!step) {
-                set_last_move(undefined)
                 set_fen(INITIAL_FEN)
+                if (hold !== 'no-last-move') {
+                    set_last_move(undefined)
+                }
                 return
             }
             set_fen(step.step.fen)
-            set_last_move([step.step.uci, step.step.san])
+            if (hold !== 'no-last-move') {
+                set_last_move([step.step.uci, step.step.san])
+            }
+            console.log('actual', step.step.path)
         }))
-
-
     }
 
     let sticky_paths: Path[] = []
 
-    if (opts.sticky_path_effects) {
+    const create_sticky_path_effects = () => {
         createEffect(on(() => store.replay_tree, () => {
             sticky_paths = []
         }))
@@ -355,6 +358,7 @@ export function createReplayTreeComputed(opts: {
             while (true) {
                 pc = find_parent_and_child_at_path(steps(), pc[0].step.path)
                 if (!pc) {
+
                     return undefined
                 }
 
@@ -437,7 +441,9 @@ export function createReplayTreeComputed(opts: {
         get get_first_path() { return get_first_path() },
         get get_last_path() { return get_last_path() },
         get get_down_path() { return get_down_path() },
-        get get_up_path() { return get_up_path() }
+        get get_up_path() { return get_up_path() },
+        create_cursor_path_effects,
+        create_sticky_path_effects
     }
 }
 

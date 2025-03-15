@@ -8,10 +8,10 @@ import { annotationShapes } from "../../components2/annotationShapes"
 import { FSRS } from "ts-fsrs"
 import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
 import { RepeatAttemptResult } from "../../store/repeat_types"
-import { fen_pos, fen_turn, nag_to_glyph, Ply } from "../../store/step_types"
+import { fen_pos, fen_turn, nag_to_glyph, parent_path, Ply } from "../../store/step_types"
 import { non_passive_on_wheel, PlayUciBoard } from "../../components2/PlayUciBoard"
 import { parseSquare } from "chessops"
-import { usePersistedStore, useStore } from "../../store"
+import { useStore } from "../../store"
 import { createReplayTreeComputed, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import TimeAgo from "../../components2/TimeAgo"
 import { Key } from "chessground/types"
@@ -48,6 +48,7 @@ function ShowComponent() {
         add_child_san_to_current_path,
         goto_path, 
         goto_path_if_can,
+        goto_path_force,
         set_success_path,
         set_failed_path,
         set_hide_after_path,
@@ -56,24 +57,15 @@ function ShowComponent() {
         add_attempt_with_spaced_repetition,
 
         load_study,
-        load_replay_tree_by_steps_id
+        load_replay_tree_by_steps_id,
     }] = useStore()
 
-    let [, {
-    /*    set_repeat_selected_study */
-    }] = usePersistedStore()
-
-    /*
-    let [, {
-        set_repeat_selected_study
-    }] = usePersistedStore()
-     */
-
     let r_props = createRepeatProps()
-    let c_props = createReplayTreeComputed({sticky_path_effects: true })
+    let c_props = createReplayTreeComputed()
+
+    c_props.create_sticky_path_effects()
 
     let params = useParams()
-    //set_repeat_selected_study(params.id)
     load_study(params.id)
 
     const due_list_by_type = createMemo(() => {
@@ -95,82 +87,93 @@ function ShowComponent() {
         }
     })
 
-    const [trigger_next_due_move, set_trigger_next_due_move] = createSignal<boolean>(true, { equals: false })
+    const [current_due, set_current_due] = createSignal<ModelRepeatDueMove | undefined>()
+    const [show_previous_moves, set_show_previous_moves] = createSignal(false)
 
-    const one_random_due = createMemo<ModelRepeatDueMove | undefined>((prev) => {
-        let res = due_list_by_type()
-        if (res === undefined) {
+    const [attempt_result, set_attempt_result] = createSignal<RepeatAttemptResult | undefined>()
+
+    type IState = 'preview' | 'load' | 'idle' | 'end'
+    const [i_state, set_i_state] = createSignal<[IState, number]>(['load', 0])
+
+    const show_at_path = (() => {
+        let due = current_due()
+        if (!due) {
             return undefined
         }
-
-        if (!trigger_next_due_move()) {
-            return prev
-        }
-        console.log('random in')
-
-        return arr_rnd(res)
+        return parent_path(due.tree_step_node.step.path)
     })
+    const solution_uci = createMemo(() => current_due()?.tree_step_node.step.uci)
 
-    const [one_selected_due, set_one_selected_due] = createSignal<ModelRepeatDueMove | undefined>(undefined)
+    const [pending, start] = useTransition()
 
-    const select_one_attempt_result = (attempt_result?: ModelRepeatMoveAttempt) => {
+    let [request_next_due, set_request_next_due] = createSignal<ModelRepeatDueMove>()
 
-        if (!attempt_result) {
-            set_one_selected_due(undefined)
+    createEffect(() => {
+        let list = due_list_by_type()
+
+        if (request_next_due()) {
             return
         }
 
+        const next_due = arr_rnd(list)
 
-        let due_move = all_list_by_type()?.find(_ => _.id === attempt_result.repeat_due_move_id)
-
-        if (!due_move) {
+        if (!next_due) {
+            set_i_state(['end', 0])
             return
         }
 
         batch(() => {
-            set_repeat_attempt_result(undefined)
-            set_show_previous_moves(false)
-            set_one_selected_due(due_move)
-        })
-    }
-
-    const one_particular_due = createMemo(() => one_selected_due() ?? one_random_due())
-
-    const [show_previous_moves, set_show_previous_moves] = createSignal(false)
-
-    const show_at_path = createMemo(() =>
-        one_particular_due()?.tree_step_node.step.path.split(' ').slice(0, -1).join(' ')
-    )
-    const solution_uci = createMemo(() => one_particular_due()?.tree_step_node.step.uci)
-
-    const [pending, start] = useTransition()
-
-    createEffect(() => {
-        let due = one_particular_due()
-
-        if (!due) {
-            return
-        }
-
-        start(() => {
-            untrack(() => {
-                set_repeat_attempt_result(undefined)
-                load_replay_tree_by_steps_id(due.tree_step_node.tree_id, false)
-            })
+            set_request_next_due(next_due)
         })
     })
 
-    let awaiting_tree_load = () => {
-        let due = one_particular_due()
-        return pending() || due?.tree_step_node.tree_id !== store.replay_tree.steps_tree_id
+    createEffect(on(request_next_due, (next_due) => {
+        if (!next_due) {
+            return
+        }
+
+        set_attempt_result(undefined)
+        set_show_previous_moves(false)
+
+        start(() => {
+            set_i_state(['load', 0])
+            load_replay_tree_by_steps_id(next_due.tree_step_node.tree_id, false)
+        })
+    }))
+
+    const on_next_due_move = () => {
+        set_request_next_due(undefined)
     }
 
-    const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
+    let is_tree_loaded = createMemo(() => {
+        let due = request_next_due()
+        return !pending() && due && due.tree_step_node.tree_id === store.replay_tree.steps_tree_id
+    })
 
+    createEffect(on(is_tree_loaded, (is_loaded) => {
+        if (is_loaded) {
+            set_current_due(request_next_due())
+        }
+    }))
+
+    createEffect(on(current_due, (due) => {
+        if (!due) {
+            return
+        }
+        batch(() => {
+            set_i_state(['preview', setTimeout(() => {
+                batch(() => {
+                    goto_path_force(show_at_path()!)
+                    set_i_state(['idle', 0])
+                })
+            }, 500)])
+            goto_path_force(parent_path(show_at_path()!))
+        })
+    }))
 
     createEffect(() => {
 
-        if (awaiting_tree_load()) {
+        if (!is_tree_loaded()) {
             return
         }
 
@@ -180,48 +183,52 @@ function ShowComponent() {
         }
 
         let show_previous = show_previous_moves()
-
-        batch(() => {
-            untrack(() => {
-                goto_path(path)
-                set_hide_after_path(show_previous ? path : '')
-            })
-        })
+        set_hide_after_path(show_previous ? path : '')
     })
 
-    const [i_idle, set_i_idle] = createSignal<number>()
+    c_props.create_cursor_path_effects(createMemo(() => {
+        let i = i_state()[0]
+        if (i === 'preview') {
+            return 'no-last-move'
+        }
+        if (i === 'idle') {
+            return 'allow'
+        }
+        return 'hold'
+    }))
+    createEffect(() => {
+        console.log(i_state(), attempt_result())
+    })
 
-    createEffect(on(repeat_attempt_result, (attempt_result) => {
-        if (awaiting_tree_load()) {
+    const select_one_attempt_result = (attempt_result: ModelRepeatMoveAttempt) => {
+        let due_move = all_list_by_type()?.find(_ => _.id === attempt_result.repeat_due_move_id)
+
+        if (!due_move) {
             return
         }
 
-        if (attempt_result !== undefined) {
-            set_hide_after_path(undefined)
+        batch(() => {
+            set_show_previous_moves(false)
+            set_request_next_due(due_move)
+        })
+    }
 
-            let due_move = one_particular_due()!
 
-            add_attempt_with_spaced_repetition(fs, due_move, attempt_result)
-
-            batch(() => {
-                set_trigger_next_due_move(false)
-                save_due_move_if_not(due_move)
-
-                if (attempt_result.includes('solved')) {
-                    console.log('trigger set timeout')
-                    set_i_idle(setTimeout(() => {
-                        batch(() => {
-                            set_trigger_next_due_move(true)
-                            set_i_idle(undefined)
-                        })
-                    }, 600))
-                }
-            })
+    createEffect(on(attempt_result, (attempt_result: RepeatAttemptResult | undefined) => {
+        if (!attempt_result) {
+            return
         }
+
+        set_hide_after_path(undefined)
+
+        let due_move = current_due()!
+
+        add_attempt_with_spaced_repetition(fs, due_move, attempt_result)
+        save_due_move_if_not(due_move)
     }))
 
-    const color = () => fen_turn(one_particular_due()?.tree_step_node.step.before_fen ?? INITIAL_FEN)
-    const movable = () => store.replay_tree.cursor_path === show_at_path()
+    const color = () => fen_turn(current_due()?.tree_step_node.step.before_fen ?? INITIAL_FEN)
+    const movable = () => i_state()[0] === 'idle' && attempt_result() === undefined
 
     const on_play_orig_key = async (orig: Key, dest: Key) => {
 
@@ -247,35 +254,54 @@ function ShowComponent() {
 
         if (uci === solution_uci()) {
             if (show_previous_moves()) {
-                set_repeat_attempt_result('solved-with-hint')
+                set_attempt_result('solved-with-hint')
             } else {
-                if (one_selected_due()) {
-                    set_repeat_attempt_result('solved-with-hint')
+                if (current_due()) {
+                    set_attempt_result('solved-with-hint')
                 } else {
-                    set_repeat_attempt_result('solved')
+                    set_attempt_result('solved')
                 }
             }
             set_success_path(node.step.path)
 
         } else {
             if (show_previous_moves()) {
-                set_repeat_attempt_result('failed-with-hint')
+                set_attempt_result('failed-with-hint')
             } else {
-                set_repeat_attempt_result('failed')
+                set_attempt_result('failed')
             }
             set_failed_path(node.step.path)
         }
     }
 
     const on_show_answer = () => {
-        set_repeat_attempt_result('failed-with-skip')
-        let path = one_particular_due()!.tree_step_node.step.path
+        set_attempt_result('failed-with-skip')
+        let path = current_due()!.tree_step_node.step.path
         set_failed_path(path)
         goto_path(path)
     }
 
+    const move_attempts = createMemo(() => current_due()?.attempts)
 
+    const session_attempts = createMemo(() => {
+        let res: ModelRepeatMoveAttempt[] = ((all_list_by_type()?.map(_ => _.attempts[0]).filter(Boolean) ?? []) as ModelRepeatMoveAttempt[])
 
+        res.sort((a, b) => b.created_at - a.created_at)
+
+        return res
+    })
+
+    const latest_move_attempt = createMemo(() => {
+        let aa = move_attempts()
+        if (!aa) {
+            return undefined
+        }
+        return aa[0]
+    })
+
+    const on_attempt_click = (attempt: ModelRepeatMoveAttempt) => {
+        select_one_attempt_result(attempt)
+    }
 
     const set_on_wheel = (i: number) => {
         if (i > 0) {
@@ -298,7 +324,7 @@ function ShowComponent() {
             return annotationShapes(step.step.uci, step.step.san, '✗')
         }
         if (store.replay_tree.success_path === step.step.path) {
-            if (repeat_attempt_result()?.includes('hint')) {
+            if (attempt_result()?.includes('hint')) {
                 return annotationShapes(step.step.uci, step.step.san, '✓')
             } else {
                 return annotationShapes(step.step.uci, step.step.san, '!')
@@ -313,37 +339,6 @@ function ShowComponent() {
 
         return annotationShapes(step.step.uci, step.step.san, nag_to_glyph(nag))
     })
-
-    const on_next_due_move = () => {
-        batch(() => {
-            set_trigger_next_due_move(true)
-            set_repeat_attempt_result(undefined)
-            set_show_previous_moves(false)
-            set_one_selected_due(undefined)
-        })
-    }
-
-    const move_attempts = createMemo(() => one_particular_due()?.attempts)
-
-    const session_attempts = createMemo(() => {
-        let res: ModelRepeatMoveAttempt[] = ((all_list_by_type()?.map(_ => _.attempts[0]).filter(Boolean) ?? []) as ModelRepeatMoveAttempt[])
-
-        res.sort((a, b) => b.created_at - a.created_at)
-
-        return res
-    })
-
-    const latest_move_attempt = createMemo(() => {
-        let aa = move_attempts()
-        if (!aa) {
-            return undefined
-        }
-        return aa[0]
-    })
-
-    const on_attempt_click = (attempt: ModelRepeatMoveAttempt) => {
-        select_one_attempt_result(attempt)
-    }
 
     return (<>
     <main class='repeat-show'>
@@ -367,7 +362,7 @@ function ShowComponent() {
         </div>
         <div class='replay-wrap'>
             <Suspense>
-            <Show when={one_particular_due()} fallback={
+            <Show when={i_state()[0] !== 'end'} fallback={
               <>
                 <span>Great; No due moves at this time.</span>
                 <A href="/repetition">Go Back to Repetitions</A>
@@ -376,14 +371,14 @@ function ShowComponent() {
             <>
                 <ReplayTreeComponent lose_focus={false}/>
                 <div class="controls">
-                    <Show when={i_idle() === undefined} fallback={
+                    <Show when={i_state()[0] === 'idle'} fallback={
                         <span class='idle'>...</span>
                     }>
     
-                        <Show when={repeat_attempt_result() === undefined && !show_previous_moves()}>
+                        <Show when={attempt_result() === undefined && !show_previous_moves()}>
                             <button onClick={() => set_show_previous_moves(true)}>Hint: Show Previous Moves</button>
                         </Show>
-                        <Show when={repeat_attempt_result() === undefined} fallback={
+                        <Show when={attempt_result() === undefined} fallback={
                             <button onClick={on_next_due_move}>Goto Next Due Move</button>
                         }>
                             <button onClick={on_show_answer}>Show Answer</button>

@@ -55,11 +55,16 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             return
         }
 
+        goto_path_force(path)
+    }
+
+    const goto_path_force = (path: Path) => {
         if (write_enabled()) {
             agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
         }
         setState("replay_tree", "cursor_path", path)
     }
+
     const set_success_path = (path?: Path) => {
         //agent.ReplayTree.update({ id: state.replay_tree.id, success_path: path })
         setState("replay_tree", "success_path", path)
@@ -96,6 +101,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         set_success_path,
         set_failed_path,
         set_hide_after_path,
+        goto_path_force,
         goto_path,
         goto_path_if_can(res: Path | undefined) {
             if (res !== undefined) {

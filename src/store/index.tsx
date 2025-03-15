@@ -44,6 +44,7 @@ export type StoreActions = {
 
     goto_path(path: Path): void
     goto_path_if_can(path: Path | undefined): void 
+    goto_path_force(path: Path): void
     delete_at_and_after_path(path: Path): void
     add_child_san_to_current_path(san: SAN): Promise<ModelTreeStepNode>
     tree_step_node_set_nags(node: ModelTreeStepNode, nags: NAG[]): Promise<void>
