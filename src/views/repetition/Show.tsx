@@ -1,4 +1,4 @@
-import { batch, createContext, createEffect, createMemo, createSignal, For, on, Show, Suspense, untrack, useContext } from "solid-js"
+import { batch, createContext, createEffect, createMemo, createSignal, For, on, Show, Suspense, untrack, useContext, useTransition } from "solid-js"
 import { A, useParams, useSearchParams } from "@solidjs/router"
 import { createRepeatProps, RepeatShowType } from "./List"
 import { arr_rnd } from "../../random"
@@ -56,8 +56,6 @@ function ShowComponent() {
         add_attempt_with_spaced_repetition,
 
         load_study,
-
-        reset_replay_tree,
         load_replay_tree_by_steps_id
     }] = useStore()
 
@@ -108,6 +106,7 @@ function ShowComponent() {
         if (!trigger_next_due_move()) {
             return prev
         }
+        console.log('random in')
 
         return arr_rnd(res)
     })
@@ -144,6 +143,8 @@ function ShowComponent() {
     )
     const solution_uci = createMemo(() => one_particular_due()?.tree_step_node.step.uci)
 
+    const [pending, start] = useTransition()
+
     createEffect(() => {
         let due = one_particular_due()
 
@@ -151,10 +152,9 @@ function ShowComponent() {
             return
         }
 
-        untrack(() => {
-            batch(() => {
+        start(() => {
+            untrack(() => {
                 set_repeat_attempt_result(undefined)
-                reset_replay_tree()
                 load_replay_tree_by_steps_id(due.tree_step_node.tree_id, false)
             })
         })
@@ -162,7 +162,7 @@ function ShowComponent() {
 
     let awaiting_tree_load = () => {
         let due = one_particular_due()
-        return due?.tree_step_node.tree_id !== store.replay_tree.steps_tree_id
+        return pending() || due?.tree_step_node.tree_id !== store.replay_tree.steps_tree_id
     }
 
     const [repeat_attempt_result, set_repeat_attempt_result] = createSignal<RepeatAttemptResult | undefined>(undefined)
@@ -171,30 +171,14 @@ function ShowComponent() {
     createEffect(() => {
 
         if (awaiting_tree_load()) {
-            /*
-            untrack(() =>
-                console.log('early await', JSON.stringify([one_particular_due()?.tree_step_node.tree_id, 'x', store.replay_tree.steps_tree_id, 'yes']))
-            )
-            */
             return
         }
 
-        //console.log(one_particular_due()?.tree_step_node.step.path)
         let path = show_at_path()
         if (path === undefined) {
-            /*
-            untrack(() =>
-                console.log('early path', one_particular_due()?.tree_step_node.tree_id, 'x', store.replay_tree.steps_tree_id, 'yes')
-            )
-            */
             return
         }
 
-        /*
-        untrack(() => {
-            console.log('hide not early', JSON.stringify([one_particular_due()?.tree_step_node.tree_id, 'x', store.replay_tree.steps_tree_id, 'yes']))
-        })
-            */
         let show_previous = show_previous_moves()
 
         batch(() => {
@@ -224,9 +208,12 @@ function ShowComponent() {
                 save_due_move_if_not(due_move)
 
                 if (attempt_result.includes('solved')) {
+                    console.log('trigger set timeout')
                     set_i_idle(setTimeout(() => {
-                        set_trigger_next_due_move(true)
-                        set_i_idle(undefined)
+                        batch(() => {
+                            set_trigger_next_due_move(true)
+                            set_i_idle(undefined)
+                        })
                     }, 600))
                 }
             })

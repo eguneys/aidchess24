@@ -70,5 +70,5 @@ export function createDueMoves(agent: Agent, actions: Partial<StoreActions>, _st
         }
     })
 
-    return () => due_moves.latest
+    return due_moves
 }

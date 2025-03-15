@@ -5,6 +5,15 @@ import './ReplayTreeComponent.scss'
 import { useStore } from "../store"
 import { INITIAL_FEN } from "chessops/fen"
 
+export function nodes_at_and_after_path(tree: ModelStepsTree, path: Path): ModelTreeStepNode[] {
+    let at = find_at_path(tree, path)
+    if (!at) {
+        throw new NoNodeAtPathError(path)
+    }
+    let children = find_children_at_path(tree, path)
+    return [at, ...children.flatMap(_ => nodes_at_and_after_path(tree, _.step.path))]
+}
+
 function previous_branch_points_at_cursor_path(tree: ModelReplayTree) {
     return previous_branch_points(tree.steps_tree, tree.cursor_path)
 }
@@ -686,4 +695,10 @@ const Nags = (props: { nags: number[] }) => {
 export const ply_to_index = (ply: number) => {
     let res = Math.ceil(ply / 2)
     return `${res}.` + (ply % 2 === 0 ? '..' : '')
+}
+
+class NoNodeAtPathError extends Error {
+    constructor(path: Path) {
+        super(path)
+    }
 }

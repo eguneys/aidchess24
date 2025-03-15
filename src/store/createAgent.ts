@@ -30,7 +30,7 @@ type ReplayTree = {
 
     update(entity: Partial<EntityPlayUciTreeReplayInsert>): Promise<void>
     update_tree_node(entity: Partial<EntityTreeStepNodeInsert>): Promise<void>
-    delete_tree_node(id: EntityTreeStepNodeId): Promise<void>
+    delete_tree_nodes(id: EntityTreeStepNodeId[]): Promise<void>
 }
 
 type Chapters = {
@@ -140,8 +140,8 @@ function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
         update_tree_node: async (entity: EntityTreeStepNodeInsert) => {
             await db.update_tree_step_node(entity)
         },
-        delete_tree_node: async (id: EntityTreeStepNodeId) => {
-            await db.delete_tree_nodes([id])
+        delete_tree_nodes: async (ids: EntityTreeStepNodeId[]) => {
+            await db.delete_tree_nodes(ids)
         }
 
     }
