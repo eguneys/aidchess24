@@ -68,6 +68,7 @@ function ShowComputedProps(store: StoreState, study_id: EntityStudyId) {
         return section.chapter_ids.map(id => store.chapters.list.find(_ => _.id === id)!).filter(Boolean)
     })
 
+
     let selected_chapter = createMemo(() => {
         let section = selected_section()
         let selected_chapter_id = section?.selected_chapter_id
@@ -799,7 +800,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             }</Show>
             <Show when={edit_chapter_dialog()}>{ (chapter) => 
                 <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(undefined)}>
-                    <EditChapterComponent chapter={chapter()} i_chapter={get_i_chapter(chapter())} on_edit_chapter={_ => on_edit_chapter(props.study.id, chapter().section_id, _)} on_delete_chapter={() => on_delete_chapter(chapter().id)} on_order_chapter={_ => on_order_chapter(chapter(), _)}/>
+                    <EditChapterComponent nb_chapters={props.chapters.length} chapter={chapter()} i_chapter={get_i_chapter(chapter())} on_edit_chapter={_ => on_edit_chapter(props.study.id, chapter().section_id, _)} on_delete_chapter={() => on_delete_chapter(chapter().id)} on_order_chapter={_ => on_order_chapter(chapter(), _)}/>
                 </DialogComponent>
             }</Show>
             <Show when={edit_study_dialog()}>
@@ -837,6 +838,7 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
     const on_new_section = async () => {
         let section = await create_section(props.study.id)
         set_selected_section(section.id)
+        props.on_edit_section(section)
     }
 
     const set_selected_section = (selected_section_id: EntitySectionId) => 
@@ -886,6 +888,7 @@ function SectionComponent(props: ShowComputedProps & { nth: string, section: Mod
     const on_new_chapter = async () => {
         let chapter = await create_chapter(props.study.id, props.section.id)
         set_selected_chapter(chapter.id)
+        props.on_edit_chapter(chapter)
     }
 
 

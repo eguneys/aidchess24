@@ -1,8 +1,10 @@
-import { createMemo, createResource, createSignal, For, Show, Suspense } from "solid-js"
+import { createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from "solid-js"
 import { EntityChapterInsert, EntitySectionInsert, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy } from "../store/sync_idb_study"
 import { SECTION_LETTERS } from "./hard_limits"
 import { parse_PGNS, PGN } from "./parse_pgn"
 import { useStore } from "../store"
+import { PlayUciBoard } from "./PlayUciBoard"
+import { BoardEditor } from "./BoardEditor"
 
 export function EditStudyComponent(props: { study: ModelStudy, on_update_study: (data: Partial<EntityStudyInsert>) => void, on_delete_study: () => void }) {
 
@@ -42,7 +44,7 @@ export function EditStudyComponent(props: { study: ModelStudy, on_update_study: 
     </>)
 }
 
-export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void, on_order_chapter: (order: number) => void }) {
+export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters: number, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void, on_order_chapter: (order: number) => void }) {
 
     const [store] = useStore()
 
@@ -70,6 +72,15 @@ export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: 
         props.on_delete_chapter()
     }
 
+    const on_create_chapter = () => {
+    }
+
+
+
+    const [tab, set_tab] = createSignal('editor')
+
+    const isTab = createSelector(tab)
+
     return (<>
         <h2>Edit Chapter</h2>
 
@@ -78,19 +89,48 @@ export function EditChapterComponent(props: { chapter: ModelChapter, i_chapter: 
         <input name="name" id="name" onKeyDown={e => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Section Name" minLength={3} value={props.chapter.name}></input>
         </div>
 
-        
-        <div class='group'>
-        <label for='order'>Set Order</label>
-        <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
-            <For each={store.chapters.list}>{(_, i) => 
-                <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
-            }</For>
-        </select>
+        <div class='tabs-wrap'>
+        <div class='tabs'>
+            <div class='tab' classList={{active: isTab('empty') }} onClick={() => set_tab('empty')}>Empty</div>
+            <div class='tab' classList={{ active: isTab('editor')} } onClick={() => set_tab('editor')}>Editor</div>
+        </div>
+        <div class='content'>
+            <Show when={tab() === 'editor'}>
+                <div class='group'>
+                    <div class='editor-wrap'>
+                        <BoardEditor />
+                    </div>
+                </div>
+                <div class='group'>
+                    <label for='order'>Set Order</label>
+                    <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+                        <For each={[...Array(props.nb_chapters).keys()]}>{(_, i) =>
+                            <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
+                        }</For>
+                    </select>
+                </div>
+            </Show>
+            <Show when={tab() === 'empty'}>
+                <div class='group'>
+                    <label for='order'>Set Order</label>
+                    <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+                        <For each={store.chapters.list}>{(_, i) =>
+                            <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
+                        }</For>
+                    </select>
+                </div>
+            </Show>
+        </div>
+        </div>
+        <div class='filler'></div>
+
+
+
 
         <div class='group buttons'>
-            <span class='split'></span>
             <button onClick={on_delete_chapter} class='delete'>Delete <i data-icon=''></i></button>
-        </div>
+            <span class='split'></span>
+            <button onClick={on_create_chapter} class='create'>Save Changes</button>
         </div>
     </>)
 }

@@ -35,6 +35,10 @@
   src: url(./assets/fonts/lichess.ttf);
 }
 
+input[type=checkbox] {
+    transform: scale(1.1);
+}
+
 [data-icon]::before {
     line-height: 1em;
     font-size: 1.2em;
