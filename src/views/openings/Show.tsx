@@ -513,8 +513,11 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         set_context_menu_open(undefined)
     }
 
+    const [,start] = useTransition()
     const on_delete_move = async (path: Path) => {
-        delete_at_and_after_path(path)
+        start(() => {
+            delete_at_and_after_path(path)
+        })
         set_context_menu_open(undefined)
     }
 
