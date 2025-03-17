@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense } from "solid-js"
+import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense, useTransition } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components2/PlayUciBoard"
@@ -103,13 +103,19 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
 
     const [tab, set_tab] = createSignal('show')
 
-    createEffect(on(() => props.selected_section, (section) => section && load_chapters(section.id)))
+    const [,start] = useTransition()
+    createEffect(on(() => props.selected_section, (section) => 
+        section && start(() => load_chapters(section.id))))
     createEffect(on(() => props.selected_chapter, (chapter) => {
         if (chapter) {
-            load_chapter(chapter.id)
-            load_replay_tree(chapter.id)
+            start(() => {
+                load_chapter(chapter.id)
+                load_replay_tree(chapter.id)
+            })
         } else {
+            start(() => {
             reset_replay_tree()
+            })
         }
     }))
 
@@ -831,7 +837,7 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
     }
 
     const set_selected_section = (selected_section_id: EntitySectionId) => 
-        update_study({id: props.study.id, selected_section_id })
+        update_study({ id: props.study.id, selected_section_id })
 
     return (<>
     <div class='sections-list'>

@@ -92,7 +92,9 @@ function ShowComponent() {
 
     const [attempt_result, set_attempt_result] = createSignal<RepeatAttemptResult | undefined>()
 
-    type IState = 'preview' | 'load' | 'idle' | 'end'
+    const [previous_attempt_click, set_previous_attempt_click] = createSignal<ModelRepeatDueMove>()
+
+    type IState = 'preview' | 'load' | 'idle' | 'end' | 'go-next'
     const [i_state, set_i_state] = createSignal<[IState, number]>(['load', 0])
 
     const show_at_path = (() => {
@@ -122,9 +124,7 @@ function ShowComponent() {
             return
         }
 
-        batch(() => {
-            set_request_next_due(next_due)
-        })
+        set_request_next_due(next_due)
     })
 
     createEffect(on(request_next_due, (next_due) => {
@@ -143,6 +143,7 @@ function ShowComponent() {
 
     const on_next_due_move = () => {
         set_request_next_due(undefined)
+        set_previous_attempt_click(undefined)
     }
 
     let is_tree_loaded = createMemo(() => {
@@ -152,7 +153,10 @@ function ShowComponent() {
 
     createEffect(on(is_tree_loaded, (is_loaded) => {
         if (is_loaded) {
-            set_current_due(request_next_due())
+            let next_due = request_next_due()
+            console.log('after is loaded')
+            console.log(current_due() === next_due)
+            set_current_due(next_due)
         }
     }))
 
@@ -160,15 +164,13 @@ function ShowComponent() {
         if (!due) {
             return
         }
-        batch(() => {
-            set_i_state(['preview', setTimeout(() => {
-                batch(() => {
-                    goto_path_force(show_at_path()!)
-                    set_i_state(['idle', 0])
-                })
-            }, 500)])
-            goto_path_force(parent_path(show_at_path()!))
-        })
+        set_i_state(['preview', setTimeout(() => {
+            batch(() => {
+                goto_path_force(show_at_path()!)
+                set_i_state(['idle', 0])
+            })
+        }, 500)])
+        goto_path_force(parent_path(show_at_path()!))
     }))
 
     createEffect(() => {
@@ -196,6 +198,7 @@ function ShowComponent() {
         }
         return 'hold'
     }))
+
     createEffect(() => {
         console.log(i_state(), attempt_result())
     })
@@ -210,6 +213,7 @@ function ShowComponent() {
         batch(() => {
             set_show_previous_moves(false)
             set_request_next_due(due_move)
+            set_previous_attempt_click(due_move)
         })
     }
 
@@ -225,6 +229,14 @@ function ShowComponent() {
 
         add_attempt_with_spaced_repetition(fs, due_move, attempt_result)
         save_due_move_if_not(due_move)
+
+
+        if (attempt_result.includes('solved')) {
+            set_i_state(['go-next', setTimeout(() => {
+                set_request_next_due(undefined)
+            }, 700)])
+        }
+
     }))
 
     const color = () => fen_turn(current_due()?.tree_step_node.step.before_fen ?? INITIAL_FEN)
@@ -256,7 +268,7 @@ function ShowComponent() {
             if (show_previous_moves()) {
                 set_attempt_result('solved-with-hint')
             } else {
-                if (current_due()) {
+                if (previous_attempt_click()) {
                     set_attempt_result('solved-with-hint')
                 } else {
                     set_attempt_result('solved')

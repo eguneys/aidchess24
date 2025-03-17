@@ -238,7 +238,7 @@ export function createReplayTreeComputed(): ReplayTreeComputed {
             if (hold !== 'no-last-move') {
                 set_last_move([step.step.uci, step.step.san])
             }
-            console.log('actual', step.step.path)
+            console.log('actual', step.step.path, hold)
         }))
     }
 

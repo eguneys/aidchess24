@@ -11,16 +11,6 @@ const Home = () => {
         <section>
       <h1><A href='repertoires'>Master Chess Through Memorization and Practice.</A></h1>
       <div class='features'>
-        <div onClick={() => navigate('/builder')} class='feature'>
-            <h2>Build Your Repertoire</h2>
-            <ul>
-                <li><p>Play against the engine selecting top 5 moves</p></li>
-                <li><p>Game is over when evaluation drops -2.</p></li>
-                <li><p>Rematch often, and focus on your openings.</p></li>
-                <li><small>See the evaluation and accuracy of the moves instantly.</small></li>
-                <li><p>Save your lines for further study.</p></li>
-            </ul>
-        </div>
         <div  onClick={() => navigate('/openings')}class='feature'>
             <h2>Featured Openings</h2>
             <ul>
@@ -34,6 +24,16 @@ const Home = () => {
             <h2>Spaced Repetition Practice</h2>
             <ul>
                 <li><p>Repeat your lines daily with quizzes using spaced repetition.</p></li>
+            </ul>
+        </div>
+        <div onClick={() => navigate('/builder')} class='feature'>
+            <h2>Build Your Repertoire</h2>
+            <ul>
+                <li><p>Play against the engine selecting top 5 moves</p></li>
+                <li><p>Game is over when evaluation drops -2.</p></li>
+                <li><p>Rematch often, and focus on your openings.</p></li>
+                <li><small>See the evaluation and accuracy of the moves instantly.</small></li>
+                <li><p>Save your lines for further study.</p></li>
             </ul>
         </div>
         {

@@ -6,7 +6,7 @@ import { PersistedStoreProvider, StoreProvider } from "./store";
 import { StudiesDBProvider } from "./store/sync_idb_study";
 const Home = lazy(() => import('./Home'))
 const Contact = lazy(() => import('./Contact'))
-const Builder = lazy(() => import('./views/builder/Builder'))
+const Builder = lazy(() => import('./views/builder/Placeholder'))
 const Beta = lazy(() => import('./Beta'))
 
 const OpeningsList = lazy(() => import('./views/openings/List'))
