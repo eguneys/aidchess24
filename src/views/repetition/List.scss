@@ -9,6 +9,9 @@
 
         grid-template-rows: 66vh;
 
+        border-radius: 6px;
+        justify-content: center;
+
         @include media.mq-is-col1 {
             grid-template-areas: 'studies'
                                  'sections'
@@ -29,9 +32,6 @@
             grid-template-areas: 'studies sections info';
             grid-template-columns: minmax(200px, 300px) minmax(300px, 520px) minmax(300px, 360px);
         }
-
-        border-radius: 6px;
-        justify-content: center;
 
         .studies-list {
             grid-area: studies;
