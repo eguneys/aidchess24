@@ -3,7 +3,6 @@ import { EntityChapterInsert, EntitySectionInsert, EntityStudyInsert, ModelChapt
 import { SECTION_LETTERS } from "./hard_limits"
 import { parse_PGNS, PGN } from "./parse_pgn"
 import { useStore } from "../store"
-import { PlayUciBoard } from "./PlayUciBoard"
 import { BoardEditor } from "./BoardEditor"
 
 export function EditStudyComponent(props: { study: ModelStudy, on_update_study: (data: Partial<EntityStudyInsert>) => void, on_delete_study: () => void }) {

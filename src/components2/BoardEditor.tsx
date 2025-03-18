@@ -1,31 +1,45 @@
 import { INITIAL_FEN } from "chessops/fen"
-import { PlayUciBoard } from "./PlayUciBoard"
 import './BoardEditor.scss'
 import { Color, Role, ROLES } from "chessops"
-import { createMemo, createSelector, createSignal, For, onMount } from "solid-js"
+import { createEffect, createSelector, createSignal, For, onMount } from "solid-js"
 import { FEN } from "chessground/types"
 import { Api } from "chessground/api"
 import { Chessground } from "chessground"
-import { fen_pos } from "../store/step_types"
+import { dragNewPiece } from "chessground/drag"
 
 
 type Spare = 'pointer' | `${Color} ${Role}` | 'trash'
 
 export const BoardEditor = () => {
 
-    const pieces = []
-
     const [spare, set_spare] = createSignal()
     const isSelected = createSelector(spare)
+    const [drag_new_piece, set_drag_new_piece] = createSignal<[Color, Role, MouseEvent]>()
+
+    const on_click_spare = (spare: Spare, e: MouseEvent) => {
+        console.log(spare, e)
+        if (spare === 'pointer') {
+
+        } else if (spare === 'trash') {
+
+        } else {
+            let [color, role] = spare.split(' ') as [Color, Role]
+
+            console.log(color, role)
+
+            set_drag_new_piece([color, role, e])
+
+        }
+    }
 
     return (<>
 
         <div class='editor is2d'>
-            <Spare klass="spare-top" color="black" is_selected={isSelected} />
+            <Spare klass="spare-top" color="black" on_spare={on_click_spare} is_selected={isSelected} />
             <div class='board-wrap'>
-                <PlayUciBoardFree color="white" fen={INITIAL_FEN} last_move={undefined} />
+                <PlayUciBoardFree drag_new_piece={drag_new_piece()} fen={INITIAL_FEN} />
             </div>
-            <Spare klass="spare-bottom" color="white" is_selected={isSelected}/>
+            <Spare klass="spare-bottom" color="white" on_spare={on_click_spare} is_selected={isSelected}/>
 
             <div class='tools-wrap'>
                 <div class='metadata'>
@@ -65,12 +79,11 @@ export const BoardEditor = () => {
 
 export function PlayUciBoardFree(props: { 
     fen: FEN, 
+    drag_new_piece?: [Color, Role, MouseEvent]
 }) {
 
     let board: HTMLDivElement
     let ground: Api
-
-    let pos = createMemo(() => fen_pos(props.fen))
 
     onMount(() => {
       let config = {
@@ -82,28 +95,36 @@ export function PlayUciBoardFree(props: {
       ground = Chessground(board, config)
     })
 
+    createEffect(() => {
+        let s = props.drag_new_piece
+        if (!s) {
+            return
+        }
+        dragNewPiece(ground.state, { color: s[0], role: s[1] }, s[2], true)
+    })
+
     return (<><div ref={(el) => board = el} class='is2d chessboard'> </div></>)
 }
 
 
 
-const Spare = (props: { color: Color, klass: string, is_selected: (_: string) => boolean }) => {
+const Spare = (props: { color: Color, klass: string, is_selected: (_: string) => boolean, on_spare: (_: Spare, e: MouseEvent) => void }) => {
 
     const isSelected = props.is_selected
 
     return (<>
     <div class={'spare' + ' ' + props.klass + ' ' + props.color}>
-        <NoSquare klass='pointer' spare='pointer' selected={isSelected('pointer')} color={props.color}/>
+        <NoSquare onClick={e => props.on_spare('pointer', e)} klass='pointer' spare='pointer' selected={isSelected('pointer')} color={props.color}/>
         <For each={ROLES}>{ role => 
-            <NoSquare klass="" spare={`${props.color} ${role}`} selected={isSelected(props.color + role)} color={props.color} />
+            <NoSquare onClick={e => props.on_spare(`${props.color} ${role}`, e)} klass="" spare={`${props.color} ${role}`} selected={isSelected(props.color + role)} color={props.color} />
         }</For>
-        <NoSquare klass='trash' spare='trash' selected={isSelected('trash')} color={props.color}/>
+        <NoSquare onClick={e => props.on_spare('trash', e)} klass='trash' spare='trash' selected={isSelected('trash')} color={props.color}/>
     </div></>)
 }
 
-const NoSquare = (props: { klass: string, spare: Spare, selected: boolean, color: Color }) => {
+const NoSquare = (props: { klass: string, spare: Spare, selected: boolean, color: Color, onClick: (_: MouseEvent) => void }) => {
     return (<>
-    <div class={'no-square' + ' ' + props.klass} classList={{selected: props.selected}}>
+    <div onMouseDown={props.onClick} class={'no-square' + ' ' + props.klass} classList={{selected: props.selected}}>
         <div>
         <div class={'piece' + ' ' + props.spare} classList={{ [props.color]: true }}>
         </div>
