@@ -1,4 +1,4 @@
-import { createContext, createEffect, createMemo, For, on, Show, Suspense, useContext, useTransition } from "solid-js"
+import { batch, createContext, createEffect, createMemo, For, on, Show, Suspense, useContext } from "solid-js"
 import { A, useParams, useSearchParams } from "@solidjs/router"
 import { createRepeatProps, RepeatShowType } from "./List"
 import { arr_rnd } from "../../random"
@@ -11,7 +11,7 @@ import { RepeatAttemptResult } from "../../store/repeat_types"
 import { fen_pos, fen_turn, nag_to_glyph, parent_path, Ply } from "../../store/step_types"
 import { non_passive_on_wheel, PlayUciBoard } from "../../components2/PlayUciBoard"
 import { parseSquare } from "chessops"
-import { useStore } from "../../store"
+import { StoreActions, useStore } from "../../store"
 import { createReplayTreeComputed, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import TimeAgo from "../../components2/TimeAgo"
 import { Key } from "chessground/types"
@@ -24,6 +24,177 @@ export default () => {
 }
 
 const FSRSContext = createContext(new FSRS({ }))
+
+type StateBoot = { state: 'boot', next: undefined }
+type StateLoadList = { state: 'load-list', next: undefined }
+type StateListNoItem = { state: 'list-no-item' }
+type StateSelectNext = { state: 'select-next', next?: ModelRepeatDueMove }
+type StateLoadNext = { state: 'load-next', next: ModelRepeatDueMove, is_previous_attempt: boolean }
+type StateLoadedPreview = { state: 'loaded-preview', next: ModelRepeatDueMove, is_previous_attempt: boolean }
+type StateLoadedIdle = { state: 'loaded-idle', next: ModelRepeatDueMove, show_previous_moves: boolean, is_previous_attempt: boolean }
+type StateAttemptResult = { state: 'attempt-result', next: ModelRepeatDueMove, attempt_result: RepeatAttemptResult, is_previous_attempt: boolean }
+type StateAutoGoNext = { state: 'auto-go-next', next: ModelRepeatDueMove, is_previous_attempt: boolean }
+
+const is_load_list = (state: SomeState): state is StateLoadList => state.state === 'load-list'
+const is_list_no_item = (state: SomeState): state is StateListNoItem => state.state === 'list-no-item'
+const is_select_next = (state: SomeState): state is StateSelectNext => state.state === 'select-next'
+const is_load_next = (state: SomeState): state is StateLoadNext => state.state === 'load-next'
+const is_loaded_preview = (state: SomeState): state is StateLoadedPreview => state.state === 'loaded-preview'
+const is_loaded_idle = (state: SomeState): state is StateLoadedIdle => state.state === 'loaded-idle'
+const is_attempt_result = (state: SomeState): state is StateAttemptResult => state.state === 'attempt-result'
+
+
+type SomeState = StateBoot | StateLoadList | StateListNoItem
+    | StateSelectNext | StateLoadNext | StateLoadedPreview
+    | StateLoadedIdle | StateAttemptResult | StateAutoGoNext
+
+
+type StoreState = { current_state: SomeState }
+
+type EventEnter = { event: 'enter', due_list_by_type: ModelRepeatDueMove[]  }
+type EventDueListChange = { event: 'due-list-change', due_list_by_type: ModelRepeatDueMove[] }
+type EventNext = { event: 'next', next: ModelRepeatDueMove }
+type EventTreeLoaded = { event: 'tree-loaded' }
+
+type SomeEvent = EventEnter | EventDueListChange | EventNext 
+    | EventTreeLoaded
+
+function h_event_load_list(_current: SomeState, 
+    event: SomeEvent, 
+    set: (next: SomeState) => void,
+    _actions: StoreActions) {
+    if (event.event === 'due-list-change' || event.event === 'enter') {
+        if (event.due_list_by_type !== undefined) {
+            set({
+                state: 'select-next',
+                next: undefined,
+            })
+        }
+    }
+}
+function h_event_list_no_item(_current: SomeState, 
+    event: SomeEvent, 
+    set: (next: SomeState) => void,
+    _actions: StoreActions) {
+    if (event.event === 'due-list-change') {
+        if (event.due_list_by_type !== undefined) {
+            set({
+                state: 'select-next',
+                next: undefined,
+            })
+        }
+    }
+}
+function h_event_select_next(current: StateSelectNext, event: SomeEvent, set: (next: SomeState) => void, actions: StoreActions) {
+    if (event.event === 'next') {
+        set({
+            state: 'load-next',
+            next: event.next,
+            is_previous_attempt: false
+        })
+    } else {
+        if (event.event === 'enter' || event.event === 'due-list-change') {
+
+            let ll = event.due_list_by_type
+
+            let next = arr_rnd(ll)
+
+            if (!next) {
+                set({
+                    state: 'list-no-item'
+                })
+            } else {
+                transition(current, { event: 'next', next }, set, actions)
+            }
+
+        }
+    }
+}
+
+function h_event_load_next(current: StateLoadNext,
+    event: SomeEvent,
+    set: (next: SomeState) => void,
+    actions: StoreActions) {
+        console.log('EVENT', event)
+    if (event.event === 'tree-loaded') {
+        set({
+            state: 'loaded-preview',
+            next: current.next,
+            is_previous_attempt: current.is_previous_attempt
+        })
+    }
+    if (event.event === 'enter') {
+        const { load_replay_tree_by_steps_id } = actions
+        console.log('loading')
+        load_replay_tree_by_steps_id(current.next.tree_step_node.tree_id, false)
+    }
+}
+
+function h_event_loaded_preview(current: StateLoadedPreview, 
+    event: SomeEvent, 
+    set: (next: SomeState) => void,
+    actions: StoreActions) {
+
+    const { set_hide_after_path, goto_path_force } = actions
+
+    if (event.event === 'enter') {
+        let is_previous_attempt = current.is_previous_attempt
+        let due = current.next
+        let show_at_path = parent_path(due.tree_step_node.step.path)
+        set_hide_after_path('')
+        goto_path_force(parent_path(show_at_path))
+        setTimeout(() => {
+            batch(() => {
+                goto_path_force(show_at_path)
+                set({
+                    state: 'loaded-idle',
+                    next: due,
+                    is_previous_attempt: is_previous_attempt,
+                    show_previous_moves: false,
+                })
+            })
+        }, 555)
+    }
+}
+function h_event_loaded_idle(current: StateLoadedIdle, 
+    event: SomeEvent, 
+    _set: (next: SomeState) => void,
+    actions: StoreActions) {
+
+    const { set_hide_after_path } = actions
+    if (event.event === 'enter') {
+        let due = current.next
+        let show_at_path = parent_path(due.tree_step_node.step.path)
+        let show_previous = current.show_previous_moves
+        set_hide_after_path(show_previous ? show_at_path : '')
+    }
+}
+function h_event_attempt_result(_current: SomeState, 
+    _event: SomeEvent, 
+    _set: (next: SomeState) => void,
+    _actions: StoreActions) {
+
+}
+
+
+function transition(current: SomeState, event: SomeEvent, set: (next: SomeState) => void, actions: StoreActions) {
+    if (is_load_list(current)) {
+        h_event_load_list(current, event, set, actions)
+    } else if (is_list_no_item(current)) {
+        h_event_list_no_item(current, event, set, actions)
+    } else if (is_select_next(current)) {
+        h_event_select_next(current, event, set, actions)
+    } else if (is_load_next(current)) {
+        h_event_load_next(current, event, set, actions)
+    } else if (is_loaded_preview(current)) {
+        h_event_loaded_preview(current, event, set, actions)
+    } else if (is_loaded_idle(current)) {
+        h_event_loaded_idle(current, event, set, actions)
+    } else if (is_attempt_result(current)) {
+        h_event_attempt_result(current, event, set, actions)
+    }
+}
+
 
 function ShowComponent() {
 
@@ -49,7 +220,6 @@ function ShowComponent() {
         add_child_san_to_current_path,
         goto_path, 
         goto_path_if_can,
-        goto_path_force,
         set_success_path,
         set_failed_path,
         set_hide_after_path,
@@ -58,7 +228,6 @@ function ShowComponent() {
         add_attempt_with_spaced_repetition,
 
         load_study,
-        load_replay_tree_by_steps_id,
     }] = useStore()
 
     let r_props = createRepeatProps()
@@ -88,148 +257,43 @@ function ShowComponent() {
         }
     })
 
-    type StateBoot = { state: 'boot', next: undefined }
-    type StateLoadList = { state: 'load-list', next: undefined }
-    type StateListNoItem = { state: 'list-no-item' }
-    type StateSelectNext = { state: 'select-next', next?: ModelRepeatDueMove }
-    type StateLoadNext = { state: 'load-next', next: ModelRepeatDueMove, is_previous_attempt: boolean }
-    type StateLoadedPreview = { state: 'loaded-preview', next: ModelRepeatDueMove, is_previous_attempt: boolean }
-    type StateLoadedIdle = { state: 'loaded-idle', next: ModelRepeatDueMove, show_previous_moves: boolean, is_previous_attempt: boolean }
-    type StateAttemptResult = { state: 'attempt-result', next: ModelRepeatDueMove, attempt_result: RepeatAttemptResult, is_previous_attempt: boolean }
-    type StateAutoGoNext = { state: 'auto-go-next', next: ModelRepeatDueMove, is_previous_attempt: boolean }
-
-    const is_boot = (state: SomeState): state is StateBoot => state.state === 'boot'
-    const is_load_list = (state: SomeState): state is StateLoadList => state.state === 'load-list'
-    const is_list_no_item = (state: SomeState): state is StateListNoItem => state.state === 'list-no-item'
-    const is_select_next = (state: SomeState): state is StateSelectNext => state.state === 'select-next'
-    const is_load_next = (state: SomeState): state is StateLoadNext => state.state === 'load-next'
-    const is_loaded_preview = (state: SomeState): state is StateLoadedPreview => state.state === 'loaded-preview'
-    const is_loaded_idle = (state: SomeState): state is StateLoadedIdle => state.state === 'loaded-idle'
-    const is_attempt_result = (state: SomeState): state is StateAttemptResult => state.state === 'attempt-result'
-    //const is_auto_go_next = (state: SomeState): state is StateAutoGoNext => state.state === 'auto-go-next'
-
-
-    type SomeState = StateBoot | StateLoadList | StateListNoItem
-        | StateSelectNext | StateLoadNext | StateLoadedPreview
-        | StateLoadedIdle | StateAttemptResult | StateAutoGoNext
-
-
-    type StoreState = { current_state: SomeState }
-
     const [state, set_state] = createStore<StoreState>({
         current_state: { state: 'boot', next: undefined }
     })
 
-    const set_current_state = (state: SomeState) => set_state('current_state', state)
 
-    createEffect(() => {
-        if (is_list_no_item(state.current_state)) {
-            if (due_list_by_type().length > 0) {
-                set_current_state({
-                    state: 'select-next',
-                    next: undefined
-                })
+    const [,actions] = useStore()
+    const set_current_state = (new_state: SomeState) => { 
+        let will_transition = state.current_state.state !== new_state.state
+        batch(() => {
+            set_state('current_state', new_state)
+            if (will_transition) {
+                transition(new_state, { event: 'enter', due_list_by_type: due_list_by_type() }, set_current_state, actions)
             }
-        }
+        })
+    }
+
+    queueMicrotask(() => {
+        set_current_state({ state: 'load-list', next: undefined })
     })
 
-    createEffect(() => {
-        if (is_boot(state.current_state)) {
-            set_current_state({
-                state: 'load-list',
-                next: undefined
-            })
-        }
-    })
-
-    createEffect(() => {
-        if (is_load_list(state.current_state)) {
-            if (due_list_by_type() !== undefined) {
-                set_current_state({
-                    state: 'select-next',
-                    next: undefined,
-                })
-            }
-        }
-    })
-
-    createEffect(() => {
-        if (is_select_next(state.current_state)) {
-            if (state.current_state.next) {
-                set_current_state({
-                    state: 'load-next',
-                    next: state.current_state.next,
-                    is_previous_attempt: false
-                })
-            } else {
-
-                let ll = due_list_by_type()
-
-                let next = arr_rnd(ll)
-
-                if (!next) {
-                    set_current_state({
-                        state: 'list-no-item'
-                    })
-                } else {
-                    set_state("current_state", produce(state => {
-                        if (is_list_no_item(state)) {
-                        } else {
-                            state.next = next
-                        }
-                    }))
-                }
-            }
-        }
-    })
-
-
-    const [, start] = useTransition()
-    createEffect(() => {
+    const is_tree_loaded = createMemo(on(() => [state.current_state.state, store.replay_tree.steps_tree_id] as [string, string], ([,replay_tree_steps_id]: [string, string]) => {
         if (is_load_next(state.current_state)) {
-            let next_due = state.current_state.next
-            if (next_due.tree_step_node.tree_id === store.replay_tree.steps_tree_id) {
-                set_current_state({
-                    state: 'loaded-preview',
-                    next: next_due,
-                    is_previous_attempt: state.current_state.is_previous_attempt
-                })
-            } else {
-                start(() => {
-                    load_replay_tree_by_steps_id(next_due.tree_step_node.tree_id, false)
-                })
-            }
-        }
-    })
-
-    createEffect(() => {
-        if (is_loaded_preview(state.current_state)) {
-            let is_previous_attempt = state.current_state.is_previous_attempt
             let due = state.current_state.next
-            let show_at_path = parent_path(due.tree_step_node.step.path)
-            set_hide_after_path('')
-            goto_path_force(parent_path(show_at_path))
-            setTimeout(() => {
-                goto_path_force(show_at_path)
-                set_current_state({
-                    state: 'loaded-idle',
-                    next: due,
-                    is_previous_attempt: is_previous_attempt,
-                    show_previous_moves: false,
-                })
-            }, 555)
+            return due.tree_step_node.tree_id === replay_tree_steps_id
         }
-    })
+    }))
 
-    createEffect(() => {
-        if (is_loaded_idle(state.current_state)) {
-            let due = state.current_state.next
-            let show_at_path = parent_path(due.tree_step_node.step.path)
-            let show_previous = state.current_state.show_previous_moves
-            set_hide_after_path(show_previous ? show_at_path : '')
+
+    createEffect(on(due_list_by_type, (ll) => {
+        transition(state.current_state, { event: 'due-list-change', due_list_by_type: ll }, set_current_state, actions)
+    }))
+
+    createEffect(on(is_tree_loaded, (yes) => {
+        if (yes) {
+            transition(state.current_state, { event: 'tree-loaded' }, set_current_state, actions)
         }
-    })
-
+    }))
 
     createEffect(on(() => is_attempt_result(state.current_state), () => {
         if (is_attempt_result(state.current_state)) {
@@ -240,9 +304,7 @@ function ShowComponent() {
             save_due_move_if_not(due)
 
             if (state.current_state.attempt_result.includes('solved')) {
-                console.log('out')
                 setTimeout(() => {
-                    console.log('here')
                     set_current_state({
                         state: 'select-next',
                         next: undefined,
@@ -262,7 +324,7 @@ function ShowComponent() {
         })
     }
 
-    c_props.create_cursor_path_effects(createMemo(() => {
+    c_props.create_cursor_path_effects(() => {
         if (is_loaded_preview(state.current_state)) {
             return 'no-last-move'
         }
@@ -272,7 +334,7 @@ function ShowComponent() {
         }
 
         return 'hold'
-    }))
+    })
 
     const select_one_attempt_result = (attempt_result: ModelRepeatMoveAttempt) => {
         let due_move = all_list_by_type()?.find(_ => _.id === attempt_result.repeat_due_move_id)
@@ -284,7 +346,7 @@ function ShowComponent() {
         set_current_state({
             state: 'load-next',
             next: due_move,
-            is_previous_attempt: true
+            is_previous_attempt: true,
         })
     }
 
@@ -521,10 +583,8 @@ function ShowComponent() {
             </div>
         </div>
         </Suspense>
-
     </main>
     </>)
-
 }
 
 

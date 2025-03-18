@@ -12,7 +12,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
     const [write_enabled, set_write_enabled] = createSignal(true)
 
     type Source = EntityChapterId | ['by_id', EntityPlayUciTreeReplayId] | ['by_steps_id', EntityStepsTreeId]
-    const [source, set_source] = createSignal<Source>()
+    const [source, set_source] = createSignal<Source | undefined>(undefined, { equals: false })
     const default_replay_tree: Accessor<ModelReplayTree> = () => ({
         id: '',
         steps_tree_id: '',
@@ -38,7 +38,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             if (s[0] === 'by_id') {
                 return agent.ReplayTree.by_id(s[1])
             } else {
-                return agent.ReplayTree.by_steps_tree_id(s[1])
+                return agent.ReplayTree.by_steps_tree_id(s[1]).then(_ => { console.log('load truth', _.steps_tree_id, _.cursor_path); return _ })
             }
         }
 
@@ -60,6 +60,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
     const goto_path_force = (path: Path) => {
         if (write_enabled()) {
+            console.trace(write_enabled(), 'save path', path)
             agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
         }
         setState("replay_tree", "cursor_path", path)
@@ -80,6 +81,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
     Object.assign(actions, {
         reset_replay_tree(only_steps_tree: boolean = false) {
+            console.log('reset')
             if (only_steps_tree) {
                 setState("replay_tree", "steps_tree_id", "")
             } else {
@@ -87,16 +89,25 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             }
         },
         load_replay_tree(chapter_id: EntityChapterId, write_enabled = true) {
-            set_source(chapter_id)
-            set_write_enabled(write_enabled)
+            console.log('reset')
+            batch(() => {
+                set_source(chapter_id)
+                set_write_enabled(write_enabled)
+            })
         },
         load_replay_tree_by_id(id: EntityPlayUciTreeReplayId, write_enabled = true) {
-            set_source(['by_id', id])
-            set_write_enabled(write_enabled)
+            console.log('reset')
+            batch(() => {
+                set_source(['by_id', id])
+                set_write_enabled(write_enabled)
+            })
         },
         load_replay_tree_by_steps_id(id: EntityStepsTreeId, write_enabled = true) {
-            set_source(['by_steps_id', id])
-            set_write_enabled(write_enabled)
+            console.log('LOAD tree write enabled', write_enabled)
+            batch(() => {
+                set_source(['by_steps_id', id])
+                set_write_enabled(write_enabled)
+            })
         },
         set_success_path,
         set_failed_path,

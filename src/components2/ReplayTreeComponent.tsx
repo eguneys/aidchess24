@@ -228,17 +228,18 @@ export function createReplayTreeComputed(): ReplayTreeComputed {
             }
 
             if (!step) {
+                console.log('actual in reset', hold)
                 set_fen(INITIAL_FEN)
-                if (hold !== 'no-last-move') {
-                    set_last_move(undefined)
-                }
+                set_last_move(undefined)
                 return
             }
             set_fen(step.step.fen)
-            if (hold !== 'no-last-move') {
+            if (hold === 'no-last-move') {
+                set_last_move(undefined)
+            } else {
                 set_last_move([step.step.uci, step.step.san])
             }
-            //console.log('actual', step.step.path, hold)
+            console.log('actual', step.step.path, hold)
         }))
     }
 
