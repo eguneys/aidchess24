@@ -53,6 +53,8 @@ export type StoreActions = {
     set_failed_path(path?: Path): void
     set_hide_after_path(path?: Path): void
 
+    set_replay_tree_has_used(): void
+
     set_fen(fen: FEN): void
     set_last_move(last_move: [UCI, SAN] | undefined): void
     play_uci(uci: UCI): SAN
@@ -71,9 +73,8 @@ export type StoreState = {
     replay_tree: ModelReplayTree
     play_fen: FEN
     last_move: [UCI, SAN] | undefined
-
-
     due_moves: { list: ModelRepeatDueMove[] }
+    replay_tree_just_loaded: boolean
 }
 
 
@@ -104,7 +105,8 @@ export function StoreProvider(props: { children: JSX.Element }) {
             return due_moves()
         },
         play_fen: INITIAL_FEN,
-        last_move: undefined
+        last_move: undefined,
+        replay_tree_just_loaded: false
     }),
     actions: Partial<StoreActions> = {},
     store: Store = [state, actions as StoreActions],
@@ -122,7 +124,12 @@ export function StoreProvider(props: { children: JSX.Element }) {
         setState('last_move', last_move)
     }
 
+    const set_replay_tree_has_used = () => {
+        setState("replay_tree_just_loaded", false)
+    }
+
     Object.assign(actions, {
+        set_replay_tree_has_used,
         set_fen,
         set_last_move,
         play_uci(uci: UCI) {

@@ -38,7 +38,11 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             if (s[0] === 'by_id') {
                 return agent.ReplayTree.by_id(s[1])
             } else {
-                return agent.ReplayTree.by_steps_tree_id(s[1]).then(_ => { console.log('load truth', _.steps_tree_id, _.cursor_path); return _ })
+                return agent.ReplayTree.by_steps_tree_id(s[1]).then(_ => { 
+                    //setTimeout(() => setState("replay_tree_just_loaded", true), 0)
+                    queueMicrotask(() => setState("replay_tree_just_loaded", true))
+                    return _
+                })
             }
         }
 
@@ -96,14 +100,12 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             })
         },
         load_replay_tree_by_id(id: EntityPlayUciTreeReplayId, write_enabled = true) {
-            console.log('reset')
             batch(() => {
                 set_source(['by_id', id])
                 set_write_enabled(write_enabled)
             })
         },
         load_replay_tree_by_steps_id(id: EntityStepsTreeId, write_enabled = true) {
-            console.log('LOAD tree write enabled', write_enabled)
             batch(() => {
                 set_source(['by_steps_id', id])
                 set_write_enabled(write_enabled)

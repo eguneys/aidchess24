@@ -1,9 +1,8 @@
-import { Accessor, createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
+import { createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
 import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../store/sync_idb_study"
 import { parent_path, Path, Step } from "../store/step_types"
 import './ReplayTreeComponent.scss'
 import { useStore } from "../store"
-import { INITIAL_FEN } from "chessops/fen"
 
 export function nodes_at_and_after_path(tree: ModelStepsTree, path: Path): ModelTreeStepNode[] {
     let at = find_at_path(tree, path)
@@ -197,72 +196,35 @@ type ReplayTreeComputed = {
     get_first_path: Path | undefined
     get_last_path: Path | undefined
     step_at_cursor_path: ModelTreeStepNode | undefined,
-    create_cursor_path_effects: (hold?: Accessor<CursorPathEffectOption>) => void
-    create_sticky_path_effects: () => void
 }
 
 export type CursorPathEffectOption = 'hold' | 'no-last-move' | 'allow'
 
-export function createReplayTreeComputed(): ReplayTreeComputed {
+export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }): ReplayTreeComputed {
 
-        let [store, {
-            set_fen,
-            set_last_move
-        }]  = useStore()
+    const cursor_path = createMemo(() => props.replay_tree.cursor_path)
+    const hide_after_path = createMemo(() => props.replay_tree.hide_after_path)
+    const solved_paths = createMemo(() => props.replay_tree.solved_paths)
+    const error_paths = createMemo(() => props.replay_tree.error_paths)
+    const success_path = createMemo(() => props.replay_tree.success_path)
+    const failed_path = createMemo(() => props.replay_tree.failed_path)
 
-    const cursor_path = createMemo(() => store.replay_tree.cursor_path)
-    const hide_after_path = createMemo(() => store.replay_tree.hide_after_path)
-    const solved_paths = createMemo(() => store.replay_tree.solved_paths)
-    const error_paths = createMemo(() => store.replay_tree.error_paths)
-    const success_path = createMemo(() => store.replay_tree.success_path)
-    const failed_path = createMemo(() => store.replay_tree.failed_path)
-
-    const steps = createMemo(() => store.replay_tree.steps_tree)
-
-    const create_cursor_path_effects = (opts?: Accessor<CursorPathEffectOption>) => {
-        createEffect(on(() => step_at_cursor_path(), (step) => {
-            let hold = opts?.() ?? 'allow'
-
-            if (hold === 'hold') {
-                return
-            }
-
-            if (!step) {
-                console.log('actual in reset', hold)
-                set_fen(INITIAL_FEN)
-                set_last_move(undefined)
-                return
-            }
-            set_fen(step.step.fen)
-            if (hold === 'no-last-move') {
-                set_last_move(undefined)
-            } else {
-                set_last_move([step.step.uci, step.step.san])
-            }
-            console.log('actual', step.step.path, hold)
-        }))
-    }
+    const steps = createMemo(() => props.replay_tree.steps_tree)
 
     let sticky_paths: Path[] = []
 
-    const create_sticky_path_effects = () => {
-        createEffect(on(() => store.replay_tree, () => {
-            sticky_paths = []
-        }))
+    createEffect(on(cursor_path, (path: Path) => {
+        previous_branch_points(steps(), path)?.map(branch => {
+            if (!sticky_paths.includes(branch.step.path)) {
+                siblings_of(steps(), branch.step.path)?.forEach(sibling => {
+                    sticky_paths = sticky_paths
+                        .filter(_ => _ !== sibling.step.path)
+                })
 
-        createEffect(on(cursor_path, (path: Path) => {
-            previous_branch_points(steps(), path)?.map(branch => {
-                if (!sticky_paths.includes(branch.step.path)) {
-                    siblings_of(steps(), branch.step.path)?.forEach(sibling => {
-                        sticky_paths = sticky_paths
-                            .filter(_ => _ !== sibling.step.path)
-                    })
-
-                    sticky_paths.push(branch.step.path)
-                }
-            })
-        }))
-    }
+                sticky_paths.push(branch.step.path)
+            }
+        })
+    }))
 
 
     const get_prev_path = createMemo(() => {
@@ -427,7 +389,7 @@ export function createReplayTreeComputed(): ReplayTreeComputed {
         return c.step.path
     })
 
-    const step_at_cursor_path = createMemo(() => find_at_path(store.replay_tree.steps_tree, cursor_path()))
+    const step_at_cursor_path = createMemo(() => find_at_path(props.replay_tree.steps_tree, cursor_path()))
 
     return {
         get step_at_cursor_path() { return step_at_cursor_path() },
@@ -442,9 +404,7 @@ export function createReplayTreeComputed(): ReplayTreeComputed {
         get get_first_path() { return get_first_path() },
         get get_last_path() { return get_last_path() },
         get get_down_path() { return get_down_path() },
-        get get_up_path() { return get_up_path() },
-        create_cursor_path_effects,
-        create_sticky_path_effects
+        get get_up_path() { return get_up_path() }
     }
 }
 
@@ -455,7 +415,7 @@ export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_men
         goto_path_if_can
     }] = useStore()
 
-    let c_props = createReplayTreeComputed()
+    let c_props = createReplayTreeComputed(store)
  
     const on_set_cursor = (path: Path) => {
         goto_path(path)

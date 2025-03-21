@@ -135,12 +135,13 @@ function h_event_loaded_preview(current: StateLoadedPreview,
     set: (next: SomeState) => void,
     actions: StoreActions) {
 
-    const { set_hide_after_path, goto_path_force } = actions
+    const { set_hide_after_path, goto_path_force, set_replay_tree_has_used } = actions
 
     if (event.event === 'enter') {
         let is_previous_attempt = current.is_previous_attempt
         let due = current.next
         let show_at_path = parent_path(due.tree_step_node.step.path)
+        set_replay_tree_has_used()
         set_hide_after_path('')
         goto_path_force(parent_path(show_at_path))
         setTimeout(() => {
@@ -231,9 +232,7 @@ function ShowComponent() {
     }] = useStore()
 
     let r_props = createRepeatProps()
-    let c_props = createReplayTreeComputed()
-
-    c_props.create_sticky_path_effects()
+    let c_props = createReplayTreeComputed(store)
 
     let params = useParams()
     load_study(params.id)
@@ -273,14 +272,13 @@ function ShowComponent() {
         })
     }
 
-    queueMicrotask(() => {
+    setTimeout(() => {
         set_current_state({ state: 'load-list', next: undefined })
     })
 
-    const is_tree_loaded = createMemo(on(() => [state.current_state.state, store.replay_tree.steps_tree_id] as [string, string], ([,replay_tree_steps_id]: [string, string]) => {
+    const is_tree_loaded = createMemo(on(() => [state.current_state.state, store.replay_tree_just_loaded] as [string, boolean], ([,just_loaded]: [string, boolean]) => {
         if (is_load_next(state.current_state)) {
-            let due = state.current_state.next
-            return due.tree_step_node.tree_id === replay_tree_steps_id
+            return just_loaded
         }
     }))
 
@@ -323,18 +321,6 @@ function ShowComponent() {
             next: undefined
         })
     }
-
-    c_props.create_cursor_path_effects(() => {
-        if (is_loaded_preview(state.current_state)) {
-            return 'no-last-move'
-        }
-
-        if (is_loaded_idle(state.current_state)) {
-            return 'allow'
-        }
-
-        return 'hold'
-    })
 
     const select_one_attempt_result = (attempt_result: ModelRepeatMoveAttempt) => {
         let due_move = all_list_by_type()?.find(_ => _.id === attempt_result.repeat_due_move_id)
