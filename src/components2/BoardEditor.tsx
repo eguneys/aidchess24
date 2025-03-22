@@ -94,7 +94,6 @@ export function PlayUciBoardFree(props: {
       }
       ground = Chessground(board, config)
 
-      board.addEventListener('')
       
 
     })

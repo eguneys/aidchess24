@@ -23,7 +23,7 @@ export default () => {
     const [store, { load_study }] = useStore()
 
     let params = useParams()
-    createEffect(() => load_study(params.id))
+    createComputed(() => load_study(params.id))
 
     return (<>
         <ShowComponent {...ShowComputedProps(store, params.id)}/>
