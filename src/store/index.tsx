@@ -29,6 +29,7 @@ export type StoreActions = {
     order_sections(study_id: EntityStudyId, section_id: EntitySectionId, order: number): Promise<void>
 
 
+    load_chapters_for_sections(section_ids: EntitySectionId[]): void
     load_chapters(section_id: EntitySectionId): void
     load_chapter(chapter_id: EntityChapterId): void
     create_chapter(study_id: EntityStudyId, section_id: EntitySectionId, name?: string, pgn?: PGN): Promise<ModelChapter>

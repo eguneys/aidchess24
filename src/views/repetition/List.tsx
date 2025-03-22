@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSelector, For, Show, Suspense } from "solid-js"
+import { createComputed, createMemo, createSelector, For, Show, Suspense, untrack } from "solid-js"
 import './List.scss'
 import { A, useNavigate } from "@solidjs/router"
 import { usePersistedStore, useStore } from "../../store"
@@ -67,7 +67,7 @@ type ComputedRepeatProps = {
 }
 
 export function createRepeatProps(): ComputedRepeatProps {
-    let [store, { load_chapters, load_due_moves }] = useStore()
+    let [store] = useStore()
     let [pstore] = usePersistedStore()
 
     const studies = createMemo(() => Object.values(store.studies))
@@ -99,17 +99,6 @@ export function createRepeatProps(): ComputedRepeatProps {
             return undefined
         }
         return store.studies[study_id] 
-    })
-
-    createEffect(() => {
-        selected_section_ids().forEach(_ => load_chapters(_))
-
-        let study_id = selected_study_id()
-        let section_ids = selected_section_ids()
-
-        if (study_id && section_ids.length > 0) {
-            load_due_moves(study_id, section_ids)
-        }
     })
 
     const all_chapters_selected = createMemo(() => store.chapters.list.filter(_ => selected_section_ids().includes(_.section_id)))
@@ -178,15 +167,41 @@ export function createRepeatProps(): ComputedRepeatProps {
 
 function ListComponent() {
 
-    let [, { load_studies }] = useStore()
+    let [, { load_studies, load_chapters_for_sections, load_due_moves }] = useStore()
     let [, { 
         set_repeat_selected_study,
         toggle_repeat_study_section
     }] = usePersistedStore()
 
-    load_studies('mine')
 
     let r_props = createRepeatProps()
+    const handle_load_chapters = () => {
+        load_chapters_for_sections(r_props.selected_section_ids)
+    }
+    const handle_load_due_moves = () => {
+        let study_id = r_props.selected_study_id
+        let section_ids = r_props.selected_section_ids
+
+        if (study_id && section_ids.length > 0) {
+            load_due_moves(study_id, section_ids)
+        }
+    }
+
+    createComputed(() => {
+        load_studies('mine')
+    })
+    createComputed(handle_load_chapters)
+    createComputed(handle_load_due_moves)
+
+   
+   
+    const handle_toggle_section_id = (id: EntitySectionId) => {
+        toggle_repeat_study_section(id)
+
+        handle_load_chapters()
+        handle_load_due_moves()
+    }
+
 
     let navigate = useNavigate()
     const navigate_show = (type: RepeatShowType) => {
@@ -222,7 +237,7 @@ function ListComponent() {
                     Select some openings first.
                 </div>
             }>{ section =>
-              <div onClick={() => toggle_repeat_study_section(section.id)} class='section' 
+              <div onClick={() => handle_toggle_section_id(section.id)} class='section' 
               classList={{selected: r_props.isSelectedSection(section.id)}}>{section.name}</div>
             }</For>
             </div>

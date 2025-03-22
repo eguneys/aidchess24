@@ -8,7 +8,7 @@ import { PGN } from "../components2/parse_pgn";
 
 export function createChapters(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
 
-    type Source = ["chapters", EntitySectionId] | ["chapter", EntityChapterId]
+    type Source = ["sections", EntitySectionId[]] | ["chapters", EntitySectionId] | ["chapter", EntityChapterId]
     const [source, set_source] = createSignal<Source>()
 
     const chapters = createAsync<{ list: ModelChapter[]}>(async (value: { list: ModelChapter[] }) => {
@@ -18,6 +18,17 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
             return { list: [] }
         }
 
+        if (s[0] === 'sections') {
+            let new_list = (await Promise.all(s[1].map(id => agent.Chapters.by_section_id(id)))).flat()
+            let old_list = value.list
+
+            let keep = old_list.filter(o => !new_list.find(n => n.id === o.id))
+
+
+            return {
+                list: [...new_list, ...keep]
+            }
+        }
         if (s[0] === 'chapters') {
             let new_list = await agent.Chapters.by_section_id(s[1]) 
             let old_list = value.list
@@ -41,6 +52,9 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
     }, { initialValue: { list: [] }})
 
     Object.assign(actions, {
+        load_chapters_for_sections(section_ids: EntitySectionId[]) {
+            set_source(['sections', section_ids])
+        },
         load_chapters(section_id: EntitySectionId) {
             set_source(["chapters", section_id])
         },
@@ -80,5 +94,5 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
         }
     })
 
-    return () => chapters.latest
+    return chapters
 }
