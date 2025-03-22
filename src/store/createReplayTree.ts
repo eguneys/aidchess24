@@ -88,31 +88,19 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
     }
 
     Object.assign(actions, {
-        reset_replay_tree(only_steps_tree: boolean = false) {
-            console.log('reset')
-            if (only_steps_tree) {
-                setState("replay_tree", "steps_tree_id", "")
-            } else {
-                set_source(undefined)
-            }
+        reset_replay_tree() {
+            set_source(undefined)
         },
-        load_replay_tree(chapter_id: EntityChapterId, write_enabled = true) {
-            console.log('reset')
+        load_replay_tree(chapter_id: EntityChapterId) {
             batch(() => {
                 set_source(chapter_id)
-                set_write_enabled(write_enabled)
+                set_write_enabled(true)
             })
         },
-        load_replay_tree_by_id(id: EntityPlayUciTreeReplayId, write_enabled = true) {
+        load_replay_tree_by_id(id: EntityPlayUciTreeReplayId) {
             batch(() => {
                 set_source(['by_id', id])
-                set_write_enabled(write_enabled)
-            })
-        },
-        load_replay_tree_by_steps_id(id: EntityStepsTreeId, write_enabled = true) {
-            batch(() => {
-                set_source(['by_steps_id', id])
-                set_write_enabled(write_enabled)
+                set_write_enabled(true)
             })
         },
         load_replay_tree_by_due_move(due: ModelRepeatDueMove) {

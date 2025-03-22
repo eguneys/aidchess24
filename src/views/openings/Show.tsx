@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense, useTransition } from "solid-js"
+import { createComputed, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense, useTransition } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components2/PlayUciBoard"
@@ -15,7 +15,8 @@ import { PGN } from "../../components2/parse_pgn"
 import { as_pgn_for_path, createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { Key } from "chessground/types"
-import { parseSquare } from "chessops"
+import { parseSquare, parseUci } from "chessops"
+import { makeSan } from "chessops/san"
 
 export default () => {
 
@@ -105,9 +106,9 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
     const [tab, set_tab] = createSignal('show')
 
     const [,start] = useTransition()
-    createEffect(on(() => props.selected_section, (section) => 
+    createComputed(on(() => props.selected_section, (section) => 
         section && start(() => load_chapters(section.id))))
-    createEffect(on(() => props.selected_chapter, (chapter) => {
+    createComputed(on(() => props.selected_chapter, (chapter) => {
         if (chapter) {
             start(() => {
                 load_chapter(chapter.id)
@@ -445,7 +446,6 @@ function PlayDeathmatch() {
 function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void }) {
 
     const [store, {
-        play_uci,
         goto_path,
         goto_path_if_can,
         delete_at_and_after_path,
@@ -454,9 +454,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         chapter_as_export_pgn
     }] = useStore()
 
-    let c_props = createReplayTreeComputed()
-    c_props.create_sticky_path_effects()
-    c_props.create_cursor_path_effects()
+    let c_props = createReplayTreeComputed(store)
 
     let [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>()
     let [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)
@@ -570,6 +568,9 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         return `top: ${y}px; left: ${x}px;`
     })
 
+    const handle_goto_path = (path?: Path) => {
+        goto_path_if_can(path)
+    }
 
     let annotation = createMemo(() => {
         let step = c_props.step_at_cursor_path
@@ -736,7 +737,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
     const on_play_orig_key = async (orig: Key, dest: Key) => {
 
-        const pos = () => fen_pos(store.play_fen)
+        const pos = () => fen_pos(c_props.fen)
 
         let position = pos()
         let turn_color = position.turn
@@ -749,8 +750,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             uci += 'q'
         }
 
-        let san = play_uci(uci)
-
+        let move = parseUci(uci)!
+        let san = makeSan(position, move)
 
         let node = await add_child_san_to_current_path(san)
         goto_path(node.step.path)
@@ -764,7 +765,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard shapes={annotation()} movable={movable()} color={fen_turn(store.play_fen)} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
+                <PlayUciBoard shapes={annotation()} movable={movable()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
                 {/*
                 <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
                 */}
@@ -773,7 +774,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <div class='header'>
                     {chapter_title_or_detached()}
                 </div>
-                <ReplayTreeComponent lose_focus={lose_focus()} on_context_menu={on_tree_context_menu}/>
+                <ReplayTreeComponent handle_goto_path={handle_goto_path} replay_tree={store.replay_tree} lose_focus={lose_focus()} on_context_menu={on_tree_context_menu}/>
                 {/*
                 <PlayUciTreeReplayComponent
                 play_replay={play_replay()} 
@@ -791,7 +792,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={set_edit_chapter_dialog}/>
             </div>
             <div class='tools-wrap'>
-                <ToolbarComponent {...props} fen={store.play_fen} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
+                <ToolbarComponent {...props} fen={c_props.fen} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
             </div>
             <Show when={edit_section_dialog()}>{ section => 
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
