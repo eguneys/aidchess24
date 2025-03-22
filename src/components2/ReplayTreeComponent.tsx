@@ -1,8 +1,8 @@
 import { createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
 import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../store/sync_idb_study"
-import { parent_path, Path, Step } from "../store/step_types"
+import { FEN, parent_path, Path, SAN, Step, UCI } from "../store/step_types"
 import './ReplayTreeComponent.scss'
-import { useStore } from "../store"
+import { INITIAL_FEN } from "chessops/fen"
 
 export function nodes_at_and_after_path(tree: ModelStepsTree, path: Path): ModelTreeStepNode[] {
     let at = find_at_path(tree, path)
@@ -196,6 +196,9 @@ type ReplayTreeComputed = {
     get_first_path: Path | undefined
     get_last_path: Path | undefined
     step_at_cursor_path: ModelTreeStepNode | undefined,
+
+    fen: FEN
+    last_move: [UCI, SAN] | undefined
 }
 
 export type CursorPathEffectOption = 'hold' | 'no-last-move' | 'allow'
@@ -210,6 +213,16 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
     const failed_path = createMemo(() => props.replay_tree.failed_path)
 
     const steps = createMemo(() => props.replay_tree.steps_tree)
+
+    const fen = createMemo(() => find_at_path(steps(), cursor_path())?.step.fen ?? INITIAL_FEN)
+    const last_move = createMemo(() => {
+        let step = find_at_path(steps(), cursor_path())?.step
+        if (!step) {
+            return undefined
+        }
+
+        return [step.uci, step.san] as [UCI, SAN]
+    })
 
     let sticky_paths: Path[] = []
 
@@ -392,6 +405,8 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
     const step_at_cursor_path = createMemo(() => find_at_path(props.replay_tree.steps_tree, cursor_path()))
 
     return {
+        get fen() { return fen() },
+        get last_move() { return last_move() },
         get step_at_cursor_path() { return step_at_cursor_path() },
         get cursor_path() { return cursor_path() },
         get hide_after_path() { return hide_after_path() },
@@ -408,14 +423,16 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
     }
 }
 
-export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_menu?: (e: MouseEvent, _: Path) => void  }) => {
+export const ReplayTreeComponent = (props: { handle_goto_path: (path?: Path) => void, replay_tree: ModelReplayTree, lose_focus: boolean, on_context_menu?: (e: MouseEvent, _: Path) => void  }) => {
 
-    let [store, { 
-        goto_path,
-        goto_path_if_can
-    }] = useStore()
+    let c_props = createReplayTreeComputed(props)
 
-    let c_props = createReplayTreeComputed(store)
+    const goto_path = (path: Path) => {
+        props.handle_goto_path(path)
+    }
+    const goto_path_if_can = (path?: Path) => {
+        props.handle_goto_path(path)
+    }
  
     const on_set_cursor = (path: Path) => {
         goto_path(path)
@@ -428,7 +445,7 @@ export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_men
     let $moves_el: HTMLDivElement
         createEffect(() => {
 
-        let cursor_path = store.replay_tree.cursor_path
+        let cursor_path = props.replay_tree.cursor_path
         let cont = $moves_el.parentElement
         if (!cont) {
             return
@@ -484,7 +501,7 @@ export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_men
     <div class='replay-tree'>
         <div class='moves-wrap'>
             <div ref={_ => $moves_el = _} class='moves'>
-                <NodesShorten replay_tree={store.replay_tree} {...c_props} on_set_cursor={on_set_cursor} on_context_menu={on_context_menu} path=""/>
+                <NodesShorten replay_tree={props.replay_tree} {...c_props} on_set_cursor={on_set_cursor} on_context_menu={on_context_menu} path=""/>
             </div>
         </div>
         <div class='branch-sums'>
@@ -501,7 +518,7 @@ export const ReplayTreeComponent = (props: { lose_focus: boolean, on_context_men
                 onClick={() => goto_path_if_can(c_props.get_down_path)} 
                 data-icon="" />
 
-            <For each={previous_branch_points_at_cursor_path(store.replay_tree)}>{branch =>
+            <For each={previous_branch_points_at_cursor_path(props.replay_tree)}>{branch =>
                 <div class='fbt' onClick={() => goto_path(branch.step.path) }>
                     <Show when={branch.step.ply & 1}>
                         <span class='index'>{ply_to_index(branch.step.ply)}</span>

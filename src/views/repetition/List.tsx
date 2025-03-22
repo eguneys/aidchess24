@@ -1,4 +1,4 @@
-import { createComputed, createMemo, createSelector, For, Show, Suspense, untrack } from "solid-js"
+import { createComputed, createMemo, createSelector, For, Show, Suspense } from "solid-js"
 import './List.scss'
 import { A, useNavigate } from "@solidjs/router"
 import { usePersistedStore, useStore } from "../../store"
@@ -187,9 +187,7 @@ function ListComponent() {
         }
     }
 
-    createComputed(() => {
-        load_studies('mine')
-    })
+    createComputed(() => load_studies('mine'))
     createComputed(handle_load_chapters)
     createComputed(handle_load_due_moves)
 

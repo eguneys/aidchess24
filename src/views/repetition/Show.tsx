@@ -1,4 +1,4 @@
-import { createContext, createMemo, createSignal, For, Show, Suspense, useContext } from "solid-js"
+import { createComputed, createContext, createMemo, createSignal, For, Show, Suspense, useContext } from "solid-js"
 import { A, useParams, useSearchParams } from "@solidjs/router"
 import { createRepeatProps, RepeatShowType } from "./List"
 import './Show.scss'
@@ -6,14 +6,16 @@ import { annotationShapes } from "../../components2/annotationShapes"
 import { FSRS } from "ts-fsrs"
 import { ModelRepeatDueMove, ModelRepeatMoveAttempt } from "../../store/sync_idb_study"
 import { RepeatAttemptResult } from "../../store/repeat_types"
-import { fen_pos, fen_turn, nag_to_glyph, Ply } from "../../store/step_types"
+import { fen_pos, fen_turn, nag_to_glyph, parent_path, Path, Ply } from "../../store/step_types"
 import { non_passive_on_wheel, PlayUciBoard } from "../../components2/PlayUciBoard"
-import { parseSquare } from "chessops"
 import { useStore } from "../../store"
 import { createReplayTreeComputed, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import TimeAgo from "../../components2/TimeAgo"
 import { Key } from "chessground/types"
 import { INITIAL_FEN } from "chessops/fen"
+import { arr_rnd } from "../../random"
+import { parseSquare, parseUci } from "chessops"
+import { makeSan } from "chessops/san"
 
 export default () => {
     return (<>
@@ -44,24 +46,48 @@ function ShowComponent() {
     }
 
     let [store, { 
-        play_uci,
-        add_child_san_to_current_path,
         goto_path, 
         goto_path_if_can,
         set_failed_path,
+        set_success_path,
         set_hide_after_path,
+
+        add_child_san_to_current_path,
     
         save_due_move_if_not,
         add_attempt_with_spaced_repetition,
 
         load_study,
+        load_chapters_for_sections,
+        load_due_moves,
+
+        load_replay_tree_by_due_move
     }] = useStore()
 
-    let r_props = createRepeatProps()
     let c_props = createReplayTreeComputed(store)
 
+    const replay_tree = () => store.replay_tree
+    const fen = () => c_props.fen
+    const last_move = () => c_props.last_move
+
+
+    let r_props = createRepeatProps()
+    const handle_load_chapters = () => {
+        load_chapters_for_sections(r_props.selected_section_ids)
+    }
+    const handle_load_due_moves = () => {
+        let study_id = r_props.selected_study_id
+        let section_ids = r_props.selected_section_ids
+
+        if (study_id && section_ids.length > 0) {
+            load_due_moves(study_id, section_ids)
+        }
+    }
+
     let params = useParams()
-    load_study(params.id)
+    createComputed(() => load_study(params.id))
+    createComputed(handle_load_chapters)
+    createComputed(handle_load_due_moves)
 
     const due_list_by_type = createMemo(() => {
         switch(repeat_type) {
@@ -82,25 +108,82 @@ function ShowComponent() {
         }
     })
 
-    const is_list_no_item = createMemo(() => false)
-    const is_loaded_idle = createMemo(() => false)
-    const is_attempt_result = createMemo(() => false)
-
-    const [due_move, set_due_move] = createSignal<ModelRepeatDueMove>()
     const [attempt_result, _set_attempt_result] = createSignal<RepeatAttemptResult>()
 
-    const [show_previous_moves, set_show_previous_moves] = createSignal<boolean>()
+    const random_due_move = createMemo((prev?: ModelRepeatDueMove) => {
+        let ll = due_list_by_type()
+        if (attempt_result() !== undefined) {
+            return prev
+        }
+        if (ll.length > 0) {
+            return arr_rnd(ll)
+        }
+    })
+
+    const [selected_due_move, set_selected_due_move] = createSignal<ModelRepeatDueMove>()
+
+    const due_move = createMemo(() => selected_due_move() ?? random_due_move())
+
+    const handle_load_replay_tree = () => {
+        let due = due_move()
+        if (!due) {
+            return
+        }
+        load_replay_tree_by_due_move(due)
+    }
+    createComputed(handle_load_replay_tree)
 
 
-    function set_attempt_result(attempt_result: RepeatAttemptResult) {
-        let due = due_move()!
+    const is_list_no_item = createMemo(() => due_move() === undefined)
+
+
+    const has_attempted_due_move = createMemo(() => attempt_result() !== undefined)
+
+    const solution_uci = createMemo(() => due_move()?.tree_step_node.step.uci)
+
+    const color = createMemo(() => fen_turn(due_move()?.tree_step_node.step.before_fen ?? INITIAL_FEN))
+    const movable = createMemo(() => !has_attempted_due_move())
+
+    const [show_previous_moves, _set_show_previous_moves] = createSignal<boolean>()
+
+    const set_show_previous_moves = (value: boolean) => {
+        if (value) {
+            let due = due_move()!
+            set_hide_after_path(parent_path(due.tree_step_node.step.path))
+        } else {
+            set_hide_after_path('')
+        }
+
+        _set_show_previous_moves(value)
+    }
+
+
+    const handle_goto_path = (path?: Path) => {
+        goto_path_if_can(path)
+    }
+
+    async function set_attempt_result(attempt_result: RepeatAttemptResult) {
         _set_attempt_result(attempt_result)
         set_hide_after_path(undefined)
-        add_attempt_with_spaced_repetition(fs, due, attempt_result)
-        save_due_move_if_not(due)
+
+        let due = due_move()!
+
+        await add_attempt_with_spaced_repetition(fs, due, attempt_result)
+        await save_due_move_if_not(due)
+
+        if (attempt_result.includes('solved')) {
+            await new Promise(resolve => {
+                setTimeout(() => {
+                    on_next_due_move()
+                    resolve(void 0)
+                }, 800)
+            })
+        }
     }
 
     const on_next_due_move = () => {
+        _set_attempt_result(undefined)
+        set_selected_due_move(undefined)
     }
 
     const select_one_attempt_result = (attempt_result: ModelRepeatMoveAttempt) => {
@@ -109,16 +192,13 @@ function ShowComponent() {
         if (!due_move) {
             return
         }
+
+        set_selected_due_move(due_move)
     }
-
-    //const solution_uci = createMemo(() => due_move()?.tree_step_node.step.uci)
-
-    const color = () => fen_turn(due_move()?.tree_step_node.step.before_fen ?? INITIAL_FEN)
-    const movable = () => is_loaded_idle()
 
     const on_play_orig_key = async (orig: Key, dest: Key) => {
 
-        const pos = () => fen_pos(store.play_fen)
+        const pos = () => fen_pos(fen())
 
         let position = pos()
         let turn_color = position.turn
@@ -131,20 +211,18 @@ function ShowComponent() {
             uci += 'q'
         }
 
-        let san = play_uci(uci)
+        let move = parseUci(uci)!
+        let san = makeSan(position, move)
 
 
         let node = await add_child_san_to_current_path(san)
         set_hide_after_path(undefined)
         goto_path(node.step.path)
 
-
-        /*
-        let show_previous_moves = state.current_state.show_previous_moves
-        let is_previous_attempt = state.current_state.is_previous_attempt
+        const is_previous_attempt = selected_due_move() !== undefined
 
         if (uci === solution_uci()) {
-            if (show_previous_moves) {
+            if (show_previous_moves()) {
                 set_attempt_result('solved-with-hint')
             } else {
                 if (is_previous_attempt) {
@@ -156,14 +234,13 @@ function ShowComponent() {
             set_success_path(node.step.path)
 
         } else {
-            if (show_previous_moves) {
+            if (show_previous_moves()) {
                 set_attempt_result('failed-with-hint')
             } else {
                 set_attempt_result('failed')
             }
             set_failed_path(node.step.path)
         }
-            */
     }
 
     const on_show_answer = () => {
@@ -178,7 +255,8 @@ function ShowComponent() {
     const session_attempts = createMemo(() => {
         let res: ModelRepeatMoveAttempt[] = ((all_list_by_type()?.map(_ => _.attempts[0]).filter(Boolean) ?? []) as ModelRepeatMoveAttempt[])
 
-        res.sort((a, b) => b.created_at - a.created_at)
+        //res.sort((a, b) => b.id.localeCompare(a.id))
+        res.sort((a, b) => a.created_at - b.created_at)
 
         return res
     })
@@ -237,6 +315,8 @@ function ShowComponent() {
         return annotationShapes(step.step.uci, step.step.san, nag_to_glyph(nag))
     })
 
+    const is_due_move_idle = createMemo(() => true)
+
     return (<>
     <main class='repeat-show'>
         <Suspense fallback={
@@ -255,30 +335,30 @@ function ShowComponent() {
             </div>
         </div>
         <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-            <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} fen={store.play_fen} last_move={store.last_move} play_orig_key={on_play_orig_key}/>
+            <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} fen={fen()} last_move={last_move()} play_orig_key={on_play_orig_key}/>
         </div>
         <div class='replay-wrap'>
             <Suspense>
             <Show when={!is_list_no_item()} fallback={
-              <>
+              <div class='no-dues'>
                 <span>Great; No due moves at this time.</span>
                 <A href="/repetition">Go Back to Repetitions</A>
-              </>
+              </div>
             }>
             <>
-                <ReplayTreeComponent lose_focus={false}/>
+                <ReplayTreeComponent handle_goto_path={handle_goto_path} replay_tree={replay_tree()} lose_focus={false}/>
                 <div class="controls">
-                    <Show when={is_loaded_idle() || is_attempt_result()} fallback={
+                    <Show when={is_due_move_idle()} fallback={
                         <span class='idle'>...</span>
                     }>
     
-                        <Show when={is_loaded_idle() && !show_previous_moves()}>
+                        <Show when={!has_attempted_due_move() && !show_previous_moves()}>
                             <button onClick={() => set_show_previous_moves(true)}>Hint: Show Previous Moves</button>
                         </Show>
-                        <Show when={is_loaded_idle()} fallback={
-                            <button onClick={on_next_due_move}>Goto Next Due Move</button>
-                        }>
+                        <Show when={has_attempted_due_move()} fallback={
                             <button onClick={on_show_answer}>Show Answer</button>
+                        }>
+                            <button onClick={on_next_due_move}>Goto Next Due Move</button>
                         </Show>
 
                     </Show>

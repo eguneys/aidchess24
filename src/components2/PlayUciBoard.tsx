@@ -10,6 +10,7 @@ import '../assets/chessground/chessground.css'
 import '../assets/chessground/cburnett.css'
 import '../assets/chessground/theme.css'
 import './chessground.scss'
+import { Chess} from "chessops"
 
 export function PlayUciBoard(props: { 
   shapes?: DrawShape[],
@@ -21,7 +22,13 @@ export function PlayUciBoard(props: {
     let board: HTMLDivElement
     let ground: Api
 
-    let pos = createMemo(() => fen_pos(props.fen))
+    let pos = createMemo(() => {
+      try {
+        return fen_pos(props.fen)
+      } catch {
+        return Chess.default()
+      }
+    })
     let dests = createMemo(() => chessgroundDests(pos()))
     let check = createMemo(() => pos().isCheck())
 

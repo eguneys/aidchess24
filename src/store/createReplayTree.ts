@@ -1,7 +1,7 @@
 import type { Agent } from "./createAgent";
 import { StoreActions, StoreState } from ".";
 import { SetStoreFunction } from "solid-js/store";
-import { EntityChapterId, EntityPlayUciTreeReplayId, EntityStepsTreeId, ModelChapter, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
+import { EntityChapterId, EntityPlayUciTreeReplayId, EntityStepsTreeId, ModelChapter, ModelRepeatDueMove, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
 import { createAsync } from "@solidjs/router";
 import { Accessor, batch, createSignal } from "solid-js";
 import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "./step_types";
@@ -11,7 +11,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
     const [write_enabled, set_write_enabled] = createSignal(true)
 
-    type Source = EntityChapterId | ['by_id', EntityPlayUciTreeReplayId] | ['by_steps_id', EntityStepsTreeId]
+    type Source = EntityChapterId | ['by_id', EntityPlayUciTreeReplayId] | ['by_steps_id', EntityStepsTreeId] | ['by_due_move', ModelRepeatDueMove]
     const [source, set_source] = createSignal<Source | undefined>(undefined, { equals: false })
     const default_replay_tree: Accessor<ModelReplayTree> = () => ({
         id: '',
@@ -37,10 +37,14 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         if (Array.isArray(s)) {
             if (s[0] === 'by_id') {
                 return agent.ReplayTree.by_id(s[1])
+            } else if (s[0] === 'by_steps_id') {
+                return agent.ReplayTree.by_steps_tree_id(s[1])
             } else {
-                return agent.ReplayTree.by_steps_tree_id(s[1]).then(_ => { 
-                    //setTimeout(() => setState("replay_tree_just_loaded", true), 0)
-                    queueMicrotask(() => setState("replay_tree_just_loaded", true))
+
+                let due = s[1]
+                return agent.ReplayTree.by_steps_tree_id(due.tree_step_node.tree_id).then(_ => {
+                    _.cursor_path = parent_path(due.tree_step_node.step.path)
+                    _.hide_after_path = ''
                     return _
                 })
             }
@@ -109,6 +113,12 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             batch(() => {
                 set_source(['by_steps_id', id])
                 set_write_enabled(write_enabled)
+            })
+        },
+        load_replay_tree_by_due_move(due: ModelRepeatDueMove) {
+            batch(() => {
+                set_source(['by_due_move', due])
+                set_write_enabled(false)
             })
         },
         set_success_path,
