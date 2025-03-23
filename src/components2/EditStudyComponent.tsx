@@ -1,9 +1,11 @@
-import { createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from "solid-js"
+import { createEffect, createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from "solid-js"
 import { EntityChapterInsert, EntitySectionInsert, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy } from "../store/sync_idb_study"
 import { SECTION_LETTERS } from "./hard_limits"
 import { parse_PGNS, PGN } from "./parse_pgn"
 import { useStore } from "../store"
 import { BoardEditor } from "./BoardEditor"
+import { Color } from "chessops"
+import { FEN } from "chessground/types"
 
 export function EditStudyComponent(props: { study: ModelStudy, on_update_study: (data: Partial<EntityStudyInsert>) => void, on_delete_study: () => void }) {
 
@@ -74,7 +76,9 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
     const on_create_chapter = () => {
     }
 
+    const [fen, set_fen] = createSignal<FEN | undefined>()
 
+    const orientation = createMemo<Color>(() => 'white')
 
     const [tab, set_tab] = createSignal('editor')
 
@@ -97,7 +101,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
             <Show when={tab() === 'editor'}>
                 <div class='group'>
                     <div class='editor-wrap'>
-                        <BoardEditor />
+                        <BoardEditor on_change_fen={set_fen} orientation={orientation()} />
                     </div>
                 </div>
                 <div class='group'>
@@ -129,7 +133,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
         <div class='group buttons'>
             <button onClick={on_delete_chapter} class='delete'>Delete <i data-icon=''></i></button>
             <span class='split'></span>
-            <button onClick={on_create_chapter} class='create'>Save Changes</button>
+            <button onClick={on_create_chapter} class='create' disabled={fen() === undefined}>Save Changes</button>
         </div>
     </>)
 }

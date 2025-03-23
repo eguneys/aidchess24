@@ -18,6 +18,8 @@
     grid-template-rows: min-content auto min-content;
 
 
+    user-select: none;
+
     .spare-top {
         grid-area: spare-top;
     }
@@ -35,13 +37,17 @@
     }
 
     .spare-top {
+        overflow: hidden;
         border-radius: 4px 4px 0 0;
     }
     .spare-bottom {
+        overflow: hidden;
         border-radius: 0 0 4px 4px;
     }
 
-
+    cg-board {
+        cursor: inherit;
+    }
 
     .board-wrap {
         aspect-ratio: 1;
@@ -63,8 +69,6 @@
                     left: 0;
                     aspect-ratio: 1;
                     background-size: cover;
-                    user-select: none;
-                    cursor: pointer;
                 }
             }
 
@@ -77,6 +81,18 @@
                 margin: 14%;
                 width: 77%;
                 background-image: url(../assets/images/trash.svg)
+            }
+
+            &.selected {
+                background: theme.$ac-li-blue2;
+            }
+
+            &.selected.pointer {
+                background: theme.$success;
+            }
+
+            &.selected.trash {
+                background: theme.$error;
             }
         }
     }
