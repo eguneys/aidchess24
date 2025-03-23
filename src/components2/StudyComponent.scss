@@ -106,9 +106,11 @@
             }
         }
 
-        .chapter:last-child {
+        /*
+        .chapter.active:last-child {
             border-bottom: 2px solid theme.$text-secondary;
         }
+            */
 
         .section {
 
