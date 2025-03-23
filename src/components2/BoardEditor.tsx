@@ -186,11 +186,11 @@ export const BoardEditor = (props: { orientation: Color, on_change_fen: (_: FEN 
     return (<>
 
         <div class='editor is2d' style={make_cursor()}>
-            <Spare klass="spare-top" color="black" on_spare={on_click_spare} is_selected={isSelected} />
+            <Spare klass="spare-top" color={opposite(props.orientation)} on_spare={on_click_spare} is_selected={isSelected} />
             <div class='board-wrap'>
                 <PlayUciBoardFree on_toggle_spare={on_toggle_spare} spare={spare()} orientation={props.orientation} on_change_fen={set_board_fen} drag_new_piece={drag_new_piece()} fen={board_fen()} />
             </div>
-            <Spare klass="spare-bottom" color="white" on_spare={on_click_spare} is_selected={isSelected}/>
+            <Spare klass="spare-bottom" color={props.orientation} on_spare={on_click_spare} is_selected={isSelected}/>
 
             <div class='tools-wrap'>
                 <div class='metadata'>

@@ -134,15 +134,30 @@
             }
 
 
-            select#order {
-                width: 20%;
+            select#order,
+            select#orientation {
+                width: 80%;
                 background: theme.$text-light2;
                 border: 1px solid theme.$text-secondary;
                 padding: .6em 1em;
             }
 
+            select#order {
+                width: 50%;
+            }
+
             .filler {
                 flex: 1;
+            }
+
+            .section {
+                display: flex;
+                justify-content: space-around;
+                gap: 1em;
+
+                .group {
+                    flex: 1;
+                }
             }
 
             .group.buttons {

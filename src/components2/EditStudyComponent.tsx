@@ -1,8 +1,7 @@
-import { createEffect, createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from "solid-js"
+import { createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from "solid-js"
 import { EntityChapterInsert, EntitySectionInsert, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy } from "../store/sync_idb_study"
 import { SECTION_LETTERS } from "./hard_limits"
 import { parse_PGNS, PGN } from "./parse_pgn"
-import { useStore } from "../store"
 import { BoardEditor } from "./BoardEditor"
 import { Color } from "chessops"
 import { FEN } from "chessground/types"
@@ -47,8 +46,6 @@ export function EditStudyComponent(props: { study: ModelStudy, on_update_study: 
 
 export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters: number, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void, on_order_chapter: (order: number) => void }) {
 
-    const [store] = useStore()
-
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
             e.value = props.chapter.name
@@ -78,7 +75,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
 
     const [fen, set_fen] = createSignal<FEN | undefined>()
 
-    const orientation = createMemo<Color>(() => 'white')
+    const [orientation, set_orientation] = createSignal<Color>('white')
 
     const [tab, set_tab] = createSignal('editor')
 
@@ -104,30 +101,32 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
                         <BoardEditor on_change_fen={set_fen} orientation={orientation()} />
                     </div>
                 </div>
-                <div class='group'>
-                    <label for='order'>Set Order</label>
-                    <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
-                        <For each={[...Array(props.nb_chapters).keys()]}>{(_, i) =>
-                            <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
-                        }</For>
-                    </select>
-                </div>
             </Show>
             <Show when={tab() === 'empty'}>
-                <div class='group'>
-                    <label for='order'>Set Order</label>
-                    <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
-                        <For each={store.chapters.list}>{(_, i) =>
-                            <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
-                        }</For>
-                    </select>
-                </div>
+                <>
+                </>
             </Show>
         </div>
         </div>
         <div class='filler'></div>
 
-
+        <div class='section'>
+            <div class='group'>
+                <label for='order'>Set Order</label>
+                <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
+                    <For each={[...Array(props.nb_chapters).keys()]}>{(_, i) =>
+                        <option value={i()} selected={props.i_chapter === i()}>{i() + 1}</option>
+                    }</For>
+                </select>
+            </div>
+            <div class='group'>
+                <label for='orientation'>Set Orientation</label>
+                <select onChange={e => set_orientation(e.currentTarget.value as Color)} name="orientation" id="orientation">
+                    <option value="white" selected={orientation() === "white"}>White</option>
+                    <option value="black" selected={orientation() === "black"}>Black</option>
+                </select>
+            </div>
+        </div>
 
 
         <div class='group buttons'>
