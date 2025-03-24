@@ -6,7 +6,7 @@ import { DialogComponent } from "../../components2/DialogComponent"
 import { FEN, fen_pos, fen_turn, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../store/step_types"
 import { annotationShapes } from "../../components2/annotationShapes"
 import { StoreState, useStore } from "../../store"
-import type { EntityChapterId, EntitySectionId, EntityStudyId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../store/sync_idb_study"
+import type { EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudyId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../store/sync_idb_study"
 import { get_letter_nth } from "../../components2/hard_limits"
 
 import '../../components2/StudyComponent.scss'
@@ -15,7 +15,7 @@ import { PGN } from "../../components2/parse_pgn"
 import { as_pgn_for_path, createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { Key } from "chessground/types"
-import { parseSquare, parseUci } from "chessops"
+import { Color, opposite, parseSquare, parseUci } from "chessops"
 import { makeSan } from "chessops/san"
 
 export default () => {
@@ -715,7 +715,12 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         delete_section(study_id, section_id)
         set_edit_section_dialog(false)
     }
-    const on_edit_chapter = update_chapter
+    const on_edit_chapter = (study_id: EntityStudyId, section_id: EntityChapterId, data: Partial<EntityChapterInsert>) => {
+        if (data.orientation) {
+            set_custom_orientation(undefined)
+        }
+        update_chapter(study_id, section_id, data)
+    }
     const on_delete_chapter = (id: EntityChapterId) => {
         delete_chapter(props.study.id, props.selected_section!.id, id)
         set_edit_chapter_dialog(false)
@@ -757,7 +762,23 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         goto_path(node.step.path)
     }
 
+    const [custom_orientation, set_custom_orientation] = createSignal<Color>()
 
+    const orientation = createMemo(() => custom_orientation() ?? props.selected_chapter?.orientation ?? props.selected_section?.orientation ?? props.study.orientation ?? 'white')
+
+    const on_key_down = (e: KeyboardEvent) => {
+
+        if (e.key === 'f') {
+            set_custom_orientation(opposite(orientation()))
+        }
+
+    }
+    onMount(() => {
+        document.addEventListener('keydown', on_key_down)
+        onCleanup(() => {
+            document.removeEventListener('keydown', on_key_down)
+        })
+    })
 
     return (<>
         <main ref={$el_ref!} class='openings-show study'>
@@ -765,7 +786,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard shapes={annotation()} movable={movable()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
+                <PlayUciBoard orientation={orientation()} shapes={annotation()} movable={movable()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
                 {/*
                 <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
                 */}

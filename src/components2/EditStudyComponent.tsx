@@ -112,7 +112,6 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
             </Show>
         </div>
         </div>
-        <div class='filler'></div>
 
         <div class='section'>
             <div class='group'>
@@ -133,6 +132,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
         </div>
 
 
+        <div class='filler'></div>
         <div class='group buttons'>
             <button onClick={on_delete_chapter} class='delete'>Delete <i data-icon=''></i></button>
             <span class='split'></span>

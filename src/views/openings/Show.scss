@@ -140,6 +140,8 @@
                 background: theme.$text-light2;
                 border: 1px solid theme.$text-secondary;
                 padding: .6em 1em;
+                user-select: none;
+                cursor: pointer;
             }
 
             select#order {
