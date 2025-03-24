@@ -150,6 +150,7 @@ export const BoardEditor = (props: { orientation: Color, on_change_fen: (_: FEN 
 
             set_drag_new_piece([color, role, e])
         }
+
     }
 
     const make_cursor = createMemo(() => {
@@ -188,7 +189,7 @@ export const BoardEditor = (props: { orientation: Color, on_change_fen: (_: FEN 
         <div class='editor is2d' style={make_cursor()}>
             <Spare klass="spare-top" color={opposite(props.orientation)} on_spare={on_click_spare} is_selected={isSelected} />
             <div class='board-wrap'>
-                <PlayUciBoardFree on_toggle_spare={on_toggle_spare} spare={spare()} orientation={props.orientation} on_change_fen={set_board_fen} drag_new_piece={drag_new_piece()} fen={board_fen()} />
+                <PlayUciBoardFree on_set_spare={set_spare} on_toggle_spare={on_toggle_spare} spare={spare()} orientation={props.orientation} on_change_fen={set_board_fen} drag_new_piece={drag_new_piece()} fen={board_fen()} />
             </div>
             <Spare klass="spare-bottom" color={props.orientation} on_spare={on_click_spare} is_selected={isSelected}/>
 
@@ -238,6 +239,7 @@ export function PlayUciBoardFree(props: {
     drag_new_piece?: [Color, Role, MouseEvent],
     on_change_fen: (fen: FEN) => void,
     on_toggle_spare: () => void
+    on_set_spare: (_: Spare) => void
 }) {
 
     const on_change = () => {
@@ -364,6 +366,13 @@ export function PlayUciBoardFree(props: {
             return
         }
         dragNewPiece(ground.state, { color: s[0], role: s[1] }, s[2], true)
+
+        document.addEventListener('mouseup', (e) => {
+            const e_pos = eventPosition(e)
+            if (e_pos && ground.getKeyAtDomPos(e_pos)) {
+                props.on_set_spare('pointer')
+            }
+        }, { once: true })
     })
 
     return (<><div ref={(el) => board = el} class='is2d chessboard'> </div></>)
