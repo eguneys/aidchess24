@@ -29,6 +29,15 @@ export function EditStudyComponent(props: { study: ModelStudy, on_update_study: 
         props.on_delete_study()
     }
 
+
+    const on_orientation_changed = (orientation: Color) => {
+        props.on_update_study({ id: props.study.id, orientation })
+    }
+
+    const orientation = createMemo(() => props.study.orientation)
+
+
+
     return (<>
         <h2>Edit Opening</h2>
 
@@ -36,6 +45,20 @@ export function EditStudyComponent(props: { study: ModelStudy, on_update_study: 
         <label for='name'>Name</label>
         <input name="name" id="name" onKeyDown={e => on_name_key_down(e.key, e.currentTarget)} onChange={(e) => on_name_changed(e.currentTarget)} type="text" placeholder="Opening Name" minLength={3} value={props.study.name}></input>
         </div>
+
+
+        <div class='section'>
+            <div class='group'>
+                <label for='orientation'>Set Orientation</label>
+                <select onChange={e => on_orientation_changed(e.currentTarget.value as Color)} name="orientation" id="orientation">
+                    <option value="white" selected={orientation() === "white"}>White</option>
+                    <option value="black" selected={orientation() === "black"}>Black</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div class='filler'></div>
 
         <div class='group buttons'>
             <span class='split'></span>
@@ -205,6 +228,12 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
         return import_lichess_link() === undefined
     })
 
+    const on_orientation_changed = (orientation: Color) => {
+        props.on_edit_section({ id: props.section.id, orientation })
+    }
+
+    const orientation = createMemo(() => props.section.orientation)
+
     return (<>
         <h2>Edit Section</h2>
         <div class='group'>
@@ -226,17 +255,32 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
                 </div>
             </Show>
             <Show when={tab() === 'empty'}>
-        
-                <div class='group'>
+                <>
+                </>
+            </Show>
+        </div>
+
+
+        <div class='section'>
+            <div class='group'>
                 <label for='order'>Set Order</label>
                 <select onChange={e => on_order_changed(e.currentTarget.value)} name="order" id="order">
                     <For each={SECTION_LETTERS.slice(0, props.nb_sections)}>{(letter, i) => 
                         <option value={letter} selected={props.i_section === i()}>{letter}</option>
                     }</For>
                 </select>
-                </div>
-            </Show>
+            </div>
+            <div class='group'>
+                <label for='orientation'>Set Orientation</label>
+                <select onChange={e => on_orientation_changed(e.currentTarget.value as Color)} name="orientation" id="orientation">
+                    <option value="white" selected={orientation() === "white"}>White</option>
+                    <option value="black" selected={orientation() === "black"}>Black</option>
+                </select>
+            </div>
         </div>
+
+
+
 
         <div class='filler'></div>
 

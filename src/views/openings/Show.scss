@@ -204,6 +204,12 @@
             }
         }
 
+        .dialog-content.edit-study {
+            select#orientation {
+                width: 30%;
+            }
+        }
+
         .dialog-content.edit-section,
         .dialog-content.edit-chapter {
             min-height: 350px;

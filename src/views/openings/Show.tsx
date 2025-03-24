@@ -1,4 +1,4 @@
-import { createComputed, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense, useTransition } from "solid-js"
+import { batch, createComputed, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense, useTransition } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components2/PlayUciBoard"
@@ -722,8 +722,10 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         update_chapter(study_id, section_id, data)
     }
     const on_delete_chapter = (id: EntityChapterId) => {
-        delete_chapter(props.study.id, props.selected_section!.id, id)
-        set_edit_chapter_dialog(false)
+        batch(() => {
+            delete_chapter(props.study.id, props.selected_section!.id, id)
+            set_edit_chapter_dialog(false)
+        })
     }
     const on_update_study = update_study
     const navigate = useNavigate()
@@ -810,7 +812,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 */}
             </div>
             <div class='sections-wrap'>
-                <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={set_edit_section_dialog} on_edit_chapter={set_edit_chapter_dialog}/>
+                <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={() => set_edit_section_dialog(true)} on_edit_chapter={() => set_edit_chapter_dialog(true)}/>
             </div>
             <div class='tools-wrap'>
                 <ToolbarComponent {...props} fen={c_props.fen} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
@@ -853,14 +855,14 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     </>)
 }
 
-function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: boolean, on_edit_study: () => void, on_edit_section: (section: ModelSection) => void, on_edit_chapter: (chapter: ModelChapter) => void, }) {
+function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: boolean, on_edit_study: () => void, on_edit_section: () => void, on_edit_chapter: () => void, }) {
 
     let [,{ create_section, update_study}] = useStore()
 
     const on_new_section = async () => {
         let section = await create_section(props.study.id)
         set_selected_section(section.id)
-        props.on_edit_section(section)
+        props.on_edit_section()
     }
 
     const set_selected_section = (selected_section_id: EntitySectionId) => 
@@ -881,14 +883,14 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
                 <NoSections />
             }>{(section, i) =>
                 <Show when={section === props.selected_section} fallback={
-                    <SectionCollapsedComponent is_edits_disabled={props.is_edits_disabled} section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section.id)} on_edit={() => props.on_edit_section(section)}/>
+                    <SectionCollapsedComponent is_edits_disabled={props.is_edits_disabled} section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section.id)} on_edit={() => props.on_edit_section()}/>
                 }>
                     <SectionComponent 
                                 {...props}
                                 section={section} 
                                 is_edits_disabled={props.is_edits_disabled} 
                                 nth={get_letter_nth(i())} 
-                                on_edit={() => props.on_edit_section(section)} 
+                                on_edit={props.on_edit_section} 
                                 on_edit_chapter={props.on_edit_chapter} 
                                 />
                 </Show>
@@ -903,18 +905,17 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
     </>)
 }
 
-function SectionComponent(props: ShowComputedProps & { nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit: () => void, on_edit_chapter: (chapter: ModelChapter) => void }) {
+function SectionComponent(props: ShowComputedProps & { nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit: () => void, on_edit_chapter: () => void }) {
 
     let [,{ create_chapter, update_section }] = useStore()
 
     const on_new_chapter = async () => {
         let chapter = await create_chapter(props.study.id, props.section.id)
-        set_selected_chapter(chapter.id)
-        props.on_edit_chapter(chapter)
+        await set_selected_chapter(chapter.id)
+        props.on_edit_chapter()
     }
 
-
-    const set_selected_chapter = (selected_chapter_id: EntityChapterId) => 
+    const set_selected_chapter = async (selected_chapter_id: EntityChapterId) => 
         update_section(props.study.id, {id: props.section.id, selected_chapter_id })
 
     return (<>
@@ -931,7 +932,7 @@ function SectionComponent(props: ShowComputedProps & { nth: string, section: Mod
                     <For each={props.chapters} fallback={
                         <NoChapters />
                     }>{(chapter, i) =>
-                        <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={props.selected_chapter===chapter} on_selected={() => set_selected_chapter(chapter.id)}  on_edit={() => props.on_edit_chapter(chapter)}/>
+                        <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={props.selected_chapter===chapter} on_selected={() => set_selected_chapter(chapter.id)}  on_edit={() => props.on_edit_chapter()}/>
                     }</For>
                 </div>
                 <div class='tools'>
