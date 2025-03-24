@@ -106,13 +106,13 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
     const [tab, set_tab] = createSignal('show')
 
     const [,start] = useTransition()
-    createComputed(on(() => props.selected_section, (section) => 
-        section && start(() => load_chapters(section.id))))
-    createComputed(on(() => props.selected_chapter, (chapter) => {
-        if (chapter) {
+    createComputed(on(createMemo(() => props.selected_section?.id), (section_id) => 
+        section_id && start(() => load_chapters(section_id))))
+    createComputed(on(createMemo(() => props.selected_chapter?.id), (chapter_id) => {
+        if (chapter_id) {
             start(() => {
-                load_chapter(chapter.id)
-                load_replay_tree(chapter.id)
+                load_chapter(chapter_id)
+                load_replay_tree(chapter_id)
             })
         } else {
             start(() => {
@@ -459,8 +459,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     let [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>()
     let [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)
     let [edit_study_dialog, set_edit_study_dialog] = createSignal(false)
-    let [edit_section_dialog, set_edit_section_dialog] = createSignal<ModelSection>()
-    let [edit_chapter_dialog, set_edit_chapter_dialog] = createSignal<ModelChapter>()
+    let [edit_section_dialog, set_edit_section_dialog] = createSignal(false)
+    let [edit_chapter_dialog, set_edit_chapter_dialog] = createSignal(false)
 
 
     const context_menu_step = createMemo(() => {
@@ -603,8 +603,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
     let [,{ create_section, create_chapter }] = useStore()
     const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
-        let section = edit_section_dialog()
-        set_edit_section_dialog(undefined)
+        let section = edit_section_dialog() ? props.selected_section : undefined
+        set_edit_section_dialog(false)
 
         let study_name = props.study.name
         let sections: Record<string, [string, PGN][]> = {}
@@ -713,12 +713,12 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     const on_edit_section = update_section
     const on_delete_section = (study_id: EntityStudyId, section_id: EntitySectionId) => {
         delete_section(study_id, section_id)
-        set_edit_section_dialog(undefined)
+        set_edit_section_dialog(false)
     }
     const on_edit_chapter = update_chapter
     const on_delete_chapter = (id: EntityChapterId) => {
         delete_chapter(props.study.id, props.selected_section!.id, id)
-        set_edit_chapter_dialog(undefined)
+        set_edit_chapter_dialog(false)
     }
     const on_update_study = update_study
     const navigate = useNavigate()
@@ -794,16 +794,16 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             <div class='tools-wrap'>
                 <ToolbarComponent {...props} fen={c_props.fen} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
             </div>
-            <Show when={edit_section_dialog()}>{ section => 
-                <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(undefined)}>
-                    <EditSectionComponent section={section()} i_section={get_i_section(section())} nb_sections={props.sections.length} on_delete_section={() => on_delete_section(props.study.id, section().id)} on_edit_section={_ => on_edit_section(props.study.id, _)} on_order_section={_ => on_order_section(section(), _)} on_import_pgns={on_import_pgns} />
+            <Show when={edit_section_dialog()}>
+                <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(false)}>
+                    <EditSectionComponent section={props.selected_section!} i_section={get_i_section(props.selected_section!)} nb_sections={props.sections.length} on_delete_section={() => on_delete_section(props.study.id, props.selected_section!.id)} on_edit_section={_ => on_edit_section(props.study.id, _)} on_order_section={_ => on_order_section(props.selected_section!, _)} on_import_pgns={on_import_pgns} />
                 </DialogComponent>
-            }</Show>
-            <Show when={edit_chapter_dialog()}>{ (chapter) => 
-                <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(undefined)}>
-                    <EditChapterComponent nb_chapters={props.chapters.length} chapter={chapter()} i_chapter={get_i_chapter(chapter())} on_edit_chapter={_ => on_edit_chapter(props.study.id, chapter().section_id, _)} on_delete_chapter={() => on_delete_chapter(chapter().id)} on_order_chapter={_ => on_order_chapter(chapter(), _)}/>
+            </Show>
+            <Show when={edit_chapter_dialog()}>
+                <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(false)}>
+                    <EditChapterComponent nb_chapters={props.chapters.length} chapter={props.selected_chapter!} i_chapter={get_i_chapter(props.selected_chapter!)} on_edit_chapter={_ => on_edit_chapter(props.study.id, props.selected_chapter!.section_id, _)} on_delete_chapter={() => on_delete_chapter(props.selected_chapter!.id)} on_order_chapter={_ => on_order_chapter(props.selected_chapter!, _)}/>
                 </DialogComponent>
-            }</Show>
+            </Show>
             <Show when={edit_study_dialog()}>
                 <DialogComponent klass='edit-study' on_close={() => set_edit_study_dialog(false)}>
                     <EditStudyComponent study={props.study} on_delete_study={() => on_delete_study(props.study.id)} on_update_study={on_update_study}/>

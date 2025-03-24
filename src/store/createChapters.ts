@@ -1,4 +1,4 @@
-import { SetStoreFunction } from "solid-js/store";
+import { SetStoreFunction} from "solid-js/store";
 import { StoreActions, StoreState } from ".";
 import type { Agent } from "./createAgent";
 import { createAsync } from "@solidjs/router";
@@ -13,7 +13,6 @@ export function createChapters(agent: Agent, actions: Partial<StoreActions>, sta
 
     const chapters = createAsync<{ list: ModelChapter[]}>(async (value: { list: ModelChapter[] }) => {
         let s = source()
-
         if (s === undefined) {
             return { list: [] }
         }

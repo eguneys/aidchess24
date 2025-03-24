@@ -4,6 +4,7 @@ import { NAG, parent_path, Path, Step } from "./step_types";
 import { Card } from "ts-fsrs";
 import { RepeatAttemptResult } from "./repeat_types";
 import { PGN } from "../components2/parse_pgn";
+import { Color } from "chessops";
 
 export function gen_id8() {
     return Math.random().toString(16).slice(2, 12)
@@ -159,7 +160,7 @@ async function db_update_tree_step_node(db: StudiesDB, entity: EntityTreeStepNod
 
 async function db_chapters_by_section_id(db: StudiesDB, section_id: EntitySectionId) {
     let section = await db_get_section(db, section_id)
-    let res = await db.chapters.where('section_id').equals(section_id).toArray()
+    let res = (await db.chapters.where('section_id').equals(section_id).toArray()).map(_ => ({..._}))
     return section.chapter_ids.map(_ => res.find(c => c.id === _)!)
 }
 
@@ -525,31 +526,34 @@ async function db_new_due_move(db: StudiesDB, entity: EntityRepeatDueMoveInsert)
 }
 
 
-function new_study_entity(): EntityStudyInsert {
+function new_study_entity(orientation?: Color): EntityStudyInsert {
     return {
         id: gen_id8(),
         name: 'New Study',
         is_edits_disabled: false,
         predicate: 'mine',
-        section_ids: []
+        section_ids: [],
+        orientation
     }
 }
 
-function new_section_entity(study_id: EntityStudyId, name = 'New Section'): EntitySectionInsert {
+function new_section_entity(study_id: EntityStudyId, name = 'New Section', orientation?: Color): EntitySectionInsert {
     return {
         id: gen_id8(),
         study_id,
         name,
-        chapter_ids: []
+        chapter_ids: [],
+        orientation
     }
 }
 
-function new_chapter_entity(section_id: EntitySectionId, tree_replay_id: EntityPlayUciTreeReplayId, name = 'New Chapter'): EntityChapterInsert {
+function new_chapter_entity(section_id: EntitySectionId, tree_replay_id: EntityPlayUciTreeReplayId, name = 'New Chapter', orientation?: Color): EntityChapterInsert {
     return {
         id: gen_id8(),
         tree_replay_id,
         section_id,
-        name
+        name,
+        orientation
     }
 }
 
@@ -642,6 +646,7 @@ export class EntityStudy extends Entity<StudiesDB> {
     predicate!: StudiesPredicate
     selected_section_id?: EntitySectionId
     section_ids!: EntitySectionId[]
+    orientation?: Color
 }
 export class EntitySection extends Entity<StudiesDB> {
     id!: EntitySectionId
@@ -649,12 +654,14 @@ export class EntitySection extends Entity<StudiesDB> {
     name!: string
     selected_chapter_id?: EntityChapterId
     chapter_ids!: EntityChapterId[]
+    orientation?: Color
 }
 export class EntityChapter extends Entity<StudiesDB> {
     id!: EntityChapterId
     section_id!: EntitySectionId
     tree_replay_id!: EntityPlayUciTreeReplayId
     name!: string
+    orientation?: Color
 }
 
 export type EntityStepsTreeId = string
@@ -839,7 +846,10 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
             }
         },
         async new_chapter(section_id: EntitySectionId, name?: string, pgn?: PGN) { 
-            return db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes, db.steps_trees, db.play_uci_tree_replays, db.sections, db.chapters], async () => {
+            return db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes, db.steps_trees, db.play_uci_tree_replays, db.studies, db.sections, db.chapters], async () => {
+                let section = await db_get_section(db, section_id)
+                let study = await db_get_study(db, section.study_id)
+                let orientation = pgn?.orientation ?? section.orientation ?? study.orientation
 
                 let steps_tree_entity = new_steps_tree_entity()
                 await db_new_steps_tree(db, steps_tree_entity)
@@ -851,7 +861,7 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
                 let tree_replay_entity = new_tree_replay_entity(steps_tree_entity.id!)
                 await db_new_tree_replay(db, tree_replay_entity)
 
-                let entity = new_chapter_entity(section_id, tree_replay_entity.id!, name)
+                let entity = new_chapter_entity(section_id, tree_replay_entity.id!, name, orientation)
                 await db_new_chapter(db, entity)
                 return {
                     id: entity.id!,

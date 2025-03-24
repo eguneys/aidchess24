@@ -73,9 +73,13 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
     const on_create_chapter = () => {
     }
 
-    const [fen, set_fen] = createSignal<FEN | undefined>()
+    const on_orientation_changed = (orientation: Color) => {
+        props.on_edit_chapter({ id: props.chapter.id, orientation })
+    }
 
-    const [orientation, set_orientation] = createSignal<Color>('white')
+    const orientation = createMemo(() => props.chapter.orientation)
+
+    const [fen, set_fen] = createSignal<FEN | undefined>()
 
     const [tab, set_tab] = createSignal('editor')
 
@@ -98,7 +102,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
             <Show when={tab() === 'editor'}>
                 <div class='group'>
                     <div class='editor-wrap'>
-                        <BoardEditor on_change_fen={set_fen} orientation={orientation()} />
+                        <BoardEditor on_change_fen={set_fen} orientation={props.chapter.orientation ?? 'white'} />
                     </div>
                 </div>
             </Show>
@@ -121,7 +125,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
             </div>
             <div class='group'>
                 <label for='orientation'>Set Orientation</label>
-                <select onChange={e => set_orientation(e.currentTarget.value as Color)} name="orientation" id="orientation">
+                <select onChange={e => on_orientation_changed(e.currentTarget.value as Color)} name="orientation" id="orientation">
                     <option value="white" selected={orientation() === "white"}>White</option>
                     <option value="black" selected={orientation() === "black"}>Black</option>
                 </select>
