@@ -874,7 +874,7 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
 
     const on_new_section = async () => {
         let section = await create_section(props.study.id)
-        set_selected_section(section.id)
+        await set_selected_section(section.id)
         props.on_edit_section()
     }
 
