@@ -43,7 +43,7 @@ function getEnPassantOptions(fen: string): string[] {
 
 type Spare = 'pointer' | `${Color} ${Role}` | 'trash'
 
-export const BoardEditor = (props: { orientation: Color, on_change_fen: (_: FEN | undefined) => void }) => {
+export const BoardEditor = (props: { initial_fen: FEN, orientation: Color, on_change_fen: (_: FEN | undefined) => void }) => {
 
     const initial_fen = () => INITIAL_FEN
     const [board_fen, set_board_fen] = createSignal(INITIAL_FEN)
@@ -133,6 +133,7 @@ export const BoardEditor = (props: { orientation: Color, on_change_fen: (_: FEN 
             _ => false
         )
     }
+    set_fen(props.initial_fen)
 
     const [spare, set_spare] = createSignal<Spare>('pointer')
     const isSelected = createSelector(spare)

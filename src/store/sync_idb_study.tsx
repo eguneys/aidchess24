@@ -1,6 +1,6 @@
 import Dexie, { Entity, EntityTable, InsertType } from "dexie";
 import { createContext, JSX } from "solid-js";
-import { NAG, parent_path, Path, Step } from "./step_types";
+import { FEN, NAG, parent_path, Path, Step } from "./step_types";
 import { Card } from "ts-fsrs";
 import { RepeatAttemptResult } from "./repeat_types";
 import { PGN } from "../components2/parse_pgn";
@@ -83,7 +83,7 @@ async function db_update_study(db: StudiesDB, entity: EntityStudyInsert) {
 async function db_update_section(db: StudiesDB, entity: EntitySectionInsert) {
     await db.sections.update(entity.id!, entity)
 }
-async function db_update_chapter(db: StudiesDB, entity: EntityChapterInsert) {
+async function db_update_chapter(db: StudiesDB, entity: Partial<EntityChapterInsert>) {
     await db.chapters.update(entity.id!, entity)
 }
 
@@ -525,6 +525,23 @@ async function db_new_due_move(db: StudiesDB, entity: EntityRepeatDueMoveInsert)
     await db.repeat_due_moves.add(entity)
 }
 
+async function db_change_root_fen(db: StudiesDB, id: EntityChapterId, fen: FEN) {
+    db.transaction('rw', [db.tree_step_node_order_for_paths, db.tree_step_nodes, db.steps_trees, db.play_uci_tree_replays, db.chapters], async () => {
+        let chapter = await db_get_chapter(db, id)
+        db_delete_chapter_rest(db, chapter)
+
+        let steps_tree_entity = new_steps_tree_entity(fen)
+        await db_new_steps_tree(db, steps_tree_entity)
+
+        let tree_replay_entity = new_tree_replay_entity(steps_tree_entity.id!)
+        await db_new_tree_replay(db, tree_replay_entity)
+
+
+        await db_update_chapter(db, { id: chapter.id, tree_replay_id: tree_replay_entity.id! })
+
+    })
+}
+
 
 function new_study_entity(orientation?: Color): EntityStudyInsert {
     return {
@@ -557,9 +574,10 @@ function new_chapter_entity(section_id: EntitySectionId, tree_replay_id: EntityP
     }
 }
 
-function new_steps_tree_entity(): EntityStepsTreeInsert {
+function new_steps_tree_entity(initial_fen?: FEN): EntityStepsTreeInsert {
     return {
-        id: gen_id8()
+        id: gen_id8(),
+        initial_fen
     }
 }
 
@@ -691,6 +709,7 @@ class EntityPlayUciTreeReplay extends Entity<StudiesDB> {
 
 class EntityStepsTree extends Entity<StudiesDB> {
     id!: EntityStepsTreeId
+    initial_fen?: FEN
 }
 
 class EntityTreeStepNode extends Entity<StudiesDB> {
@@ -789,7 +808,7 @@ export type StudiesDBReturn = {
 
     update_study(study: EntityStudyInsert): Promise<void>
     update_section(section: EntitySectionInsert): Promise<void>
-    update_chapter(chapter: EntityChapterInsert): Promise<void>
+    update_chapter(chapter: Partial<EntityChapterInsert>): Promise<void>
 
     order_sections(study_id: EntityStudyId, section_id: EntitySectionId, order: number): Promise<void>
     order_chapters(section_id: EntitySectionId, chapter_id: EntityChapterId, order: number): Promise<void>
@@ -798,10 +817,7 @@ export type StudiesDBReturn = {
     delete_section(section: EntitySectionId): Promise<void>
     delete_chapter(chapter: EntityChapterId): Promise<void>
 
-    /*
-    new_play_uci_tree_replay(): Promise<ModelTreeReplay>
-    new_steps_tree(): Promise<ModelStepsTree>
-    */
+    change_root_fen(id: EntityChapterId, fen: string): Promise<void>;
 
     new_tree_step_node(tree_id: EntityStepsTreeId, step: Step, nags?: NAG[], comments?: string[], write_enabled?: boolean): Promise<ModelTreeStepNode>
 
@@ -948,6 +964,9 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
         },
         new_due_move(due_move: EntityRepeatDueMoveInsert) {
             return db_new_due_move(db, due_move)
+        },
+        change_root_fen(id: EntityChapterId, fen: FEN) {
+            return db_change_root_fen(db, id, fen)
         }
     }
 

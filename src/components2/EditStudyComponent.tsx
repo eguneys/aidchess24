@@ -67,7 +67,7 @@ export function EditStudyComponent(props: { study: ModelStudy, on_update_study: 
     </>)
 }
 
-export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters: number, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void, on_order_chapter: (order: number) => void }) {
+export function EditChapterComponent(props: { fen: FEN, chapter: ModelChapter, nb_chapters: number, i_chapter: number, on_edit_chapter: (_: Partial<EntityChapterInsert>) => void, on_delete_chapter: () => void, on_order_chapter: (order: number) => void, on_change_root_fen: (fen: FEN) => void }) {
 
     const on_name_key_down = (key: string, e: HTMLInputElement) => {
         if (key === 'Escape') {
@@ -93,7 +93,11 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
         props.on_delete_chapter()
     }
 
-    const on_create_chapter = () => {
+    const on_save_changes = () => {
+        let fen = edited_fen()
+        if (fen && props.fen !== fen) {
+            props.on_change_root_fen(fen)
+        }
     }
 
     const on_orientation_changed = (orientation: Color) => {
@@ -102,11 +106,13 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
 
     const orientation = createMemo(() => props.chapter.orientation)
 
-    const [fen, set_fen] = createSignal<FEN | undefined>()
+    const [edited_fen, set_edited_fen] = createSignal<FEN | undefined>()
 
     const [tab, set_tab] = createSignal('editor')
 
     const isTab = createSelector(tab)
+
+    const fen = createMemo(() => edited_fen() ?? props.fen)
 
     return (<>
         <h2>Edit Chapter</h2>
@@ -125,7 +131,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
             <Show when={tab() === 'editor'}>
                 <div class='group'>
                     <div class='editor-wrap'>
-                        <BoardEditor on_change_fen={set_fen} orientation={props.chapter.orientation ?? 'white'} />
+                        <BoardEditor initial_fen={fen()} on_change_fen={set_edited_fen} orientation={props.chapter.orientation ?? 'white'} />
                     </div>
                 </div>
             </Show>
@@ -159,7 +165,7 @@ export function EditChapterComponent(props: { chapter: ModelChapter, nb_chapters
         <div class='group buttons'>
             <button onClick={on_delete_chapter} class='delete'>Delete <i data-icon=''></i></button>
             <span class='split'></span>
-            <button onClick={on_create_chapter} class='create' disabled={fen() === undefined}>Save Changes</button>
+            <button onClick={on_save_changes} class='create' disabled={fen() === undefined}>Save Changes</button>
         </div>
     </>)
 }

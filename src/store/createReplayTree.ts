@@ -4,7 +4,7 @@ import { SetStoreFunction } from "solid-js/store";
 import { EntityChapterId, EntityPlayUciTreeReplayId, EntityStepsTreeId, ModelChapter, ModelRepeatDueMove, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
 import { createAsync } from "@solidjs/router";
 import { Accessor, batch, createSignal } from "solid-js";
-import { initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "./step_types";
+import { FEN, initial_step_play_san, NAG, next_step_play_san, parent_path, Path, SAN } from "./step_types";
 import { chapter_as_export_pgn, find_at_path, find_children_at_path, nodes_at_and_after_path } from "../components2/ReplayTreeComponent";
 
 export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>): Accessor<ModelReplayTree> {
@@ -68,7 +68,6 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
     const goto_path_force = (path: Path) => {
         if (write_enabled()) {
-            console.trace(write_enabled(), 'save path', path)
             agent.ReplayTree.update({ id: state.replay_tree.id, cursor_path: path })
         }
         setState("replay_tree", "cursor_path", path)
@@ -167,9 +166,10 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
                 return existing
             }
 
+            let initial_fen = state.replay_tree.steps_tree.initial_fen
             let node = find_at_path(state.replay_tree.steps_tree, path)
 
-            let step = node ? next_step_play_san(node.step, san) : initial_step_play_san(san)
+            let step = node ? next_step_play_san(node.step, san) : initial_step_play_san(san, initial_fen)
 
             let new_node: ModelTreeStepNode = await agent.ReplayTree.create_node(state.replay_tree.steps_tree_id, step, undefined, undefined, write_enabled())
 
@@ -188,6 +188,14 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         async chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter) {
             let res = await agent.ReplayTree.by_chapter_id(chapter.id)
             return chapter_as_export_pgn(study_name, section_name, chapter, res.steps_tree)
+        },
+        async change_root_fen(chapter_id: EntityChapterId, fen: FEN) {
+            await agent.ReplayTree.change_root_fen(chapter_id, fen)
+            console.log('here')
+            batch(() => {
+                set_source(undefined)
+                set_source(chapter_id)
+            })
         }
     })
 

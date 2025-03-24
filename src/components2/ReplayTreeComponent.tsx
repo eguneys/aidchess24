@@ -197,6 +197,7 @@ type ReplayTreeComputed = {
     get_last_path: Path | undefined
     step_at_cursor_path: ModelTreeStepNode | undefined,
 
+    initial_fen: FEN
     fen: FEN
     last_move: [UCI, SAN] | undefined
 }
@@ -214,7 +215,9 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
 
     const steps = createMemo(() => props.replay_tree.steps_tree)
 
-    const fen = createMemo(() => find_at_path(steps(), cursor_path())?.step.fen ?? INITIAL_FEN)
+    const initial_fen = createMemo(() => find_at_path(steps(), '')?.step.fen ?? steps().initial_fen ?? INITIAL_FEN)
+
+    const fen = createMemo(() => find_at_path(steps(), cursor_path())?.step.fen ?? initial_fen())
     const last_move = createMemo(() => {
         let step = find_at_path(steps(), cursor_path())?.step
         if (!step) {
@@ -405,6 +408,7 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
     const step_at_cursor_path = createMemo(() => find_at_path(props.replay_tree.steps_tree, cursor_path()))
 
     return {
+        get initial_fen() { return initial_fen() },
         get fen() { return fen() },
         get last_move() { return last_move() },
         get step_at_cursor_path() { return step_at_cursor_path() },

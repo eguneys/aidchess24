@@ -7,7 +7,7 @@ import { createStudies } from "./createStudies";
 import { createChapters } from "./createChapters";
 import { createReplayTree } from "./createReplayTree";
 import { createDueMoves } from "./createDueMoves";
-import { NAG, Path, SAN } from "./step_types";
+import { FEN, NAG, Path, SAN } from "./step_types";
 import { PGN } from "../components2/parse_pgn";
 import { makePersisted } from "@solid-primitives/storage";
 import { FSRS } from "ts-fsrs";
@@ -39,6 +39,8 @@ export type StoreActions = {
     reset_replay_tree(): void
     load_replay_tree(chapter_id: EntityChapterId): void
     load_replay_tree_by_due_move(due: ModelRepeatDueMove): void
+
+    change_root_fen(chapter_id: EntityChapterId, fen: FEN): Promise<void>
 
     goto_path(path: Path): void
     goto_path_if_can(path: Path | undefined): void 

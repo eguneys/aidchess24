@@ -2,7 +2,7 @@ import { useContext } from "solid-js";
 import type { Store } from ".";
 import { EntityChapterId, EntityChapterInsert, EntityPlayUciTreeReplayId, EntityPlayUciTreeReplayInsert, EntityRepeatDueMoveId, EntitySectionId, EntitySectionInsert, EntityStepsTreeId, EntityStudyId, EntityStudyInsert, EntityTreeStepNodeId, EntityTreeStepNodeInsert, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelReplayTree, ModelSection, ModelStudy, ModelTreeStepNode, StudiesDBContext, StudiesDBReturn } from "./sync_idb_study";
 import { PGN } from "../components2/parse_pgn";
-import type { NAG, Step } from "../store/step_types";
+import type { FEN, NAG, Step } from "../store/step_types";
 import { Card } from "ts-fsrs";
 import { RepeatAttemptResult } from "./repeat_types";
 
@@ -31,6 +31,8 @@ type ReplayTree = {
     update(entity: Partial<EntityPlayUciTreeReplayInsert>): Promise<void>
     update_tree_node(entity: Partial<EntityTreeStepNodeInsert>): Promise<void>
     delete_tree_nodes(id: EntityTreeStepNodeId[]): Promise<void>
+
+    change_root_fen(id: EntityChapterId, fen: FEN): Promise<void>
 }
 
 type Chapters = {
@@ -142,6 +144,9 @@ function createAgentReplayTree(db: StudiesDBReturn): ReplayTree {
         },
         delete_tree_nodes: async (ids: EntityTreeStepNodeId[]) => {
             await db.delete_tree_nodes(ids)
+        },
+        change_root_fen: async (id: EntityChapterId, fen: FEN) => {
+            await db.change_root_fen(id, fen)
         }
 
     }

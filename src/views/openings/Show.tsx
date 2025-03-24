@@ -708,6 +708,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         delete_study,
         order_sections,
         order_chapters,
+
+        change_root_fen,
     }] = useStore()
 
     const on_edit_section = update_section
@@ -740,6 +742,11 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     }
     const on_order_chapter = (chapter: ModelChapter, order: number) => {
         order_chapters(props.study.id, chapter.section_id, chapter.id, order)
+    }
+
+    const on_change_root_fen = async (fen: FEN) => {
+        await change_root_fen(props.selected_chapter!.id, fen)
+        set_edit_chapter_dialog(false)
     }
 
     const on_play_orig_key = async (orig: Key, dest: Key) => {
@@ -824,7 +831,13 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             </Show>
             <Show when={edit_chapter_dialog()}>
                 <DialogComponent klass='edit-chapter' on_close={() => set_edit_chapter_dialog(false)}>
-                    <EditChapterComponent nb_chapters={props.chapters.length} chapter={props.selected_chapter!} i_chapter={get_i_chapter(props.selected_chapter!)} on_edit_chapter={_ => on_edit_chapter(props.study.id, props.selected_chapter!.section_id, _)} on_delete_chapter={() => on_delete_chapter(props.selected_chapter!.id)} on_order_chapter={_ => on_order_chapter(props.selected_chapter!, _)}/>
+                    <EditChapterComponent fen={c_props.initial_fen} nb_chapters={props.chapters.length} 
+                        chapter={props.selected_chapter!} i_chapter={get_i_chapter(props.selected_chapter!)} 
+                        on_edit_chapter={_ => on_edit_chapter(props.study.id, props.selected_chapter!.section_id, _)}
+                        on_delete_chapter={() => on_delete_chapter(props.selected_chapter!.id)} 
+                        on_order_chapter={_ => on_order_chapter(props.selected_chapter!, _)} 
+                        on_change_root_fen={on_change_root_fen}
+                    />
                 </DialogComponent>
             </Show>
             <Show when={edit_study_dialog()}>
