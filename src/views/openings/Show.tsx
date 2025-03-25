@@ -12,7 +12,7 @@ import { get_letter_nth } from "../../components2/hard_limits"
 import '../../components2/StudyComponent.scss'
 import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "../../components2/EditStudyComponent"
 import { PGN } from "../../components2/parse_pgn"
-import { as_pgn_for_path, createReplayTreeComputed, find_at_path, find_children_at_path, find_root_children, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
+import { as_pgn_for_path, createReplayTreeComputed, find_at_path, find_children_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { Key } from "chessground/types"
 import { Color, opposite, parseSquare, parseUci } from "chessops"
