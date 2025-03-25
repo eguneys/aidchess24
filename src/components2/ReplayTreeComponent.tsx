@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
+import { children, createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
 import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../store/sync_idb_study"
 import { FEN, parent_path, Path, SAN, Step, UCI } from "../store/step_types"
 import './ReplayTreeComponent.scss'
@@ -427,7 +427,7 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
     }
 }
 
-export const ReplayTreeComponent = (props: { handle_goto_path: (path?: Path) => void, replay_tree: ModelReplayTree, lose_focus: boolean, on_context_menu?: (e: MouseEvent, _: Path) => void  }) => {
+export const ReplayTreeComponent = (props: { features?: JSX.Element, feature_content?: JSX.Element, handle_goto_path: (path?: Path) => void, replay_tree: ModelReplayTree, lose_focus: boolean, on_context_menu?: (e: MouseEvent, _: Path) => void  }) => {
 
     let c_props = createReplayTreeComputed(props)
 
@@ -501,6 +501,9 @@ export const ReplayTreeComponent = (props: { handle_goto_path: (path?: Path) => 
         })
     })
 
+    const features = children(() => props.features)
+    const feature_content = children(() => props.feature_content)
+
     return (<>
     <div class='replay-tree'>
         <div class='moves-wrap'>
@@ -508,6 +511,7 @@ export const ReplayTreeComponent = (props: { handle_goto_path: (path?: Path) => 
                 <NodesShorten replay_tree={props.replay_tree} {...c_props} on_set_cursor={on_set_cursor} on_context_menu={on_context_menu} path=""/>
             </div>
         </div>
+        <Show when={feature_content()} fallback={
         <div class='branch-sums'>
             <button 
                 class="fbt up"
@@ -531,7 +535,9 @@ export const ReplayTreeComponent = (props: { handle_goto_path: (path?: Path) => 
                 </div>
             }</For>
         </div>
+        }>{content => content() }</Show>
         <div class='replay-jump'>
+            <Show when={features()}>{ features => features() }</Show>
             <button disabled={c_props.get_first_path === undefined} 
                 class="fbt first" 
                 classList={{ disabled: c_props.get_first_path === undefined }}

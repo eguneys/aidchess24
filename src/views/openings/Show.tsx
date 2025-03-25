@@ -1,4 +1,4 @@
-import { batch, createComputed, createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show, Suspense, useTransition } from "solid-js"
+import { batch, createComputed, createEffect, createMemo, createSignal, For, mapArray, on, onCleanup, onMount, Show, Suspense, useTransition } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components2/PlayUciBoard"
@@ -17,6 +17,7 @@ import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { Key } from "chessground/types"
 import { Color, opposite, parseSquare, parseUci } from "chessops"
 import { makeSan } from "chessops/san"
+import { arr_rnd } from "../../random"
 
 export default () => {
 
@@ -131,10 +132,7 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
                     <StudyShow {...props_with_study(study())} on_feature_practice={() => set_tab('practice')} />
                 </Show>
                 <Show when={tab() === 'practice'}>
-                    <></>
-                    {/*
-                    <StudyPractice study={study()} on_feature_practice_off={() => set_tab('show')} />
-                        */}
+                    <StudyPractice {...props_with_study(study())} on_feature_practice_off={() => set_tab('show')} />
                 </Show>
             </>
             }</Show>
@@ -143,107 +141,112 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
 }
 
 
-/*
-function StudyPractice(props: { study: ModelStudy, on_feature_practice_off: () => void }) {
-
-    const db = useContext(StudiesDBContext)!
-
-    const play_uci = PlayUciComponent()
-
-    const [selected_section, set_selected_section] = createSignal<Section | undefined>(undefined)
-    const [selected_chapter, set_selected_chapter] = createSignal<Chapter | undefined>(undefined)
-
-    const on_selected_chapter = (section: Section, chapter: Chapter) => {
-        batch(() => {
-            set_selected_section(section)
-            set_selected_chapter(chapter)
-        })
-    }
-
-    const play_replay = createMemo(() => {
-        let s = selected_chapter()
-        if (!s) {
-            return PlayUciTreeReplay(gen_id8(), StepsTree(gen_id8()))
-        }
-        return s.play_replay
-    })
-
-    const [color, set_color] = createSignal(play_uci.turn)
-    const [movable, set_movable] = createSignal(false)
-
-    const initial_fen = createMemo(() => INITIAL_FEN)
-
-    createEffect(on(() => play_replay().cursor_path_step, (step) => {
-        if (!step) {
-            play_uci.set_fen_and_last_move(initial_fen())
-            return
-        }
-        play_uci.set_fen_and_last_move(step.fen, step.uci)
-    }))
+function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () => void }) {
 
 
-    const Player = usePlayer()
-    Player.setVolume(0.2)
-    createEffect(on(() => play_replay().cursor_path_step, (current, prev) => {
-        if (current) {
-            if (!prev || prev.ply === current.ply - 1) {
-                Player.move(current)
-            }
-        }
-    }))
+    const [store, {
+        goto_path,
+        goto_path_if_can,
+        add_child_san_to_current_path,
+    }] = useStore()
 
-    const set_on_wheel = (i: number) => {
-        if (i > 0) {
-            play_replay().goto_next_if_can()
-        } else {
-            play_replay().goto_prev_if_can()
-        }
-    }
-
-    let $el_ref: HTMLDivElement
-
-    let annotation = createMemo(() => {
-        let step = play_replay().cursor_path_step
-
-        if (!step) {
-            return []
-        }
-
-        let nag = step.nags[0]
-
-        if (!nag) {
-            return []
-        }
-
-        return annotationShapes(step.uci, step.san, nag_to_glyph(nag))
-    })
-
-    const chapter_title_or_detached = createMemo(() => {
-        return selected_chapter()?.name ?? '[detached]'
-    })
+    let c_props = createReplayTreeComputed(store)
 
 
     const [tab, set_tab] = createSignal('practice')
 
 
-    const quiz_nodes = createMemo(() => play_replay().steps.all_nodes)
+    const set_on_wheel = (i: number) => {
+        if (i > 0) {
+            goto_path_if_can(c_props.get_next_path)
+        } else {
+            goto_path_if_can(c_props.get_prev_path)
+        }
+    }
+
+    const [custom_orientation, set_custom_orientation] = createSignal<Color>()
+
+    const orientation = createMemo(() => custom_orientation() ?? props.selected_chapter?.orientation ?? props.selected_section?.orientation ?? props.study.orientation ?? 'white')
+
+    const on_key_down = (e: KeyboardEvent) => {
+
+        if (e.key === 'f') {
+            set_custom_orientation(opposite(orientation()))
+        }
+
+    }
+    onMount(() => {
+        document.addEventListener('keydown', on_key_down)
+        onCleanup(() => {
+            document.removeEventListener('keydown', on_key_down)
+        })
+    })
+
+    let annotation = createMemo(() => {
+        let step = c_props.step_at_cursor_path
+
+        if (!step) {
+            return []
+        }
+
+        let nag = step.nags?.[0]
+
+        if (!nag) {
+            return []
+        }
+
+        return annotationShapes(step.step.uci, step.step.san, nag_to_glyph(nag))
+    })
+
+
+    const on_play_orig_key = async (orig: Key, dest: Key) => {
+
+        const pos = () => fen_pos(c_props.fen)
+
+        let position = pos()
+        let turn_color = position.turn
+
+        let piece = position.board.get(parseSquare(orig)!)!
+
+        let uci = orig + dest
+        if (piece.role === 'pawn' &&
+            ((dest[1] === '8' && turn_color === 'white') || (dest[1] === '1' && turn_color === 'black'))) {
+            uci += 'q'
+        }
+
+        let move = parseUci(uci)!
+        let san = makeSan(position, move)
+
+        let node = await add_child_san_to_current_path(san)
+        goto_path(node.step.path)
+    }
+
+    const chapter_title_or_detached = createMemo(() => {
+        return props.selected_chapter?.name ?? '[detached]'
+    })
+
+    const handle_goto_path = (path?: Path) => {
+        goto_path_if_can(path)
+    }
+
+    const [color, set_color] = createSignal<Color>(orientation())
+    const [movable, set_movable] = createSignal(false)
+
+    const quiz_nodes = createMemo(() => [])
 
     return (<>
-        <main ref={$el_ref!} class='openings-show study'>
+        <main class='openings-show study'>
             <div class='details-wrap'>
-                <StudyDetailsComponent study={props.study} section={selected_section()} chapter={selected_chapter()} />
+                <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
+                <PlayUciBoard orientation={orientation()} shapes={annotation()} movable={movable()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
             </div>
             <div class='replay-wrap'>
                 <div class='header'>
                     {chapter_title_or_detached()}
                 </div>
-                <PlayUciTreeReplayComponent db={db} 
-                play_replay={play_replay()} 
-                on_context_menu={() => {}} 
-                lose_focus={false}
+                <ReplayTreeComponent handle_goto_path={handle_goto_path} replay_tree={store.replay_tree} lose_focus={false} on_context_menu={() => {}}
                 features = {
                     <>
                     <button onClick={props.on_feature_practice_off} class='feature practice'><i data-icon=""></i></button>
@@ -268,7 +271,7 @@ function StudyPractice(props: { study: ModelStudy, on_feature_practice_off: () =
                             </Show>
                             <Show when={tab() === 'practice'}>
                             <h4>Practice with the Computer</h4>
-                            <Practice color={color()} set_color={set_color} set_movable={set_movable} play_uci={play_uci} play_replay={play_replay()}/>
+                            <Practice color={color()} set_color={set_color} set_movable={set_movable}/>
                             </Show>
                         </div>
                     </div>
@@ -277,17 +280,15 @@ function StudyPractice(props: { study: ModelStudy, on_feature_practice_off: () =
                 />
             </div>
             <div class='sections-wrap'>
-                <SectionsListComponent db={db} study={props.study} is_edits_disabled={true} on_selected_chapter={on_selected_chapter}/>
+                <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled}/>
             </div>
             <div class='tools-wrap'>
             </div>
         </main>
     </>)
 }
-    */
 
-/*
-function Practice(props: { color: Color, set_color: (_: Color) => void, set_movable: (_: boolean)=> void, play_uci: PlayUciComponent, play_replay: PlayUciTreeReplay}) {
+function Practice(props: { color: Color, set_color: (_: Color) => void, set_movable: (_: boolean)=> void}) {
     const on_rematch = (color?: Color) => {
         if (color) {
             set_color(color)
@@ -300,25 +301,6 @@ function Practice(props: { color: Color, set_color: (_: Color) => void, set_mova
     const engine_color = createMemo(() => opposite(color()))
 
     props.set_movable(true)
-
-    const play_uci = props.play_uci
-    const play_replay = createMemo(() => props.play_replay)
-
-    createEffect(on(() => play_uci.on_last_move_added, (us) => {
-        if (!us) {
-            return
-        }
-
-        let san = us[1]
-
-        let failed_node = play_replay().add_failed_san_or_success_with_advance_cursor_path(san)
-
-        if (failed_node) {
-
-        }
-
-    }, { defer: true }))
-
 
     return (<>
         <div class='info-wrap'>
@@ -342,11 +324,11 @@ function Practice(props: { color: Color, set_color: (_: Color) => void, set_mova
 }
 
 type QuizItem = {
-    step: TreeStepNode,
+    step: ModelTreeStepNode,
     is_solved?: boolean
 }
 
-function QuizItem(step: TreeStepNode) {
+function QuizItem(step: ModelTreeStepNode) {
 
     let [is_solved, set_is_solved] = createSignal<boolean | undefined>(undefined)
 
@@ -357,7 +339,7 @@ function QuizItem(step: TreeStepNode) {
     }
 }
 
-function TakeQuiz(props: { nodes: TreeStepNode[] }) {
+function TakeQuiz(props: { nodes: ModelTreeStepNode[] }) {
 
     let [indexes, _set_indexes] = createSignal([...Array(15).keys()])
     
@@ -427,7 +409,7 @@ function PlayDeathmatch() {
             <Show when={status() === 'info'}>
                 <p>
                     You will play the moves from the opening.
-                    If you go out of book game ends.
+                    If you go out of book, game ends.
                 </p>
             </Show>
         </div>
@@ -440,8 +422,6 @@ function PlayDeathmatch() {
         </div>
     </>)
 }
-
-*/
 
 function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void }) {
 
@@ -796,27 +776,16 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
                 <PlayUciBoard orientation={orientation()} shapes={annotation()} movable={movable()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
-                {/*
-                <PlayUciBoard shapes={annotation()} color={color()} movable={movable()} play_uci={play_uci}/>
-                */}
             </div>
             <div class='replay-wrap'>
                 <div class='header'>
                     {chapter_title_or_detached()}
                 </div>
-                <ReplayTreeComponent handle_goto_path={handle_goto_path} replay_tree={store.replay_tree} lose_focus={lose_focus()} on_context_menu={on_tree_context_menu}/>
-                {/*
-                <PlayUciTreeReplayComponent
-                play_replay={play_replay()} 
-                on_context_menu={on_tree_context_menu} 
-                lose_focus={lose_focus()}
-                features = {
-                    <>
-                    <button onClick={props.on_feature_practice} class='feature practice'><i data-icon=""></i></button>
-                    </>
-                }
+                <ReplayTreeComponent handle_goto_path={handle_goto_path} replay_tree={store.replay_tree} lose_focus={lose_focus()} on_context_menu={on_tree_context_menu}
+                    features={
+                        <button onClick={props.on_feature_practice} class='feature practice'><i data-icon=""></i></button>
+                    }
                 />
-                */}
             </div>
             <div class='sections-wrap'>
                 <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={() => set_edit_section_dialog(true)} on_edit_chapter={() => set_edit_chapter_dialog(true)}/>
@@ -868,14 +837,14 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     </>)
 }
 
-function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: boolean, on_edit_study: () => void, on_edit_section: () => void, on_edit_chapter: () => void, }) {
+function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: boolean, on_edit_study?: () => void, on_edit_section?: () => void, on_edit_chapter?: () => void, }) {
 
     let [,{ create_section, update_study}] = useStore()
 
     const on_new_section = async () => {
         let section = await create_section(props.study.id)
         await set_selected_section(section.id)
-        props.on_edit_section()
+        props.on_edit_section?.()
     }
 
     const set_selected_section = (selected_section_id: EntitySectionId) => 
@@ -896,7 +865,7 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
                 <NoSections />
             }>{(section, i) =>
                 <Show when={section === props.selected_section} fallback={
-                    <SectionCollapsedComponent is_edits_disabled={props.is_edits_disabled} section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section.id)} on_edit={() => props.on_edit_section()}/>
+                    <SectionCollapsedComponent is_edits_disabled={props.is_edits_disabled} section={section} nth={get_letter_nth(i())} on_selected={() => set_selected_section(section.id)} on_edit={() => props.on_edit_section?.()}/>
                 }>
                     <SectionComponent 
                                 {...props}
@@ -918,14 +887,14 @@ function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: b
     </>)
 }
 
-function SectionComponent(props: ShowComputedProps & { nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit: () => void, on_edit_chapter: () => void }) {
+function SectionComponent(props: ShowComputedProps & { nth: string, section: ModelSection, is_edits_disabled: boolean, on_edit?: () => void, on_edit_chapter?: () => void }) {
 
     let [,{ create_chapter, update_section }] = useStore()
 
     const on_new_chapter = async () => {
         let chapter = await create_chapter(props.study.id, props.section.id)
         await set_selected_chapter(chapter.id)
-        props.on_edit_chapter()
+        props.on_edit_chapter?.()
     }
 
     const set_selected_chapter = async (selected_chapter_id: EntityChapterId) => 
@@ -936,7 +905,7 @@ function SectionComponent(props: ShowComputedProps & { nth: string, section: Mod
             <div class='header'>
                 <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis' title={props.section?.name}>{props.section?.name}</span></div>
                 <Show when={!props.is_edits_disabled}>
-                    <i onClick={() => props.on_edit()} data-icon=""></i>
+                    <i onClick={() => props.on_edit?.()} data-icon=""></i>
                 </Show>
             </div>
             <div class='chapters-list'>
@@ -945,7 +914,7 @@ function SectionComponent(props: ShowComputedProps & { nth: string, section: Mod
                     <For each={props.chapters} fallback={
                         <NoChapters />
                     }>{(chapter, i) =>
-                        <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={props.selected_chapter===chapter} on_selected={() => set_selected_chapter(chapter.id)}  on_edit={() => props.on_edit_chapter()}/>
+                        <ChapterComponent is_edits_disabled={props.is_edits_disabled} chapter={chapter} nth={`${props.nth}${i() + 1}`} selected={props.selected_chapter===chapter} on_selected={() => set_selected_chapter(chapter.id)}  on_edit={() => props.on_edit_chapter?.()}/>
                     }</For>
                 </div>
                 <div class='tools'>

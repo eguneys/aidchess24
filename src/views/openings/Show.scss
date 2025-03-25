@@ -38,7 +38,7 @@
                                  'details details'
                                  'sections sections'
                                  'tools tools';
-            grid-template-columns: var(--col2-uniboard-width) minmax(300px, 400px);
+            grid-template-columns: var(--col2-uniboard-width) minmax(250px, 320px);
 
             justify-self: center;
         }
@@ -258,15 +258,16 @@
                 button.feature {
                     border:none;
                     padding: 1em;
-                    background: theme.$ac-deep-blue;
+                    background: theme.$ac-deep-blue2;
                     color: theme.$text-light2;
                     font-size: 1em;
                     user-select: none;
                     cursor: pointer;
+                    border-top: 1px solid theme.$ac-deep-blue;
 
                     &:hover, &.active {
-                        background: theme.$bu-mu-lavender;
-                        color: theme.$text-primary;
+                        background: theme.$ac-deep-blue;
+                        color: theme.$text-light2;
                     }
 
                     &:active {
@@ -311,6 +312,12 @@
                         }
                     }
 
+                    .practice, .deathmatch, .quiz {
+                        h4 {
+                            font-size: 0.9em;
+                        }
+                    }
+
                     .practice {
                         h4 {
                            background: theme.$deep-blue;
@@ -337,10 +344,15 @@
                     }
 
                     .content {
+                        display: flex;
+                        flex-flow: column;
+                        min-height: 200px;
                         background: theme.$ac-deep-blue;
                         color: theme.$text-light2;
                     .info-wrap {
                         display: flex;
+                        flex: 1;
+                        align-items: center;
 
                         .status {
                             flex: 2;
@@ -392,13 +404,15 @@
 
                     .buttons {
                         display: flex;
+                        border-top: 1px solid theme.$ac-li-blue-2;
                         .rematch {
+                            border-right: 1px solid theme.$ac-li-blue2;
                             flex: 2;
                         }
 
                         button {
-                            background: theme.$ac-li-purple-2;
-                            color: theme.$text-primary;
+                            background: theme.$ac-deep-blue2;
+                            color: theme.$text-light;
 
                             padding: 0.1em 0;
                             font-size: 1.1em;
@@ -410,7 +424,8 @@
                             transition: background .1s;
     
                         &:hover {
-                            background: theme.$ac-li-purple;
+                            background: theme.$ac-deep-blue;
+                            color: theme.$text-light2;
                         }
                         &:active {
                             text-decoration: underline;
