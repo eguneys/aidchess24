@@ -1,5 +1,5 @@
 import type { Agent } from "./createAgent";
-import { StoreActions, StoreState } from ".";
+import { StoreActions, StoreProvider, StoreState } from ".";
 import { SetStoreFunction } from "solid-js/store";
 import { EntityChapterId, EntityPlayUciTreeReplayId, EntityStepsTreeId, ModelChapter, ModelRepeatDueMove, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
 import { createAsync } from "@solidjs/router";
@@ -87,20 +87,17 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
     }
 
     Object.assign(actions, {
+        set_write_enabled_replay_tree(value: boolean) {
+            set_write_enabled(value)
+        },
         reset_replay_tree() {
             set_source(undefined)
         },
         load_replay_tree(chapter_id: EntityChapterId) {
-            batch(() => {
-                set_source(chapter_id)
-                set_write_enabled(true)
-            })
+            set_source(chapter_id)
         },
         load_replay_tree_by_id(id: EntityPlayUciTreeReplayId) {
-            batch(() => {
-                set_source(['by_id', id])
-                set_write_enabled(true)
-            })
+            set_source(['by_id', id])
         },
         load_replay_tree_by_due_move(due: ModelRepeatDueMove) {
             batch(() => {
@@ -184,6 +181,42 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
             }
 
             return new_node
+        },
+        async add_child_san_to_success_or_error_path_no_save(san: SAN) {
+            let path = state.replay_tree.cursor_path
+
+            let children = find_children_at_path(state.replay_tree.steps_tree, path)
+
+            let existing = children.find(_ => _.step.san === san)
+
+            if (existing) {
+
+                setState("replay_tree", "solved_paths", _ => [existing.step.path, ..._])
+
+                return ["success", existing]
+            }
+
+            let node = find_at_path(state.replay_tree.steps_tree, path)
+
+            let step = node ? next_step_play_san(node.step, san) : initial_step_play_san(san, state.replay_tree.steps_tree.initial_fen)
+
+            let new_node: ModelTreeStepNode = await agent.ReplayTree.create_node(state.replay_tree.steps_tree_id, step, undefined, undefined, false)
+
+            let nodes = state.replay_tree.steps_tree.flat_nodes[path]
+
+            batch(() => {
+                if (!nodes) {
+                    setState("replay_tree", "steps_tree", "flat_nodes", path, [new_node])
+                } else {
+                    setState("replay_tree", "steps_tree", "flat_nodes", path, _ => {
+                        return [..._, new_node]
+                    })
+                }
+
+                setState("replay_tree", "error_paths", _ => [new_node.step.path, ..._])
+            })
+
+            return ["error", new_node]
         },
         async chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter) {
             let res = await agent.ReplayTree.by_chapter_id(chapter.id)

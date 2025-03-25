@@ -49,9 +49,13 @@ export type StoreActions = {
     add_child_san_to_current_path(san: SAN): Promise<ModelTreeStepNode>
     tree_step_node_set_nags(node: ModelTreeStepNode, nags: NAG[]): Promise<void>
 
+    add_child_san_to_success_or_error_path_no_save(san: SAN): Promise<["success", ModelTreeStepNode] | ["error", ModelTreeStepNode] | undefined>
+
     set_success_path(path?: Path): void
     set_failed_path(path?: Path): void
     set_hide_after_path(path?: Path): void
+
+    set_write_enabled_replay_tree(value: boolean): void
 
     load_due_moves(study_id: EntityStudyId, section_ids: EntitySectionId[]): void
     save_due_move_if_not(due_move: ModelRepeatDueMove): Promise<void>

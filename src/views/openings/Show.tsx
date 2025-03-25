@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "@solidjs/router"
 import './Show.scss'
 import { non_passive_on_wheel } from "../../components2/PlayUciBoard"
 import { DialogComponent } from "../../components2/DialogComponent"
-import { FEN, fen_pos, fen_turn, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, Path, Step } from "../../store/step_types"
+import { FEN, fen_pos, fen_turn, GLYPH_NAMES, glyph_to_nag, GLYPHS, nag_to_glyph, parent_path, Path, SAN, Step } from "../../store/step_types"
 import { annotationShapes } from "../../components2/annotationShapes"
 import { StoreState, useStore } from "../../store"
 import type { EntityChapterId, EntityChapterInsert, EntitySectionId, EntityStudyId, ModelChapter, ModelSection, ModelStudy, ModelTreeStepNode } from "../../store/sync_idb_study"
@@ -147,11 +147,13 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
     const [store, {
         goto_path,
         goto_path_if_can,
-        add_child_san_to_current_path,
+        add_child_san_to_success_or_error_path_no_save,
+        set_write_enabled_replay_tree
     }] = useStore()
 
-    let c_props = createReplayTreeComputed(store)
+    set_write_enabled_replay_tree(false)
 
+    let c_props = createReplayTreeComputed(store)
 
     const [tab, set_tab] = createSignal('practice')
 
@@ -217,8 +219,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
         let move = parseUci(uci)!
         let san = makeSan(position, move)
 
-        let node = await add_child_san_to_current_path(san)
-        goto_path(node.step.path)
+        on_play_san(san)
     }
 
     const chapter_title_or_detached = createMemo(() => {
@@ -229,10 +230,43 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
         goto_path_if_can(path)
     }
 
-    const [color, set_color] = createSignal<Color>(orientation())
+    const [is_busy_timeout, set_is_busy_timeout] = createSignal<number>()
+
+    const [color, set_color] = createSignal<Color>()
     const [movable, set_movable] = createSignal(false)
 
+    const movable_or_busy = createMemo(() => is_busy_timeout() === undefined && movable())
+
+    const orientation_with_practice_color = createMemo(() => color() ?? orientation())
+
     const quiz_nodes = createMemo(() => [])
+
+    const on_play_san = async (san: SAN) => {
+        if (tab() === 'practice') {
+            on_play_san_practice(san)
+        }
+    }
+
+
+    const on_play_san_practice = async (san: SAN) => {
+
+        let node = await add_child_san_to_success_or_error_path_no_save(san)
+        console.log(node)
+        if (!node) {
+            return
+        }
+
+        if (node[0] === 'error') {
+            goto_path(node[1].step.path)
+
+            set_is_busy_timeout(setTimeout(() => {
+                goto_path(parent_path(node[1].step.path))
+                set_is_busy_timeout(undefined)
+            }, 800))
+        } else {
+            goto_path(node[1].step.path)
+        }
+    }
 
     return (<>
         <main class='openings-show study'>
@@ -240,7 +274,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
                 <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
             </div>
             <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard orientation={orientation()} shapes={annotation()} movable={movable()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
+                <PlayUciBoard orientation={orientation_with_practice_color()} shapes={annotation()} movable={movable_or_busy()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
             </div>
             <div class='replay-wrap'>
                 <div class='header'>
@@ -271,7 +305,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
                             </Show>
                             <Show when={tab() === 'practice'}>
                             <h4>Practice with the Computer</h4>
-                            <Practice color={color()} set_color={set_color} set_movable={set_movable}/>
+                            <Practice color={orientation_with_practice_color()} set_color={set_color} set_movable={set_movable}/>
                             </Show>
                         </div>
                     </div>
@@ -280,7 +314,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
                 />
             </div>
             <div class='sections-wrap'>
-                <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled}/>
+                <SectionsListComponent {...props} is_edits_disabled={true}/>
             </div>
             <div class='tools-wrap'>
             </div>
@@ -289,6 +323,9 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
 }
 
 function Practice(props: { color: Color, set_color: (_: Color) => void, set_movable: (_: boolean)=> void}) {
+
+    const [, { goto_path }] = useStore()
+
     const on_rematch = (color?: Color) => {
         if (color) {
             set_color(color)
@@ -301,6 +338,7 @@ function Practice(props: { color: Color, set_color: (_: Color) => void, set_mova
     const engine_color = createMemo(() => opposite(color()))
 
     props.set_movable(true)
+    goto_path('')
 
     return (<>
         <div class='info-wrap'>
@@ -431,8 +469,11 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         delete_at_and_after_path,
         tree_step_node_set_nags,
         add_child_san_to_current_path,
-        chapter_as_export_pgn
+        chapter_as_export_pgn,
+        set_write_enabled_replay_tree
     }] = useStore()
+
+    set_write_enabled_replay_tree(!props.study.is_edits_disabled)
 
     let c_props = createReplayTreeComputed(store)
 
