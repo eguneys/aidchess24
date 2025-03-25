@@ -4,6 +4,7 @@ import { createEffect, createMemo, For, Show, Suspense } from 'solid-js'
 import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
+import practice_png from '../../assets/images/practice.png'
 import import_lichess_png from '../../assets/images/importlichess.png'
 import { useStore } from '../../store'
 import type { ModelStudy, StudiesPredicate } from '../../store/sync_idb_study'
@@ -194,6 +195,12 @@ function Help() {
         <p>
             <img alt="chapters into sections" src={sections_png}></img>
         </p>
+        <h3> Practice opening lines with the computer </h3>
+        <p>
+            <img alt="practice with computer" src={practice_png}></img>
+        </p>
+
+
         <h3> Local First </h3>
         <p>
 

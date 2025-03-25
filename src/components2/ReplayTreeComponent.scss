@@ -93,7 +93,7 @@
 
             transition: .3s;
 
-            &.hidden {
+            &.hidden:not(.in-error) {
                 background: $text-gray !important;
                 color: $text-gray !important;
                 transition: 0s;
@@ -141,7 +141,8 @@
                     color: $text-light;
                 }
             }
-            &.success {
+            &.success,
+            &.in-solved {
                 color: theme.$success;
                 &:hover {
                    background: theme.$success;
@@ -198,12 +199,17 @@
                     background: theme.$blunder;
                 }
     
-                &.success {
+                &.success,
+                &.in-solved {
                     background: theme.$success;
                 }
                 &.failed {
                     background: theme.$error;
                 }
+                &.in-error {
+                    background: theme.$error;
+                }
+
 
 
 

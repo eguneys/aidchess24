@@ -1,8 +1,9 @@
 import { children, createEffect, createMemo, For, JSX, on, onCleanup, onMount, Show } from "solid-js"
 import { ModelChapter, ModelReplayTree, ModelStepsTree, ModelTreeStepNode } from "../store/sync_idb_study"
-import { FEN, parent_path, Path, SAN, Step, UCI } from "../store/step_types"
+import { FEN, fen_turn, parent_path, Path, SAN, Step, UCI } from "../store/step_types"
 import './ReplayTreeComponent.scss'
 import { INITIAL_FEN } from "chessops/fen"
+import { Color } from "chessops"
 
 export function nodes_at_and_after_path(tree: ModelStepsTree, path: Path): ModelTreeStepNode[] {
     let at = find_at_path(tree, path)
@@ -200,6 +201,7 @@ type ReplayTreeComputed = {
     initial_fen: FEN
     fen: FEN
     last_move: [UCI, SAN] | undefined
+    turn: Color
 }
 
 export type CursorPathEffectOption = 'hold' | 'no-last-move' | 'allow'
@@ -237,6 +239,9 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
                         .filter(_ => _ !== sibling.step.path)
                 })
 
+                if (props.replay_tree.error_paths.includes(branch.step.path)) {
+                    return
+                }
                 sticky_paths.push(branch.step.path)
             }
         })
@@ -410,6 +415,7 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
     return {
         get initial_fen() { return initial_fen() },
         get fen() { return fen() },
+        get turn() { return fen_turn(fen()) },
         get last_move() { return last_move() },
         get step_at_cursor_path() { return step_at_cursor_path() },
         get cursor_path() { return cursor_path() },
@@ -653,8 +659,8 @@ function StepNode(props: { node: ModelTreeStepNode, show_index?: boolean, collap
         ['hidden']: is_hidden(),
         ['failed']: is_failed(),
         ['success']: is_success(),
-        ['in_solved']: is_in_solved(),
-        ['in_error']: is_in_error(),
+        ['in-solved']: is_in_solved(),
+        ['in-error']: is_in_error(),
 
         [nag_klass[props.node.nags?.[0] ?? 0]]: props.node.nags !== undefined
     }))

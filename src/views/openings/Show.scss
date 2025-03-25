@@ -414,8 +414,12 @@
                     .buttons {
                         display: flex;
                         border-top: 1px solid theme.$ac-li-blue-2;
+                        .end,
                         .rematch {
                             border-right: 1px solid theme.$ac-li-blue2;
+                        }
+
+                        .rematch {
                             flex: 2;
                         }
 

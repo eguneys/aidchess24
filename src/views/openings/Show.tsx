@@ -12,7 +12,7 @@ import { get_letter_nth } from "../../components2/hard_limits"
 import '../../components2/StudyComponent.scss'
 import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "../../components2/EditStudyComponent"
 import { PGN } from "../../components2/parse_pgn"
-import { as_pgn_for_path, createReplayTreeComputed, find_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
+import { as_pgn_for_path, createReplayTreeComputed, find_at_path, find_children_at_path, find_root_children, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { Key } from "chessground/types"
 import { Color, opposite, parseSquare, parseUci } from "chessops"
@@ -146,7 +146,9 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
 
     const [store, {
         goto_path,
+        goto_path_force,
         goto_path_if_can,
+        set_hide_after_path,
         add_child_san_to_success_or_error_path_no_save,
         set_write_enabled_replay_tree
     }] = useStore()
@@ -173,7 +175,12 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
     const on_key_down = (e: KeyboardEvent) => {
 
         if (e.key === 'f') {
-            set_custom_orientation(opposite(orientation()))
+            batch(() => {
+                set_custom_orientation(opposite(orientation()))
+                set_color(undefined)
+
+                auto_play_if_can()
+            })
         }
 
     }
@@ -251,20 +258,75 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
     const on_play_san_practice = async (san: SAN) => {
 
         let node = await add_child_san_to_success_or_error_path_no_save(san)
-        console.log(node)
         if (!node) {
             return
         }
 
         if (node[0] === 'error') {
-            goto_path(node[1].step.path)
+            goto_path_force(node[1].step.path)
 
             set_is_busy_timeout(setTimeout(() => {
-                goto_path(parent_path(node[1].step.path))
-                set_is_busy_timeout(undefined)
-            }, 800))
+                batch(() => {
+                    goto_path(parent_path(node[1].step.path))
+                    set_is_busy_timeout(undefined)
+                })
+            }, 600))
         } else {
-            goto_path(node[1].step.path)
+            batch(() => {
+                goto_path_force(node[1].step.path)
+                set_hide_after_path(node[1].step.path)
+            })
+
+            let cc = find_children_at_path(store.replay_tree.steps_tree, node[1].step.path)
+                .filter(_ => !store.replay_tree.error_paths.includes(_.step.path))
+
+            if (!cc) {
+
+                return
+            }
+            let c = arr_rnd(cc)
+
+            set_is_busy_timeout(setTimeout(() => {
+                batch(() => {
+                    goto_path_force(c.step.path)
+                    set_hide_after_path(c.step.path)
+                    set_is_busy_timeout(undefined)
+                })
+            }, 600))
+
+        }
+    }
+
+    const practice_on_rematch = (c?: Color) => {
+        if (c === undefined) {
+            return
+        }
+        set_color(c)
+        set_hide_after_path(undefined)
+        goto_path_force('')
+
+        auto_play_if_can()
+    }
+
+    const auto_play_if_can = () => {
+
+        if (orientation_with_practice_color() !== c_props.turn) {
+            let cc = find_children_at_path(store.replay_tree.steps_tree, store.replay_tree.cursor_path)
+
+
+            cc = cc.filter(_ => !store.replay_tree.error_paths.includes(_.step.path))
+
+            if (!cc || cc.length === 0) {
+                return
+            }
+            let c = arr_rnd(cc)
+            set_is_busy_timeout(setTimeout(() => {
+                batch(() => {
+                    goto_path_force(c.step.path)
+                    set_hide_after_path(c.step.path)
+                    set_is_busy_timeout(undefined)
+                })
+            }, 500))
         }
     }
 
@@ -291,8 +353,10 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
                     <div class='practice-feature'>
                         <div class='tabs'>
                             <div onClick={() => set_tab('practice')} class={'feature tab' + (tab() === 'practice' ? ' active': '')}>Practice</div>
+                            {/*
                             <div onClick={() => set_tab('quiz')} class={'quiz tab' + (tab() === 'quiz' ? ' active': '')}>Quiz</div>
                             <div onClick={() => set_tab('deathmatch')} class={'deathmatch tab' + (tab() === 'deathmatch' ? ' active': '')}>Deathmatch</div>
+                            */}
                         </div>
                         <div class={'content ' + tab()}>
                             <Show when={tab() === 'quiz'}>
@@ -305,7 +369,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
                             </Show>
                             <Show when={tab() === 'practice'}>
                             <h4>Practice with the Computer</h4>
-                            <Practice color={orientation_with_practice_color()} set_color={set_color} set_movable={set_movable}/>
+                            <Practice movable={movable_or_busy()} on_rematch={practice_on_rematch} color={orientation_with_practice_color()} set_movable={set_movable}/>
                             </Show>
                         </div>
                     </div>
@@ -322,18 +386,28 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
     </>)
 }
 
-function Practice(props: { color: Color, set_color: (_: Color) => void, set_movable: (_: boolean)=> void}) {
+function Practice(props: { color: Color, movable: boolean, set_movable: (_: boolean)=> void, on_rematch: (color?: Color) => void }) {
 
-    const [, { goto_path }] = useStore()
+    const [store, { goto_path, reload_replay_tree_with_cursor_path }] = useStore()
 
+    const [, start] = useTransition()
     const on_rematch = (color?: Color) => {
-        if (color) {
-            set_color(color)
+        if (color === undefined) {
+            start(() => {
+                reload_replay_tree_with_cursor_path(store.replay_tree.cursor_path)
+            })
+            return
         }
+        batch(() => {
+
+            start(() => {
+                reload_replay_tree_with_cursor_path('')
+                props.on_rematch(color)
+            })
+        })
     }
 
     const color = createMemo(() => props.color)
-    const set_color = props.set_color
 
     const engine_color = createMemo(() => opposite(color()))
 
@@ -343,7 +417,11 @@ function Practice(props: { color: Color, set_color: (_: Color) => void, set_mova
     return (<>
         <div class='info-wrap'>
             <div class='status'>
-                Your turn.
+                <Show when={props.movable} fallback={
+                    <span>...</span>
+                }>
+                    <span>Your turn.</span>
+                </Show>
             </div>
             <div class='info'>
                 <p>
@@ -355,7 +433,8 @@ function Practice(props: { color: Color, set_color: (_: Color) => void, set_mova
             </div>
         </div>
         <div class='rematch-buttons buttons'>
-            <button onClick={() => on_rematch()} class='rematch'>Rematch</button>
+            <button onClick={() => on_rematch()} class='end'>End</button>
+            <button onClick={() => on_rematch(color())} class='rematch'>Rematch</button>
             <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
         </div>
     </>)

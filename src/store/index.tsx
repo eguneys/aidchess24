@@ -36,6 +36,7 @@ export type StoreActions = {
     chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter): Promise<string>
 
 
+    reload_replay_tree_with_cursor_path(path: Path): void
     reset_replay_tree(): void
     load_replay_tree(chapter_id: EntityChapterId): void
     load_replay_tree_by_due_move(due: ModelRepeatDueMove): void

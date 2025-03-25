@@ -1,5 +1,5 @@
 import type { Agent } from "./createAgent";
-import { StoreActions, StoreProvider, StoreState } from ".";
+import { StoreActions, StoreState } from ".";
 import { SetStoreFunction } from "solid-js/store";
 import { EntityChapterId, EntityPlayUciTreeReplayId, EntityStepsTreeId, ModelChapter, ModelRepeatDueMove, ModelReplayTree, ModelTreeStepNode } from "./sync_idb_study";
 import { createAsync } from "@solidjs/router";
@@ -11,7 +11,7 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
     const [write_enabled, set_write_enabled] = createSignal(true)
 
-    type Source = EntityChapterId | ['by_id', EntityPlayUciTreeReplayId] | ['by_steps_id', EntityStepsTreeId] | ['by_due_move', ModelRepeatDueMove]
+    type Source = EntityChapterId | ['by_id', EntityPlayUciTreeReplayId, Path | undefined] | ['by_steps_id', EntityStepsTreeId] | ['by_due_move', ModelRepeatDueMove]
     const [source, set_source] = createSignal<Source | undefined>(undefined, { equals: false })
     const default_replay_tree: Accessor<ModelReplayTree> = () => ({
         id: '',
@@ -36,7 +36,13 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
         if (Array.isArray(s)) {
             if (s[0] === 'by_id') {
-                return agent.ReplayTree.by_id(s[1])
+                return agent.ReplayTree.by_id(s[1]).then(_ => {
+                    if (s[2] !== undefined) {
+                        _.cursor_path = s[2]
+                    }
+
+                    return _
+                })
             } else if (s[0] === 'by_steps_id') {
                 return agent.ReplayTree.by_steps_tree_id(s[1])
             } else {
@@ -90,14 +96,17 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
         set_write_enabled_replay_tree(value: boolean) {
             set_write_enabled(value)
         },
+        reload_replay_tree_with_cursor_path(path: Path) {
+            set_source(['by_id', state.replay_tree.id, path])
+        },
         reset_replay_tree() {
             set_source(undefined)
         },
         load_replay_tree(chapter_id: EntityChapterId) {
             set_source(chapter_id)
         },
-        load_replay_tree_by_id(id: EntityPlayUciTreeReplayId) {
-            set_source(['by_id', id])
+        load_replay_tree_by_id(id: EntityPlayUciTreeReplayId, path?: Path) {
+            set_source(['by_id', id, path])
         },
         load_replay_tree_by_due_move(due: ModelRepeatDueMove) {
             batch(() => {
@@ -189,7 +198,13 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
             let existing = children.find(_ => _.step.san === san)
 
+
             if (existing) {
+
+
+                if (state.replay_tree.error_paths.includes(existing.step.path)) {
+                    return ["error", existing]
+                }
 
                 setState("replay_tree", "solved_paths", _ => [existing.step.path, ..._])
 
