@@ -36,6 +36,9 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
         if (Array.isArray(s)) {
             if (s[0] === 'by_id') {
+                if (s[1] === '') {
+                    return default_replay_tree()
+                }
                 return agent.ReplayTree.by_id(s[1]).then(_ => {
                     if (s[2] !== undefined) {
                         _.cursor_path = s[2]

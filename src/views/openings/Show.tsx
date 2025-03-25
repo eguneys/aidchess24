@@ -277,23 +277,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
                 set_hide_after_path(node[1].step.path)
             })
 
-            let cc = find_children_at_path(store.replay_tree.steps_tree, node[1].step.path)
-                .filter(_ => !store.replay_tree.error_paths.includes(_.step.path))
-
-            if (!cc) {
-
-                return
-            }
-            let c = arr_rnd(cc)
-
-            set_is_busy_timeout(setTimeout(() => {
-                batch(() => {
-                    goto_path_force(c.step.path)
-                    set_hide_after_path(c.step.path)
-                    set_is_busy_timeout(undefined)
-                })
-            }, 600))
-
+            auto_play_if_can()
         }
     }
 
