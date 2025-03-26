@@ -62,7 +62,7 @@ const Home = () => {
 
 <section>
       <h1>See your progress, and do challenges</h1>
-      <img src='logo-big.webp' alt="See your Progress" style={"max-width:300px; width: 100%;"}></img>
+      <img src='/logo-big.webp' alt="See your Progress" style={"max-width:300px; width: 100%;"}></img>
       <br/>
       <p>Discover more features under development.</p>
       <p>With more to come in the future.</p>
