@@ -14,8 +14,8 @@ const Home = () => {
         <div  onClick={() => navigate('/openings')}class='feature'>
             <h2>Featured Openings</h2>
             <ul>
-                <li><span>Slav Defense</span></li>
-                <li><span>Sicilian Defense</span></li>
+                <li><span>Scotch Game</span></li>
+                <li><span>Scandinavian</span></li>
                 <li><span>French Defense</span></li>
                 <li><small>(or Import a Lichess Study or PGN)</small></li>
             </ul>
