@@ -139,7 +139,7 @@ function ShowComponent() {
 
     const has_attempted_due_move = createMemo(() => attempt_result() !== undefined)
 
-    const solution_uci = createMemo(() => due_move()?.tree_step_node.step.uci)
+    const solution_san = createMemo(() => due_move()?.tree_step_node.step.san)
 
     const color = createMemo(() => fen_turn(due_move()?.tree_step_node.step.before_fen ?? INITIAL_FEN))
     const movable = createMemo(() => !has_attempted_due_move())
@@ -229,7 +229,7 @@ function ShowComponent() {
 
         const is_previous_attempt = selected_due_move() !== undefined
 
-        if (uci === solution_uci()) {
+        if (san === solution_san()) {
             if (show_previous_moves()) {
                 set_attempt_result('solved-with-hint')
             } else {
