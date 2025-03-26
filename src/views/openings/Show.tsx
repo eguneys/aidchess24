@@ -645,7 +645,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
     const [color, set_color] = createSignal<Color>()
     const [movable, set_movable] = createSignal(false)
 
-    const movable_or_busy = createMemo(() => is_busy_timeout() === undefined && movable())
+    const movable_or_busy = createMemo(() => is_busy_timeout() === undefined && movable() && !end_of_practice())
 
     const orientation_with_practice_color = createMemo(() => color() ?? orientation())
 
@@ -688,30 +688,52 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
         if (c === undefined) {
             return
         }
-        set_color(c)
-        set_hide_after_path(undefined)
-        goto_path_force('')
+        batch(() => {
+            set_end_of_practice(false)
+            set_color(c)
+            set_hide_after_path(undefined)
+            goto_path_force('')
 
-        auto_play_if_can()
+            auto_play_if_can()
+        })
     }
 
+
+    const get_children = createMemo(() => {
+        let cc = find_children_at_path(store.replay_tree.steps_tree, store.replay_tree.cursor_path)
+
+        cc = cc.filter(_ => !store.replay_tree.error_paths.includes(_.step.path))
+
+        if (!cc || cc.length === 0) {
+            return undefined
+        }
+
+        return cc
+    })
+
+    const [end_of_practice, set_end_of_practice] = createSignal(false)
+
     const auto_play_if_can = () => {
-
+        let cc = get_children()
+        if (cc === undefined) {
+            set_end_of_practice(true)
+            return
+        }
         if (orientation_with_practice_color() !== c_props.turn) {
-            let cc = find_children_at_path(store.replay_tree.steps_tree, store.replay_tree.cursor_path)
 
-
-            cc = cc.filter(_ => !store.replay_tree.error_paths.includes(_.step.path))
-
-            if (!cc || cc.length === 0) {
-                return
-            }
             let c = arr_rnd(cc)
             set_is_busy_timeout(setTimeout(() => {
                 batch(() => {
                     goto_path_force(c.step.path)
                     set_hide_after_path(c.step.path)
                     set_is_busy_timeout(undefined)
+
+
+                    let cc = get_children()
+                    if (cc === undefined) {
+                        set_end_of_practice(true)
+                    }
+
                 })
             }, 500))
         }
@@ -756,7 +778,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
                             </Show>
                             <Show when={tab() === 'practice'}>
                             <h4>Practice with the Computer</h4>
-                            <Practice movable={movable_or_busy()} on_rematch={practice_on_rematch} color={orientation_with_practice_color()} set_movable={set_movable}/>
+                            <Practice end_of_practice={end_of_practice()} movable={movable_or_busy()} on_rematch={practice_on_rematch} color={orientation_with_practice_color()} set_movable={set_movable}/>
                             </Show>
                         </div>
                     </div>
@@ -773,7 +795,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
     </>)
 }
 
-function Practice(props: { color: Color, movable: boolean, set_movable: (_: boolean)=> void, on_rematch: (color?: Color) => void }) {
+function Practice(props: { end_of_practice: boolean, color: Color, movable: boolean, set_movable: (_: boolean)=> void, on_rematch: (color?: Color) => void }) {
 
     const [store, { goto_path, reload_replay_tree_with_cursor_path }] = useStore()
 
@@ -804,10 +826,14 @@ function Practice(props: { color: Color, movable: boolean, set_movable: (_: bool
     return (<>
         <div class='info-wrap'>
             <div class='status'>
+                <Show when={props.end_of_practice} fallback={
                 <Show when={props.movable} fallback={
                     <span>...</span>
                 }>
                     <span>Your turn.</span>
+                </Show>
+                }>
+                    <span>End of line.</span>
                 </Show>
             </div>
             <div class='info'>
