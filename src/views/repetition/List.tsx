@@ -188,6 +188,7 @@ function ListComponent() {
     }
 
     createComputed(() => load_studies('mine'))
+    createComputed(() => load_studies('featured'))
     createComputed(handle_load_chapters)
     createComputed(handle_load_due_moves)
 

@@ -543,14 +543,25 @@ async function db_change_root_fen(db: StudiesDB, id: EntityChapterId, fen: FEN) 
 }
 
 
-function new_study_entity(orientation?: Color): EntityStudyInsert {
+function new_featured_study_entity(id: EntityStudyId): EntityStudyInsert {
+    return {
+        id,
+        name: 'New Study',
+        is_edits_disabled: true,
+        predicate: 'featured',
+        section_ids: [],
+    }
+}
+
+
+
+function new_study_entity(): EntityStudyInsert {
     return {
         id: gen_id8(),
         name: 'New Study',
         is_edits_disabled: false,
         predicate: 'mine',
         section_ids: [],
-        orientation
     }
 }
 
@@ -802,6 +813,7 @@ export type StudiesDBReturn = {
     get_studies_by_predicate(predicate: StudiesPredicate): Promise<ModelStudy[]>;
     get_studies(): Promise<ModelStudy[]>;
 
+    new_featured_study_just_once_or_undefined(study_id: string): Promise<ModelStudy | undefined>
     new_study(): Promise<ModelStudy>
     new_section(study_id: EntityStudyId, name?: string): Promise<ModelSection>
     new_chapter(section_id: EntitySectionId, name?: string, pgn?: PGN): Promise<ModelChapter>
@@ -843,6 +855,19 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
 
 
     let res: StudiesDBReturn = {
+        async new_featured_study_just_once_or_undefined(id: EntityStudyId) {
+            let res = await db.studies.get(id)
+            if (res) {
+                return undefined
+            }
+            let entity = new_featured_study_entity(id)
+            await db_new_study(db, entity)
+            return {
+                id: entity.id!,
+                ...entity,
+                sections: []
+            }
+        },
         async new_study() { 
             let entity = new_study_entity()
             await db_new_study(db, entity) 

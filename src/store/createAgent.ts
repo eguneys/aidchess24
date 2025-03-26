@@ -50,6 +50,7 @@ type Studies = {
     featured(): Promise<ModelStudy[]>
     all(): Promise<ModelStudy[]>
     get(id: EntityStudyId): Promise<ModelStudy>
+    create_featured_once(id: EntityStudyId): Promise<ModelStudy | undefined>
     create(): Promise<ModelStudy>
     delete(id: EntityStudyId): Promise<void>
     create_section(id: EntityStudyId, name?: string): Promise<ModelSection>
@@ -73,6 +74,10 @@ function createAgentStudies(db: StudiesDBReturn): Studies {
         featured,
         all,
         get,
+        create_featured_once: async (id: EntityStudyId) => {
+            let study = await db.new_featured_study_just_once_or_undefined(id)
+            return study
+        },
         create: async () => {
             let study = await db.new_study()
             return study

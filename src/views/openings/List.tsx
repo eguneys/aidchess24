@@ -1,6 +1,6 @@
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import './List.scss'
-import { createEffect, createMemo, For, Show, Suspense } from 'solid-js'
+import { createEffect, createMemo, createSelector, For, Show, Suspense } from 'solid-js'
 import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
@@ -71,14 +71,16 @@ const ListComponent = (props: { studies: ModelStudy[], tab: Tab, set_tab: (_: Ta
         navigate('/openings/' + study.id)
     }
 
+    const isActive = createSelector(tab)
+
     return (<>
     <main class="openings-list">
         <aside class='subnav'>
             <nav>
-                <a onClick={() => set_tab('mine')} class={'mine' + (tab() === 'mine' ? ' active': '')}>My Openings</a>
-                <a onClick={() => set_tab('featured')} class={'featured' + (tab() === 'featured' ? ' active': '')}>Featured</a>
-                <a onClick={() => set_tab('auto')} class={'auto' + (tab() === 'auto' ? ' active': '')}>Auto Generated</a>
-                <a onClick={() => set_tab('help')} class={'help' + (tab() === 'help' ? ' active': '')}><i data-icon=""></i>Help</a>
+                <a onClick={() => set_tab('mine')} class={'mine'} classList={{active: isActive('mine')}}>My Openings</a>
+                <a onClick={() => set_tab('featured')} class={'featured'} classList={{active: isActive('featured')}}>Featured</a>
+                <a onClick={() => set_tab('auto')} class={'auto'} classList={{active: isActive('auto')}}>Auto Generated</a>
+                <a onClick={() => set_tab('help')} class={'help'} classList={{active: isActive('help')}}><i data-icon=""></i>Help</a>
             </nav>
         </aside>
         <div class='content'>
@@ -100,6 +102,7 @@ const ListComponent = (props: { studies: ModelStudy[], tab: Tab, set_tab: (_: Ta
                     }>{study => 
                         <StudyListItem study={study} on_click_study={on_click_study}/>
                     }</For>
+                    <PopulateFeaturedOpeningsOnce/>
                     </Suspense>
                 </div>
             </Show>
@@ -144,6 +147,15 @@ const ListComponent = (props: { studies: ModelStudy[], tab: Tab, set_tab: (_: Ta
         </Show>
         </div>
     </main>
+    </>)
+}
+
+const PopulateFeaturedOpeningsOnce = () => {
+    let [,{populate_featured_studies_once}] = useStore()
+
+    populate_featured_studies_once()
+
+    return (<>
     </>)
 }
 

@@ -36,6 +36,10 @@ export type StoreActions = {
     chapter_as_export_pgn(study_name: string, section_name: string, chapter: ModelChapter): Promise<string>
 
     study_as_export_pgn(study_id: EntityStudyId): Promise<string>
+    import_from_pgn(study: ModelStudy, default_section_name: string, pgns: PGN[], section?: ModelSection): Promise<void>
+
+    create_featured_once(study_id: EntityStudyId): Promise<ModelStudy | undefined>
+    populate_featured_studies_once(): Promise<void>
 
 
     reload_replay_tree_with_cursor_path(path: Path): void

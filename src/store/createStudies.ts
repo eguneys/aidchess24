@@ -1,9 +1,10 @@
 import { SetStoreFunction } from "solid-js/store";
 import type { Agent } from "./createAgent";
 import { type StoreActions, type StoreState } from './'
-import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelStudy, StudiesPredicate } from "./sync_idb_study";
+import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert, ModelChapter, ModelSection, ModelStudy, StudiesPredicate } from "./sync_idb_study";
 import { batch, createSignal } from "solid-js";
-import { createAsync } from "@solidjs/router";
+import { _mergeSearchString, createAsync } from "@solidjs/router";
+import { parse_PGNS, PGN } from "../components2/parse_pgn";
 
 export function createStudies(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
     type Source = ["studies", StudiesPredicate] | ["study", EntityStudyId]
@@ -56,6 +57,14 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
         load_study(id: EntityStudyId) {
             set_source(['study', id])
         },
+        async create_featured_once(id: EntityStudyId) {
+            let study = await agent.Studies.create_featured_once(id)
+            if (!study) {
+                return undefined
+            }
+            setState("studies", { [study.id]: study })
+            return study
+        },
         async create_study() {
             let study = await agent.Studies.create()
             setState("studies", { [study.id]: study })
@@ -71,11 +80,11 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
                 throw err
             }
         },
-        async update_study(data: EntityStudyInsert) {
+        async update_study(data: Partial<EntityStudyInsert>) {
             await agent.Studies.update(data)
             setState("studies", data.id!, data)
         },
-        async update_section(study_id: EntityStudyId, data: EntitySectionInsert) {
+        async update_section(study_id: EntityStudyId, data: Partial<EntitySectionInsert>) {
             await agent.Studies.update_section(data)
             batch(() => {
                 setState("studies", study_id, "sections", _ => _.id === data.id, data)
@@ -134,8 +143,93 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
             }
 
             return res
+        },
+        async import_from_pgn(study: ModelStudy, default_section_name: string, pgns: PGN[], section?: ModelSection) {
+
+            let study_name = study.name
+            let sections: Record<string, [string, PGN][]> = {}
+            actions.update_study!({ id: study.id, is_edits_disabled: true })
+
+            for (let pgn of pgns) {
+                let event = pgn.event!
+                let [default_study_name, section_name, chapter_name] = event.split(':')
+
+                if (!chapter_name) {
+                    chapter_name = section_name
+                    section_name = default_section_name
+                }
+
+
+                if (sections[section_name] === undefined) {
+                    sections[section_name] = []
+                }
+
+                sections[section_name].push([chapter_name, pgn])
+                study_name = default_study_name
+            }
+
+            await actions.update_study!({ id: study.id, name: study_name })
+
+            let section_name = Object.keys(sections)[0]
+            if (section) {
+                await actions.update_section!(study.id, { id: section.id, name: section_name })
+            }
+
+            let s_chapter: ModelChapter | undefined = undefined
+            let s_section: ModelSection | undefined = section
+
+            for (section_name of Object.keys(sections)) {
+                if (!section) {
+                    section = await actions.create_section!(study.id, section_name)
+                }
+
+                let chapters = sections[section_name]
+                console.log(sections, chapters)
+                for (let [chapter_name, pgn] of chapters) {
+                    s_chapter = await actions.create_chapter!(study.id, section!.id, chapter_name, pgn)
+                }
+                s_section = section
+                section = undefined
+            }
+
+            if (s_section && s_chapter) {
+                actions.update_study!({ id: study.id, selected_section_id: s_section.id })
+                actions.update_section!(study.id, { id: s_section.id, selected_chapter_id: s_chapter.id })
+            }
+        },
+        async populate_featured_studies_once() {
+            await populate_featured_studies_once(agent, actions as StoreActions)
+            actions.load_studies!('featured')
         }
     })
 
     return studies
+}
+
+
+async function populate_featured_studies_once(agent: Agent, actions: StoreActions) {
+
+    let featured_studies: Record<string, string> = {
+        'e4e5white1heroku': '/featured_pgns/lichess_study_1e4-e5-black-repertoire-introduction_by_heroku_2025.03.26.pgn',
+        'e4e5black1heroku': '/featured_pgns/lichess_study_1e4-white-repertoire-introduction_by_heroku_2025.03.26.pgn',
+    }
+
+    let featured = await agent.Studies.featured()
+
+    let ids = Object.keys(featured_studies)
+
+    featured.filter(_ => !ids.includes(_.id)).forEach(_ => actions.delete_study(_.id))
+
+
+    await Promise.all(ids.filter(_ => !featured.find(f => f.id === _)).map(async id => {
+        let study = await actions.create_featured_once(id)
+        if (study === undefined) {
+            return
+        }
+
+        let pgns = await fetch(featured_studies[id]).then(_ => _.text()).then(parse_PGNS)
+
+        await actions.import_from_pgn(study, "New Section", pgns)
+    }))
+
 }

@@ -303,60 +303,12 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
 
 
 
-    let [,{ create_section, create_chapter }] = useStore()
+    let [,{ import_from_pgn }] = useStore()
     const on_import_pgns = async (pgns: PGN[], default_section_name: string) => {
         let section = edit_section_dialog() ? props.selected_section : undefined
         set_edit_section_dialog(false)
 
-        let study_name = props.study.name
-        let sections: Record<string, [string, PGN][]> = {}
-        update_study({ id: props.study.id, is_edits_disabled: true })
-
-        for (let pgn of pgns) {
-            let event = pgn.event!
-            let [default_study_name, section_name, chapter_name] = event.split(':')
-
-            if (!chapter_name) {
-                chapter_name = section_name
-                section_name = default_section_name
-            }
-
-
-            if (sections[section_name] === undefined) {
-                sections[section_name] = []
-            }
-
-            sections[section_name].push([chapter_name, pgn])
-            study_name = default_study_name
-        }
-
-        await on_update_study({ id: props.study.id, name: study_name })
-
-        let section_name = Object.keys(sections)[0]
-        if (section) {
-            await on_edit_section(props.study.id, { id: section.id, name: section_name })
-        }
-
-        let s_chapter: ModelChapter | undefined = undefined
-        let s_section: ModelSection | undefined = section
-
-        for (section_name of Object.keys(sections)) {
-            if (!section) {
-                section = await create_section(props.study.id, section_name)
-            }
-
-            let chapters = sections[section_name]
-            for (let [chapter_name, pgn] of chapters) {
-                s_chapter = await create_chapter(props.study.id, section!.id, chapter_name, pgn)
-            }
-            s_section = section
-            section = undefined
-        }
-
-        if (s_section && s_chapter) {
-            update_study({ id: props.study.id, selected_section_id: s_section.id })
-            update_section(props.study.id, { id: s_section.id, selected_chapter_id: s_chapter.id })
-        }
+        await import_from_pgn(props.study, default_section_name, pgns, section)
     }
 
 
