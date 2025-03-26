@@ -224,31 +224,33 @@ function ShowComponent() {
 
 
         let node = await add_child_san_to_current_path(san)
-        set_hide_after_path(undefined)
-        goto_path(node.step.path)
+        batch(() => {
+            set_hide_after_path(undefined)
+            goto_path(node.step.path)
 
-        const is_previous_attempt = selected_due_move() !== undefined
+            const is_previous_attempt = selected_due_move() !== undefined
 
-        if (san === solution_san()) {
-            if (show_previous_moves()) {
-                set_attempt_result('solved-with-hint')
-            } else {
-                if (is_previous_attempt) {
+            if (san === solution_san()) {
+                if (show_previous_moves()) {
                     set_attempt_result('solved-with-hint')
                 } else {
-                    set_attempt_result('solved')
+                    if (is_previous_attempt) {
+                        set_attempt_result('solved-with-hint')
+                    } else {
+                        set_attempt_result('solved')
+                    }
                 }
-            }
-            set_success_path(node.step.path)
+                set_success_path(node.step.path)
 
-        } else {
-            if (show_previous_moves()) {
-                set_attempt_result('failed-with-hint')
             } else {
-                set_attempt_result('failed')
+                if (show_previous_moves()) {
+                    set_attempt_result('failed-with-hint')
+                } else {
+                    set_attempt_result('failed')
+                }
+                set_failed_path(node.step.path)
             }
-            set_failed_path(node.step.path)
-        }
+        })
     }
 
     const on_show_answer = () => {

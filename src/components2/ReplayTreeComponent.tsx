@@ -239,7 +239,7 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
                         .filter(_ => _ !== sibling.step.path)
                 })
 
-                if (props.replay_tree.error_paths.includes(branch.step.path)) {
+                if (props.replay_tree.error_paths.includes(branch.step.path) || props.replay_tree.failed_path === branch.step.path) {
                     return
                 }
                 sticky_paths.push(branch.step.path)
