@@ -361,19 +361,6 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     const on_export_lichess = () => {
     }
 
-    async function study_as_export_pgn() {
-        let res = await Promise.all(props.sections.map(section =>
-            Promise.all(section.chapter_ids.map(id => store.chapters.list.find(_ => _.id === id)!).map(chapter =>
-                chapter_as_export_pgn(props.study.name, section.name, chapter)
-            )).then(_ => _.join('\n\n'))
-        )).then(_ => _.join('\n\n\n'))
-        return res
-    }
-
-    const on_export_pgn = async () => {
-        let res = await study_as_export_pgn()
-        downloadBlob(res, `${props.study.name}.pgn`)
-    }
     const on_copy_pgn = async () => {
         let res = await chapter_as_export_pgn(props.study.name, props.selected_section!.name, props.selected_chapter!)
         navigator.clipboard.writeText(res)
@@ -511,7 +498,7 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
                 <SectionsListComponent {...props} is_edits_disabled={props.study.is_edits_disabled} on_edit_study={() => set_edit_study_dialog(true)} on_edit_section={() => set_edit_section_dialog(true)} on_edit_chapter={() => set_edit_chapter_dialog(true)}/>
             </div>
             <div class='tools-wrap'>
-                <ToolbarComponent {...props} fen={c_props.fen} on_export_lichess={on_export_lichess} on_export_pgn={on_export_pgn} on_copy_pgn={on_copy_pgn}/>
+                <ToolbarComponent {...props} fen={c_props.fen} on_export_lichess={on_export_lichess} on_copy_pgn={on_copy_pgn}/>
             </div>
             <Show when={edit_section_dialog()}>
                 <DialogComponent klass='edit-section' on_close={() => set_edit_section_dialog(false)}>
@@ -1090,7 +1077,7 @@ function StudyDetailsComponent(_props: { study: ModelStudy, section?: ModelSecti
 }
 
 
-function ToolbarComponent(props: { study: ModelStudy, fen: FEN, on_export_lichess: () => void, on_export_pgn: () => void, on_copy_pgn: () => void }) {
+function ToolbarComponent(props: { study: ModelStudy, fen: FEN, on_export_lichess: () => void, on_copy_pgn: () => void }) {
     const [, { update_study}] = useStore()
 
     const [tab, set_tab] = createSignal('share')
@@ -1104,6 +1091,16 @@ function ToolbarComponent(props: { study: ModelStudy, fen: FEN, on_export_liches
     const is_edits_disabled = props.study.is_edits_disabled;
     const set_is_edits_disabled = (value: boolean) => update_study({ id: props.study.id, is_edits_disabled: value })
 
+
+    const [pending_export, set_pending_export] = createSignal(false)
+    const [,{ study_as_export_pgn }] = useStore()
+
+    const on_export_pgn = async () => {
+        set_pending_export(true)
+        let res = await study_as_export_pgn(props.study.id)
+        set_pending_export(false)
+        downloadBlob(res, `${props.study.name}.pgn`)
+    }
 
     return (<>
         <div class='tabs'>
@@ -1122,8 +1119,8 @@ function ToolbarComponent(props: { study: ModelStudy, fen: FEN, on_export_liches
             <Show when={tab() === 'share'}>
                 <div class='export'>
                     <button onClick={on_copy_pgn}><CopiedI on_copy={on_copied_pgn()}/>Copy PGN</button>
-                    <button onClick={props.on_export_pgn}>Export as PGN</button>
-                    <button onClick={props.on_export_lichess}>Export to Lichess Study</button>
+                    <button onClick={on_export_pgn} disabled={pending_export()}><Show when={pending_export()} fallback={<>Export as PGN</>}>Loading...</Show></button>
+                    <button onClick={props.on_export_lichess} disabled={true}>Export to Lichess Study</button>
                 </div>
                 <div class='fen'>
                 <h4>FEN</h4>

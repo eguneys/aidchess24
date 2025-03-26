@@ -561,9 +561,14 @@
                         display: flex;
                         gap: 0.4em;
 
-                        &:hover {
+                        &:hover:not([disabled]) {
                             background: theme.$ac-li-orange-2;
                         color: theme.$text-secondary;
+                        }
+
+                        &[disabled] {
+                            background: theme.$text-secondary-2;
+                            opacity: 0.8;
                         }
                     }
                 }

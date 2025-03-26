@@ -115,6 +115,25 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
 
                 return [...section_ids]
             })
+        },
+        async study_as_export_pgn(study_id: EntityStudyId) {
+            let res = ''
+            let study = await agent.Studies.get(study_id)
+
+            for (let section_id of study.section_ids) {
+                let section = study.sections.find(_ => _.id === section_id)!
+
+                for (let chapter_id of section.chapter_ids) {
+                    let chapter = section.chapters.find(_ => _.id === chapter_id)!
+
+                    res += await actions.chapter_as_export_pgn!(study.name, section.name, chapter)
+                    res += '\n\n'
+                }
+                
+                res += '\n\n\n'
+            }
+
+            return res
         }
     })
 
