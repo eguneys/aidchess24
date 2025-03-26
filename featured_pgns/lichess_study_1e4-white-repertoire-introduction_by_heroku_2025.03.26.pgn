@@ -1,0 +1,165 @@
+[Event "1.e4 White Repertoire Introduction: 1.e4 e5 Scotch Game: 4...Nf6"]
+[Site "https://lichess.org/study/qmJrweCP/pKBqo7pa"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "C45"]
+[Opening "Scotch Game: Mieses Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 e5 Scotch Game: 4...Nf6"]
+[UTCDate "2025.03.26"]
+[UTCTime "15:59:01"]
+
+1. e4 e5 2. Nf3 Nc6 3. d4 exd4 4. Nxd4 Nf6 5. Nxc6 bxc6 6. e5 Qe7 7. Qe2 Nd5 8. c4 Ba6 9. b3 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 e5 Scotch Game: 4...Bc5 5...Qf6"]
+[Site "https://lichess.org/study/qmJrweCP/bHFR8Om1"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "C45"]
+[Opening "Scotch Game: Classical Variation, Intermezzo Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 e5 Scotch Game: 4...Bc5 5...Qf6"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:01:25"]
+
+1. e4 e5 2. Nf3 Nc6 3. d4 exd4 4. Nxd4 Bc5 5. Nxc6 Qf6 6. Qf3 bxc6 (6... dxc6 7. Nd2 Be6 8. Bd3 O-O-O 9. O-O) 7. Nc3 d6 8. Na4 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 e5 Scotch Game: 4...Nxd4"]
+[Site "https://lichess.org/study/qmJrweCP/DQ71ikbC"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "C44"]
+[Opening "Scotch Game: Lolli Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 e5 Scotch Game: 4...Nxd4"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:08:32"]
+
+1. e4 e5 2. Nf3 Nc6 3. d4 exd4 4. Nxd4 Nxd4 5. Qxd4 Qf6 6. e5 Qb6 7. Be3 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 vs Scandinavian: 2...Nf6 4...Bf5"]
+[Site "https://lichess.org/study/qmJrweCP/wVlwF30q"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Marshall Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 vs Scandinavian: 2...Nf6 4...Bf5"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:13:34"]
+
+1. e4 d5 2. exd5 Nf6 3. d4 Nxd5 4. Nf3 Bf5 (4... Bg4 5. h3) 5. Nh4 Bc8 6. g3 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 vs Scandinavian: 2...Nf6 4...g6"]
+[Site "https://lichess.org/study/qmJrweCP/JDhH9o3D"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Richter Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 vs Scandinavian: 2...Nf6 4...g6"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:20:26"]
+
+1. e4 d5 2. exd5 Nf6 3. d4 Nxd5 4. Nf3 g6 5. c4 Nb6 6. h3 Bg7 7. Nc3 O-O 8. Be2 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 vs Scandinavian: 2...Qxd4 3...Qa5"]
+[Site "https://lichess.org/study/qmJrweCP/qt0EAzaW"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Lasker Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 vs Scandinavian: 2...Qxd4 3...Qa5"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:42:36"]
+
+1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. d4 Nf6 5. Nf3 Bg4 (5... c6 6. Bd2 Bf5) 6. h3 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 vs Scandinavian: 2...Qxd4 3...Qd8"]
+[Site "https://lichess.org/study/qmJrweCP/QLc6gg7J"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Valencian Variation, Main Line"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 vs Scandinavian: 2...Qxd4 3...Qd8"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:47:49"]
+
+1. e4 d5 2. exd5 Qxd5 3. Nc3 Qd8 4. d4 Nf6 5. Nf3 Bg4 6. h3 Bh5 7. g4 Bg6 8. Ne5 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 vs Caro Kann Advance: 3...Bf5"]
+[Site "https://lichess.org/study/qmJrweCP/wvZFvcIK"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B12"]
+[Opening "Caro-Kann Defense: Advance Variation, Tal Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 vs Caro Kann Advance: 3...Bf5"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:13:16"]
+
+1. e4 c6 2. d4 d5 3. e5 Bf5 4. h4 h5 5. Bd3 Bxd3 6. Qxd3 e6 7. Bg5 Qb6 8. Nd2 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 vs Caro Kann Advance: 3...c5"]
+[Site "https://lichess.org/study/qmJrweCP/JbOIByEp"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B12"]
+[Opening "Caro-Kann Defense: Advance Variation, Botvinnik-Carls Defense"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 vs Caro Kann Advance: 3...c5"]
+[UTCDate "2025.03.26"]
+[UTCTime "17:07:10"]
+
+1. e4 c6 2. d4 d5 3. e5 c5 4. dxc5 Nc6 5. a3 Nxe5 6. b4 *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 vs French Exchange: 4...Bd6"]
+[Site "https://lichess.org/study/qmJrweCP/nQ4CCYaS"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "C01"]
+[Opening "French Defense: Exchange Variation"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 vs French Exchange: 4...Bd6"]
+[UTCDate "2025.03.26"]
+[UTCTime "16:11:40"]
+
+1. e4 e6 2. d4 d5 3. exd5 exd5 4. Nf3 Nf6 5. Bd3 Bd6 6. Qe2+ Qe7 7. Qxe7+ *
+
+
+[Event "1.e4 White Repertoire Introduction: 1.e4 e5 Petroff: Stafford Gambit"]
+[Site "https://lichess.org/study/qmJrweCP/Xec81ZP4"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "C42"]
+[Opening "Petrov's Defense: Stafford Gambit"]
+[Annotator "https://lichess.org/@/heroku"]
+[StudyName "1.e4 White Repertoire Introduction"]
+[ChapterName "1.e4 e5 Petroff: Stafford Gambit"]
+[UTCDate "2025.03.26"]
+[UTCTime "18:00:10"]
+
+1. e4 e5 2. Nf3 Nf6 3. Nxe5 Nc6 4. Nxc6 dxc6 5. e5 Ne4 6. d4 *
+
+
