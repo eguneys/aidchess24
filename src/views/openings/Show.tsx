@@ -12,7 +12,7 @@ import { get_letter_nth } from "../../components2/hard_limits"
 import '../../components2/StudyComponent.scss'
 import { EditChapterComponent, EditSectionComponent, EditStudyComponent } from "../../components2/EditStudyComponent"
 import { PGN } from "../../components2/parse_pgn"
-import { as_pgn_for_path, createReplayTreeComputed, find_at_path, find_children_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
+import { as_pgn_for_path, create_sound_effects, createReplayTreeComputed, find_at_path, find_children_at_path, MoveContextMenuComponent, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import { PlayUciBoard } from "../../components2/PlayUciBoard"
 import { Key } from "chessground/types"
 import { Color, opposite, parseSquare, parseUci } from "chessops"
@@ -155,6 +155,8 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
     set_write_enabled_replay_tree(!props.study.is_edits_disabled)
 
     let c_props = createReplayTreeComputed(store)
+
+    create_sound_effects(c_props)
 
     let [context_menu_open, set_context_menu_open] = createSignal<Path | undefined>()
     let [annotate_sub_menu_open, set_annotate_sub_menu_open] = createSignal(false)
@@ -559,6 +561,7 @@ function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () 
     set_write_enabled_replay_tree(false)
 
     let c_props = createReplayTreeComputed(store)
+    create_sound_effects(c_props)
 
     const [tab, set_tab] = createSignal('practice')
 

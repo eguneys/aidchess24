@@ -9,7 +9,7 @@ import { RepeatAttemptResult } from "../../store/repeat_types"
 import { fen_pos, fen_turn, nag_to_glyph, parent_path, Path, Ply } from "../../store/step_types"
 import { non_passive_on_wheel, PlayUciBoard } from "../../components2/PlayUciBoard"
 import { useStore } from "../../store"
-import { createReplayTreeComputed, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
+import { create_sound_effects, createReplayTreeComputed, ReplayTreeComponent } from "../../components2/ReplayTreeComponent"
 import TimeAgo from "../../components2/TimeAgo"
 import { Key } from "chessground/types"
 import { INITIAL_FEN } from "chessops/fen"
@@ -65,6 +65,7 @@ function ShowComponent() {
     }] = useStore()
 
     let c_props = createReplayTreeComputed(store)
+    create_sound_effects(c_props)
 
     const replay_tree = () => store.replay_tree
     const fen = () => c_props.fen

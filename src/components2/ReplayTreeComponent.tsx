@@ -4,6 +4,7 @@ import { FEN, fen_turn, parent_path, Path, SAN, Step, UCI } from "../store/step_
 import './ReplayTreeComponent.scss'
 import { INITIAL_FEN } from "chessops/fen"
 import { Color } from "chessops"
+import { usePlayer } from "../sound"
 
 export function nodes_at_and_after_path(tree: ModelStepsTree, path: Path): ModelTreeStepNode[] {
     let at = find_at_path(tree, path)
@@ -248,6 +249,8 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
     }))
 
 
+
+
     const get_prev_path = createMemo(() => {
         let c = cursor_path()
 
@@ -412,6 +415,8 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
 
     const step_at_cursor_path = createMemo(() => find_at_path(props.replay_tree.steps_tree, cursor_path()))
 
+
+
     return {
         get initial_fen() { return initial_fen() },
         get fen() { return fen() },
@@ -432,6 +437,21 @@ export function createReplayTreeComputed(props: { replay_tree: ModelReplayTree }
         get get_up_path() { return get_up_path() }
     }
 }
+
+export const create_sound_effects = (props: { step_at_cursor_path: ModelTreeStepNode | undefined }) => {
+    const Player = usePlayer()
+    Player.setVolume(0.2)
+
+    createEffect(on(() => props.step_at_cursor_path, (current, prev) => {
+        if (current) {
+            if (!prev || prev.step.ply === current.step.ply - 1) {
+                Player.move(current.step)
+            }
+        }
+    }))
+}
+
+
 
 export const ReplayTreeComponent = (props: { features?: JSX.Element, feature_content?: JSX.Element, handle_goto_path: (path?: Path) => void, replay_tree: ModelReplayTree, lose_focus: boolean, on_context_menu?: (e: MouseEvent, _: Path) => void  }) => {
 
