@@ -277,7 +277,7 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
             <Show when={isActiveTab('pgn')}>
                 <div class='group'>
                 <label for='name'>Import from PGN</label>
-                <textarea rows={10} onChange={(e) => set_import_pgn_text(e.target.value)} name="name" id="name" type="text" placeholder="Paste PGN here."></textarea>
+                <textarea rows={10} onChange={(e) => set_import_pgn_text(e.target.value)} name="name" id="name" placeholder="Paste PGN here."></textarea>
                 </div>
             </Show>
             <Show when={isActiveTab('empty')}>
