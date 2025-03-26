@@ -30,6 +30,10 @@ export function createReplayTree(agent: Agent, actions: Partial<StoreActions>, s
 
     const replay_tree = createAsync<ModelReplayTree>(async () => {
         let s = source()
+
+
+        //await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
+
         if (!s) {
             return default_replay_tree()
         }

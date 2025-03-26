@@ -140,390 +140,6 @@ function ShowComponent(props: ShowComputedPropsOpStudy) {
     </>)
 }
 
-
-function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () => void }) {
-
-
-    const [store, {
-        goto_path,
-        goto_path_force,
-        goto_path_if_can,
-        set_hide_after_path,
-        add_child_san_to_success_or_error_path_no_save,
-        set_write_enabled_replay_tree
-    }] = useStore()
-
-    set_write_enabled_replay_tree(false)
-
-    let c_props = createReplayTreeComputed(store)
-
-    const [tab, set_tab] = createSignal('practice')
-
-
-    const set_on_wheel = (i: number) => {
-        if (i > 0) {
-            goto_path_if_can(c_props.get_next_path)
-        } else {
-            goto_path_if_can(c_props.get_prev_path)
-        }
-    }
-
-    const [custom_orientation, set_custom_orientation] = createSignal<Color>()
-
-    const orientation = createMemo(() => custom_orientation() ?? props.selected_chapter?.orientation ?? props.selected_section?.orientation ?? props.study.orientation ?? 'white')
-
-    const on_key_down = (e: KeyboardEvent) => {
-
-        if (e.key === 'f') {
-            batch(() => {
-                set_custom_orientation(opposite(orientation()))
-                set_color(undefined)
-
-                auto_play_if_can()
-            })
-        }
-
-    }
-    onMount(() => {
-        document.addEventListener('keydown', on_key_down)
-        onCleanup(() => {
-            document.removeEventListener('keydown', on_key_down)
-        })
-    })
-
-    let annotation = createMemo(() => {
-        let step = c_props.step_at_cursor_path
-
-        if (!step) {
-            return []
-        }
-
-        let nag = step.nags?.[0]
-
-        if (!nag) {
-            return []
-        }
-
-        return annotationShapes(step.step.uci, step.step.san, nag_to_glyph(nag))
-    })
-
-
-    const on_play_orig_key = async (orig: Key, dest: Key) => {
-
-        const pos = () => fen_pos(c_props.fen)
-
-        let position = pos()
-        let turn_color = position.turn
-
-        let piece = position.board.get(parseSquare(orig)!)!
-
-        let uci = orig + dest
-        if (piece.role === 'pawn' &&
-            ((dest[1] === '8' && turn_color === 'white') || (dest[1] === '1' && turn_color === 'black'))) {
-            uci += 'q'
-        }
-
-        let move = parseUci(uci)!
-        let san = makeSan(position, move)
-
-        on_play_san(san)
-    }
-
-    const chapter_title_or_detached = createMemo(() => {
-        return props.selected_chapter?.name ?? '[detached]'
-    })
-
-    const handle_goto_path = (path?: Path) => {
-        goto_path_if_can(path)
-    }
-
-    const [is_busy_timeout, set_is_busy_timeout] = createSignal<number>()
-
-    const [color, set_color] = createSignal<Color>()
-    const [movable, set_movable] = createSignal(false)
-
-    const movable_or_busy = createMemo(() => is_busy_timeout() === undefined && movable())
-
-    const orientation_with_practice_color = createMemo(() => color() ?? orientation())
-
-    const quiz_nodes = createMemo(() => [])
-
-    const on_play_san = async (san: SAN) => {
-        if (tab() === 'practice') {
-            on_play_san_practice(san)
-        }
-    }
-
-
-    const on_play_san_practice = async (san: SAN) => {
-
-        let node = await add_child_san_to_success_or_error_path_no_save(san)
-        if (!node) {
-            return
-        }
-
-        if (node[0] === 'error') {
-            goto_path_force(node[1].step.path)
-
-            set_is_busy_timeout(setTimeout(() => {
-                batch(() => {
-                    goto_path(parent_path(node[1].step.path))
-                    set_is_busy_timeout(undefined)
-                })
-            }, 600))
-        } else {
-            batch(() => {
-                goto_path_force(node[1].step.path)
-                set_hide_after_path(node[1].step.path)
-            })
-
-            auto_play_if_can()
-        }
-    }
-
-    const practice_on_rematch = (c?: Color) => {
-        if (c === undefined) {
-            return
-        }
-        set_color(c)
-        set_hide_after_path(undefined)
-        goto_path_force('')
-
-        auto_play_if_can()
-    }
-
-    const auto_play_if_can = () => {
-
-        if (orientation_with_practice_color() !== c_props.turn) {
-            let cc = find_children_at_path(store.replay_tree.steps_tree, store.replay_tree.cursor_path)
-
-
-            cc = cc.filter(_ => !store.replay_tree.error_paths.includes(_.step.path))
-
-            if (!cc || cc.length === 0) {
-                return
-            }
-            let c = arr_rnd(cc)
-            set_is_busy_timeout(setTimeout(() => {
-                batch(() => {
-                    goto_path_force(c.step.path)
-                    set_hide_after_path(c.step.path)
-                    set_is_busy_timeout(undefined)
-                })
-            }, 500))
-        }
-    }
-
-    return (<>
-        <main class='openings-show study'>
-            <div class='details-wrap'>
-                <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
-            </div>
-            <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-                <PlayUciBoard orientation={orientation_with_practice_color()} shapes={annotation()} movable={movable_or_busy()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
-            </div>
-            <div class='replay-wrap'>
-                <div class='header'>
-                    {chapter_title_or_detached()}
-                </div>
-                <ReplayTreeComponent handle_goto_path={handle_goto_path} replay_tree={store.replay_tree} lose_focus={false} on_context_menu={() => {}}
-                features = {
-                    <>
-                    <button onClick={props.on_feature_practice_off} class='feature practice'><i data-icon=""></i></button>
-                    </>
-                }
-                feature_content = {
-                    <>
-                    <div class='practice-feature'>
-                        <div class='tabs'>
-                            <div onClick={() => set_tab('practice')} class={'feature tab' + (tab() === 'practice' ? ' active': '')}>Practice</div>
-                            {/*
-                            <div onClick={() => set_tab('quiz')} class={'quiz tab' + (tab() === 'quiz' ? ' active': '')}>Quiz</div>
-                            <div onClick={() => set_tab('deathmatch')} class={'deathmatch tab' + (tab() === 'deathmatch' ? ' active': '')}>Deathmatch</div>
-                            */}
-                        </div>
-                        <div class={'content ' + tab()}>
-                            <Show when={tab() === 'quiz'}>
-                            <h4>Take Quiz</h4>
-                            <TakeQuiz nodes={quiz_nodes()}/>
-                            </Show>
-                            <Show when={tab() === 'deathmatch'}>
-                            <h4>Play Deathmatch</h4>
-                            <PlayDeathmatch />
-                            </Show>
-                            <Show when={tab() === 'practice'}>
-                            <h4>Practice with the Computer</h4>
-                            <Practice movable={movable_or_busy()} on_rematch={practice_on_rematch} color={orientation_with_practice_color()} set_movable={set_movable}/>
-                            </Show>
-                        </div>
-                    </div>
-                    </>
-                }
-                />
-            </div>
-            <div class='sections-wrap'>
-                <SectionsListComponent {...props} is_edits_disabled={true}/>
-            </div>
-            <div class='tools-wrap'>
-            </div>
-        </main>
-    </>)
-}
-
-function Practice(props: { color: Color, movable: boolean, set_movable: (_: boolean)=> void, on_rematch: (color?: Color) => void }) {
-
-    const [store, { goto_path, reload_replay_tree_with_cursor_path }] = useStore()
-
-    const [, start] = useTransition()
-    const on_rematch = (color?: Color) => {
-        if (color === undefined) {
-            start(() => {
-                reload_replay_tree_with_cursor_path(store.replay_tree.cursor_path)
-            })
-            return
-        }
-        batch(() => {
-
-            start(() => {
-                reload_replay_tree_with_cursor_path('')
-                props.on_rematch(color)
-            })
-        })
-    }
-
-    const color = createMemo(() => props.color)
-
-    const engine_color = createMemo(() => opposite(color()))
-
-    props.set_movable(true)
-    goto_path('')
-
-    return (<>
-        <div class='info-wrap'>
-            <div class='status'>
-                <Show when={props.movable} fallback={
-                    <span>...</span>
-                }>
-                    <span>Your turn.</span>
-                </Show>
-            </div>
-            <div class='info'>
-                <p>
-                    Computer will follow the lines in the opening.
-                </p>
-                <p>
-                    Moves will be hidden.
-                </p>
-            </div>
-        </div>
-        <div class='rematch-buttons buttons'>
-            <button onClick={() => on_rematch()} class='end'>End</button>
-            <button onClick={() => on_rematch(color())} class='rematch'>Rematch</button>
-            <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
-        </div>
-    </>)
-}
-
-type QuizItem = {
-    step: ModelTreeStepNode,
-    is_solved?: boolean
-}
-
-function QuizItem(step: ModelTreeStepNode) {
-
-    let [is_solved, set_is_solved] = createSignal<boolean | undefined>(undefined)
-
-    return {
-        step,
-        get is_solved() { return is_solved() },
-        set is_solved(s: boolean | undefined) { set_is_solved(s)}
-    }
-}
-
-function TakeQuiz(props: { nodes: ModelTreeStepNode[] }) {
-
-    let [indexes, _set_indexes] = createSignal([...Array(15).keys()])
-    
-    const [status, _set_status] = createSignal('info')
-    const make_quiz_item = () => QuizItem(arr_rnd(props.nodes))
-
-    let items = createMemo(mapArray(indexes, make_quiz_item))
-
-    return (<>
-    <div class='info-wrap'>
-        <div class='status'>
-            <Show when={status()=== 'info'}>
-                Press start
-            </Show>
-
-            <Show when={status()=== 'in-progress'}>
-                <span>1 of 15</span>
-            </Show>
-
-            <Show when={status()=== 'end'}>
-                <button class='retake'>Re-take</button>
-            </Show>
-        </div>
-        <div class='info'>
-            <Show when={status() === 'info'}>
-                <p>
-                    You are given 15 random positions from the opening.
-                    Play the correct moves.
-                </p>
-            </Show>
-        </div>
-     </div>
-        <div class='quiz-history'>
-            <For each={items()}>{ (_item, i) =>
-               <div class={'quiz-item'}>{i() + 1}</div>
-            }</For>
-        </div>
-        <div class='quiz-buttons buttons'>
-            <Show when={status()=== 'info'}>
-                <button class='start'>Start</button>
-            </Show>
-        </div>
-    </>)
-}
-
-function PlayDeathmatch() {
-
-    const [status, _set_status] = createSignal('info')
-    return (
-        <>
-    <div class='info-wrap'>
-        <div class='status'>
-            <Show when={status() === 'info'}>
-                Press start
-            </Show>
-
-            <Show when={status()=== 'in-progress'}>
-                <span>1 of 15</span>
-            </Show>
-
-            <Show when={status()=== 'end'}>
-                <button class='retake'>Re-take</button>
-            </Show>
-
-        </div>
-        <div class='info'>
-            <Show when={status() === 'info'}>
-                <p>
-                    You will play the moves from the opening.
-                    If you go out of book, game ends.
-                </p>
-            </Show>
-        </div>
-
-        </div>
-        <div class='quiz-buttons buttons'>
-            <Show when={status()=== 'info'}>
-                <button class='start'>Start</button>
-            </Show>
-        </div>
-    </>)
-}
-
 function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void }) {
 
     const [store, {
@@ -940,6 +556,390 @@ function StudyShow(props: ShowComputedProps & { on_feature_practice: () => void 
         </main>
     </>)
 }
+
+function StudyPractice(props: ShowComputedProps & { on_feature_practice_off: () => void }) {
+
+
+    const [store, {
+        goto_path,
+        goto_path_force,
+        goto_path_if_can,
+        set_hide_after_path,
+        add_child_san_to_success_or_error_path_no_save,
+        set_write_enabled_replay_tree
+    }] = useStore()
+
+    set_write_enabled_replay_tree(false)
+
+    let c_props = createReplayTreeComputed(store)
+
+    const [tab, set_tab] = createSignal('practice')
+
+
+    const set_on_wheel = (i: number) => {
+        if (i > 0) {
+            goto_path_if_can(c_props.get_next_path)
+        } else {
+            goto_path_if_can(c_props.get_prev_path)
+        }
+    }
+
+    const [custom_orientation, set_custom_orientation] = createSignal<Color>()
+
+    const orientation = createMemo(() => custom_orientation() ?? props.selected_chapter?.orientation ?? props.selected_section?.orientation ?? props.study.orientation ?? 'white')
+
+    const on_key_down = (e: KeyboardEvent) => {
+
+        if (e.key === 'f') {
+            batch(() => {
+                set_custom_orientation(opposite(orientation()))
+                set_color(undefined)
+
+                auto_play_if_can()
+            })
+        }
+
+    }
+    onMount(() => {
+        document.addEventListener('keydown', on_key_down)
+        onCleanup(() => {
+            document.removeEventListener('keydown', on_key_down)
+        })
+    })
+
+    let annotation = createMemo(() => {
+        let step = c_props.step_at_cursor_path
+
+        if (!step) {
+            return []
+        }
+
+        let nag = step.nags?.[0]
+
+        if (!nag) {
+            return []
+        }
+
+        return annotationShapes(step.step.uci, step.step.san, nag_to_glyph(nag))
+    })
+
+
+    const on_play_orig_key = async (orig: Key, dest: Key) => {
+
+        const pos = () => fen_pos(c_props.fen)
+
+        let position = pos()
+        let turn_color = position.turn
+
+        let piece = position.board.get(parseSquare(orig)!)!
+
+        let uci = orig + dest
+        if (piece.role === 'pawn' &&
+            ((dest[1] === '8' && turn_color === 'white') || (dest[1] === '1' && turn_color === 'black'))) {
+            uci += 'q'
+        }
+
+        let move = parseUci(uci)!
+        let san = makeSan(position, move)
+
+        on_play_san(san)
+    }
+
+    const chapter_title_or_detached = createMemo(() => {
+        return props.selected_chapter?.name ?? '[detached]'
+    })
+
+    const handle_goto_path = (path?: Path) => {
+        goto_path_if_can(path)
+    }
+
+    const [is_busy_timeout, set_is_busy_timeout] = createSignal<number>()
+
+    const [color, set_color] = createSignal<Color>()
+    const [movable, set_movable] = createSignal(false)
+
+    const movable_or_busy = createMemo(() => is_busy_timeout() === undefined && movable())
+
+    const orientation_with_practice_color = createMemo(() => color() ?? orientation())
+
+    const quiz_nodes = createMemo(() => [])
+
+    const on_play_san = async (san: SAN) => {
+        if (tab() === 'practice') {
+            on_play_san_practice(san)
+        }
+    }
+
+
+    const on_play_san_practice = async (san: SAN) => {
+
+        let node = await add_child_san_to_success_or_error_path_no_save(san)
+        if (!node) {
+            return
+        }
+
+        if (node[0] === 'error') {
+            goto_path_force(node[1].step.path)
+
+            set_is_busy_timeout(setTimeout(() => {
+                batch(() => {
+                    goto_path(parent_path(node[1].step.path))
+                    set_is_busy_timeout(undefined)
+                })
+            }, 600))
+        } else {
+            batch(() => {
+                goto_path_force(node[1].step.path)
+                set_hide_after_path(node[1].step.path)
+            })
+
+            auto_play_if_can()
+        }
+    }
+
+    const practice_on_rematch = (c?: Color) => {
+        if (c === undefined) {
+            return
+        }
+        set_color(c)
+        set_hide_after_path(undefined)
+        goto_path_force('')
+
+        auto_play_if_can()
+    }
+
+    const auto_play_if_can = () => {
+
+        if (orientation_with_practice_color() !== c_props.turn) {
+            let cc = find_children_at_path(store.replay_tree.steps_tree, store.replay_tree.cursor_path)
+
+
+            cc = cc.filter(_ => !store.replay_tree.error_paths.includes(_.step.path))
+
+            if (!cc || cc.length === 0) {
+                return
+            }
+            let c = arr_rnd(cc)
+            set_is_busy_timeout(setTimeout(() => {
+                batch(() => {
+                    goto_path_force(c.step.path)
+                    set_hide_after_path(c.step.path)
+                    set_is_busy_timeout(undefined)
+                })
+            }, 500))
+        }
+    }
+
+    return (<>
+        <main class='openings-show study'>
+            <div class='details-wrap'>
+                <StudyDetailsComponent {...props} section={props.selected_section} chapter={props.selected_chapter} />
+            </div>
+            <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
+                <PlayUciBoard orientation={orientation_with_practice_color()} shapes={annotation()} movable={movable_or_busy()} color={fen_turn(c_props.fen)} fen={c_props.fen} last_move={c_props.last_move} play_orig_key={on_play_orig_key}/>
+            </div>
+            <div class='replay-wrap'>
+                <div class='header'>
+                    {chapter_title_or_detached()}
+                </div>
+                <ReplayTreeComponent handle_goto_path={handle_goto_path} replay_tree={store.replay_tree} lose_focus={false} on_context_menu={() => {}}
+                features = {
+                    <>
+                    <button onClick={props.on_feature_practice_off} class='feature practice'><i data-icon=""></i></button>
+                    </>
+                }
+                feature_content = {
+                    <>
+                    <div class='practice-feature'>
+                        <div class='tabs'>
+                            <div onClick={() => set_tab('practice')} class={'feature tab' + (tab() === 'practice' ? ' active': '')}>Practice</div>
+                            {/*
+                            <div onClick={() => set_tab('quiz')} class={'quiz tab' + (tab() === 'quiz' ? ' active': '')}>Quiz</div>
+                            <div onClick={() => set_tab('deathmatch')} class={'deathmatch tab' + (tab() === 'deathmatch' ? ' active': '')}>Deathmatch</div>
+                            */}
+                        </div>
+                        <div class={'content ' + tab()}>
+                            <Show when={tab() === 'quiz'}>
+                            <h4>Take Quiz</h4>
+                            <TakeQuiz nodes={quiz_nodes()}/>
+                            </Show>
+                            <Show when={tab() === 'deathmatch'}>
+                            <h4>Play Deathmatch</h4>
+                            <PlayDeathmatch />
+                            </Show>
+                            <Show when={tab() === 'practice'}>
+                            <h4>Practice with the Computer</h4>
+                            <Practice movable={movable_or_busy()} on_rematch={practice_on_rematch} color={orientation_with_practice_color()} set_movable={set_movable}/>
+                            </Show>
+                        </div>
+                    </div>
+                    </>
+                }
+                />
+            </div>
+            <div class='sections-wrap'>
+                <SectionsListComponent {...props} is_edits_disabled={true}/>
+            </div>
+            <div class='tools-wrap'>
+            </div>
+        </main>
+    </>)
+}
+
+function Practice(props: { color: Color, movable: boolean, set_movable: (_: boolean)=> void, on_rematch: (color?: Color) => void }) {
+
+    const [store, { goto_path, reload_replay_tree_with_cursor_path }] = useStore()
+
+    const [, start] = useTransition()
+    const on_rematch = (color?: Color) => {
+        if (color === undefined) {
+            start(() => {
+                reload_replay_tree_with_cursor_path(store.replay_tree.cursor_path)
+            })
+            return
+        }
+        batch(() => {
+
+            start(() => {
+                reload_replay_tree_with_cursor_path('')
+                props.on_rematch(color)
+            })
+        })
+    }
+
+    const color = createMemo(() => props.color)
+
+    const engine_color = createMemo(() => opposite(color()))
+
+    props.set_movable(true)
+    goto_path('')
+
+    return (<>
+        <div class='info-wrap'>
+            <div class='status'>
+                <Show when={props.movable} fallback={
+                    <span>...</span>
+                }>
+                    <span>Your turn.</span>
+                </Show>
+            </div>
+            <div class='info'>
+                <p>
+                    Computer will follow the lines in the opening.
+                </p>
+                <p>
+                    Moves will be hidden.
+                </p>
+            </div>
+        </div>
+        <div class='rematch-buttons buttons'>
+            <button onClick={() => on_rematch()} class='end'>End</button>
+            <button onClick={() => on_rematch(color())} class='rematch'>Rematch</button>
+            <button onClick={() => on_rematch(engine_color())} class={`color ${engine_color()}`}><i></i></button>
+        </div>
+    </>)
+}
+
+type QuizItem = {
+    step: ModelTreeStepNode,
+    is_solved?: boolean
+}
+
+function QuizItem(step: ModelTreeStepNode) {
+
+    let [is_solved, set_is_solved] = createSignal<boolean | undefined>(undefined)
+
+    return {
+        step,
+        get is_solved() { return is_solved() },
+        set is_solved(s: boolean | undefined) { set_is_solved(s)}
+    }
+}
+
+function TakeQuiz(props: { nodes: ModelTreeStepNode[] }) {
+
+    let [indexes, _set_indexes] = createSignal([...Array(15).keys()])
+    
+    const [status, _set_status] = createSignal('info')
+    const make_quiz_item = () => QuizItem(arr_rnd(props.nodes))
+
+    let items = createMemo(mapArray(indexes, make_quiz_item))
+
+    return (<>
+    <div class='info-wrap'>
+        <div class='status'>
+            <Show when={status()=== 'info'}>
+                Press start
+            </Show>
+
+            <Show when={status()=== 'in-progress'}>
+                <span>1 of 15</span>
+            </Show>
+
+            <Show when={status()=== 'end'}>
+                <button class='retake'>Re-take</button>
+            </Show>
+        </div>
+        <div class='info'>
+            <Show when={status() === 'info'}>
+                <p>
+                    You are given 15 random positions from the opening.
+                    Play the correct moves.
+                </p>
+            </Show>
+        </div>
+     </div>
+        <div class='quiz-history'>
+            <For each={items()}>{ (_item, i) =>
+               <div class={'quiz-item'}>{i() + 1}</div>
+            }</For>
+        </div>
+        <div class='quiz-buttons buttons'>
+            <Show when={status()=== 'info'}>
+                <button class='start'>Start</button>
+            </Show>
+        </div>
+    </>)
+}
+
+function PlayDeathmatch() {
+
+    const [status, _set_status] = createSignal('info')
+    return (
+        <>
+    <div class='info-wrap'>
+        <div class='status'>
+            <Show when={status() === 'info'}>
+                Press start
+            </Show>
+
+            <Show when={status()=== 'in-progress'}>
+                <span>1 of 15</span>
+            </Show>
+
+            <Show when={status()=== 'end'}>
+                <button class='retake'>Re-take</button>
+            </Show>
+
+        </div>
+        <div class='info'>
+            <Show when={status() === 'info'}>
+                <p>
+                    You will play the moves from the opening.
+                    If you go out of book, game ends.
+                </p>
+            </Show>
+        </div>
+
+        </div>
+        <div class='quiz-buttons buttons'>
+            <Show when={status()=== 'info'}>
+                <button class='start'>Start</button>
+            </Show>
+        </div>
+    </>)
+}
+
 
 function SectionsListComponent(props: ShowComputedProps & { is_edits_disabled: boolean, on_edit_study?: () => void, on_edit_section?: () => void, on_edit_chapter?: () => void, }) {
 

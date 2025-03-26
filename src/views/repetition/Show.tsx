@@ -332,21 +332,26 @@ function ShowComponent() {
         }>
 
         <div class='header'>
-            <div class='title'>{r_props.study?.name}</div>
-            <div class='filter'><span class='label'>Filter:</span> 
-                <span class='value'>{filter_title()}</span> moves
-            </div>
-            <div class='due-moves'><span class='label'>Due:</span> 
-                <Suspense>
+            <Suspense>
+                <div class='title'>{r_props.study?.name}</div>
+                <div class='filter'><span class='label'>Filter:</span>
+                    <span class='value'>{filter_title()}</span> moves
+                </div>
+                <div class='due-moves'><span class='label'>Due:</span>
                     <span class='value'>{due_list_by_type().length}</span> moves left
-                </Suspense>
-            </div>
+                </div>
+
+            </Suspense>
         </div>
         <div on:wheel={non_passive_on_wheel(set_on_wheel)} class='board-wrap'>
-            <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} fen={fen()} last_move={last_move()} play_orig_key={on_play_orig_key}/>
+            <PlayUciBoard shapes={annotation()} orientation={color()} color={color()} movable={movable()} fen={fen()} last_move={last_move()} play_orig_key={on_play_orig_key} />
         </div>
         <div class='replay-wrap'>
-            <Suspense>
+            <Suspense fallback={
+                <div class='loading'>
+                    Loading..
+                </div>
+            }>
             <Show when={!is_list_no_item()} fallback={
               <div class='no-dues'>
                 <span>Great; No due moves at this time.</span>
