@@ -108,7 +108,7 @@ async function db_delete_study(db: StudiesDB, id: EntityStudyId) {
 }
 
 async function db_delete_section(db: StudiesDB, id: EntitySectionId) {
-    db.transaction('rw', [db.studies, db.sections, db.chapters], async () => {
+    db.transaction('rw', [db.studies, db.sections, db.chapters, db.play_uci_tree_replays], async () => {
 
         let section = await db_get_section(db, id)
         let study = await db_get_study(db, section.study_id)

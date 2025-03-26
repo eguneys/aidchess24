@@ -118,6 +118,10 @@
                 font-weight: 400;
             }
 
+            textarea {
+                resize: none;
+            }
+
             input {
                 padding: 0.5em;
                 border: 2px solid theme.$text-secondary;

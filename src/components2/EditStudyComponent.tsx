@@ -198,6 +198,17 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
 
     const [tab, set_tab] = createSignal('lichess')
 
+    const [import_pgn_text, set_import_pgn_text] = createSignal('')
+
+    const import_pgns = createMemo(() => parse_PGNS(import_pgn_text()))
+
+    const on_import_pgn = async () => {
+        let pgns = import_pgns()
+        if (!pgns) {
+            return
+        }
+        props.on_import_pgns(pgns, props.section.name)
+    }
 
     const [import_study_text, set_import_study_text] = createSignal('')
 
@@ -240,6 +251,8 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
 
     const orientation = createMemo(() => props.section.orientation)
 
+    const isActiveTab = createSelector(tab)
+
     return (<>
         <h2>Edit Section</h2>
         <div class='group'>
@@ -250,17 +263,24 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
 
 
         <div class='tabs'>
-            <div class={'tab ' + (tab() === 'empty' ? 'active' : '')} onClick={() => set_tab('empty')}>Empty</div>
-            <div class={'tab ' + (tab() === 'lichess' ? 'active' : '')} onClick={() => set_tab('lichess')}>Import Lichess Study</div>
+            <div class={'tab'} classList={{ active: isActiveTab('empty') }} onClick={() => set_tab('empty')}>Empty</div>
+            <div class={'tab'} classList={{ active: isActiveTab('lichess') }} onClick={() => set_tab('lichess')}>Import Lichess Study</div>
+            <div class={'tab'} classList={{ active: isActiveTab('pgn') }}  onClick={() => set_tab('pgn')}>Import PGN</div>
         </div>
         <div class='content'>
-            <Show when={tab() === 'lichess'}>
+            <Show when={isActiveTab('lichess')}>
                 <div class='group'>
                 <label for='name'>Import a Study from Lichess</label>
                 <input class={import_lichess_disabled() ? 'error': 'success'} onKeyUp={(e) => set_import_study_text(e.currentTarget.value)} onChange={(e) => set_import_study_text(e.target.value)} name="name" id="name" type="text" placeholder="Lichess Study URL"></input>
                 </div>
             </Show>
-            <Show when={tab() === 'empty'}>
+            <Show when={isActiveTab('pgn')}>
+                <div class='group'>
+                <label for='name'>Import from PGN</label>
+                <textarea rows={10} onChange={(e) => set_import_pgn_text(e.target.value)} name="name" id="name" type="text" placeholder="Paste PGN here."></textarea>
+                </div>
+            </Show>
+            <Show when={isActiveTab('empty')}>
                 <>
                 </>
             </Show>
@@ -292,6 +312,13 @@ export function EditSectionComponent(props: { section: ModelSection, i_section: 
 
         <div class='group buttons'>
             <span class='split'></span>
+            <Show when={tab() === 'pgn'}>
+                <Suspense fallback={
+                    <button class='loading' disabled={true}>Loading ...</button>
+                }>
+                <button onClick={on_import_pgn} class='import' disabled={import_pgns() === undefined}>Import<i data-icon=''></i></button>
+                </Suspense>
+            </Show>
 
             <Show when={tab() === 'lichess'}>
                 <Suspense fallback={

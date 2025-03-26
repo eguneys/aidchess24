@@ -1065,12 +1065,18 @@ export function ChapterComponent(props: { is_edits_disabled: boolean, chapter: M
 
 function SectionCollapsedComponent(props: { is_edits_disabled: boolean, section: ModelSection, nth: string, on_selected: () => void, on_edit: () => void }) {
 
+    const on_edit_section = async () => {
+        await props.on_selected()
+        props.on_edit()
+    }
+
+
     return (<>
         <div class='section'>
             <div onClick={() => props.on_selected()} class='header'>
                 <div class='title'><span class='nth'>{props.nth}</span><span class='fit-ellipsis'>{props.section.name}</span></div>
                 <Show when={!props.is_edits_disabled}>
-                    <i onClick={() => props.on_edit()} data-icon=""></i>
+                    <i onClick={on_edit_section} data-icon=""></i>
                 </Show>
             </div>
         </div>
