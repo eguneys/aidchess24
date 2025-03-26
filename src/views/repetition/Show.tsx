@@ -1,4 +1,4 @@
-import { createComputed, createContext, createMemo, createSignal, For, Show, Suspense, useContext } from "solid-js"
+import { batch, createComputed, createContext, createMemo, createSignal, For, Show, Suspense, useContext } from "solid-js"
 import { A, useParams, useSearchParams } from "@solidjs/router"
 import { createRepeatProps, RepeatShowType } from "./List"
 import './Show.scss'
@@ -182,8 +182,11 @@ function ShowComponent() {
     }
 
     const on_next_due_move = () => {
-        _set_attempt_result(undefined)
-        set_selected_due_move(undefined)
+        batch(() => {
+            _set_attempt_result(undefined)
+            set_show_previous_moves(false)
+            set_selected_due_move(undefined)
+        })
     }
 
     const select_one_attempt_result = (attempt_result: ModelRepeatMoveAttempt) => {
@@ -193,7 +196,12 @@ function ShowComponent() {
             return
         }
 
-        set_selected_due_move(due_move)
+
+        batch(() => {
+            _set_attempt_result(undefined)
+            set_show_previous_moves(false)
+            set_selected_due_move(due_move)
+        })
     }
 
     const on_play_orig_key = async (orig: Key, dest: Key) => {
