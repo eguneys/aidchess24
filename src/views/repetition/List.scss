@@ -175,6 +175,15 @@
         }
 
         .studies-list {
+            .filter {
+                display: flex;
+                justify-content: flex-end;
+                gap: 0.5em;
+                padding: 0.2em;
+            }
+        }
+
+        .studies-list {
             .no-study {
                 display: flex;
                 flex-flow: column;

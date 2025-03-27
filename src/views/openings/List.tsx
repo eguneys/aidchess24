@@ -1,6 +1,6 @@
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import './List.scss'
-import { createEffect, createMemo, createSelector, For, Show, Suspense } from 'solid-js'
+import { createComputed, createMemo, createSelector, For, Show, Suspense } from 'solid-js'
 import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
@@ -39,7 +39,7 @@ export default () => {
         return 'mine'
     })
 
-    createEffect(() => load_studies(get_predicate()))
+    createComputed(() => load_studies(get_predicate()))
 
     const studies = () => Object.values(store.studies)
 

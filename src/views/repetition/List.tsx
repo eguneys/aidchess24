@@ -1,8 +1,8 @@
 import { createComputed, createMemo, createSelector, For, Show, Suspense } from "solid-js"
 import './List.scss'
-import { A, useNavigate } from "@solidjs/router"
+import { A, useNavigate, useParams, useSearchParams } from "@solidjs/router"
 import { usePersistedStore, useStore } from "../../store"
-import { EntitySectionId, EntityStudyId, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelSection, ModelStudy } from "../../store/sync_idb_study"
+import { EntitySectionId, EntityStudyId, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelSection, ModelStudy, StudiesPredicate } from "../../store/sync_idb_study"
 import { fen_turn, Step } from "../../store/step_types"
 
 export type RepeatShowType = 'first-ten' | 'ten-twenty' | 'twenty-plus' | 'white' | 'black'
@@ -187,8 +187,30 @@ function ListComponent() {
         }
     }
 
-    createComputed(() => load_studies('mine'))
-    createComputed(() => load_studies('featured'))
+    type Tab = StudiesPredicate
+    let [params, set_params] = useSearchParams()
+
+    const tab = createMemo<Tab>(() => params.filter as Tab ?? 'mine')
+
+    const set_tab = (tab: Tab) => {
+        set_params({ filter: tab })
+    }
+
+    const get_predicate = createMemo(() => {
+        let res = tab()
+        if (res === 'mine') {
+            return res
+        }
+        if (res === 'featured') {
+            return res
+        }
+        if (res === 'auto') {
+            return res
+        }
+        return 'mine'
+    })
+
+    createComputed(() => load_studies(get_predicate()))
     createComputed(handle_load_chapters)
     createComputed(handle_load_due_moves)
 
@@ -207,6 +229,7 @@ function ListComponent() {
         navigate('/repetition/' + r_props.selected_study_id + '?filter=' + type)
     }
 
+    const isActive = createSelector(tab)
 
 
     return (<>
@@ -214,6 +237,13 @@ function ListComponent() {
         <div class='studies-list'>
             <div class='header'>
                 <h3>Select an Opening</h3>
+            </div>
+            <div class='filter'>
+                <label for="filter">Filter: </label>
+                <select onChange={e => set_tab(e.target.value as Tab)} id="filter">
+                    <option value="mine" id="mine" selected={isActive('mine')}>My Openings</option>
+                    <option value="featured" id="featured" selected={isActive('featured')}>Featured Openings</option>
+                </select>
             </div>
             <div class='list'>
             <For each={r_props.studies} fallback={
