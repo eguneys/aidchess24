@@ -116,6 +116,7 @@ const Contact = () => {
     return (<>
     <h1> Contact </h1>
     <ul>
+      <li><p>Join our Slack Channel <a href="https://join.slack.com/t/aidchess/shared_invite/zt-32jrytrth-jA8To9yps7M3Q5QhDIAkYQ">Slack Invite Link</a>.</p></li>
       <li><p>Email me at iplaythefrench at gmail dot com.</p></li>
       <li><p>Reach me out at <a href="https://lichess.org/@/heroku">https://lichess.org/@/heroku</a>.</p></li>
       <li><p>Open an issue at <a href="https://github.com/eguneys/aidchess24">https://github.com/eguneys/aidchess24</a></p></li>
