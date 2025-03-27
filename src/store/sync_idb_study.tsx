@@ -543,13 +543,14 @@ async function db_change_root_fen(db: StudiesDB, id: EntityChapterId, fen: FEN) 
 }
 
 
-function new_featured_study_entity(id: EntityStudyId): EntityStudyInsert {
+function new_featured_study_entity(id: EntityStudyId, version: number): EntityStudyInsert {
     return {
         id,
         name: 'New Study',
         is_edits_disabled: true,
         predicate: 'featured',
         section_ids: [],
+        version
     }
 }
 
@@ -676,6 +677,7 @@ export class EntityStudy extends Entity<StudiesDB> {
     selected_section_id?: EntitySectionId
     section_ids!: EntitySectionId[]
     orientation?: Color
+    version?: number
 }
 export class EntitySection extends Entity<StudiesDB> {
     id!: EntitySectionId
@@ -813,7 +815,7 @@ export type StudiesDBReturn = {
     get_studies_by_predicate(predicate: StudiesPredicate): Promise<ModelStudy[]>;
     get_studies(): Promise<ModelStudy[]>;
 
-    new_featured_study_just_once_or_undefined(study_id: string): Promise<ModelStudy | undefined>
+    new_featured_study_just_once_or_undefined(study_id: EntityStudyId, version: number): Promise<ModelStudy | undefined>
     new_study(): Promise<ModelStudy>
     new_section(study_id: EntityStudyId, name?: string): Promise<ModelSection>
     new_chapter(section_id: EntitySectionId, name?: string, pgn?: PGN): Promise<ModelChapter>
@@ -855,12 +857,12 @@ export const StudiesDBProvider = (props: { children: JSX.Element }) => {
 
 
     let res: StudiesDBReturn = {
-        async new_featured_study_just_once_or_undefined(id: EntityStudyId) {
+        async new_featured_study_just_once_or_undefined(id: EntityStudyId, version: number) {
             let res = await db.studies.get(id)
             if (res) {
                 return undefined
             }
-            let entity = new_featured_study_entity(id)
+            let entity = new_featured_study_entity(id, version)
             await db_new_study(db, entity)
             return {
                 id: entity.id!,

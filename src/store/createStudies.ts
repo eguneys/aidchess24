@@ -5,6 +5,7 @@ import { EntitySectionId, EntitySectionInsert, EntityStudyId, EntityStudyInsert,
 import { batch, createSignal } from "solid-js";
 import { _mergeSearchString, createAsync } from "@solidjs/router";
 import { parse_PGNS, PGN } from "../components2/parse_pgn";
+import { Color } from "chessops";
 
 export function createStudies(agent: Agent, actions: Partial<StoreActions>, state: StoreState, setState: SetStoreFunction<StoreState>) {
     type Source = ["studies", StudiesPredicate] | ["study", EntityStudyId]
@@ -57,8 +58,8 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
         load_study(id: EntityStudyId) {
             set_source(['study', id])
         },
-        async create_featured_once(id: EntityStudyId) {
-            let study = await agent.Studies.create_featured_once(id)
+        async create_featured_once(id: EntityStudyId, version: number) {
+            let study = await agent.Studies.create_featured_once(id, version)
             if (!study) {
                 return undefined
             }
@@ -206,30 +207,61 @@ export function createStudies(agent: Agent, actions: Partial<StoreActions>, stat
     return studies
 }
 
+type FeaturedStudyTemplate = {
+    id: EntityStudyId,
+    link: string,
+    version: number,
+    orientation?: Color
+}
 
 async function populate_featured_studies_once(agent: Agent, actions: StoreActions) {
 
-    let featured_studies: Record<string, string> = {
-        'e4e5white1heroku': '/featured_pgns/lichess_study_1e4-e5-black-repertoire-introduction_by_heroku_2025.03.26.pgn',
-        'e4e5black1heroku': '/featured_pgns/lichess_study_1e4-white-repertoire-introduction_by_heroku_2025.03.26.pgn',
-    }
+    let featured_templates: FeaturedStudyTemplate[] = [
+        {
+            id: 'e4e5blackheroku',
+            link: '/featured_pgns/lichess_study_1e4-e5-black-repertoire-introduction_by_heroku_2025.03.26.pgn',
+            version: 1,
+            orientation: 'black'
+        },
+        {
+            id: 'e4e5whiteheroku',
+            link: '/featured_pgns/lichess_study_1e4-white-repertoire-introduction_by_heroku_2025.03.26.pgn',
+            version: 1,
+            orientation: 'white'
+        }
+    ]
 
-    let featured = await agent.Studies.featured()
+    let featured_existing = await agent.Studies.featured()
 
-    let ids = Object.keys(featured_studies)
+    await Promise.all(featured_existing.map(async existing => {
+        let e_template = featured_templates.find(_ => _.id === existing.id)
+        if (!e_template || e_template.version !== existing.version) {
+            await actions.delete_study(existing.id)
+        }
+    }))
 
-    featured.filter(_ => !ids.includes(_.id)).forEach(_ => actions.delete_study(_.id))
+    await Promise.all(featured_templates.map(async e_template => {
+        let existing = featured_existing.find(_ => _.id === e_template.id || _.version === e_template.version)
+        if (!existing) {
+            await create_featured_study_from_template(e_template)
+        }
+    }))
 
-
-    await Promise.all(ids.filter(_ => !featured.find(f => f.id === _)).map(async id => {
-        let study = await actions.create_featured_once(id)
+    async function create_featured_study_from_template(template: FeaturedStudyTemplate) {
+        let study = await actions.create_featured_once(template.id, 0)
         if (study === undefined) {
             return
         }
 
-        let pgns = await fetch(featured_studies[id]).then(_ => _.text()).then(parse_PGNS)
+        let { link, orientation, version } = template
+        let pgns = await fetch(link).then(_ => _.text()).then(parse_PGNS)
 
         await actions.import_from_pgn(study, "New Section", pgns)
-    }))
+
+        if (orientation) {
+            await actions.update_study({ id: study.id, orientation })
+        }
+        await actions.update_study({id: study.id, version})
+    }
 
 }
