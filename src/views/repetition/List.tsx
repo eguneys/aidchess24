@@ -1,6 +1,6 @@
 import { createComputed, createMemo, createSelector, For, Show, Suspense } from "solid-js"
 import './List.scss'
-import { A, useNavigate, useParams, useSearchParams } from "@solidjs/router"
+import { A, useNavigate, useSearchParams } from "@solidjs/router"
 import { usePersistedStore, useStore } from "../../store"
 import { EntitySectionId, EntityStudyId, ModelChapter, ModelRepeatDueMove, ModelRepeatMoveAttempt, ModelSection, ModelStudy, StudiesPredicate } from "../../store/sync_idb_study"
 import { fen_turn, Step } from "../../store/step_types"
