@@ -38,7 +38,7 @@ export type StoreActions = {
     study_as_export_pgn(study_id: EntityStudyId): Promise<string>
     import_from_pgn(study: ModelStudy, default_section_name: string, pgns: PGN[], section?: ModelSection): Promise<void>
 
-    create_featured_once(study_id: EntityStudyId): Promise<ModelStudy | undefined>
+    create_featured_once(study_id: EntityStudyId, version: number): Promise<ModelStudy | undefined>
     populate_featured_studies_once(): Promise<void>
 
 
