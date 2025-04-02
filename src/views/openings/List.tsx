@@ -1,6 +1,6 @@
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import './List.scss'
-import { createComputed, createEffect, createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from 'solid-js'
+import { createComputed, createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from 'solid-js'
 import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
@@ -9,7 +9,6 @@ import import_lichess_png from '../../assets/images/importlichess.png'
 import { useStore } from '../../store'
 import type { ModelStudy, StudiesPredicate } from '../../store/sync_idb_study'
 import { parse_PGNS, PGN } from '../../components2/parse_pgn'
-import { PgnParser } from 'chessops/pgn'
 
 export default () => {
 
