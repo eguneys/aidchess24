@@ -107,3 +107,5 @@ Absolutely! Below is a curated list of **60 brilliant attacking and tactical mas
 4. **Compare with annotations** – Books like *"The Most Instructive Games of Chess Ever Played"* (Chernev) help.  
 
 Would you like PGNs or video links for any of these? Let me know, and I can provide resources!
+
+*Aidchess's Note*: We recommend memorizing these games on this website. Head over to [Featured Openings](/openings?filter=featured) to find all these games in a study. Once you study and learn them all, don't forget to use the [Repetition](/repetition) feature to recall the moves with daily quizzes powered by spaced repetition.

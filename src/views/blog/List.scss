@@ -1,0 +1,31 @@
+@use '../../base_css/theme';
+
+main.blog-list {
+    display: flex;
+    flex-flow: column;
+
+    ul.list {
+
+        display: flex;
+        flex-flow: column;
+
+        .blog-preview {
+            position: relative;
+           margin: 1em;
+           border-bottom: 1px solid theme.$text-secondary;
+
+           display: flex;
+           gap: 0.5em;
+           align-items: flex-end;
+
+           &:before {
+            content: "•";
+            margin-right: 0.5em;
+           }
+
+           .date {
+            font-size: 0.9em;
+           }
+        }
+    }
+}

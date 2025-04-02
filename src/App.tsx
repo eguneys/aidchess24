@@ -4,6 +4,7 @@ import {  MetaProvider } from '@solidjs/meta'
 import './App.scss'
 import { PersistedStoreProvider, StoreProvider } from "./store";
 import { StudiesDBProvider } from "./store/sync_idb_study";
+import { BlogStoreProvider } from "./views/blog/store";
 const Home = lazy(() => import('./Home'))
 const Contact = lazy(() => import('./Contact'))
 const Builder = lazy(() => import('./views/builder/Placeholder'))
@@ -14,6 +15,9 @@ const OpeningsShow = lazy(() => import('./views/openings/Show'))
 
 const RepetitionList = lazy(() => import('./views/repetition/List'))
 const RepetitionShow = lazy(() => import('./views/repetition/Show'))
+
+const BlogList = lazy(() => import('./views/blog/List'))
+const BlogShow = lazy(() => import('./views/blog/Show'))
 
 export const MyApp = () => {
     return (<>
@@ -30,6 +34,8 @@ export const MyApp = () => {
             <Route path='/openings/:id' component={OpeningsShow}/>
             <Route path='/repetition' component={RepetitionList}/>
             <Route path='/repetition/:id' component={RepetitionShow}/>
+            <Route path='/blog' component={BlogList}/>
+            <Route path='/blog/:id' component={BlogShow}/>
             <Route path='/contact' component={Contact}/>
             <Route path='/terms' component={Contact}/>
             <Route path='/privacy' component={Contact}/>
@@ -57,7 +63,9 @@ const AppInRouterWithStore = (props: any) => {
     <StudiesDBProvider>
       <PersistedStoreProvider>
       <StoreProvider>
-        <AppInRouter {...props} />
+        <BlogStoreProvider>
+          <AppInRouter {...props} />
+        </BlogStoreProvider>
       </StoreProvider>
       </PersistedStoreProvider>
     </StudiesDBProvider>
@@ -101,6 +109,7 @@ const AppInRouter = (props: any) => {
             {/*<section><A href='/widen'>Widen</A></section>*/}
             <section><A href='/openings'>Openings</A></section>
             <section><A href='/repetition'>Repetition</A></section>
+            <section><A href='/blog'>Blog</A></section>
             <section><A class="donate" href='/donate' target="_self">Donate</A></section>
           </nav>
           </div>

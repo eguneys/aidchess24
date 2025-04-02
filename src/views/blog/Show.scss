@@ -1,0 +1,16 @@
+main.blog-show {
+
+    .blog {
+        .content {
+            padding: 1em;
+            list-style-position: inside;
+
+            ol {
+                margin-left: 0.6em;
+            }
+            p {
+                margin: 0.5em;
+            }
+        }
+    }
+}
