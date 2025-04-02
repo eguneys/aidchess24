@@ -1,6 +1,6 @@
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import './List.scss'
-import { createComputed, createMemo, createSelector, For, Show, Suspense } from 'solid-js'
+import { createComputed, createEffect, createMemo, createResource, createSelector, createSignal, For, Show, Suspense } from 'solid-js'
 import annotate_png from '../../assets/images/annotate.png'
 import compact_png from '../../assets/images/compact.png'
 import sections_png from '../../assets/images/sections.png'
@@ -8,10 +8,12 @@ import practice_png from '../../assets/images/practice.png'
 import import_lichess_png from '../../assets/images/importlichess.png'
 import { useStore } from '../../store'
 import type { ModelStudy, StudiesPredicate } from '../../store/sync_idb_study'
+import { parse_PGNS, PGN } from '../../components2/parse_pgn'
+import { PgnParser } from 'chessops/pgn'
 
 export default () => {
 
-    const [store, { create_study, load_studies }] = useStore()
+    const [, { load_studies }] = useStore()
 
     let [params, set_params] = useSearchParams()
 
@@ -41,35 +43,19 @@ export default () => {
 
     createComputed(() => load_studies(get_predicate()))
 
-    const studies = () => Object.values(store.studies)
-
-    const navigate = useNavigate()
-    const on_new_opening = async () => {
-        let study = await create_study()
-
-        navigate('/openings/' + study.id)
-    }
-
-
 
     return (<>
-        <ListComponent studies={studies()} tab={tab()} set_tab={set_tab} on_new_opening={on_new_opening} />
+        <ListComponent tab={tab()} set_tab={set_tab}/>
     </>)
 }
 
 type Tab = StudiesPredicate | 'help'
 
 
-const ListComponent = (props: { studies: ModelStudy[], tab: Tab, set_tab: (_: Tab) => void, on_new_opening: () => Promise<void> }) => {
+const ListComponent = (props: { tab: Tab, set_tab: (_: Tab) => void }) => {
 
     const tab = () => props.tab
     const set_tab = props.set_tab
-
-    let navigate = useNavigate()
-
-    const on_click_study = (study: ModelStudy) => {
-        navigate('/openings/' + study.id)
-    }
 
     const isActive = createSelector(tab)
 
@@ -79,7 +65,6 @@ const ListComponent = (props: { studies: ModelStudy[], tab: Tab, set_tab: (_: Ta
             <nav>
                 <a onClick={() => set_tab('mine')} class={'mine'} classList={{active: isActive('mine')}}>My Openings</a>
                 <a onClick={() => set_tab('featured')} class={'featured'} classList={{active: isActive('featured')}}>Featured</a>
-                <a onClick={() => set_tab('auto')} class={'auto'} classList={{active: isActive('auto')}}>Auto Generated</a>
                 <a onClick={() => set_tab('help')} class={'help'} classList={{active: isActive('help')}}><i data-icon=""></i>Help</a>
             </nav>
         </aside>
@@ -88,65 +73,135 @@ const ListComponent = (props: { studies: ModelStudy[], tab: Tab, set_tab: (_: Ta
                 <Help/>
             </Show>
             <Show when={tab()==='featured'}>
-                <h3 class='featured'> Featured Openings </h3>
-                <small class='featured'>If you want to feature your openings here, please <A href='/contact'>contact here</A>.</small>
-                <div class='list'>
-                    <Suspense fallback={
-                        <div class='loading'>Loading featured openings..</div>}
-                        >
-                    <For each={props.studies} fallback={
-                        <div class='no-studies'>
-                            <p>No Openings listed here yet. Likely to be coming soon.</p>
-                            <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
-                        </div>
-                    }>{study => 
-                        <StudyListItem study={study} on_click_study={on_click_study}/>
-                    }</For>
-                    <PopulateFeaturedOpeningsOnce/>
-                    </Suspense>
-                </div>
-            </Show>
-            <Show when={tab()==='auto'}>
-                <h3 class='auto'> Auto Generated Openings </h3>
-                <small class='auto'>Openings listed below are compiled via programmatically selecting moves from Master's Games.</small>
-                <div class='list'>
-                    <Suspense fallback={
-                        <div class='loading'>Loading auto generated openings..</div>}
-                        >
-                    <For each={props.studies} fallback={
-                        <div class='no-studies'>
-                            <p>No Openings listed here yet. Likely to be coming soon.</p>
-                            <a onClick={() => set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
-                        </div>
-                    }>{study => 
-                        <StudyListItem study={study} on_click_study={on_click_study}/>
-                    }</For>
-                    </Suspense>
-                </div>
+                <Featured set_tab={props.set_tab} />
             </Show>
             <Show when={tab()==='mine'}>
-                <div class='tools'>
-                    <button onClick={() => props.on_new_opening()} class='new'><i data-icon=""></i> New Opening Repertoire</button>
-                </div>
-                <div class='list'>
-                    <Suspense fallback={
-                        <div class='loading'>Loading your openings..</div>}
-                        >
-                    <For each={props.studies} fallback={
-                        <div class='no-studies'>
-                            <p>No Openings here yet.</p>
-                            <p>Try importing a lichess study.</p>
-                            <p>Or build an opening repertoire using 
-                                <A href='/builder'>Builder</A> feature</p>
-                        </div>
-                    }>{study => 
-                        <StudyListItem study={study} on_click_study={on_click_study}/>
-                    }</For>
-                    </Suspense>
-                </div>
-        </Show>
+                <Mine />
+            </Show>
         </div>
     </main>
+    </>)
+}
+
+
+const Mine = () => {
+
+    let [store, { create_study, import_from_pgn }] = useStore()
+
+    const studies = () => Object.values(store.studies)
+
+    const navigate = useNavigate()
+    const on_click_study = (study: ModelStudy) => {
+        navigate('/openings/' + study.id)
+    }
+
+    const on_new_opening = async () => {
+        let study = await create_study()
+
+        navigate('/openings/' + study.id)
+    }
+
+    const on_import_pgns = async (pgns: PGN[]) => {
+        let study = await create_study()
+
+        await import_from_pgn(study, '', pgns)
+    }
+
+    return (<>
+        <div class='tools'>
+            <ImportLichessPasteLink on_import_pgns={on_import_pgns}/>
+            <button onClick={() => on_new_opening()} class='new'><i data-icon=""></i> New Opening Repertoire</button>
+        </div>
+        <div class='list'>
+            <Suspense fallback={
+                <div class='loading'>Loading your openings..</div>}
+            >
+                <For each={studies()} fallback={
+                    <div class='no-studies'>
+                        <p>No Openings here yet.</p>
+                        <p>Try importing a lichess study.</p>
+                        <p>Or build an opening repertoire using 
+                            <A href='/builder'>Builder</A> feature</p>
+                    </div>
+                }>{study =>
+                    <StudyListItem study={study} on_click_study={on_click_study} />
+                    }</For>
+            </Suspense>
+        </div>
+    </>)
+}
+
+const ImportLichessPasteLink = (props: { on_import_pgns: (_: PGN[]) => void }) => {
+
+    const [import_study_text, set_import_study_text] = createSignal('')
+
+    const import_lichess_link = createMemo(() => {
+
+        let m = import_study_text().match(/\/study\/([a-zA-Z0-9]{8})\/?$/)
+
+        if (!m) {
+            return undefined
+        }
+
+        let id = m[1]
+
+        return `https://lichess.org/api/study/${id}.pgn`
+    })
+
+    const fetch_lichess_link = async (link: string) => {
+        return await fetch(link)
+        .then(_ => _.text())
+        .then(_ => parse_PGNS(_))
+        .then(props.on_import_pgns)
+    }
+
+    const [lichess_pgns] = createResource(import_lichess_link, fetch_lichess_link)
+
+    const get_loading_text = createMemo(() =>
+        lichess_pgns.loading ? 'Loading...' : ''
+    )
+
+   const import_lichess_error = createMemo(() => {
+        return import_study_text().length > 0 && import_lichess_link() === undefined
+    })
+
+    return (<>
+        <input type='text' classList={{error: import_lichess_error()}} on:change={e => set_import_study_text(e.currentTarget.value)} on:paste={e => set_import_study_text(e.clipboardData?.getData('text') ?? '')} placeholder="Paste Lichess Study Link to Import" value={get_loading_text()}></input>
+    </>)
+}
+
+const Featured = (props: { set_tab: (_: Tab) => void }) => {
+
+    let [store] = useStore()
+
+    const studies = () => Object.values(store.studies)
+
+    let navigate = useNavigate()
+
+    const on_click_study = (study: ModelStudy) => {
+        navigate('/openings/' + study.id)
+    }
+
+
+
+    return (<>
+        <h3 class='featured'> Featured Openings </h3>
+        <small class='featured'>If you want to feature your openings here, please <A href='/contact'>contact here</A>.</small>
+        <div class='list'>
+            <Suspense fallback={
+                <div class='loading'>Loading featured openings..</div>}
+            >
+                <For each={studies()} fallback={
+                    <div class='no-studies'>
+                        <p>No Openings listed here yet. Likely to be coming soon.</p>
+                        <a onClick={() => props.set_tab('mine')}>Meanwhile create your own opening, or import a lichess study.</a>
+                    </div>
+                }>{study =>
+                    <StudyListItem study={study} on_click_study={on_click_study} />
+                    }</For>
+                <PopulateFeaturedOpeningsOnce />
+            </Suspense>
+        </div>
     </>)
 }
 

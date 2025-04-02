@@ -67,6 +67,17 @@
 
                 justify-content: flex-end;
                 border-bottom: 2px solid theme.$ac-li-blue-2;
+                gap: 2em;
+
+                input {
+                    width: 400px;
+                    padding: 0.5em;
+
+                    &.error {
+                        border: 1px solid theme.$error !important;
+                        outline: theme.$error;
+                    }
+                }
 
                 button.new {
                     display: flex;
