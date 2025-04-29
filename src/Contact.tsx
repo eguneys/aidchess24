@@ -56,8 +56,13 @@ const Donate = () => {
       <p class='twitch'><a href="https://twitch.tv/gsoutz" target="_blank">Support me on Twitch</a></p>
       <iframe width="520px" height="270px" src="https://clips.twitch.tv/embed?clip=InexpensiveBigPelicanKappaPride-pB0DDQjPbt_afn2V&parent=aidchess.com"></iframe>
       <p>
+          <a href="https://www.buymeacoffee.com/eguneys"><img crossorigin="anonymous" src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=eguneys&button_colour=40DCA5&font_colour=ffffff&font_family=Inter&outline_colour=000000&coffee_colour=FFDD00" /></a>
+      </p>
+      {/*
+      <p>
           < a target="_blank" href="https://patreon.com/eguneys?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink">Patreon</a>
       </p>
+      */}
 
     </div>
     </>)
